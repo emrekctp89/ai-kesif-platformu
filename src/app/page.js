@@ -1,103 +1,104 @@
-import Image from "next/image";
+// src/app/page.js (Düzeltilmiş Hali)
 
-export default function Home() {
+import { supabase } from '@/lib/supabaseClient';
+import Link from 'next/link';
+
+export const revalidate = 60;
+
+async function getCategories() {
+  const { data, error } = await supabase.from('categories').select('name, slug');
+  if (error) {
+    console.error('Kategori çekme hatası:', error);
+    return [];
+  }
+  return data;
+}
+
+// FİLTRELEME İÇİN GÜNCELLENMİŞ VE DÜZELTİLMİŞ FONKSİYON
+async function getTools(categorySlug) {
+  let query = supabase
+    .from('tools')
+    .select(`
+      id,
+      name,
+      description,
+      link,
+      categories!inner( name, slug ) 
+    `) // DÜZELTME: categories yanına !inner ekledik.
+    .eq('is_approved', true);
+
+  if (categorySlug) {
+    query = query.eq('categories.slug', categorySlug);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    // Hatayı daha anlaşılır göstermek için güncelledik
+    console.error('Araçları filtrelerken hata:', error.message);
+    return [];
+  }
+  return data;
+}
+
+export default async function HomePage({ searchParams }) {
+  const categorySlug = searchParams.category;
+  const tools = await getTools(categorySlug);
+  const categories = await getCategories();
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div>
+      <div className="text-center mb-10">
+        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
+          Yapay Zeka Araçlarını Keşfet
+        </h1>
+        <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+          Projeniz veya günlük işleriniz için en iyi AI araçları burada.
+        </p>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <div className="flex justify-center flex-wrap gap-2 mb-10">
+        <Link href="/"
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition ${!categorySlug ? 'bg-indigo-600 text-white shadow' : 'bg-white text-gray-700 hover:bg-gray-200'}`}>
+          Tümü
+        </Link>
+        {categories.map((category) => (
+          <Link key={category.slug}
+                href={`/?category=${category.slug}`}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition ${categorySlug === category.slug ? 'bg-indigo-600 text-white shadow' : 'bg-white text-gray-700 hover:bg-gray-200'}`}>
+            {category.name}
+          </Link>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {tools.length > 0 ? (
+            tools.map((tool) => (
+              <div key={tool.id} className="border rounded-xl p-6 shadow-lg bg-white flex flex-col transition hover:shadow-xl hover:-translate-y-1">
+                <div className="flex-grow">
+                  <div className="flex justify-between items-start mb-3">
+                     <h2 className="text-xl font-bold text-gray-900">{tool.name}</h2>
+                     <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                       {/* Düzeltme: categories artık bir nesne, dizi değil */}
+                       {tool.categories.name}
+                     </span>
+                  </div>
+                  <p className="text-gray-600 mb-4">{tool.description}</p>
+                </div>
+                <a
+                  href={tool.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 block w-full bg-gray-800 text-white text-center font-bold py-2 px-4 rounded-lg hover:bg-black transition-colors"
+                >
+                  Aracı Ziyaret Et
+                </a>
+              </div>
+            ))
+        ) : (
+            <p className="col-span-full text-center text-gray-500">Bu kategoride gösterilecek araç bulunamadı.</p>
+        )}
+      </div>
     </div>
   );
 }
