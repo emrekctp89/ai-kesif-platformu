@@ -1,0 +1,160 @@
+import { createClient } from "@/utils/supabase/server";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Award, MessageSquare, Heart, Image as ImageIcon } from "lucide-react";
+
+// Veritabanındaki RPC fonksiyonunu çağıran fonksiyon
+async function getProfileData(username) {
+  // DEĞİŞİKLİK: Eğer username geçersizse, en baştan 404 sayfasına yönlendir.
+  if (!username || username === "null") {
+    notFound();
+  }
+
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("get_public_profile_data", {
+    p_username: username,
+  });
+
+  if (error || !data) {
+    console.error("Profil verisi çekilirken hata:", error);
+    notFound();
+  }
+  return data;
+}
+
+export async function generateMetadata({ params }) {
+  const profile = await getProfileData(params.username);
+  return {
+    title: `${profile.username}'in Profili | AI Keşif Platformu`,
+    description:
+      profile.bio ||
+      `${profile.username} kullanıcısının AI Keşif Platformu'ndaki katkıları.`,
+  };
+}
+
+export default async function UserProfilePage({ params }) {
+  const profile = await getProfileData(params.username);
+
+  const memberSince = new Date(profile.member_since).toLocaleDateString(
+    "tr-TR",
+    {
+      year: "numeric",
+      month: "long",
+    }
+  );
+
+  return (
+    <div className="container mx-auto max-w-4xl py-12 px-4">
+      {/* Kullanıcı Tanıtım Kartı */}
+      <header className="flex flex-col sm:flex-row items-center gap-8 mb-12">
+        <Avatar className="w-24 h-24 border-4 border-primary/20">
+          <AvatarImage src={profile.avatar_url} />
+          <AvatarFallback className="text-3xl">
+            {profile.username?.substring(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="text-center sm:text-left">
+          <h1 className="text-4xl font-bold">{profile.username}</h1>
+          <p className="text-muted-foreground mt-2">{profile.bio}</p>
+          <div className="flex items-center justify-center sm:justify-start gap-4 mt-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <Award className="w-4 h-4 text-primary" />
+              <span className="font-bold text-foreground">
+                {profile.reputation_points}
+              </span>{" "}
+              itibar puanı
+            </div>
+            <span>•</span>
+            <span>{memberSince} tarihinden beri üye</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Aktivite Akışı */}
+      <div className="space-y-8">
+        {/* Son Yorumlar */}
+        {profile.comments?.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Son Yorumları
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {profile.comments.map((comment, i) => (
+                <div key={i} className="text-sm p-3 bg-muted/50 rounded-md">
+                  <p className="italic">"{comment.content}"</p>
+                  <Link
+                    href={`/tool/${comment.tool_slug}`}
+                    className="text-xs text-muted-foreground hover:text-primary"
+                  >
+                    <span className="font-semibold">{comment.tool_name}</span>{" "}
+                    için yazdı.
+                  </Link>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Son Favoriler */}
+        {profile.favorites?.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="w-5 h-5" />
+                Son Favorileri
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              {profile.favorites.map((fav, i) => (
+                <Link key={i} href={`/tool/${fav.tool_slug}`}>
+                  <Badge
+                    variant="secondary"
+                    className="hover:bg-primary hover:text-primary-foreground"
+                  >
+                    {fav.tool_name}
+                  </Badge>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Son Eserler */}
+        {profile.showcase_items?.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ImageIcon className="w-5 h-5" />
+                Son Eserleri
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {profile.showcase_items.map((item) => (
+                <Link key={item.id} href={`/eserler?eserId=${item.id}`}>
+                  <img
+                    src={item.image_url}
+                    alt={item.title}
+                    className="aspect-square w-full object-cover rounded-md hover:scale-105 transition-transform"
+                  />
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
+          //</Card>
+        )}
+      </div>
+    </div>
+  );
+}
