@@ -7,7 +7,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Trophy, Star, MessageSquare, Plus, Heart, Award } from "lucide-react";
+import {
+  Trophy,
+  Star,
+  MessageSquare,
+  Plus,
+  Heart,
+  Award,
+  Image as ImageIcon,
+} from "lucide-react";
 
 // Hangi olayın hangi ikonu ve rengi kullanacağını belirleyen yardımcı obje
 const eventIcons = {
@@ -34,6 +42,19 @@ const eventIcons = {
   arac_onerisi_onaylandi: {
     icon: <Trophy className="w-4 h-4 text-orange-500" />,
     text: "Araç Öneriniz Onaylandı",
+  },
+  // YENİ EKLENENLER
+  eserin_onaylandi: {
+    icon: <ImageIcon className="w-4 h-4 text-green-500" />,
+    text: "Eseriniz Onaylandı",
+  },
+  eser_oyu_aldi: {
+    icon: <Heart className="w-4 h-4 text-pink-500" />,
+    text: "Eseriniz Oy Aldı",
+  },
+  eser_yorumu_aldi: {
+    icon: <MessageSquare className="w-4 h-4 text-purple-500" />,
+    text: "Eserinize Yorum Yapıldı",
   },
 };
 

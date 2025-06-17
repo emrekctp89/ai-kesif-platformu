@@ -1,11 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    // Bu satır, bazı sunucu ortamlarında dosya boyutu limitinin
-    // daha güvenilir çalışmasını sağlar.
     serverActions: {
-      bodySizeLimit: '4mb', // Limiti 4MB olarak ayarlıyoruz
+      bodySizeLimit: "4mb",
     },
+  },
+  // YENİ: Görüntü optimizasyonu için yapılandırma ekliyoruz
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        // Bu, sizin Supabase projenizin alan adıdır.
+        hostname: "hhopgeupizlfkmvtsvkf.supabase.co",
+        port: "",
+        // Supabase Storage'daki tüm genel yollara izin veriyoruz.
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
   },
 };
 

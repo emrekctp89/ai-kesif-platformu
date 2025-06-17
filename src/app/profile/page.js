@@ -15,72 +15,11 @@ import { AvatarUploader } from "@/components/AvatarUploader";
 import { CollectionManager } from "@/components/CollectionManager";
 import { ShowcaseManager } from "@/components/ShowcaseManager";
 import { ArrowUp, Star } from "lucide-react";
-import { ReputationInfo } from "@/components/ReputationInfo"; // Yeni bileşeni import ediyoruz
-import { ProfileEditor } from "@/components/ProfileEditor"; // Yeni düzenleyici bileşenini import ediyoruz
+import { ReputationInfo } from "@/components/ReputationInfo";
+import { ProfileEditor } from "@/components/ProfileEditor";
 
-// Kullanıcının oyladığı araçları çeken fonksiyon
-async function getUserRatedTools(userId) {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("ratings")
-    .select(`rating, tools (id, name, slug, description)`)
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
-  if (error) {
-    console.error("Puanlanan araçlar çekilirken hata:", error);
-    return [];
-  }
-  return data.map((item) => ({ ...item.tools, user_rating: item.rating }));
-}
+// --- DATA FETCHING FUNCTIONS ---
 
-// Kullanıcının favori araçlarını çeken fonksiyon
-async function getUserFavoriteTools(userId) {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("favorites")
-    .select(`tools (id, name, slug, description, categories (name))`)
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
-  if (error) {
-    console.error("Favori araçlar çekilirken hata:", error);
-    return [];
-  }
-  return data.map((item) => item.tools);
-}
-
-// Kullanıcının yorumlarını çeken fonksiyon
-async function getUserComments(userId) {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("comments")
-    .select(`id, content, created_at, tools ( name, slug )`)
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
-  if (error) {
-    console.error("Kullanıcı yorumları çekilirken hata:", error);
-    return [];
-  }
-  return data;
-}
-
-// YENİ: Kullanıcının son puan olaylarını çeken fonksiyon
-async function getUserReputationEvents(userId) {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("reputation_events")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(5); // Son 5 olayı alıyoruz
-
-  if (error) {
-    console.error("Kullanıcı puan geçmişi çekilirken hata:", error);
-    return [];
-  }
-  return data;
-}
-
-// Kullanıcının tüm profil bilgilerini (username, bio dahil) çeken fonksiyon
 async function getUserProfile(userId) {
   if (!userId) return null;
   const supabase = createClient();
@@ -97,7 +36,22 @@ async function getUserProfile(userId) {
   return data;
 }
 
-// Kullanıcının koleksiyonlarını çeken fonksiyon
+async function getUserReputationEvents(userId) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("reputation_events")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  if (error) {
+    console.error("Kullanıcı puan geçmişi çekilirken hata:", error);
+    return [];
+  }
+  return data;
+}
+
 async function getUserCollections(userId) {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -112,7 +66,18 @@ async function getUserCollections(userId) {
   return data;
 }
 
-// Kullanıcının kendi gönderdiği prompt'ları çeken fonksiyon
+async function getUserShowcaseItems(userId) {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("get_user_showcase_items", {
+    p_user_id: userId,
+  });
+  if (error) {
+    console.error("Kullanıcı eserleri çekilirken hata:", error);
+    return [];
+  }
+  return data;
+}
+
 async function getUserPrompts(userId) {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -127,18 +92,49 @@ async function getUserPrompts(userId) {
   return data;
 }
 
-// Kullanıcının eserlerini çeken fonksiyon
-async function getUserShowcaseItems(userId) {
+async function getUserComments(userId) {
   const supabase = createClient();
-  const { data, error } = await supabase.rpc("get_user_showcase_items", {
-    p_user_id: userId,
-  });
+  const { data, error } = await supabase
+    .from("comments")
+    .select(`id, content, created_at, tools ( name, slug )`)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
   if (error) {
-    console.error("Kullanıcı eserleri çekilirken hata:", error);
+    console.error("Kullanıcı yorumları çekilirken hata:", error);
     return [];
   }
   return data;
 }
+
+async function getUserFavoriteTools(userId) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("favorites")
+    .select(`tools (id, name, slug, description, categories (name))`)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("Favori araçlar çekilirken hata:", error);
+    return [];
+  }
+  return data.map((item) => item.tools);
+}
+
+async function getUserRatedTools(userId) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("ratings")
+    .select(`rating, tools (id, name, slug, description)`)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("Puanlanan araçlar çekilirken hata:", error);
+    return [];
+  }
+  return data.map((item) => ({ ...item.tools, user_rating: item.rating }));
+}
+
+// --- MAIN PAGE COMPONENT ---
 
 export default async function ProfilePage() {
   const supabase = createClient();
@@ -147,25 +143,24 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
   if (!user) return redirect("/login");
 
-  // Tüm verileri paralel olarak çekiyoruz
   const [
-    ratedTools,
-    favoriteTools,
-    userComments,
     profile,
-    collections,
-    userPrompts,
-    showcaseItems,
     reputationEvents,
+    collections,
+    showcaseItems,
+    userPrompts,
+    userComments,
+    favoriteTools,
+    ratedTools,
   ] = await Promise.all([
-    getUserRatedTools(user.id),
-    getUserFavoriteTools(user.id),
-    getUserComments(user.id),
     getUserProfile(user.id),
-    getUserCollections(user.id),
-    getUserPrompts(user.id),
-    getUserShowcaseItems(user.id),
     getUserReputationEvents(user.id),
+    getUserCollections(user.id),
+    getUserShowcaseItems(user.id),
+    getUserPrompts(user.id),
+    getUserComments(user.id),
+    getUserFavoriteTools(user.id),
+    getUserRatedTools(user.id),
   ]);
 
   return (
@@ -175,13 +170,17 @@ export default async function ProfilePage() {
         <p className="text-muted-foreground">Hoş geldin, {user.email}</p>
       </div>
 
-      {/* DEĞİŞİKLİK: Ayrı kartlar yerine tek bir profil yönetim kartı */}
-      <ProfileEditor user={user} profile={profile} />
-
-      <ReputationInfo
-        reputationPoints={profile?.reputation_points || 0}
-        events={reputationEvents}
-      />
+      <div className="grid md:grid-cols-3 gap-8">
+        <div className="md:col-span-2">
+          <ProfileEditor user={user} profile={profile} />
+        </div>
+        <div>
+          <ReputationInfo
+            reputationPoints={profile?.reputation_points || 0}
+            events={reputationEvents}
+          />
+        </div>
+      </div>
 
       <Card>
         <CardHeader>

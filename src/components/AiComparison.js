@@ -11,14 +11,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, Bot } from "lucide-react";
 import toast from "react-hot-toast";
 
 export function AiComparison({ tools }) {
+  // DEĞİŞİKLİK: Yükleme durumunu yönetmek için useTransition kullanıyoruz
   const [isPending, startTransition] = useTransition();
   const [analysisResult, setAnalysisResult] = React.useState(null);
 
   const handleCompareClick = () => {
+    // Yükleme durumunu başlat
     startTransition(async () => {
       const result = await getAiComparison(tools);
       if (result.error) {
@@ -33,14 +35,20 @@ export function AiComparison({ tools }) {
   return (
     <div className="space-y-8">
       <div className="text-center">
+        {/* Buton artık kendi yükleme durumunu yönetiyor */}
         <Button
           onClick={handleCompareClick}
           disabled={isPending || tools.length < 2}
           size="lg"
         >
-          {isPending
-            ? "Analiz Ediliyor..."
-            : "Bu Araçları Yapay Zekaya Karşılaştır"}
+          {isPending ? (
+            <>
+              <Bot className="mr-2 h-4 w-4 animate-spin" />
+              Analiz Ediliyor...
+            </>
+          ) : (
+            "Bu Araçları Yapay Zekaya Karşılaştır"
+          )}
         </Button>
         {tools.length < 2 && (
           <p className="text-sm text-muted-foreground mt-2">

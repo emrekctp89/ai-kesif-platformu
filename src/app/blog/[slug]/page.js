@@ -11,11 +11,12 @@ async function getPost(slug) {
     .from("posts")
     .select("*")
     .eq("slug", slug)
-    .eq("is_published", true) // Sadece yayınlanmış yazıları getir
+    // DEĞİŞİKLİK: 'is_published' yerine yeni 'status' sütununa göre filtreliyoruz
+    .eq("status", "Yayınlandı")
     .single();
 
   if (error || !data) {
-    notFound(); // Yazı bulunamazsa 404 sayfasına yönlendir
+    notFound(); // Yazı bulunamazsa veya yayınlanmamışsa 404
   }
   return data;
 }
@@ -67,7 +68,6 @@ export default async function PostPage({ params }) {
       <div className="prose prose-lg dark:prose-invert max-w-none">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
-          // Markdown elementlerini kendi stillerimizle güzelleştiriyoruz
           components={{
             a: ({ node, ...props }) => (
               <a className="text-primary hover:underline" {...props} />

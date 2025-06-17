@@ -52,6 +52,7 @@ const platformOptions = [
   "Linux",
   "Chrome Uzantısı",
 ];
+const tierOptions = ["Normal", "Pro", "Sponsorlu"]; // YENİ: Seviye seçenekleri
 
 // Çoklu Etiket Seçim Bileşeni (Değişiklik yok)
 function MultiSelectTags({ allTags, initialSelectedTags }) {
@@ -264,6 +265,26 @@ export function EditToolDialog({ tool, categories, allTags }) {
               initialSelectedTags={tool.tool_tags.map((tt) => tt.tags)}
             />
           </div>
+          {/* YENİ: Araç Seviyesi */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="tier" className="text-right">
+              Seviye
+            </Label>
+            <select
+              name="tier"
+              id="tier"
+              defaultValue={tool.tier || "Normal"}
+              required
+              className="col-span-3 mt-1 block w-full pl-3 pr-10 py-2.5 text-base border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {tierOptions.map((tier) => (
+                <option key={tier} value={tier}>
+                  {tier}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">

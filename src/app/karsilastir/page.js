@@ -90,7 +90,9 @@ export default async function ComparePage({ searchParams }) {
       {/* Karşılaştırma Tablosu artık en altta */}
       {comparedTools.length > 0 && (
         <div className="overflow-x-auto">
-          <h3 className="text-2xl font-bold text-center mb-6">Detaylar</h3>
+          <h3 className="text-2xl font-bold text-center mb-6">
+            Detaylı Karşılaştırma
+          </h3>
           <div
             className="grid gap-8"
             style={{

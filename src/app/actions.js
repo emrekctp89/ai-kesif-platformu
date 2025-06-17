@@ -118,39 +118,12 @@ export async function approveTool(formData) {
   const supabaseAdmin = createAdminClient();
   const toolId = formData.get("toolId");
 
-  // Önce aracı öneren kişinin kim olduğunu buluyoruz
-  const { data: toolData } = await supabaseAdmin
-    .from("tools")
-    .select("user_id, suggester_email")
-    .eq("id", toolId)
-    .single();
-  if (!toolData) return { error: "Araç bulunamadı." };
-
   const { error } = await supabaseAdmin
     .from("tools")
     .update({ is_approved: true })
     .eq("id", toolId);
+
   if (error) return { error: "Araç onaylanırken bir hata oluştu." };
-
-  // Öneren kişinin ID'sini veya e-postasından profilini bularak puan veriyoruz
-  let targetUserId = toolData.user_id;
-  if (!targetUserId && toolData.suggester_email) {
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .eq("email", toolData.suggester_email)
-      .single();
-    targetUserId = profile?.id;
-  }
-
-  if (targetUserId) {
-    await supabaseAdmin.rpc("award_reputation", {
-      p_user_id: targetUserId,
-      p_event_type: "arac_onerisi_onaylandi",
-      p_points: 25,
-      p_related_id: toolId,
-    });
-  }
 
   revalidatePath("/admin");
   revalidatePath("/");
@@ -462,7 +435,7 @@ export async function toggleFeatured(formData) {
 }
 
 // -- YORUM EKLEME --
-// Kullanıcı yeni bir yorum yaptığında çalışır (+2 Puan)
+// Bu fonksiyon artık sadece yorumu ekler. Puanlama, trigger tarafından yapılır.
 export async function addComment(formData) {
   "use server";
   const supabase = createClient();
@@ -477,21 +450,11 @@ export async function addComment(formData) {
 
   if (!content || content.trim() === "") return { error: "Yorum boş olamaz." };
 
-  const { data: newComment, error } = await supabase
+  const { error } = await supabase
     .from("comments")
-    .insert({ content, tool_id: toolId, user_id: user.id })
-    .select("id")
-    .single();
+    .insert({ content, tool_id: toolId, user_id: user.id });
 
   if (error) return { error: "Yorumunuz eklenirken bir hata oluştu." };
-
-  // DEĞİŞİKLİK: Yorum yapan kullanıcıya 2 puan veriyoruz.
-  await supabase.rpc("award_reputation", {
-    p_user_id: user.id,
-    p_event_type: "yeni_yorum_yapti",
-    p_points: 2,
-    p_related_id: newComment.id,
-  });
 
   revalidatePath(`/tool/${formData.get("toolSlug")}`);
   return { success: "Yorumunuz başarıyla eklendi." };
@@ -553,10 +516,9 @@ export async function updateTool(formData) {
   const link = formData.get("link");
   const description = formData.get("description");
   const category_id = formData.get("category_id");
-  // YENİ: Yeni alanları formdan alıyoruz
   const pricing_model = formData.get("pricing_model");
-  // Platformlar bir dizi olarak gelebilir, getAll ile alıyoruz
   const platforms = formData.getAll("platforms");
+  const tier = formData.get("tier"); // YENİ: Seviye bilgisini formdan alıyoruz
 
   if (!toolId || !name || !link || !category_id) {
     return { error: "Tüm zorunlu alanlar doldurulmalıdır." };
@@ -568,16 +530,11 @@ export async function updateTool(formData) {
     link,
     description,
     category_id,
-    pricing_model: pricing_model, // YENİ
-    platforms: platforms, // YENİ
+    pricing_model: pricing_model || null,
+    platforms,
+    tier, // YENİ: Güncellenecek veriye ekliyoruz
   };
 
-  // Boş gelen pricing_model'i null olarak ayarlayarak veritabanı hatasını önlüyoruz
-  if (!pricing_model) {
-    updatedData.pricing_model = null;
-  }
-
-  // Veritabanındaki ilgili aracı güncelliyoruz
   const { error } = await supabase
     .from("tools")
     .update(updatedData)
@@ -876,6 +833,7 @@ export async function deleteTag(formData) {
 export async function assignTagsToTool(formData) {
   "use server";
 
+  // 1. Önce normal istemci ile işlemi kimin tetiklediğini kontrol et
   const supabase = createClient();
   const {
     data: { user },
@@ -885,44 +843,47 @@ export async function assignTagsToTool(formData) {
     return { error: "Yetkiniz yok." };
   }
 
+  // 2. Güvenlik kontrolü geçildikten sonra, YAZMA/SİLME İŞLEMLERİ İÇİN ADMIN CLIENT KULLAN
+  const supabaseAdmin = createAdminClient();
   const toolId = formData.get("toolId");
-  // Formdan gelen tüm tagId'leri bir dizi olarak alıyoruz
   const tagIds = formData.getAll("tagId").map((id) => parseInt(id, 10));
 
   if (!toolId) {
     return { error: "Araç ID'si bulunamadı." };
   }
 
-  // 1. Önce bu araca ait tüm mevcut etiketleri siliyoruz
-  const { error: deleteError } = await supabase
+  // 1. Önce bu araca ait tüm mevcut etiketleri SÜPER ADMIN YETKİSİYLE siliyoruz
+  const { error: deleteError } = await supabaseAdmin
     .from("tool_tags")
     .delete()
     .eq("tool_id", toolId);
 
   if (deleteError) {
     console.error("Eski etiketleri silme hatası:", deleteError);
-    return { error: "Etiketler güncellenirken bir hata oluştu." };
+    return { error: "Etiketler güncellenirken bir veritabanı hatası oluştu." };
   }
 
-  // 2. Eğer formdan seçilen yeni etiketler varsa, onları ekliyoruz
+  // 2. Eğer formdan seçilen yeni etiketler varsa, onları SÜPER ADMIN YETKİSİYLE ekliyoruz
   if (tagIds.length > 0) {
     const newLinks = tagIds.map((tagId) => ({
       tool_id: toolId,
       tag_id: tagId,
     }));
 
-    const { error: insertError } = await supabase
+    const { error: insertError } = await supabaseAdmin
       .from("tool_tags")
       .insert(newLinks);
 
     if (insertError) {
       console.error("Yeni etiketleri ekleme hatası:", insertError);
-      return { error: "Etiketler güncellenirken bir hata oluştu." };
+      return {
+        error: "Etiketler güncellenirken bir veritabanı hatası oluştu.",
+      };
     }
   }
 
   revalidatePath("/admin");
-  return { success: "Aracın etiketleri güncellendi." };
+  return { success: "Aracın etiketleri başarıyla güncellendi." };
 }
 
 // Önce, AI modeline göndermek için tüm araçları çeken bir yardımcı fonksiyon
@@ -1269,6 +1230,8 @@ export async function createPost(formData) {
 }
 
 // Mevcut bir blog yazısını güncelleyen fonksiyon
+// src/app/actions.js dosyasındaki updatePost fonksiyonunu bu kodla değiştirin.
+
 export async function updatePost(formData) {
   "use server";
   const supabase = createClient();
@@ -1286,22 +1249,31 @@ export async function updatePost(formData) {
   const content = formData.get("content");
   const description = formData.get("description");
   const featured_image_url = formData.get("featured_image_url");
+  const status = formData.get("status");
+  const category_id = formData.get("category_id");
 
-  // Artık status veya category_id'yi burada güncellemiyoruz
   const postData = {
     title,
     slug,
     content,
     description,
     featured_image_url,
+    status,
+    category_id: category_id ? parseInt(category_id, 10) : null,
     updated_at: new Date().toISOString(),
   };
 
+  if (status === "Yayınlandı" && !formData.get("was_published_before")) {
+    postData.published_at = new Date().toISOString();
+  }
+
   const { error } = await supabase.from("posts").update(postData).eq("id", id);
 
+  // DEĞİŞİKLİK: Hata kontrolünü daha detaylı hale getiriyoruz.
   if (error) {
     console.error("Yazı güncelleme hatası:", error);
-    return { error: "Yazı güncellenirken bir hata oluştu." };
+    // DETAYLI HATA MESAJINI İSTEMCİYE GÖNDER
+    return { error: `Veritabanı Hatası: ${error.message}` };
   }
 
   revalidatePath("/admin");
@@ -1565,6 +1537,8 @@ export async function updateCollectionTools(formData) {
 // Yeni bir prompt gönderildiğinde +10 puan kazandıran güncellenmiş fonksiyon
 // -- PROMPT GÖNDERME --
 // Kullanıcı yeni bir prompt paylaştığında çalışır (+10 Puan)
+// -- PROMPT GÖNDERME --
+// Bu fonksiyon artık sadece prompt'u ve ilk oyunu ekler. Puanlama, trigger tarafından yapılır.
 export async function submitPrompt(formData) {
   "use server";
   const supabase = createClient();
@@ -1574,15 +1548,13 @@ export async function submitPrompt(formData) {
 
   if (!user) return { error: "Prompt göndermek için giriş yapmalısınız." };
 
-  // ... (form verilerini alma kısmı aynı)
   const title = formData.get("title");
   const prompt_text = formData.get("prompt_text");
   const notes = formData.get("notes");
   const tool_id = formData.get("toolId");
 
-  if (!title || !prompt_text || !tool_id) {
+  if (!title || !prompt_text || !tool_id)
     return { error: "Başlık, prompt ve araç seçimi zorunludur." };
-  }
 
   const { data: newPrompt, error: insertError } = await supabase
     .from("prompts")
@@ -1603,52 +1575,40 @@ export async function submitPrompt(formData) {
     .from("prompt_votes")
     .insert({ prompt_id: newPrompt.id, user_id: user.id });
 
-  // DEĞİŞİKLİK: Puan verme işlemini RPC ile yapıyoruz
-  await supabase.rpc("award_reputation", {
-    p_user_id: user.id,
-    p_event_type: "yeni_prompt_gonderdi",
-    p_points: 10,
-    p_related_id: newPrompt.id,
-  });
-
   revalidatePath(`/tool/${formData.get("toolSlug")}`);
-  return { success: "Prompt başarıyla gönderildi! (+10 Puan)" };
+  return { success: "Prompt başarıyla gönderildi!" };
 }
 
 // Bir prompt oylandığında, prompt'un sahibine +5 puan kazandıran güncellenmiş fonksiyon
 export async function togglePromptVote(formData) {
   "use server";
-
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return { error: "Oylama yapmak için giriş yapmalısınız." };
-  }
+  if (!user) return { error: "Oylama yapmak için giriş yapmalısınız." };
 
   const promptId = formData.get("promptId");
-  if (!promptId) {
-    return { error: "Prompt ID'si bulunamadı." };
+  const { data: existingVote } = await supabase
+    .from("prompt_votes")
+    .select("prompt_id")
+    .eq("user_id", user.id)
+    .eq("prompt_id", promptId)
+    .maybeSingle();
+
+  if (existingVote) {
+    await supabase
+      .from("prompt_votes")
+      .delete()
+      .match({ user_id: user.id, prompt_id: promptId });
+  } else {
+    await supabase
+      .from("prompt_votes")
+      .insert({ user_id: user.id, prompt_id: promptId });
   }
 
-  // DEĞİŞİKLİK: Tüm karmaşık mantık yerine, artık sadece
-  // tek bir akıllı veritabanı fonksiyonunu (RPC) çağırıyoruz.
-  const { error } = await supabase.rpc("handle_prompt_vote", {
-    p_prompt_id: promptId,
-    p_voter_id: user.id,
-  });
-
-  if (error) {
-    console.error("handle_prompt_vote hatası:", error);
-    return { error: "Oylama sırasında bir hata oluştu." };
-  }
-
-  // Gerekli sayfaların önbelleğini temizliyoruz
   revalidatePath(`/tool/${formData.get("toolSlug")}`);
-  revalidatePath("/profile");
-
   return { success: true };
 }
 
@@ -1824,41 +1784,22 @@ export async function deleteShowcaseItem(formData) {
   return { success: "Eser başarıyla silindi." };
 }
 
+// -- ESER ONAYLAMA --
+// Bu fonksiyon artık sadece onay durumunu günceller. Puanlama ve bildirim, trigger tarafından yapılır.
 export async function approveShowcaseItem(formData) {
   "use server";
-
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Sadece admin bu işlemi yapabilir
-  if (!user || user.email !== process.env.ADMIN_EMAIL) {
-    return { error: "Yetkiniz yok." };
-  }
-
-  const itemId = formData.get("itemId");
-  if (!itemId) {
-    return { error: "Eser ID'si bulunamadı." };
-  }
-
-  // İşlemi, tüm güvenlik kurallarını bypass eden "Süper Admin" istemcisiyle yapıyoruz.
   const supabaseAdmin = createAdminClient();
+  const itemId = formData.get("itemId");
 
   const { error } = await supabaseAdmin
     .from("showcase_items")
     .update({ is_approved: true })
     .eq("id", itemId);
 
-  if (error) {
-    console.error("Eser onaylama hatası:", error);
-    return { error: "Eser onaylanırken bir hata oluştu." };
-  }
+  if (error) return { error: "Eser onaylanırken bir hata oluştu." };
 
-  // İlgili tüm sayfaların önbelleğini temizle
   revalidatePath("/admin");
   revalidatePath("/eserler");
-
   return { success: "Eser başarıyla onaylandı ve yayınlandı." };
 }
 
@@ -2403,4 +2344,41 @@ export async function sendNewsletter() {
   return {
     success: `${recipients.length} kullanıcıya bülten başarıyla gönderildi.`,
   };
+}
+
+export async function uploadBlogImage(formData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: "Yetkiniz yok." };
+  }
+
+  const file = formData.get("image");
+  if (!file || file.size === 0) {
+    return { error: "Lütfen bir dosya seçin." };
+  }
+
+  // Dosya yolunu oluşturuyoruz (kullanıcı/zaman_damgası.uzantı)
+  const fileExt = file.name.split(".").pop();
+  const filePath = `public/${user.id}/${Date.now()}.${fileExt}`;
+
+  // Dosyayı 'blog-images' bucket'ına yüklüyoruz
+  const { error: uploadError } = await supabase.storage
+    .from("blog-images")
+    .upload(filePath, file);
+
+  if (uploadError) {
+    console.error("Blog görseli yükleme hatası:", uploadError);
+    return { error: "Görsel yüklenirken bir hata oluştu." };
+  }
+
+  // Yüklenen dosyanın genel URL'ini alıp geri döndürüyoruz
+  const { data } = supabase.storage.from("blog-images").getPublicUrl(filePath);
+
+  return { success: true, url: data.publicUrl };
 }

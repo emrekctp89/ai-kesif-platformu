@@ -64,19 +64,14 @@ export function BlogManager({ posts }) {
   const formRef = React.useRef(null);
 
   const handleCreatePost = async (formData) => {
-    // Bu fonksiyon doğrudan formun action'ına bağlı olduğu için
-    // toast bildirimini burada yönetmek yerine, redirect sonrası
-    // düzenleme sayfasında bir mesaj gösterebiliriz.
     const result = await createPost(formData);
     if (result?.error) {
       toast.error(result.error);
     }
-    // Başarılı olursa, `createPost` zaten yönlendirme yapıyor.
   };
 
   return (
     <div className="space-y-6">
-      {/* Yeni Yazı Oluşturma Formu */}
       <div>
         <h3 className="text-lg font-medium mb-2">Yeni Yazı Oluştur</h3>
         <form
@@ -99,29 +94,32 @@ export function BlogManager({ posts }) {
 
       <hr className="border-border" />
 
-      {/* Mevcut Yazılar Listesi */}
       <div>
         <h3 className="text-lg font-medium mb-2">Mevcut Yazılar</h3>
         <div className="space-y-2">
-          {posts.map((post) => (
-            <div
-              key={post.id}
-              className="p-3 rounded-lg border flex justify-between items-center"
-            >
-              <div>
-                <p className="font-medium">{post.title}</p>
-                <Badge variant={post.is_published ? "default" : "secondary"}>
-                  {post.is_published ? "Yayınlandı" : "Taslak"}
-                </Badge>
+          {posts.map((post) => {
+            // DEĞİŞİKLİK: 'is_published' yerine 'status' kullanıyoruz
+            const isPublished = post.status === "Yayınlandı";
+            return (
+              <div
+                key={post.id}
+                className="p-3 rounded-lg border flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-medium">{post.title}</p>
+                  <Badge variant={isPublished ? "default" : "secondary"}>
+                    {post.status}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/admin/blog/${post.id}/edit`}>Düzenle</Link>
+                  </Button>
+                  <DeletePostButton post={post} />
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/admin/blog/${post.id}/edit`}>Düzenle</Link>
-                </Button>
-                <DeletePostButton post={post} />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

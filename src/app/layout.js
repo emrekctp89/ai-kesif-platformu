@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { TopLoader } from "@/components/TopLoader";
 // Yeni Analytics bileşenini import ediyoruz
 import { Analytics } from "@vercel/analytics/react";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
 const onest = Onest({
   subsets: ["latin"],
@@ -28,6 +29,8 @@ export default function RootLayout({ children }) {
           enableSystem
           disableTransitionOnChange
         >
+          {/* Google Analytics'i ThemeProvider'ın hemen içine yerleştiriyoruz */}
+          <GoogleAnalytics />
           <TopLoader />
           <Toaster
             position="top-center"

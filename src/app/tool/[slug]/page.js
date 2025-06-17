@@ -1,13 +1,9 @@
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-
-// shadcn/ui bileşenleri
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-// Kendi oluşturduğumuz bileşenler
 import StarRating from "@/components/StarRating";
 import FavoriteButton from "@/components/FavoriteButton";
 import CommentSection from "@/components/CommentSection";
@@ -15,9 +11,6 @@ import { ShareButtons } from "@/components/ShareButtons";
 import { SimilarTools } from "@/components/SimilarTools";
 import { ScrollHint } from "@/components/ScrollHint";
 import PromptSection from "@/components/PromptSection";
-//import { CommentsUI as PromptSection } from "@/components/PromptSection";
-
-// İkonlar
 import {
   Globe,
   Apple,
@@ -26,7 +19,10 @@ import {
   Pen,
   ShoppingCart,
   Star,
+  Crown,
+  Gem,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const platformIcons = {
   Web: <Globe className="w-5 h-5" />,
@@ -36,6 +32,18 @@ const platformIcons = {
   macOS: <Monitor className="w-5 h-5" />,
   Linux: <Pen className="w-5 h-5" />,
   "Chrome Uzantısı": <ShoppingCart className="w-5 h-5" />,
+};
+
+// Seviyelere göre özel stiller ve ikonlar
+const tierStyles = {
+  Pro: {
+    badge: "bg-purple-600 text-white hover:bg-purple-700",
+    icon: <Crown className="w-4 h-4 mr-1.5" />,
+  },
+  Sponsorlu: {
+    badge: "bg-amber-500 text-white hover:bg-amber-600",
+    icon: <Gem className="w-4 h-4 mr-1.5" />,
+  },
 };
 
 async function getToolData(slug) {
@@ -92,11 +100,20 @@ export default async function ToolDetailPage({ params }) {
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/tool/${tool.slug}`;
   const shareTitle = `Bu harika AI aracını keşfet: ${tool.name}`;
 
+  // DÜZELTME: Eksik olan değişkeni burada tanımlıyoruz.
+  const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
+
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4 space-y-16">
       {/* 1. Bölüm: Ana Araç Detayları */}
       <section className="space-y-6">
         <div className="flex flex-wrap items-center gap-4">
+          {isPremium && (
+            <Badge className={cn("text-sm", tierStyles[tool.tier]?.badge)}>
+              {tierStyles[tool.tier]?.icon}
+              {tool.tier}
+            </Badge>
+          )}
           <span className="bg-secondary text-secondary-foreground text-sm font-semibold px-3 py-1 rounded-full w-fit">
             {tool.category_name}
           </span>

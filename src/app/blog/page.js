@@ -14,8 +14,9 @@ async function getPublishedPosts() {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("posts")
-    .select("title, slug, description, featured_image_url, published_at") // `description` sütununu eklememiz gerekecek
-    .eq("is_published", true)
+    .select("title, slug, description, featured_image_url, published_at")
+    // DEĞİŞİKLİK: 'is_published' yerine yeni 'status' sütununa göre filtreliyoruz
+    .eq("status", "Yayınlandı")
     .order("published_at", { ascending: false });
 
   if (error) {
@@ -24,9 +25,6 @@ async function getPublishedPosts() {
   }
   return data;
 }
-
-// `posts` tablosuna bir 'description' sütunu eklemeyi unutmuşuz.
-// Bunu bir sonraki adımda SQL ile ekleyeceğiz.
 
 export const metadata = {
   title: "Blog | AI Keşif Platformu",
@@ -51,7 +49,7 @@ export default async function BlogPage() {
 
       {posts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {posts.map((post, index) => (
+          {posts.map((post) => (
             <Link key={post.slug} href={`/blog/${post.slug}`} className="group">
               <Card className="h-full overflow-hidden transition-all hover:border-primary">
                 {post.featured_image_url && (
@@ -77,7 +75,7 @@ export default async function BlogPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground line-clamp-3">
-                    {post.description || "Açıklama bulunmuyor..."}
+                    {post.description || ""}
                   </p>
                 </CardContent>
               </Card>

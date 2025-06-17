@@ -27,6 +27,7 @@ import {
   addShowcaseComment,
   toggleShowcaseVote,
 } from "@/app/actions";
+import Image from "next/image"; // Next.js'in Image bileşenini import ediyoruz
 
 // Oylama Butonu
 function VoteButton({ item, isInitiallyVoted, user, onVote }) {
@@ -169,7 +170,7 @@ export function ShowcaseDetailModal({
 
       <div className="relative bg-muted w-2/3 flex items-center justify-center">
         {item.content_type === "Görsel" ? (
-          <img
+          <Image
             src={item.image_url}
             alt={item.title}
             className="max-w-full max-h-full object-contain"

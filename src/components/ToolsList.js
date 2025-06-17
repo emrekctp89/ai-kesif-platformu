@@ -12,7 +12,10 @@ import {
   Pen,
   ShoppingCart,
   Star,
+  Crown,
+  Gem,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -24,6 +27,20 @@ const platformIcons = {
   macOS: <Monitor className="w-4 h-4" />,
   Linux: <Pen className="w-4 h-4" />,
   "Chrome Uzantısı": <ShoppingCart className="w-4 h-4" />,
+};
+
+// Seviyelere göre özel stiller ve ikonlar
+const tierStyles = {
+  Pro: {
+    badge: "bg-purple-600 text-white hover:bg-purple-700 border-purple-700",
+    card: "border-purple-500/50 shadow-lg shadow-purple-500/10",
+    icon: <Crown className="w-4 h-4 mr-1.5" />,
+  },
+  Sponsorlu: {
+    badge: "bg-amber-500 text-white hover:bg-amber-600 border-amber-600",
+    card: "border-amber-500/50 shadow-lg shadow-amber-500/10",
+    icon: <Gem className="w-4 h-4 mr-1.5" />,
+  },
 };
 
 async function getToolsData(searchParams, user, favoriteToolIds) {
@@ -40,6 +57,7 @@ async function getToolsData(searchParams, user, favoriteToolIds) {
   const selectedPlatforms = searchParams["platforms"]
     ? searchParams["platforms"].split(",")
     : [];
+  const selectedTier = searchParams["tier"]; // YENİ: Seviye filtresini alıyoruz
 
   const from = (currentPage - 1) * ITEMS_PER_PAGE;
   const to = from + ITEMS_PER_PAGE - 1;
@@ -60,11 +78,13 @@ async function getToolsData(searchParams, user, favoriteToolIds) {
     query = query.contains("tags", tagsToFilter);
   }
 
-  if (pricingModel) {
-    query = query.eq("pricing_model", pricingModel);
-  }
-  if (selectedPlatforms.length > 0) {
+  if (pricingModel) query = query.eq("pricing_model", pricingModel);
+  if (selectedPlatforms.length > 0)
     query = query.contains("platforms", selectedPlatforms);
+
+  // YENİ: Seviyeye göre filtrelemeyi sorguya ekliyoruz
+  if (selectedTier) {
+    query = query.eq("tier", selectedTier);
   }
 
   switch (sortBy) {
@@ -111,10 +131,15 @@ export async function ToolsList({ searchParams, user, favoriteToolIds }) {
         {tools.length > 0 ? (
           tools.map((tool) => {
             const isFavorited = favoriteToolIds.has(tool.id);
+            const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
+
             return (
               <div
                 key={tool.id}
-                className="bg-card border rounded-xl p-6 shadow-lg flex flex-col relative transition hover:shadow-xl hover:-translate-y-1"
+                className={cn(
+                  "bg-card border rounded-xl p-6 shadow-lg flex flex-col relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
+                  isPremium && tierStyles[tool.tier]?.card
+                )}
               >
                 {user && (
                   <div className="absolute top-4 right-4 z-10">
@@ -126,13 +151,22 @@ export async function ToolsList({ searchParams, user, favoriteToolIds }) {
                   </div>
                 )}
                 <div className="flex-grow">
+                  {isPremium && (
+                    <Badge
+                      className={cn(
+                        "mb-2 flex w-fit items-center",
+                        tierStyles[tool.tier]?.badge
+                      )}
+                    >
+                      {tierStyles[tool.tier]?.icon}
+                      {tool.tier}
+                    </Badge>
+                  )}
                   <Link href={`/tool/${tool.slug}`} className="group">
-                    <h2 className="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors pr-8">
+                    <h2 className="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">
                       {tool.name}
                     </h2>
                   </Link>
-
-                  {/* DEĞİŞİKLİK: Kategori rozeti artık tıklanabilir */}
                   <Link
                     href={`/?category=${tool.category_slug}`}
                     className="inline-block mt-2"
@@ -141,8 +175,6 @@ export async function ToolsList({ searchParams, user, favoriteToolIds }) {
                       {tool.category_name}
                     </span>
                   </Link>
-
-                  {/* DEĞİŞİKLİK: Etiket rozetleri artık tıklanabilir */}
                   {tool.tags && tool.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 my-3">
                       {tool.tags.map((tag) => (

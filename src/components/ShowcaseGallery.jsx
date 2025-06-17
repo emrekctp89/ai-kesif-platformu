@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image"; // Next.js'in Image bileşenini import ediyoruz
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -52,22 +53,23 @@ export function ShowcaseGallery({ items, user }) {
             userProfile.email?.substring(0, 2).toUpperCase() || "??";
 
           return (
-            // DEĞİŞİKLİK: Dıştaki link kaldırıldı. Kart artık bir div.
             <div key={item.id} className="masonry-grid-item">
-              <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-primary">
-                <CardContent className="p-0">
-                  {/* Link artık sadece görseli ve metin önizlemesini kapsıyor */}
-                  <Link
-                    href={`${pathname}?eserId=${item.id}`}
-                    scroll={false}
-                    className="block group"
-                  >
+              <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-primary group">
+                <Link
+                  href={`${pathname}?eserId=${item.id}`}
+                  scroll={false}
+                  className="block"
+                >
+                  <CardContent className="p-0">
                     {item.content_type === "Görsel" ? (
-                      <div className="w-full overflow-hidden bg-muted">
-                        <img
+                      <div className="w-full overflow-hidden bg-muted aspect-square relative">
+                        {/* DEĞİŞİKLİK: <img> yerine <Image> kullanıyoruz */}
+                        <Image
                           src={item.image_url}
                           alt={item.title}
-                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover transition-transform group-hover:scale-105"
                         />
                       </div>
                     ) : (
@@ -78,42 +80,41 @@ export function ShowcaseGallery({ items, user }) {
                         </p>
                       </div>
                     )}
-                  </Link>
-                  <div className="p-4">
-                    <Link href={`${pathname}?eserId=${item.id}`} scroll={false}>
-                      <h3 className="font-semibold text-card-foreground line-clamp-1 hover:text-primary">
+                    <div className="p-4">
+                      <h3 className="font-semibold text-card-foreground line-clamp-1">
                         {item.title}
                       </h3>
-                    </Link>
-                    <div className="flex items-center gap-2 mt-2">
-                      {/* DEĞİŞİKLİK: Kullanıcı linki artık ayrı ve güvenli */}
-                      {userProfile.username ? (
-                        <Link
-                          href={`/u/${userProfile.username}`}
-                          className="group/user flex items-center gap-2"
-                        >
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={userProfile.avatar_url} />
-                            <AvatarFallback>{fallback}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-xs text-muted-foreground group-hover/user:text-primary">
-                            {userProfile.username}
-                          </span>
-                        </Link>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={userProfile.avatar_url} />
-                            <AvatarFallback>{fallback}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-xs text-muted-foreground">
-                            {userProfile.email}
-                          </span>
-                        </div>
-                      )}
                     </div>
+                  </CardContent>
+                </Link>
+                <div className="p-4 pt-0">
+                  <div className="flex items-center gap-2 mt-2">
+                    {userProfile.username ? (
+                      <Link
+                        href={`/u/${userProfile.username}`}
+                        className="group/user flex items-center gap-2"
+                      >
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={userProfile.avatar_url} />
+                          <AvatarFallback>{fallback}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs text-muted-foreground group-hover/user:text-primary">
+                          {userProfile.username}
+                        </span>
+                      </Link>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={userProfile.avatar_url} />
+                          <AvatarFallback>{fallback}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs text-muted-foreground">
+                          {userProfile.email}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </CardContent>
+                </div>
               </Card>
             </div>
           );
