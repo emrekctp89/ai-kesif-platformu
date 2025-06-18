@@ -11,10 +11,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AdminMenu } from "./AdminMenu";
-// Düzeltme: Eksik olan bileşen ve fonksiyonları import ediyoruz
 import { NotificationCenter } from "./NotificationCenter";
 import { getNotifications } from "@/app/actions";
-import { Users } from "lucide-react";
+import { Sparkles, Crown, Users } from "lucide-react"; // Crown ikonunu import ediyoruz
 
 export default async function Header() {
   const supabase = createClient();
@@ -23,21 +22,29 @@ export default async function Header() {
   } = await supabase.auth.getUser();
   const isAdmin = user && user.email === process.env.ADMIN_EMAIL;
 
-  // Header yüklendiğinde, bildirimleri sunucuda çekiyoruz.
+  // Kullanıcının profilinden abonelik durumunu çekiyoruz
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("stripe_price_id")
+        .eq("id", user.id)
+        .single()
+    : { data: null };
+
+  const isProUser = !!profile?.stripe_price_id;
+
   const { notifications, unreadCount } = await getNotifications();
 
   return (
     <header className="bg-card shadow-sm border-b border-border sticky top-0 z-50">
       <div className="container mx-auto flex items-center p-4 gap-4">
         {isAdmin && <AdminMenu />}
-
         <Link
           href="/"
           className="text-xl font-bold tracking-tight text-foreground"
         >
           AI Keşif
         </Link>
-
         <div className="ml-auto">
           <TooltipProvider delayDuration={100}>
             <nav className="flex items-center gap-1 md:gap-2 flex-wrap justify-end">
@@ -69,6 +76,7 @@ export default async function Header() {
                   Karşılaştır
                 </Link>
               </Button>
+
               {user ? (
                 <Button
                   asChild
@@ -100,8 +108,29 @@ export default async function Header() {
                 <Link href="/submit">Araç Öner</Link>
               </Button>
 
+              {/* YENİ: "Pro'ya Yükselt" veya "Pro Üye" Butonu */}
+              {user &&
+                !isAdmin &&
+                (isProUser ? (
+                  <Button
+                    variant="outline"
+                    className="border-purple-500 text-purple-500 pointer-events-none"
+                  >
+                    <Crown className="w-4 h-4 mr-2" /> Pro Üye
+                  </Button>
+                ) : (
+                  <Button
+                    asChild
+                    className="font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
+                  >
+                    <Link href="/uyelik">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Pro'ya Yükselt
+                    </Link>
+                  </Button>
+                ))}
+
               <div className="flex items-center">
-                {/* DÜZELTME: Bildirim Merkezi'ni buraya geri ekliyoruz */}
                 <NotificationCenter
                   initialNotifications={notifications}
                   unreadCount={unreadCount}

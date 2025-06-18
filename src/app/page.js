@@ -1,45 +1,14 @@
 import { createClient } from "@/utils/supabase/server";
-import { Suspense } from "react";
-import { CategorySelect } from "@/components/CategorySelect";
-import { SortSelect } from "@/components/SortSelect";
+import { HomepageClient } from "@/components/HomepageClient"; // Yeni istemci bileşenini import ediyoruz
+// Keşif bölümlerini burada, sunucuda import ediyoruz
 import { FeaturedTools } from "@/components/FeaturedTools";
 import { TrendingTools } from "@/components/TrendingTools";
 import { ToolOfTheDay } from "@/components/ToolOfTheDay";
-import { ToolsList } from "@/components/ToolsList";
-import { ToolsGridSkeleton } from "@/components/ToolsGridSkeleton";
-import { TagFilter } from "@/components/TagFilter";
-import { AdvancedFilters } from "@/components/AdvancedFilters";
-import { SearchInput } from "@/components/SearchInput";
-import { Button } from "@/components/ui/button";
-import { TierFilter } from "@/components/TierFilter"; // Yeni filtre bileşenini import ediyoruz
 
-async function getCategories() {
+// Bu fonksiyon, sayfa için gerekli olan tüm verileri sunucuda tek seferde çeker.
+async function getPageData(searchParams) {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("categories")
-    .select("name, slug");
-  if (error) {
-    console.error("Kategori çekme hatası:", error);
-    return [];
-  }
-  return data;
-}
 
-async function getAllTags() {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("tags")
-    .select("*")
-    .order("name", { ascending: true });
-  if (error) {
-    console.error("Tüm etiketleri çekerken hata:", error);
-    return [];
-  }
-  return data;
-}
-
-export default async function HomePage({ searchParams }) {
-  const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -48,49 +17,47 @@ export default async function HomePage({ searchParams }) {
     : { data: [] };
   const favoriteToolIds = new Set(favorites?.map((f) => f.tool_id) || []);
 
-  const [categories, allTags] = await Promise.all([
-    getCategories(),
-    getAllTags(),
-  ]);
+  const { fetchMoreTools } = await import("@/app/actions");
+  const initialTools = await fetchMoreTools({ page: 0, searchParams });
 
-  return (
-    <div>
-      {/* Keşif Bölümü artık herkes için (hem misafirler hem de giriş yapmış kullanıcılar) gösteriliyor */}
+  const { data: categoriesData } = await supabase
+    .from("categories")
+    .select("name, slug")
+    .order("name");
+  const { data: allTagsData } = await supabase
+    .from("tags")
+    .select("*")
+    .order("name");
+
+  return {
+    user,
+    favoriteToolIds,
+    initialTools,
+    categories: categoriesData || [],
+    allTags: allTagsData || [],
+  };
+}
+
+export default async function HomePage({ searchParams }) {
+  // Tüm verileri sunucuda çekiyoruz
+  const initialData = await getPageData(searchParams);
+
+  // Keşif bölümlerini burada, bir Server Component olarak oluşturuyoruz
+  const discoverySections = (
+    <div className="space-y-12">
       <ToolOfTheDay />
       <FeaturedTools />
       <TrendingTools />
-
-      <div className="text-center mb-10 pt-8">
-        <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-          Tüm Araçlar
-        </h2>
-      </div>
-
-      <div className="flex flex-col md:flex-row justify-center items-center gap-4 mb-10">
-        <form className="flex gap-2 w-full md:w-auto md:flex-grow max-w-md">
-          <SearchInput />
-          <Button type="submit">Ara</Button>
-        </form>
-        <div className="flex flex-wrap justify-center gap-2">
-          <CategorySelect categories={categories} />
-          <SortSelect />
-          <TagFilter allTags={allTags} />
-          <AdvancedFilters />
-          {/* YENİ: Seviye Filtresi menüsünü ekliyoruz */}
-          <TierFilter />
-        </div>
-      </div>
-
-      <Suspense
-        key={JSON.stringify(searchParams)}
-        fallback={<ToolsGridSkeleton />}
-      >
-        <ToolsList
-          searchParams={searchParams}
-          user={user}
-          favoriteToolIds={favoriteToolIds}
-        />
-      </Suspense>
     </div>
+  );
+
+  // Hem verileri HEM DE hazır oluşturulmuş sunucu bileşenlerini
+  // interaktif mantığı yönetecek olan Client Component'e aktarıyoruz.
+  return (
+    <HomepageClient
+      initialData={initialData}
+      searchParams={searchParams}
+      discoverySections={discoverySections}
+    />
   );
 }

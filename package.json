@@ -39,11 +39,13 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",
+    "react-intersection-observer": "^9.16.0",
     "react-markdown": "^10.1.0",
     "react-share": "^5.2.2",
     "recharts": "^2.15.3",
     "remark-gfm": "^4.0.1",
     "resend": "^4.5.2",
+    "stripe": "^18.2.1",
     "tailwind-merge": "^3.3.1",
     "use-debounce": "^10.0.5"
   },

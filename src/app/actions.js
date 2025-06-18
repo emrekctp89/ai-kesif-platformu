@@ -4,6 +4,7 @@
 "use server";
 
 // Artık import'lar gelebilir.
+import Stripe from "stripe";
 import { createClient } from "@/utils/supabase/server";
 //import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from "next/cache";
@@ -18,6 +19,13 @@ import { createAdminClient } from "@/utils/supabase/admin"; // Özel admin istem
 import { WeeklyNewsletterEmail } from "@/components/emails/WeeklyNewsletterEmail";
 // Node'un renderToString fonksiyonunu kullanacağız
 import { render } from "@react-email/render";
+
+const ITEMS_PER_PAGE = 12; // Ana sayfadaki sayfa başına araç sayısıyla aynı olmalı
+
+// Stripe istemcisini başlatıyoruz
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2024-04-10",
+});
 
 // Bu fonksiyon Türkçe karakterleri URL uyumlu hale getirir.
 function slugify(text) {
@@ -2052,7 +2060,7 @@ export async function updateUserProfile(formData) {
   if (username && !/^[a-z0-9_-]{3,15}$/.test(username)) {
     return {
       error:
-        "Kullanıcı adı 3-15 karakter arasında olmalı ve sadece küçük harf, sayı, '-' veya '_' içerebilir.",
+        "Kullanıcı adı 3-15 karakter arasında olmalı ve sadece küçük harf, sayı, - veya _ içerebilir.",
     };
   }
 
@@ -2381,4 +2389,143 @@ export async function uploadBlogImage(formData) {
   const { data } = supabase.storage.from("blog-images").getPublicUrl(filePath);
 
   return { success: true, url: data.publicUrl };
+}
+
+export async function fetchMoreTools({ page = 1, searchParams }) {
+  "use server";
+
+  const supabase = createClient();
+
+  const from = page * ITEMS_PER_PAGE; // Sayfa 1'den başladığı için, offset'i direkt sayfa ile çarpıyoruz
+  const to = from + ITEMS_PER_PAGE - 1;
+
+  // URL parametrelerinden tüm filtreleri alıyoruz
+  const categorySlug = searchParams?.category;
+  const searchText = searchParams?.search;
+  const sortBy = searchParams?.sort || "newest";
+  const selectedTags = searchParams?.tags
+    ? searchParams.tags.split(",").map(Number)
+    : [];
+  const pricingModel = searchParams?.pricing;
+  const selectedPlatforms = searchParams?.platforms
+    ? searchParams.platforms.split(",")
+    : [];
+
+  let query = supabase
+    .from("tools_with_ratings")
+    .select("*") // 'count' burada gerekli değil, sadece veri çekiyoruz
+    .eq("is_approved", true);
+
+  // Tüm filtreleri sorguya uyguluyoruz
+  if (categorySlug) query = query.eq("category_slug", categorySlug);
+  if (searchText)
+    query = query.or(
+      `name.ilike.%${searchText}%,description.ilike.%${searchText}%`
+    );
+  if (selectedTags.length > 0) {
+    const tagsToFilter = JSON.stringify(selectedTags.map((id) => ({ id })));
+    query = query.contains("tags", tagsToFilter);
+  }
+  if (pricingModel) query = query.eq("pricing_model", pricingModel);
+  if (selectedPlatforms.length > 0)
+    query = query.contains("platforms", selectedPlatforms);
+
+  switch (sortBy) {
+    case "rating":
+      query = query.order("average_rating", {
+        ascending: false,
+        nullsFirst: false,
+      });
+      break;
+    case "popularity":
+      query = query.order("total_ratings", {
+        ascending: false,
+        nullsFirst: false,
+      });
+      break;
+    default:
+      query = query.order("created_at", { ascending: false });
+      break;
+  }
+
+  query = query.range(from, to);
+
+  const { data: tools, error } = await query;
+
+  if (error) {
+    console.error("Daha fazla araç çekerken hata:", error.message);
+    return []; // Hata durumunda boş bir dizi döndür
+  }
+
+  return tools;
+}
+
+// Kullanıcıyı Stripe ödeme sayfasına yönlendiren fonksiyon
+export async function createCheckoutSession(formData) {
+  "use server";
+  console.log("--- createCheckoutSession Aksiyonu Başladı ---");
+
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      console.log("-> Kullanıcı bulunamadı, login sayfasına yönlendiriliyor.");
+      return redirect("/login");
+    }
+    console.log(`-> Kullanıcı doğrulandı: ${user.email}`);
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("stripe_customer_id")
+      .eq("id", user.id)
+      .single();
+    console.log(
+      "-> Profil verisi çekildi. Mevcut Stripe Müşteri ID:",
+      profile?.stripe_customer_id
+    );
+
+    const priceId = formData.get("priceId");
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    console.log(`-> Fiyat ID: ${priceId}, Site URL: ${siteUrl}`);
+
+    let customerId = profile?.stripe_customer_id;
+
+    if (!customerId) {
+      console.log(
+        "-> Stripe müşteri ID'si yok, yeni bir tane oluşturuluyor..."
+      );
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: { supabaseUUID: user.id },
+      });
+      customerId = customer.id;
+      console.log("-> Yeni Stripe müşteri ID'si oluşturuldu:", customerId);
+
+      await supabase
+        .from("profiles")
+        .update({ stripe_customer_id: customerId })
+        .eq("id", user.id);
+      console.log("-> Profil, yeni Stripe müşteri ID'si ile güncellendi.");
+    }
+
+    console.log("-> Stripe ödeme oturumu oluşturuluyor...");
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "subscription",
+      customer: customerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${siteUrl}/profile?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/uyelik`,
+    });
+    console.log("✅ Stripe oturumu başarıyla oluşturuldu. Yönlendiriliyor...");
+
+    return redirect(session.url);
+  } catch (error) {
+    console.error("!!! createCheckoutSession HATASI:", error);
+    const errorMessage = "Ödeme sayfasına yönlendirilirken bir hata oluştu.";
+    return redirect(`/uyelik?message=${encodeURIComponent(errorMessage)}`);
+  }
 }

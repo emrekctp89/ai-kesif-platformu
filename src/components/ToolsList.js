@@ -59,6 +59,21 @@ async function getToolsData(searchParams, user, favoriteToolIds) {
     : [];
   const selectedTier = searchParams["tier"]; // YENİ: Seviye filtresini alıyoruz
 
+  // DEĞİŞİKLİK: Kullanıcının abonelik durumunu da çekiyoruz
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("stripe_price_id")
+        .eq("id", user.id)
+        .single()
+    : { data: null };
+  const isProUser = !!profile?.stripe_price_id;
+
+  const { data: favorites } = user
+    ? await supabase.from("favorites").select("tool_id").eq("user_id", user.id)
+    : { data: [] };
+  const favoriteToolIds = new Set(favorites?.map((f) => f.tool_id) || []);
+
   const from = (currentPage - 1) * ITEMS_PER_PAGE;
   const to = from + ITEMS_PER_PAGE - 1;
 
@@ -85,6 +100,11 @@ async function getToolsData(searchParams, user, favoriteToolIds) {
   // YENİ: Seviyeye göre filtrelemeyi sorguya ekliyoruz
   if (selectedTier) {
     query = query.eq("tier", selectedTier);
+  }
+
+  // DEĞİŞİKLİK: Eğer kullanıcı Pro değilse, 'Pro' seviyesindeki araçları hariç tut
+  if (!isProUser) {
+    query = query.neq("tier", "Pro");
   }
 
   switch (sortBy) {
@@ -119,10 +139,10 @@ async function getToolsData(searchParams, user, favoriteToolIds) {
 }
 
 export async function ToolsList({ searchParams, user, favoriteToolIds }) {
-  const { tools, currentPage, totalPages } = await getToolsData(
+  // isProUser bilgisi artık getToolsData'dan gelecek
+  const { tools, currentPage, totalPages, isProUser } = await getToolsData(
     searchParams,
-    user,
-    favoriteToolIds
+    user
   );
 
   return (
