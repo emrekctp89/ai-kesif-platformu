@@ -1,20 +1,25 @@
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
-import AuthButton from "./AuthButton";
-import { Button } from "./ui/button";
-import { ThemeToggle } from "./ThemeToggle";
-import { RandomToolButton } from "./RandomToolButton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { AdminMenu } from "./AdminMenu";
-import { NotificationCenter } from "./NotificationCenter";
 import { getNotifications } from "@/app/actions";
-import { Sparkles, Crown, Users } from "lucide-react"; // Crown ikonunu import ediyoruz
+import { HeaderNav } from "./HeaderNav";
+import { Bot } from "lucide-react";
 
+// Yeni veritabanı fonksiyonumuzu çağıran fonksiyon
+async function getTotalUnreadMessages(userId) {
+  if (!userId) return 0;
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("get_total_unread_count", {
+    p_user_id: userId,
+  });
+  if (error) {
+    console.error("Toplam okunmamış mesaj sayısı çekilirken hata:", error);
+    return 0;
+  }
+  return data;
+}
+
+// Bu, artık sadece veri çeken, sadeleşmiş bir "Server Component"tir.
 export default async function Header() {
   const supabase = createClient();
   const {
@@ -22,126 +27,45 @@ export default async function Header() {
   } = await supabase.auth.getUser();
   const isAdmin = user && user.email === process.env.ADMIN_EMAIL;
 
-  // Kullanıcının profilinden abonelik durumunu çekiyoruz
-  const { data: profile } = user
-    ? await supabase
-        .from("profiles")
-        .select("stripe_price_id")
-        .eq("id", user.id)
-        .single()
-    : { data: null };
+  // Gerekli tüm verileri sunucuda çekiyoruz
+  const [profile, notificationsResult, totalUnreadMessages] = await Promise.all(
+    [
+      user
+        ? supabase
+            .from("profiles")
+            .select("username, avatar_url, stripe_price_id")
+            .eq("id", user.id)
+            .single()
+        : Promise.resolve({ data: null }),
+      user
+        ? getNotifications()
+        : Promise.resolve({ notifications: [], unreadCount: 0 }),
+      getTotalUnreadMessages(user?.id),
+    ]
+  );
 
-  const isProUser = !!profile?.stripe_price_id;
-
-  const { notifications, unreadCount } = await getNotifications();
+  const isProUser = !!profile?.data?.stripe_price_id;
 
   return (
-    <header className="bg-card shadow-sm border-b border-border sticky top-0 z-50">
-      <div className="container mx-auto flex items-center p-4 gap-4">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto flex h-16 max-w-screen-2xl items-center">
         {isAdmin && <AdminMenu />}
-        <Link
-          href="/"
-          className="text-xl font-bold tracking-tight text-foreground"
-        >
-          AI Keşif
+
+        <Link href="/kesfet" className="mr-6 flex items-center space-x-2">
+          <Bot className="h-6 w-6 text-primary" />
+          <span className="text-xl font-bold tracking-tight">AI Keşif</span>
         </Link>
-        <div className="ml-auto">
-          <TooltipProvider delayDuration={100}>
-            <nav className="flex items-center gap-1 md:gap-2 flex-wrap justify-end">
-              <Button
-                asChild
-                variant="outline"
-                className="border-primary text-primary hover:bg-primary/10 hover:text-primary"
-              >
-                <Link href="/akis">
-                  <Users className="w-4 h-4 mr-2" />
-                  Akış
-                </Link>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link href="/eserler">Eserler</Link>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link href="/leaderboard">Liderlik Tablosu</Link>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link href="/blog">Blog</Link>
-              </Button>
-              <Button
-                asChild
-                variant="ghost"
-                className="relative px-6 py-3 font-semibold text-primary hover:text-primary-dark transition-colors duration-300 border-b-2 border-transparent hover:border-primary"
-              >
-                <Link href="/karsilastir" className="relative z-10">
-                  Karşılaştır
-                </Link>
-              </Button>
 
-              {user ? (
-                <Button
-                  asChild
-                  className="font-semibold text-white bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 bg-[size:300%_auto] animate-breathing-glow hover:opacity-90"
-                >
-                  <Link href="/tavsiye">AI Tavsiye</Link>
-                </Button>
-              ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span tabIndex={0}>
-                      <Button
-                        className="font-semibold"
-                        disabled
-                        style={{ pointerEvents: "none" }}
-                      >
-                        AI Tavsiye
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Bu özellik için giriş yapmalısınız.</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-
-              <RandomToolButton user={user} />
-              <Button asChild variant="secondary">
-                <Link href="/submit">Araç Öner</Link>
-              </Button>
-
-              {/* YENİ: "Pro'ya Yükselt" veya "Pro Üye" Butonu */}
-              {user &&
-                !isAdmin &&
-                (isProUser ? (
-                  <Button
-                    variant="outline"
-                    className="border-purple-500 text-purple-500 pointer-events-none"
-                  >
-                    <Crown className="w-4 h-4 mr-2" /> Pro Üye
-                  </Button>
-                ) : (
-                  <Button
-                    asChild
-                    className="font-semibold bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:opacity-90"
-                  >
-                    <Link href="/uyelik">
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Pro'ya Yükselt
-                    </Link>
-                  </Button>
-                ))}
-
-              <div className="flex items-center">
-                <NotificationCenter
-                  initialNotifications={notifications}
-                  unreadCount={unreadCount}
-                  user={user}
-                />
-                <AuthButton />
-                <ThemeToggle />
-              </div>
-            </nav>
-          </TooltipProvider>
-        </div>
+        {/* Tüm verileri, interaktif mantığı yönetecek olan Client Component'e aktarıyoruz. */}
+        <HeaderNav
+          user={user}
+          isAdmin={isAdmin}
+          isProUser={isProUser}
+          notifications={notificationsResult.notifications}
+          unreadCount={notificationsResult.unreadCount}
+          totalUnreadMessages={totalUnreadMessages} // Eksik olan "kablo"yu bağlıyoruz
+          profile={profile?.data}
+        />
       </div>
     </header>
   );

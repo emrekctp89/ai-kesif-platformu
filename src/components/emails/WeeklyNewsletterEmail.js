@@ -92,7 +92,7 @@ export const WeeklyNewsletterEmail = ({ newsletterData }) => (
         {/* Haftanın Prompt'u */}
         {newsletterData.top_prompt && (
           <div style={sectionStyle}>
-            <h2 style={headingStyle}>⭐ Haftanın Prompt'u</h2>
+            <h2 style={headingStyle}>⭐ Haftanın Prompt&apos;u</h2>
             <div style={cardStyle}>
               <p style={{ ...titleStyle, marginBottom: "8px" }}>
                 {newsletterData.top_prompt.title}

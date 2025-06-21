@@ -10,25 +10,52 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Award, MessageSquare, Heart, Image as ImageIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Award,
+  MessageSquare,
+  Heart,
+  Image as ImageIcon,
+  Mail,
+} from "lucide-react";
+import { startConversation } from "@/app/actions";
+import { FollowButton } from "@/components/FollowButton"; // Yeni bileşeni import ediyoruz
+import { BadgesShowcase } from "@/components/BadgesShowcase"; // Yeni bileşeni import ediyoruz
 
-// Veritabanındaki RPC fonksiyonunu çağıran fonksiyon
-async function getProfileData(username) {
-  // DEĞİŞİKLİK: Eğer username geçersizse, en baştan 404 sayfasına yönlendir.
-  if (!username || username === "null") {
-    notFound();
+// Veri çeken fonksiyonu, takipçi sayılarını da alacak şekilde güncelliyoruz
+async function getProfileData(username, currentUserId) {
+  const supabase = createClient();
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    // DEĞİŞİKLİK: follower_count ve following_count'u da çekiyoruz
+    .select("*, follower_count, following_count")
+    .eq("username", username)
+    .single();
+
+  if (profileError || !profile) notFound();
+
+  let isFollowing = false;
+  if (currentUserId && currentUserId !== profile.id) {
+    const { data: followRecord } = await supabase
+      .from("followers")
+      .select("*")
+      .eq("follower_id", currentUserId)
+      .eq("following_id", profile.id)
+      .maybeSingle();
+    isFollowing = !!followRecord;
   }
 
-  const supabase = createClient();
-  const { data, error } = await supabase.rpc("get_public_profile_data", {
+  const { data: activityData } = await supabase.rpc("get_public_profile_data", {
     p_username: username,
   });
 
-  if (error || !data) {
-    console.error("Profil verisi çekilirken hata:", error);
-    notFound();
-  }
-  return data;
+  return {
+    ...profile,
+    ...(activityData || {}),
+    is_current_user: profile.id === currentUserId,
+    is_following: isFollowing,
+  };
 }
 
 export async function generateMetadata({ params }) {
@@ -42,7 +69,12 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function UserProfilePage({ params }) {
-  const profile = await getProfileData(params.username);
+  const supabase = createClient();
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+
+  const profile = await getProfileData(params.username, currentUser?.id);
 
   const memberSince = new Date(profile.member_since).toLocaleDateString(
     "tr-TR",
@@ -66,6 +98,25 @@ export default async function UserProfilePage({ params }) {
           <h1 className="text-4xl font-bold">{profile.username}</h1>
           <p className="text-muted-foreground mt-2">{profile.bio}</p>
           <div className="flex items-center justify-center sm:justify-start gap-4 mt-4 text-sm text-muted-foreground">
+            {/* YENİ: Tıklanabilir Takipçi/Takip edilen sayaçları */}
+            <Link
+              href={`/u/${profile.username}/followers`}
+              className="hover:text-primary"
+            >
+              <span className="font-bold text-foreground">
+                {profile.follower_count}
+              </span>{" "}
+              Takipçi
+            </Link>
+            <Link
+              href={`/u/${profile.username}/following`}
+              className="hover:text-primary"
+            >
+              <span className="font-bold text-foreground">
+                {profile.following_count}
+              </span>{" "}
+              Takip
+            </Link>
             <div className="flex items-center gap-1.5">
               <Award className="w-4 h-4 text-primary" />
               <span className="font-bold text-foreground">
@@ -77,7 +128,39 @@ export default async function UserProfilePage({ params }) {
             <span>{memberSince} tarihinden beri üye</span>
           </div>
         </div>
+        {/* YENİ: Mesaj Gönder Butonu */}
+        {/* Bu buton, sadece giriş yapmış ve kendi profiline bakmayan kullanıcılara görünür */}
+        {/* YENİ: Akıllı "Takip Et" ve "Mesaj Gönder" Butonları */}
+        {currentUser && !profile.is_current_user && (
+          <div className="flex items-center gap-2">
+            <FollowButton
+              targetUserId={profile.id}
+              targetUsername={profile.username}
+              isInitiallyFollowing={profile.is_following}
+            />
+            <form
+              action={async () => {
+                "use server";
+                await startConversation(profile.id);
+              }}
+            >
+              <Button type="submit" variant="secondary">
+                Mesaj Gönder
+              </Button>
+            </form>
+          </div>
+        )}
       </header>
+
+      {/* YENİ: ROZETLER BÖLÜMÜ */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-bold mb-4">Kazanılan Rozetler</h2>
+        <Card>
+          <CardContent className="p-6">
+            <BadgesShowcase badges={profile.badges} />
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Aktivite Akışı */}
       <div className="space-y-8">

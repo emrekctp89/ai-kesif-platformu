@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -11,27 +10,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export function SortSelect() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const currentSort = searchParams.get("sort") || "newest";
-
-  const handleValueChange = (value) => {
-    // Mevcut tüm URL parametrelerini alıyoruz
-    const params = new URLSearchParams(searchParams.toString());
-
-    // Yeni sıralama parametresini ekliyoruz
-    params.set("sort", value);
-
-    // Sıralama değiştiğinde her zaman 1. sayfaya dön
-    params.delete("page");
-
-    // Yeni URL'e yönlendiriyoruz
-    router.push(`/?${params.toString()}`);
-  };
-
+export function SortSelect({ value, onValueChange }) {
   return (
-    <Select value={currentSort} onValueChange={handleValueChange}>
+    <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="w-full md:w-[180px]">
         <SelectValue placeholder="Sırala..." />
       </SelectTrigger>

@@ -1,49 +1,49 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
 import { SearchInput } from "@/components/SearchInput";
 import { FilterSheet } from "@/components/FilterSheet";
 import { InfiniteToolsList } from "@/components/InfiniteToolsList";
 import { ToolsGridSkeleton } from "@/components/ToolsGridSkeleton";
 import { Button } from "@/components/ui/button";
 import { Sparkles, X } from "lucide-react";
-// Animasyonlar için Framer Motion'ı import ediyoruz
 import { motion, AnimatePresence } from "framer-motion";
 
 export function HomepageClient({
   initialData,
-  searchParams,
+  searchParams: serverSearchParams,
   discoverySections,
 }) {
   const { user, favoriteToolIds, initialTools, categories, allTags } =
     initialData;
 
-  const hasActiveFilters =
-    Object.keys(searchParams).length > 0 &&
-    (Object.keys(searchParams).length !== 1 || !searchParams.page);
+  // DEĞİŞİKLİK: Sunucudan gelen basit objeyi, istemcideki hook ile birleştiriyoruz.
+  // Bu, hem sunucu hem de istemci tarafında tutarlı bir veri yapısı sağlar.
+  const searchParams = useSearchParams();
+
+  // Herhangi bir filtrenin aktif olup olmadığını kontrol ediyoruz.
+  const hasActiveFilters = useMemo(() => {
+    const keys = Array.from(searchParams.keys());
+    return keys.some((key) => key !== "page");
+  }, [searchParams]);
 
   const [showDiscovery, setShowDiscovery] = useState(!hasActiveFilters);
-  // DEĞİŞİKLİK: Filtrelerin görünürlüğünü kontrol eden yeni state
   const [showControls, setShowControls] = useState(hasActiveFilters);
 
   useEffect(() => {
     if (hasActiveFilters) {
       setShowDiscovery(false);
-      setShowControls(true); // Bir filtre aktifse, kontrolleri her zaman göster
+      setShowControls(true);
     }
   }, [hasActiveFilters]);
 
   return (
     <div className="space-y-12">
-      {/* Üst Kısım: Başlık ve Filtreler */}
       <div
         className="text-center pt-8 sticky top-16 bg-background/95 backdrop-blur-sm z-40 py-4 border-b"
-        // DEĞİŞİKLİK: Fare olaylarını dinleyen kapsayıcı
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => {
-          // Sadece bir filtre aktif değilse, fare ayrıldığında gizle
           if (!hasActiveFilters) {
             setShowControls(false);
           }
@@ -56,7 +56,6 @@ export function HomepageClient({
           Yapay zeka dünyasını keşfedin veya aradığınızı anında bulun.
         </p>
 
-        {/* DEĞİŞİKLİK: Kontroller artık animasyonlu bir şekilde görünüp kayboluyor */}
         <AnimatePresence>
           {showControls && (
             <motion.div
@@ -101,7 +100,7 @@ export function HomepageClient({
 
       <div className="mt-12">
         <Suspense
-          key={JSON.stringify(searchParams)}
+          key={searchParams.toString()}
           fallback={<ToolsGridSkeleton />}
         >
           <InfiniteToolsList

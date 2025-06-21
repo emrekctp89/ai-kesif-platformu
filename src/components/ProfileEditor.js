@@ -39,7 +39,6 @@ export function ProfileEditor({ user, profile }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Avatar yükleme bileşenini buraya taşıyoruz */}
         <div className="space-y-2">
           <Label>Profil Fotoğrafı</Label>
           <AvatarUploader

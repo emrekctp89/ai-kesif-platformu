@@ -14,6 +14,7 @@ import {
   Star,
   Crown,
   Gem,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +44,7 @@ const tierStyles = {
   },
 };
 
-async function getToolsData(searchParams, user, favoriteToolIds) {
+async function getToolsData(searchParams, user) {
   const supabase = createClient();
 
   const categorySlug = searchParams["category"];

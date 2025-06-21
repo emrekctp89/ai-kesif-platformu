@@ -5,39 +5,44 @@ import { Button } from "@/components/ui/button";
 import { Dice5 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+// DEĞİŞİKLİK: TooltipProvider'ı bu dosyaya geri import ediyoruz
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
 export function RandomToolButton({ user }) {
   const [isHovered, setIsHovered] = useState(false);
 
+  // Eğer kullanıcı giriş yapmamışsa, ipucu gösteren versiyonu render et
   if (!user) {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          {/* DEĞİŞİKLİK: Butonu bir span ile sarıyoruz */}
-          <span tabIndex={0}>
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled
-              style={{ pointerEvents: "none" }}
-            >
-              <Dice5 className="h-[1.2rem] w-[1.2rem]" />
-            </Button>
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>Bu özellik için giriş yapmalısınız.</p>
-        </TooltipContent>
-      </Tooltip>
+      // DEĞİŞİKLİK: Bu bileşenin kendi TooltipProvider'ını ekliyoruz.
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span tabIndex={0}>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled
+                style={{ pointerEvents: "none" }}
+              >
+                <Dice5 className="h-[1.2rem] w-[1.2rem]" />
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Bu özellik için giriş yapmalısınız.</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 
-  // Giriş yapmış kullanıcı için normal buton
+  // Eğer kullanıcı giriş yapmışsa, normal ve fonksiyonel butonu render et
   return (
     <Button
       asChild
@@ -46,33 +51,21 @@ export function RandomToolButton({ user }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link
-        href="/random-tools"
-        aria-label="Rastgele bir araç keşfet"
-        className="flex items-center gap-2"
-      >
+      <Link href="/random-tools" aria-label="Rastgele bir araç keşfet">
         <AnimatePresence>
           {isHovered && (
             <motion.span
-              key="text"
-              initial={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="text-sm font-semibold text-primary"
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="mr-2 text-sm font-semibold"
             >
               Keşfet
             </motion.span>
           )}
         </AnimatePresence>
-
-        {/* İkonun da yumuşakça hafif sağa kayması */}
-        <motion.div
-          key="icon"
-          initial={{ x: 0 }}
-          animate={{ x: isHovered ? 4 : 0 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
-        >
+        <motion.div className="group-hover:animate-none animate-roll">
           <Dice5 className="h-[1.2rem] w-[1.2rem]" />
         </motion.div>
       </Link>

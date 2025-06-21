@@ -70,8 +70,8 @@ export default async function ComparePage({ searchParams }) {
           AI Karşılaştırma Arenası
         </h1>
         <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-          Karşılaştırmak istediğiniz araçları seçin, özelliklerini inceleyin ve
-          yapay zekanın analizini isteyin.
+          Karşılaştırmak istediğiniz araçları seçin ve özelliklerini, puanlarını
+          ve yapay zekanın analizini görün.
         </p>
       </div>
 
@@ -82,25 +82,25 @@ export default async function ComparePage({ searchParams }) {
         />
       </div>
 
-      {/* DEĞİŞİKLİK: AI Karşılaştırma bölümü yukarı taşındı */}
-      <div className="mb-12">
-        <AiComparison tools={comparedTools} />
-      </div>
+      {/* AI Karşılaştırma Bölümü */}
+      {comparedTools.length > 1 && (
+        <div className="mb-12">
+          <AiComparison tools={comparedTools} />
+        </div>
+      )}
 
-      {/* Karşılaştırma Tablosu artık en altta */}
-      {comparedTools.length > 0 && (
-        <div className="overflow-x-auto">
-          <h3 className="text-2xl font-bold text-center mb-6">
-            Detaylı Karşılaştırma
-          </h3>
-          <div
-            className="grid gap-8"
-            style={{
-              gridTemplateColumns: `repeat(${comparedTools.length}, minmax(300px, 1fr))`,
-            }}
-          >
-            {comparedTools.map((tool) => (
-              <Card key={tool.id}>
+      {/* Karşılaştırma Tablosu */}
+      {comparedTools.length > 0 ? (
+        // DEĞİŞİKLİK: Mobil için dikey, masaüstü için yatay grid yapısı
+        <div
+          className="space-y-8 md:space-y-0 md:grid md:gap-8"
+          style={{
+            gridTemplateColumns: `repeat(${comparedTools.length}, minmax(0, 1fr))`,
+          }}
+        >
+          {comparedTools.map((tool) => (
+            <div key={tool.id}>
+              <Card className="h-full">
                 <CardHeader>
                   <CardTitle className="text-2xl">{tool.name}</CardTitle>
                   <CardDescription>{tool.category_name}</CardDescription>
@@ -144,8 +144,14 @@ export default async function ComparePage({ searchParams }) {
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16">
+          <p className="text-muted-foreground">
+            Lütfen karşılaştırmak için yukarıdan en az bir araç seçin.
+          </p>
         </div>
       )}
     </div>

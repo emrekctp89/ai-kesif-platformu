@@ -1,12 +1,22 @@
 "use client";
 
 import * as React from "react";
-import { useTransition } from "react"; // useTransition'ı import ediyoruz
+import { useTransition } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,8 +30,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { createCollection, deleteCollection } from "@/app/actions";
 import toast from "react-hot-toast";
+import { PlusCircle } from "lucide-react";
 
-// Koleksiyon Silme Butonu (Değişiklik yok)
+// Koleksiyon Silme Butonu
 function DeleteCollectionButton({ collectionId }) {
   const handleFormAction = async (formData) => {
     const result = await deleteCollection(formData);
@@ -31,7 +42,6 @@ function DeleteCollectionButton({ collectionId }) {
       toast.success("Koleksiyon başarıyla silindi.");
     }
   };
-
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -59,50 +69,80 @@ function DeleteCollectionButton({ collectionId }) {
   );
 }
 
-// Ana Koleksiyon Yönetim Bileşeni
-export function CollectionManager({ collections }) {
+// Yeni Koleksiyon Oluşturma Penceresi
+function CreateCollectionDialog() {
   const formRef = React.useRef(null);
-  // DEĞİŞİKLİK: Yükleme durumunu yönetmek için useTransition kullanıyoruz
+  const [isOpen, setIsOpen] = React.useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleCreateCollection = (formData) => {
-    // Sunucu eylemini startTransition ile sarmalıyoruz
     startTransition(async () => {
       const result = await createCollection(formData);
-      // Artık sadece hata durumunda bir bildirim gösteriyoruz.
-      // Başarılı durumda zaten yönlendirme olacak.
       if (result?.error) {
         toast.error(result.error);
+      } else {
+        toast.success(
+          "Koleksiyon oluşturuldu, düzenleme sayfasına yönlendiriliyorsunuz..."
+        );
+        setIsOpen(false);
       }
-      // toast.loading ve toast.dismiss kaldırıldı.
     });
   };
 
   return (
-    <div className="space-y-6">
-      {/* Yeni Koleksiyon Ekleme Formu */}
-      <div>
-        <h3 className="text-lg font-medium mb-2">Yeni Koleksiyon Oluştur</h3>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Yeni Koleksiyon
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Yeni Koleksiyon Oluştur</DialogTitle>
+          <DialogDescription>
+            Koleksiyonunuza akılda kalıcı bir başlık verin. Daha sonra içine
+            araçlar ekleyebilirsiniz.
+          </DialogDescription>
+        </DialogHeader>
         <form
           ref={formRef}
           action={handleCreateCollection}
-          className="flex items-center gap-2"
+          className="space-y-4 py-2"
         >
-          <Label htmlFor="new-collection-title" className="sr-only">
-            Koleksiyon Başlığı
-          </Label>
-          <Input
-            id="new-collection-title"
-            name="title"
-            placeholder="Yeni koleksiyon başlığı..."
-            required
-            disabled={isPending}
-          />
-          {/* DEĞİŞİKLİK: Buton artık yükleme durumunu kendi üzerinde gösteriyor */}
-          <Button type="submit" disabled={isPending}>
-            {isPending ? "Oluşturuluyor..." : "Oluştur & Düzenle"}
-          </Button>
+          <div className="space-y-2">
+            <Label htmlFor="new-collection-title">Koleksiyon Başlığı</Label>
+            <Input
+              id="new-collection-title"
+              name="title"
+              placeholder="Örn: En İyi Ücretsiz Tasarım Araçları"
+              required
+              disabled={isPending}
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary" disabled={isPending}>
+                İptal
+              </Button>
+            </DialogClose>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Oluşturuluyor..." : "Oluştur & Düzenle"}
+            </Button>
+          </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Ana Koleksiyon Yönetim Bileşeni
+export function CollectionManager({ collections }) {
+  return (
+    <div className="space-y-6">
+      {/* DEĞİŞİKLİK: "Yeni Koleksiyon" butonu artık listenin üzerinde */}
+      <div className="flex justify-end">
+        <CreateCollectionDialog />
       </div>
 
       <hr className="border-border" />
@@ -136,7 +176,7 @@ export function CollectionManager({ collections }) {
               </div>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground text-center py-4">
               Henüz hiç koleksiyon oluşturmadınız.
             </p>
           )}

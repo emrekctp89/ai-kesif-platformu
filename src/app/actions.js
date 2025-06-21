@@ -1208,22 +1208,25 @@ export async function createPost(formData) {
     return { error: "Yetkiniz yok." };
   }
 
-  // DEĞİŞİKLİK: 'title' değişkenini formdan burada alıyoruz.
   const title = formData.get("title");
-  if (!title) {
-    return { error: "Yazı başlığı boş olamaz." };
+  // YENİ: Formdan yazının tipini alıyoruz ('Blog', 'Rehber', 'Makale')
+  const type = formData.get("type");
+
+  if (!title || !type) {
+    return { error: "Yazı başlığı ve tipi zorunludur." };
   }
 
-  // slugify fonksiyonumuzun bu dosyada olduğunu varsayıyoruz
-  const slug = slugify(title);
+  const slug = slugify(title) + "-" + Date.now().toString(36);
 
   const { data: newPost, error } = await supabase
     .from("posts")
     .insert({
-      title, // Artık bu değişken tanımlı ve doğru.
+      title,
       slug,
       author_id: user.id,
-      content: "# Yeni Yazı Başlığı\n\nBuraya yazınızı yazmaya başlayın...",
+      content: `# ${title}\n\nBuraya yazınızı yazmaya başlayın...`,
+      type, // Yeni yazı tipini veritabanına kaydediyoruz
+      status: "Taslak", // Her yeni yazı taslak olarak başlar
     })
     .select("id")
     .single();
@@ -1233,13 +1236,14 @@ export async function createPost(formData) {
     return { error: "Yazı oluşturulurken bir hata oluştu." };
   }
 
-  // Admini, yeni oluşturulan yazının düzenleme sayfasına yönlendir
-  redirect(`/admin/blog/${newPost.id}/edit`);
+  // DEĞİŞİKLİK: Artık her zaman tek ve doğru olan yeni editör sayfasına yönlendiriyoruz.
+  redirect(`/admin/posts/${newPost.id}/edit`);
 }
 
 // Mevcut bir blog yazısını güncelleyen fonksiyon
 // src/app/actions.js dosyasındaki updatePost fonksiyonunu bu kodla değiştirin.
 
+// Mevcut updatePost fonksiyonunu, yeni 'type' alanını da içerecek şekilde güncelliyoruz.
 export async function updatePost(formData) {
   "use server";
   const supabase = createClient();
@@ -1252,41 +1256,44 @@ export async function updatePost(formData) {
   }
 
   const id = formData.get("id");
-  const title = formData.get("title");
-  const slug = formData.get("slug");
-  const content = formData.get("content");
-  const description = formData.get("description");
-  const featured_image_url = formData.get("featured_image_url");
-  const status = formData.get("status");
-  const category_id = formData.get("category_id");
+
+  // Önce yazının mevcut durumunu veritabanından çekiyoruz
+  const { data: existingPost } = await supabase
+    .from("posts")
+    .select("published_at")
+    .eq("id", id)
+    .single();
 
   const postData = {
-    title,
-    slug,
-    content,
-    description,
-    featured_image_url,
-    status,
-    category_id: category_id ? parseInt(category_id, 10) : null,
+    title: formData.get("title"),
+    slug: formData.get("slug"),
+    content: formData.get("content"),
+    description: formData.get("description"),
+    featured_image_url: formData.get("featured_image_url"),
+    status: formData.get("status"),
+    type: formData.get("type"),
+    category_id: formData.get("category_id")
+      ? parseInt(formData.get("category_id"), 10)
+      : null,
     updated_at: new Date().toISOString(),
   };
 
-  if (status === "Yayınlandı" && !formData.get("was_published_before")) {
+  // DEĞİŞİKLİK: Eğer yazının durumu "Yayınlandı" ise VE
+  // veritabanındaki yayınlanma tarihi boş (null) ise, yayın tarihini ayarla.
+  if (postData.status === "Yayınlandı" && !existingPost?.published_at) {
     postData.published_at = new Date().toISOString();
   }
 
   const { error } = await supabase.from("posts").update(postData).eq("id", id);
 
-  // DEĞİŞİKLİK: Hata kontrolünü daha detaylı hale getiriyoruz.
   if (error) {
     console.error("Yazı güncelleme hatası:", error);
-    // DETAYLI HATA MESAJINI İSTEMCİYE GÖNDER
     return { error: `Veritabanı Hatası: ${error.message}` };
   }
 
   revalidatePath("/admin");
   revalidatePath("/blog");
-  revalidatePath(`/blog/${slug}`);
+  revalidatePath(`/blog/${postData.slug}`);
 
   return { success: "Yazı başarıyla güncellendi." };
 }
@@ -1327,54 +1334,32 @@ export async function deletePost(formData) {
 // Bir yazıya etiket atayan/kaldıran fonksiyon
 export async function assignTagsToPost(formData) {
   "use server";
-
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  // Sadece admin yetkisiyle çalışır
-  if (!user || !user.email !== process.env.ADMIN_EMAIL) {
+  if (!user || user.email !== process.env.ADMIN_EMAIL)
     return { error: "Yetkiniz yok." };
-  }
 
+  const supabaseAdmin = createAdminClient();
   const postId = formData.get("postId");
-  // Formdan gelen tüm tagId'leri bir dizi olarak alıyoruz
   const tagIds = formData.getAll("tagId").map((id) => parseInt(id, 10));
 
-  if (!postId) {
-    return { error: "Yazı ID'si bulunamadı." };
-  }
+  if (!postId) return { error: "Yazı ID'si bulunamadı." };
 
-  // 1. Önce bu yazıya ait tüm mevcut etiket bağlantılarını siliyoruz
-  const { error: deleteError } = await supabase
-    .from("post_tags")
-    .delete()
-    .eq("post_id", postId);
+  await supabaseAdmin.from("post_tags").delete().eq("post_id", postId);
 
-  if (deleteError) {
-    console.error("Eski etiketleri silme hatası:", deleteError);
-    return { error: "Etiketler güncellenirken bir hata oluştu." };
-  }
-
-  // 2. Eğer formdan seçilen yeni etiketler varsa, onları ekliyoruz
   if (tagIds.length > 0) {
     const newLinks = tagIds.map((tagId) => ({
       post_id: postId,
       tag_id: tagId,
     }));
-
-    const { error: insertError } = await supabase
-      .from("post_tags")
-      .insert(newLinks);
-
-    if (insertError) {
-      console.error("Yeni etiketleri ekleme hatası:", insertError);
-      return { error: "Etiketler güncellenirken bir hata oluştu." };
-    }
+    const { error } = await supabaseAdmin.from("post_tags").insert(newLinks);
+    if (error)
+      return { error: "Yazı etiketleri güncellenirken bir hata oluştu." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath(`/admin/posts/${postId}/edit`);
   return { success: "Yazının etiketleri başarıyla güncellendi." };
 }
 
@@ -1459,6 +1444,7 @@ export async function updateCollection(formData) {
   const title = formData.get("title");
   const description = formData.get("description");
   const is_public = formData.get("is_public") === "true";
+  const type = formData.get("type"); // YENİ: Koleksiyon tipini alıyoruz
 
   const { error } = await supabase
     .from("collections")
@@ -1466,6 +1452,7 @@ export async function updateCollection(formData) {
       title,
       description,
       is_public,
+      type, // YENİ
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
@@ -2528,4 +2515,881 @@ export async function createCheckoutSession(formData) {
     const errorMessage = "Ödeme sayfasına yönlendirilirken bir hata oluştu.";
     return redirect(`/uyelik?message=${encodeURIComponent(errorMessage)}`);
   }
+}
+
+export async function fetchActivityFeed() {
+  "use server";
+
+  const supabase = createClient();
+  // Mevcut RPC fonksiyonumuzu çağırarak en güncel akışı alıyoruz.
+  const { data, error } = await supabase.rpc("get_community_activity_feed");
+
+  if (error) {
+    console.error("Aktivite akışı yeniden çekilirken hata:", error);
+    return [];
+  }
+  return data;
+}
+
+// Gemini kullanarak metin üreten fonksiyon
+export async function generateTextWithGemini(userPrompt) {
+  "use server";
+
+  if (!userPrompt) {
+    return { error: "Lütfen bir istek girin." };
+  }
+
+  try {
+    const prompt = `Kullanıcının isteği: "${userPrompt}". Bu isteğe uygun, yaratıcı ve ilgi çekici bir metin oluştur.`;
+    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const payload = { contents: chatHistory };
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      return { error: "Yapay zeka modelinden hata alındı." };
+    }
+    const result = await response.json();
+
+    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+      return {
+        success: true,
+        text: result.candidates[0].content.parts[0].text,
+      };
+    } else {
+      return {
+        error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı.",
+      };
+    }
+  } catch (e) {
+    console.error("Metin üretme hatası:", e);
+    return { error: "Metin üretilirken beklenmedik bir hata oluştu." };
+  }
+}
+
+// Imagen kullanarak görsel üreten fonksiyon
+export async function generateImageWithImagen(userPrompt) {
+  "use server";
+
+  if (!userPrompt) {
+    return { error: "Lütfen bir görsel tarifi girin." };
+  }
+
+  try {
+    const payload = {
+      instances: [{ prompt: userPrompt }],
+      parameters: { sampleCount: 1 },
+    };
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) return { error: "Gemini/Imagen API anahtarı bulunamadı." };
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      return { error: "Görsel üretme servisinden hata alındı." };
+    }
+    const result = await response.json();
+
+    if (result.predictions?.[0]?.bytesBase64Encoded) {
+      const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+      return { success: true, url: imageUrl };
+    } else {
+      return { error: "Yapay zeka modelinden bir görsel alınamadı." };
+    }
+  } catch (e) {
+    console.error("Görsel üretme hatası:", e);
+    return { error: "Görsel üretilirken beklenmedik bir hata oluştu." };
+  }
+}
+
+// Yeni bir sohbet başlatan veya mevcut olanı bulan fonksiyon
+export async function startConversation(recipientUserId) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect("/login?message=Mesaj göndermek için giriş yapmalısınız.");
+  }
+
+  if (user.id === recipientUserId) {
+    // Kendine mesaj göndermeyi engellemek için ana sayfaya yönlendirilebilir.
+    return redirect("/");
+  }
+
+  // Veritabanında oluşturduğumuz özel RPC fonksiyonunu çağırıyoruz.
+  const { data: conversationId, error } = await supabase.rpc(
+    "create_or_find_conversation",
+    {
+      p_user1_id: user.id,
+      p_user2_id: recipientUserId,
+    }
+  );
+
+  if (error) {
+    console.error("Sohbet başlatma hatası:", error);
+    // Hata durumunda kullanıcıyı profiline geri yönlendir
+    return redirect("/profile?message=Sohbet başlatılamadı.");
+  }
+
+  // Kullanıcıyı oluşturulan veya bulunan sohbetin sayfasına yönlendir
+  redirect(`/mesajlar/${conversationId}`);
+}
+
+// Bir sohbete yeni bir mesaj gönderen fonksiyon
+export async function sendMessage(formData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Mesaj göndermek için giriş yapmalısınız." };
+  }
+
+  const content = formData.get("content");
+  const conversationId = formData.get("conversationId");
+
+  if (!content || !conversationId || content.trim() === "") {
+    return { error: "Mesaj içeriği boş olamaz." };
+  }
+
+  // 1. Yeni mesajı 'messages' tablosuna ekle
+  const { error: messageError } = await supabase.from("messages").insert({
+    conversation_id: conversationId,
+    sender_id: user.id,
+    content: content.trim(),
+  });
+
+  if (messageError) {
+    console.error("Mesaj gönderme hatası:", messageError);
+    return { error: "Mesajınız gönderilirken bir hata oluştu." };
+  }
+
+  // 2. 'conversations' tablosundaki son mesaj zamanını güncelle.
+  // Bu, sohbet listesini en son aktiviteye göre sıralamamızı sağlar.
+  await supabase
+    .from("conversations")
+    .update({ last_message_at: new Date().toISOString() })
+    .eq("id", conversationId);
+
+  // Mesajın gönderildiği sohbet sayfasının önbelleğini temizle
+  revalidatePath(`/mesajlar/${conversationId}`);
+  // Ana mesajlar sayfasını da güncelle (sohbetleri yeniden sıralamak için)
+  revalidatePath("/mesajlar");
+
+  return { success: "Mesaj gönderildi." };
+}
+
+// Kullanıcıları aramak için kullanılan fonksiyon
+export async function searchUsers(searchTerm) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, username, email, avatar_url")
+    .or(`username.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
+    // Kullanıcının kendi kendini bulmasını engelle
+    .neq("id", user.id)
+    .limit(5);
+
+  if (error) {
+    console.error("Kullanıcı arama hatası:", error);
+    return [];
+  }
+  return data;
+}
+
+// Paylaşım menüsü için son sohbetleri getiren fonksiyon
+export async function getRecentConversationsForShare() {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  // 1. ADIM: Önce, giriş yapmış kullanıcının dahil olduğu sohbetlerin ID'lerini alıyoruz.
+  const { data: userConvos, error: userConvosError } = await supabase
+    .from("conversation_participants")
+    .select("conversation_id")
+    .eq("user_id", user.id);
+
+  if (userConvosError || !userConvos || userConvos.length === 0) {
+    return []; // Eğer hiç sohbeti yoksa, boş bir liste döndür.
+  }
+
+  const conversationIds = userConvos.map((c) => c.conversation_id);
+
+  // 2. ADIM: Bu sohbet ID'lerini kullanarak, bu sohbetlerdeki DİĞER katılımcıların
+  // profil bilgilerini çekiyoruz.
+  const { data: otherParticipants, error: participantsError } = await supabase
+    .from("conversation_participants")
+    .select(
+      `
+            profiles (id, username, avatar_url, email),
+            conversations (last_message_at)
+        `
+    )
+    .in("conversation_id", conversationIds)
+    .neq("user_id", user.id)
+    // En son konuşulan kişiyi en üste getirmek için sıralama yapıyoruz
+    .order("last_message_at", {
+      referencedTable: "conversations",
+      ascending: false,
+    })
+    .limit(5);
+
+  if (participantsError) {
+    console.error(
+      "Son sohbetler çekilirken hata (katılımcılar):",
+      participantsError
+    );
+    return [];
+  }
+
+  // Sadece profil bilgilerini içeren temiz bir dizi döndürüyoruz.
+  return otherParticipants.map((p) => p.profiles);
+}
+
+// Bir içeriği birden fazla kullanıcıya mesaj olarak gönderen ana fonksiyon
+// Bir içeriği birden fazla kullanıcıya mesaj olarak gönderen ana fonksiyon (GÜNCELLENDİ)
+export async function sendMessageWithSharedContent(formData) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user: sender },
+  } = await supabase.auth.getUser();
+
+  if (!sender) {
+    return { error: "Mesaj göndermek için giriş yapmalısınız." };
+  }
+
+  const recipientIds = formData.getAll("recipients");
+  const note = formData.get("note");
+  const sharedContent = JSON.parse(formData.get("sharedContent"));
+
+  if (!recipientIds || recipientIds.length === 0) {
+    return { error: "Lütfen en az bir alıcı seçin." };
+  }
+
+  try {
+    for (const recipientId of recipientIds) {
+      // 1. Sohbeti bul veya oluştur.
+      const { data: conversationId, error: convoError } = await supabase.rpc(
+        "create_or_find_conversation",
+        {
+          p_user1_id: sender.id,
+          p_user2_id: recipientId,
+        }
+      );
+
+      if (convoError || !conversationId) {
+        console.error("Sohbet oluşturma/bulma hatası:", convoError);
+        return { error: "Sohbet odası oluşturulamadı." };
+      }
+
+      // 2. Mesajı ekle.
+      const { error: messageError } = await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        sender_id: sender.id,
+        content: note || null,
+        shared_content: sharedContent,
+      });
+
+      if (messageError) {
+        console.error("Mesaj ekleme hatası:", messageError);
+        return { error: "Mesaj gönderilirken bir veritabanı hatası oluştu." };
+      }
+
+      // 3. Sohbetin son aktivite zamanını güncelle.
+      const { error: updateError } = await supabase
+        .from("conversations")
+        .update({ last_message_at: new Date().toISOString() })
+        .eq("id", conversationId);
+
+      if (updateError) {
+        console.error("Sohbet zamanı güncelleme hatası:", updateError);
+        // Bu kritik bir hata değil, mesaj yine de gitti. Sadece logluyoruz.
+      }
+    }
+  } catch (error) {
+    console.error("Paylaşım mesajı gönderme hatası (catch):", error);
+    return { error: "Mesajlar gönderilirken beklenmedik bir hata oluştu." };
+  }
+
+  // Tüm işlemler başarılı olduğunda ana mesajlar sayfasını yenile
+  revalidatePath("/mesajlar");
+  return { success: "İçerik başarıyla paylaşıldı!" };
+}
+
+// Bir sohbet penceresi açıldığında, o sohbetteki mesajları
+// okundu olarak işaretleyen yeni bir fonksiyon.
+export async function markConversationAsRead(conversationId) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || !conversationId) {
+    return { error: "Kullanıcı veya sohbet ID'si eksik." };
+  }
+
+  const { error } = await supabase.rpc("mark_conversation_as_read", {
+    p_conversation_id: conversationId,
+    p_user_id: user.id,
+  });
+
+  if (error) {
+    console.error("Mesajları okundu olarak işaretleme hatası:", error);
+    return { error: "Mesajlar okunmuş olarak işaretlenemedi." };
+  }
+
+  // DEĞİŞİKLİK: İşlem başarılı olduğunda, sunucu tarafında
+  // doğrudan layout'un önbelleğini temizleyerek yenilenmeye zorluyoruz.
+  revalidatePath("/mesajlar", "layout");
+
+  return { success: true };
+}
+
+// Yeni bir proje oluşturan fonksiyon
+export async function createProject(formData) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Bu işlem için giriş yapmalısınız." };
+  }
+
+  const title = formData.get("title");
+  if (!title) {
+    return { error: "Proje başlığı boş olamaz." };
+  }
+
+  // Projeye ait benzersiz bir slug oluşturuyoruz
+  const slug = slugify(title) + "-" + Date.now().toString(36);
+
+  const { data: newProject, error } = await supabase
+    .from("projects")
+    .insert({ title, user_id: user.id, description: "" })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("Proje oluşturma hatası:", error);
+    return { error: "Proje oluşturulurken bir hata oluştu." };
+  }
+
+  // Kullanıcıyı, yeni oluşturulan projenin düzenleme sayfasına yönlendir
+  redirect(`/profile/projects/${newProject.id}/edit`);
+}
+
+// Bir projenin detaylarını güncelleyen fonksiyon
+export async function updateProject(formData) {
+  "use server";
+  const supabase = createClient();
+
+  const id = formData.get("id");
+  const title = formData.get("title");
+  const description = formData.get("description");
+
+  const { error } = await supabase
+    .from("projects")
+    .update({ title, description, updated_at: new Date().toISOString() })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Proje güncelleme hatası:", error);
+    return { error: "Proje güncellenirken bir hata oluştu." };
+  }
+
+  revalidatePath(`/profile/projects/${id}/edit`);
+  revalidatePath("/profile");
+  return { success: "Proje başarıyla güncellendi." };
+}
+
+// Bir projeyi silen fonksiyon
+export async function deleteProject(formData) {
+  "use server";
+  const supabase = createClient();
+  const id = formData.get("id");
+
+  // RLS kuralları sayesinde kullanıcı sadece kendi projesini silebilir.
+  const { error } = await supabase.from("projects").delete().eq("id", id);
+
+  if (error) {
+    console.error("Proje silme hatası:", error);
+    return { error: "Proje silinirken bir hata oluştu." };
+  }
+
+  // Kullanıcıyı ana profil sayfasına yönlendiriyoruz çünkü proje artık yok.
+  redirect("/profile");
+}
+
+// Bir projedeki içerikleri (araç, eser, prompt) güncelleyen fonksiyon
+export async function updateProjectItems(formData) {
+  "use server";
+  const supabase = createClient();
+
+  const projectId = formData.get("projectId");
+  // Formdan gelen tüm item'ları bir dizi olarak alıyoruz
+  const items = JSON.parse(formData.get("items") || "[]"); // [{item_id: 1, item_type: 'tool'}, ...]
+
+  if (!projectId) {
+    return { error: "Proje ID'si bulunamadı." };
+  }
+
+  // 1. Önce bu projeye ait tüm mevcut içerikleri siliyoruz
+  const { error: deleteError } = await supabase
+    .from("project_items")
+    .delete()
+    .eq("project_id", projectId);
+
+  if (deleteError) {
+    console.error("Eski proje içerikleri silme hatası:", deleteError);
+    return { error: "Proje güncellenirken bir hata oluştu." };
+  }
+
+  // 2. Eğer formdan seçilen yeni içerikler varsa, onları ekliyoruz
+  if (items.length > 0) {
+    const newItems = items.map((item) => ({
+      project_id: projectId,
+      item_id: item.item_id,
+      item_type: item.item_type,
+    }));
+
+    const { error: insertError } = await supabase
+      .from("project_items")
+      .insert(newItems);
+
+    if (insertError) {
+      console.error("Yeni proje içerikleri ekleme hatası:", insertError);
+      return { error: "Proje güncellenirken bir hata oluştu." };
+    }
+  }
+
+  revalidatePath(`/profile/projects/${projectId}/edit`);
+  return { success: "Projedeki içerikler güncellendi." };
+}
+
+// Bir projenin tüm detaylarını (içindeki araçlar, eserler, promptlar)
+// AI analizi için çeken bir yardımcı fonksiyon.
+async function getProjectDetailsForAI(projectId) {
+  const supabase = createClient();
+
+  // Projenin ana bilgilerini çekiyoruz
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .select("title, description")
+    .eq("id", projectId)
+    .single();
+
+  if (projectError) throw new Error("Proje bulunamadı.");
+
+  // Projeye eklenmiş tüm içeriklerin listesini çekiyoruz
+  const { data: items, error: itemsError } = await supabase
+    .from("project_items")
+    .select("item_id, item_type")
+    .eq("project_id", projectId);
+
+  if (itemsError) throw new Error("Proje içerikleri çekilemedi.");
+
+  // Farklı türdeki içeriklerin detaylarını çekmek için ID'leri grupluyoruz
+  const toolIds = items
+    .filter((i) => i.item_type === "tool")
+    .map((i) => i.item_id);
+  const showcaseIds = items
+    .filter((i) => i.item_type === "showcase_item")
+    .map((i) => i.item_id);
+  const promptIds = items
+    .filter((i) => i.item_type === "prompt")
+    .map((i) => i.item_id);
+
+  // Her bir içerik türü için veritabanından detayları çekiyoruz
+  const [{ data: tools }, { data: showcaseItems }, { data: prompts }] =
+    await Promise.all([
+      supabase.from("tools").select("name, description").in("id", toolIds),
+      supabase
+        .from("showcase_items")
+        .select("title, description")
+        .in("id", showcaseIds),
+      supabase.from("prompts").select("title, prompt_text").in("id", promptIds),
+    ]);
+
+  // Tüm verileri tek bir obje altında birleştiriyoruz
+  return {
+    project,
+    tools: tools || [],
+    showcaseItems: showcaseItems || [],
+    prompts: prompts || [],
+  };
+}
+
+// "AI Stratejist" analizini isteyen ana fonksiyon
+export async function getAiProjectStrategy(projectId) {
+  "use server";
+
+  if (!projectId) {
+    return { error: "Proje ID'si bulunamadı." };
+  }
+
+  try {
+    // 1. Adım: Analiz edilecek tüm proje verisini çek
+    const projectData = await getProjectDetailsForAI(projectId);
+
+    // 2. Adım: Gemini için özel ve detaylı prompt'u oluştur
+    const formattedData = `
+        Proje Başlığı: ${projectData.project.title}
+        Proje Açıklaması: ${projectData.project.description}
+
+        Kullanılan Araçlar:
+        ${projectData.tools.map((t) => `- ${t.name}: ${t.description}`).join("\n") || "Yok"}
+
+        Oluşturulan Eserler:
+        ${projectData.showcaseItems.map((s) => `- ${s.title}: ${s.description}`).join("\n") || "Yok"}
+
+        Kullanılan Prompt'lar:
+        ${projectData.prompts.map((p) => `- ${p.title}: "${p.prompt_text}"`).join("\n") || "Yok"}
+    `;
+
+    const prompt = `
+        Sen bir proje yönetimi ve yapay zeka stratejistisin. Sana bir kullanıcının projesine eklediği araçların, eserlerin ve prompt'ların bir listesini vereceğim. 
+        
+        Proje Verileri:
+        ${formattedData}
+
+        Görevin: Bu verilere dayanarak, kullanıcının projesini daha da ileriye taşıması için stratejik tavsiyeler sunmaktır. Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin veya açıklama ekleme.
+    `;
+
+    // 3. Adım: Gemini API'sine isteği hazırla ve gönder
+    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const payload = {
+      contents: chatHistory,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            project_summary: {
+              type: "STRING",
+              description:
+                "Projenin genel amacını ve durumunu 2 cümleyle özetle.",
+            },
+            strategic_suggestions: {
+              type: "ARRAY",
+              items: { type: "STRING" },
+              description:
+                "Projenin hedefine ulaşması için 3 adet somut ve yaratıcı stratejik öneri sun.",
+            },
+            potential_tools: {
+              type: "ARRAY",
+              items: { type: "STRING" },
+              description:
+                "Bu projeye fayda sağlayabilecek, listede olmayan 2 farklı araç türü öner.",
+            },
+          },
+        },
+      },
+    };
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      return { error: `Yapay zeka modelinden hata alındı.` };
+    }
+
+    const result = await response.json();
+
+    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+      return {
+        success: true,
+        data: JSON.parse(result.candidates[0].content.parts[0].text),
+      };
+    } else {
+      return {
+        error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı.",
+      };
+    }
+  } catch (e) {
+    console.error("AI Stratejist fonksiyonunda genel hata:", e);
+    return { error: "Analiz oluşturulurken beklenmedik bir hata oluştu." };
+  }
+}
+
+// "AI Co-Pilot" analizini isteyen ana fonksiyon
+//"AI Co-Pilot" analizini isteyen, sohbet geçmişini hatırlayan ana fonksiyon
+export async function getAdminCoPilotResponse(userPrompt, history) {
+  "use server";
+
+  if (!process.env.SUPABASE_SERVICE_KEY || !process.env.GEMINI_API_KEY) {
+    return {
+      error: "Sunucu tarafı API anahtarları (.env.local) yapılandırılmamış.",
+    };
+  }
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: "Yetkiniz yok." };
+  }
+
+  try {
+    const supabaseAdmin = createAdminClient();
+
+    // DEĞİŞİKLİK: Artık sadece anlık verileri çekiyoruz, karmaşık şemayı kaldırıyoruz.
+    const { data: snapshotData, error: snapshotError } =
+      await supabaseAdmin.rpc("get_platform_snapshot");
+
+    if (snapshotError)
+      throw new Error(`Platform verileri alınamadı: ${snapshotError.message}`);
+
+    // DEĞİŞİKLİK: platformContext'i sadeleştiriyoruz.
+    const platformContext = `
+        MEVCUT ÖZELLİKLER: Kullanıcılar kayıt olabilir, profil oluşturabilir (kullanıcı adı, bio, avatar). Araçları listeleyebilir, gelişmiş filtreleme ve sıralama yapabilir. Araçlara puan verebilir, yorum yapabilir, favorilerine ekleyebilir. Tam donanımlı bir Admin Paneli (onay, düzenle, sil, öne çıkan, kullanıcı yönetimi), Blog, Koleksiyonlar, Prompt Kütüphanesi, Topluluk Eserleri Galerisi, Gerçek Zamanlı Aktivite Akışı, Özel Mesajlaşma ve AI Tavsiye Motoru (Gemini) mevcuttur.
+        TEKNOLOJİLER: Next.js (App Router), JavaScript, React, Supabase (PostgreSQL), Tailwind CSS, shadcn/ui.
+        ANLIK VERİLER: Toplam Kullanıcı: ${snapshotData.totals.total_users}, Toplam Onaylı Araç: ${snapshotData.totals.total_tools}
+    `;
+
+    const chatHistory = history.map((msg) => {
+      let contentText =
+        typeof msg.content === "string"
+          ? msg.content
+          : JSON.stringify(msg.content);
+      return {
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: contentText }],
+      };
+    });
+
+    const finalSystemPrompt = `Sen, 'AI Keşif Platformu' adlı projenin baş ürün yöneticisi ve baş geliştiricisisin. Sana platformun özelliklerini, teknik yapısını ve anlık verilerini sunuyorum. Görevin, tüm bu bağlamı kullanarak, admin ile olan konuşma geçmişini de dikkate alıp, sorduğu yeni soruya yönelik en akıllı ve en yaratıcı cevabı vermektir. Eğer senden bir özellik için kod yazman istenirse, bu teknolojilere uygun, tam ve çalıştırılabilir bir kod bloğu oluşturmalısın. Cevabını SADECE JSON formatında ver.`;
+
+    const finalUserMessage = {
+      role: "user",
+      parts: [
+        {
+          text: `${finalSystemPrompt}\n\n${platformContext}\n\nADMİNİN YENİ SORUSU: "${userPrompt}"`,
+        },
+      ],
+    };
+
+    const payload = {
+      contents: [...chatHistory, finalUserMessage],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            response_title: { type: "STRING" },
+            response_text: { type: "STRING" },
+            code_suggestion: {
+              type: "OBJECT",
+              properties: {
+                language: { type: "STRING" },
+                code: { type: "STRING" },
+                explanation: { type: "STRING" },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json();
+      return {
+        error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}`,
+      };
+    }
+
+    const result = await response.json();
+    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+      return {
+        success: true,
+        data: JSON.parse(result.candidates[0].content.parts[0].text),
+      };
+    } else {
+      return {
+        error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı.",
+      };
+    }
+  } catch (e) {
+    console.error("AI Co-Pilot fonksiyonunda genel hata:", e.message);
+    return {
+      error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}`,
+    };
+  }
+}
+
+// "Komut Paleti" için arama yapan fonksiyon
+export async function runOmniSearch(query) {
+  "use server";
+
+  if (!query) {
+    return [];
+  }
+
+  const supabase = createClient();
+  // Daha önce oluşturduğumuz özel veritabanı fonksiyonunu çağırıyoruz
+  const { data, error } = await supabase.rpc("omni_search", {
+    p_search_term: query,
+  });
+
+  if (error) {
+    console.error("Omni-search hatası:", error);
+    return [];
+  }
+
+  return data;
+}
+
+export async function toggleFollowUser(formData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+
+  if (!currentUser) {
+    return { error: "Bu işlem için giriş yapmalısınız." };
+  }
+
+  const targetUserId = formData.get("targetUserId");
+  const targetUsername = formData.get("targetUsername");
+
+  if (!targetUserId) {
+    return { error: "Hedef kullanıcı ID'si bulunamadı." };
+  }
+
+  // Kullanıcının kendi kendini takip etmesini engelle
+  if (currentUser.id === targetUserId) {
+    return { error: "Kendinizi takip edemezsiniz." };
+  }
+
+  // Kullanıcının hedef kullanıcıyı zaten takip edip etmediğini kontrol et
+  const { data: existingFollow, error: checkError } = await supabase
+    .from("followers")
+    .select("*")
+    .eq("follower_id", currentUser.id)
+    .eq("following_id", targetUserId)
+    .maybeSingle();
+
+  if (checkError) {
+    console.error("Takip kontrolü hatası:", checkError);
+    return { error: "İşlem sırasında bir veritabanı hatası oluştu." };
+  }
+
+  if (existingFollow) {
+    // Eğer zaten takip ediyorsa, takipten çık (kaydı sil)
+    const { error: unfollowError } = await supabase
+      .from("followers")
+      .delete()
+      .match({ follower_id: currentUser.id, following_id: targetUserId });
+
+    if (unfollowError) {
+      console.error("Takipten çıkma hatası:", unfollowError);
+      return { error: "Takipten çıkılırken bir hata oluştu." };
+    }
+  } else {
+    // Eğer takip etmiyorsa, takip et (yeni kayıt ekle)
+    const { error: followError } = await supabase
+      .from("followers")
+      .insert({ follower_id: currentUser.id, following_id: targetUserId });
+
+    if (followError) {
+      console.error("Takip etme hatası:", followError);
+      return { error: "Takip edilirken bir hata oluştu." };
+    }
+  }
+
+  // İlgili profil sayfasının önbelleğini temizleyerek butonun anında güncellenmesini sağla
+  if (targetUsername) {
+    revalidatePath(`/u/${targetUsername}`);
+  }
+
+  return { success: true };
+}
+
+// YENİ: Bir yazıya ilgili araçları atayan/kaldıran fonksiyon
+// YENİ: Bir yazıya ilgili araçları atayan/kaldıran fonksiyon
+// Bir yazıya ilgili araçları atayan fonksiyonu güncelliyoruz.
+export async function assignToolsToPost(formData) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL)
+    return { error: "Yetkiniz yok." };
+
+  const supabaseAdmin = createAdminClient();
+  const postId = formData.get("postId");
+  const toolIds = formData.getAll("toolId").map((id) => parseInt(id, 10));
+
+  if (!postId) return { error: "Yazı ID'si bulunamadı." };
+
+  await supabaseAdmin.from("post_tools").delete().eq("post_id", postId);
+
+  if (toolIds.length > 0) {
+    const newLinks = toolIds.map((toolId) => ({
+      post_id: postId,
+      tool_id: toolId,
+    }));
+    const { error } = await supabaseAdmin.from("post_tools").insert(newLinks);
+    if (error)
+      return { error: "İlişkili araçlar güncellenirken bir hata oluştu." };
+  }
+
+  revalidatePath(`/admin/posts/${postId}/edit`);
+  return { success: "Yazının ilişkili araçları güncellendi." };
 }

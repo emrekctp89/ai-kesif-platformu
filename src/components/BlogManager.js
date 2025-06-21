@@ -1,7 +1,16 @@
 "use client";
 
 import * as React from "react";
+import { useTransition } from "react"; // useTransition'ı import ediyoruz
 import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,11 +28,18 @@ import {
 } from "@/components/ui/alert-dialog";
 import { createPost, deletePost } from "@/app/actions";
 import toast from "react-hot-toast";
+import { PlusCircle } from "lucide-react";
 
-// Yazı Silme Butonu
+// ✅ Yazı Silme Butonu
 function DeletePostButton({ post }) {
-  const handleFormAction = async (formData) => {
+  const handleClick = async () => {
+    const formData = new FormData();
+    formData.set("id", post.id);
+
+    toast.loading("Siliniyor...");
     const result = await deletePost(formData);
+    toast.dismiss();
+
     if (result?.error) {
       toast.error(result.error);
     } else {
@@ -32,74 +48,108 @@ function DeletePostButton({ post }) {
   };
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="sm">
-          Sil
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Bu işlem geri alınamaz. "{post.title}" başlıklı yazı kalıcı olarak
-            silinecektir.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Vazgeç</AlertDialogCancel>
-          <form action={handleFormAction}>
-            <input type="hidden" name="id" value={post.id} />
-            <input type="hidden" name="slug" value={post.slug} />
-            <AlertDialogAction type="submit">Evet, Sil</AlertDialogAction>
-          </form>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <Button onClick={handleClick} variant="destructive" size="sm">
+      Sil
+    </Button>
   );
 }
 
-// Ana Blog Yönetim Bileşeni
-export function BlogManager({ posts }) {
+// Akıllı "Yeni Yazı" Butonu
+function CreateNewPostMenu() {
   const formRef = React.useRef(null);
+  const [open, setOpen] = React.useState(false);
+  // DEĞİŞİKLİK: Yükleme durumunu yönetmek için useTransition kullanıyoruz
+  const [isPending, startTransition] = useTransition();
 
-  const handleCreatePost = async (formData) => {
-    const result = await createPost(formData);
-    if (result?.error) {
-      toast.error(result.error);
-    }
+  const handleCreate = (event) => {
+    event.preventDefault();
+    const formData = new FormData(formRef.current);
+    const type = event.nativeEvent.submitter.value;
+    formData.set("type", type);
+
+    // Sunucu eylemini startTransition ile sarmalıyoruz.
+    // Bu, işlem sırasında arayüzün donmasını engeller ve 'isPending'i günceller.
+    startTransition(async () => {
+      const result = await createPost(formData);
+      if (result?.error) {
+        toast.error(result.error);
+      }
+      // Başarılı olursa, 'createPost' zaten yönlendirme yapıyor.
+      // Artık toast.loading veya toast.dismiss'e gerek yok.
+    });
+    setOpen(false);
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium mb-2">Yeni Yazı Oluştur</h3>
-        <form
-          ref={formRef}
-          action={handleCreatePost}
-          className="flex items-center gap-2"
-        >
-          <Label htmlFor="new-post-title" className="sr-only">
-            Yazı Başlığı
-          </Label>
-          <Input
-            id="new-post-title"
-            name="title"
-            placeholder="Yeni yazı başlığı..."
-            required
-          />
-          <Button type="submit">Oluştur & Düzenle</Button>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Yeni İçerik Ekle
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-80" align="end">
+        <DropdownMenuLabel>
+          Ne tür bir içerik oluşturmak istiyorsunuz?
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <form ref={formRef} onSubmit={handleCreate} className="p-2 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="new-post-title">Yeni İçerik Başlığı</Label>
+            <Input
+              id="new-post-title"
+              name="title"
+              placeholder="Yeni başlık..."
+              required
+              disabled={isPending}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            {/* DEĞİŞİKLİK: Butonlar artık 'isPending' durumuna göre kendi kendini yönetiyor */}
+            <Button
+              type="submit"
+              name="type"
+              value="Blog"
+              variant="secondary"
+              size="sm"
+              disabled={isPending}
+            >
+              {isPending ? "..." : "Blog Yazısı Oluştur"}
+            </Button>
+            <Button
+              type="submit"
+              name="type"
+              value="Rehber"
+              size="sm"
+              disabled={isPending}
+            >
+              {isPending ? "..." : "Rehber Oluştur"}
+            </Button>
+          </div>
         </form>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// ✅ Ana Bileşen
+export function BlogManager({ posts }) {
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <CreateNewPostMenu />
       </div>
 
       <hr className="border-border" />
 
-      <div>
+      <div className="space-y-2">
         <h3 className="text-lg font-medium mb-2">Mevcut Yazılar</h3>
         <div className="space-y-2">
           {posts.map((post) => {
-            // DEĞİŞİKLİK: 'is_published' yerine 'status' kullanıyoruz
             const isPublished = post.status === "Yayınlandı";
+            // DEĞİŞİKLİK: editUrl artık her zaman yeni, merkezi sayfayı işaret ediyor.
+            const editUrl = `/admin/posts/${post.id}/edit`;
+
             return (
               <div
                 key={post.id}
@@ -107,13 +157,16 @@ export function BlogManager({ posts }) {
               >
                 <div>
                   <p className="font-medium">{post.title}</p>
-                  <Badge variant={isPublished ? "default" : "secondary"}>
-                    {post.status}
-                  </Badge>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant={isPublished ? "default" : "secondary"}>
+                      {post.status}
+                    </Badge>
+                    <Badge variant="outline">{post.type}</Badge>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/admin/blog/${post.id}/edit`}>Düzenle</Link>
+                    <Link href={editUrl}>Düzenle</Link>
                   </Button>
                   <DeletePostButton post={post} />
                 </div>

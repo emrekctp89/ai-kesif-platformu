@@ -17,7 +17,9 @@ import { ShowcaseManager } from "@/components/ShowcaseManager";
 import { ArrowUp, Star } from "lucide-react";
 import { ReputationInfo } from "@/components/ReputationInfo";
 import { ProfileEditor } from "@/components/ProfileEditor";
-
+// Yeni bileşenleri import ediyoruz
+import { ProjectList } from "@/components/ProjectList";
+import { CreateProjectButton } from "@/components/CreateProjectButton";
 // --- DATA FETCHING FUNCTIONS ---
 
 async function getUserProfile(userId) {
@@ -134,7 +136,21 @@ async function getUserRatedTools(userId) {
   return data.map((item) => ({ ...item.tools, user_rating: item.rating }));
 }
 
-// --- MAIN PAGE COMPONENT ---
+// YENİ: Kullanıcının projelerini çeken fonksiyon
+async function getUserProjects(userId) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .select("id, title, created_at, updated_at")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false, nullsFirst: false });
+
+  if (error) {
+    console.error("Projeler çekilirken hata:", error);
+    return [];
+  }
+  return data;
+}
 
 export default async function ProfilePage() {
   const supabase = createClient();
@@ -143,6 +159,7 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
   if (!user) return redirect("/login");
 
+  // Yeni proje verisini de paralel olarak çekiyoruz
   const [
     profile,
     reputationEvents,
@@ -152,6 +169,7 @@ export default async function ProfilePage() {
     userComments,
     favoriteTools,
     ratedTools,
+    projects, // <-- Yeni veri
   ] = await Promise.all([
     getUserProfile(user.id),
     getUserReputationEvents(user.id),
@@ -161,6 +179,7 @@ export default async function ProfilePage() {
     getUserComments(user.id),
     getUserFavoriteTools(user.id),
     getUserRatedTools(user.id),
+    getUserProjects(user.id), // <-- Yeni fonksiyonu çağırıyoruz
   ]);
 
   return (
@@ -181,6 +200,21 @@ export default async function ProfilePage() {
           />
         </div>
       </div>
+      {/* DEĞİŞİKLİK: Projeler Kartı artık yeni bileşenleri kullanıyor */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Projelerim</CardTitle>
+            <CardDescription>
+              Kişisel çalışma alanlarınızı buradan yönetin.
+            </CardDescription>
+          </div>
+          <CreateProjectButton />
+        </CardHeader>
+        <CardContent>
+          <ProjectList projects={projects} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

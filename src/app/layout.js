@@ -5,9 +5,11 @@ import Footer from "@/components/Footer";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { TopLoader } from "@/components/TopLoader";
-// Yeni Analytics bileşenini import ediyoruz
 import { Analytics } from "@vercel/analytics/react";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { CommandPalette } from "@/components/CommandPalette";
+// Yeni ipucu bileşenini import ediyoruz
+import { CommandHint } from "@/components/CommandHint";
 
 const onest = Onest({
   subsets: ["latin"],
@@ -29,7 +31,6 @@ export default function RootLayout({ children }) {
           enableSystem
           disableTransitionOnChange
         >
-          {/* Google Analytics'i ThemeProvider'ın hemen içine yerleştiriyoruz */}
           <GoogleAnalytics />
           <TopLoader />
           <Toaster
@@ -50,7 +51,10 @@ export default function RootLayout({ children }) {
             <Footer />
           </div>
 
-          {/* Analytics bileşenini body'nin sonuna ekliyoruz */}
+          <CommandPalette />
+          {/* Yeni ipucu bileşenini buraya ekliyoruz */}
+          <CommandHint />
+
           <Analytics />
         </ThemeProvider>
       </body>

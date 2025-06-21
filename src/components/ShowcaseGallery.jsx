@@ -55,20 +55,20 @@ export function ShowcaseGallery({ items, user }) {
           return (
             <div key={item.id} className="masonry-grid-item">
               <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-primary group">
-                <Link
-                  href={`${pathname}?eserId=${item.id}`}
-                  scroll={false}
-                  className="block"
-                >
-                  <CardContent className="p-0">
-                    {item.content_type === "Görsel" ? (
-                      <div className="w-full overflow-hidden bg-muted aspect-square relative">
-                        {/* DEĞİŞİKLİK: <img> yerine <Image> kullanıyoruz */}
+                <CardContent className="p-0">
+                  <Link
+                    href={`${pathname}?eserId=${item.id}`}
+                    scroll={false}
+                    className="block cursor-pointer"
+                  >
+                    {item.content_type === "Görsel" && item.image_url ? (
+                      // DEĞİŞİKLİK: <Image> bileşeni doğru şekilde kullanıldı
+                      <div className="aspect-square w-full overflow-hidden bg-muted relative">
                         <Image
                           src={item.image_url}
                           alt={item.title}
                           fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                           className="object-cover transition-transform group-hover:scale-105"
                         />
                       </div>
@@ -80,41 +80,41 @@ export function ShowcaseGallery({ items, user }) {
                         </p>
                       </div>
                     )}
-                    <div className="p-4">
-                      <h3 className="font-semibold text-card-foreground line-clamp-1">
+                  </Link>
+                  <div className="p-4">
+                    <Link href={`${pathname}?eserId=${item.id}`} scroll={false}>
+                      <h3 className="font-semibold text-card-foreground line-clamp-1 hover:text-primary">
                         {item.title}
                       </h3>
+                    </Link>
+                    <div className="flex items-center gap-2 mt-2">
+                      {userProfile.username ? (
+                        <Link
+                          href={`/u/${userProfile.username}`}
+                          className="group/user flex items-center gap-2"
+                        >
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={userProfile.avatar_url} />
+                            <AvatarFallback>{fallback}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-muted-foreground group-hover/user:text-primary">
+                            {userProfile.username}
+                          </span>
+                        </Link>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={userProfile.avatar_url} />
+                            <AvatarFallback>{fallback}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-muted-foreground">
+                            {userProfile.email}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </CardContent>
-                </Link>
-                <div className="p-4 pt-0">
-                  <div className="flex items-center gap-2 mt-2">
-                    {userProfile.username ? (
-                      <Link
-                        href={`/u/${userProfile.username}`}
-                        className="group/user flex items-center gap-2"
-                      >
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={userProfile.avatar_url} />
-                          <AvatarFallback>{fallback}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-xs text-muted-foreground group-hover/user:text-primary">
-                          {userProfile.username}
-                        </span>
-                      </Link>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={userProfile.avatar_url} />
-                          <AvatarFallback>{fallback}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-xs text-muted-foreground">
-                          {userProfile.email}
-                        </span>
-                      </div>
-                    )}
                   </div>
-                </div>
+                </CardContent>
               </Card>
             </div>
           );

@@ -11,7 +11,6 @@ import { Star, Crown, Gem } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ToolCardSkeleton } from "./ToolCardSkeleton";
 
-// Seviyelere göre stiller
 const tierStyles = {
   Pro: {
     badge: "bg-purple-600 text-white hover:bg-purple-700",
@@ -140,7 +139,7 @@ export function InfiniteToolsList({
                     <span className="font-bold text-foreground">
                       {tool.average_rating.toFixed(1)}
                     </span>
-                    <span>({tool.total_ratings} oy)</span>
+                    <span>({tool.total_ratings})</span>
                   </div>
                   {tool.pricing_model && (
                     <Badge variant="default">{tool.pricing_model}</Badge>

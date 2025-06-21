@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { ShareButtons } from "@/components/ShareButtons";
 import { SimilarTools } from "@/components/SimilarTools";
 import { ScrollHint } from "@/components/ScrollHint";
 import PromptSection from "@/components/PromptSection";
+import { ShareButton } from "@/components/ShareButton";
 import {
   Globe,
   Apple,
@@ -23,6 +24,7 @@ import {
   Gem,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BookOpen } from "lucide-react";
 
 const platformIcons = {
   Web: <Globe className="w-5 h-5" />,
@@ -58,6 +60,22 @@ async function getToolData(slug) {
     .eq("slug", slug)
     .single();
   if (error || !tool) notFound();
+  // DEĞİŞİKLİK: Kullanıcının abonelik durumunu çekiyoruz
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("stripe_price_id")
+        .eq("id", user.id)
+        .single()
+    : { data: null };
+  const isProUser =
+    !!profile?.stripe_price_id ||
+    (user && user.email === process.env.ADMIN_EMAIL);
+
+  // YENİ: Eğer araç "Pro" ise ve kullanıcı Pro değilse, üyelik sayfasına yönlendir
+  if (tool.tier === "Pro" && !isProUser) {
+    redirect("/uyelik");
+  }
   const { data: favoriteRecord } = userId
     ? await supabase
         .from("favorites")
@@ -93,12 +111,43 @@ export async function generateMetadata({ params }) {
   };
 }
 
+// YENİ: Belirli bir araçla ilişkili rehberleri çeken fonksiyon
+async function getRelatedGuides(toolId) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("post_tools")
+    .select(
+      `
+            posts (title, slug, description)
+        `
+    )
+    .eq("tool_id", toolId)
+    .eq("posts.status", "Yayınlandı")
+    .eq("posts.type", "Rehber");
+
+  if (error) {
+    console.error("İlgili rehberler çekilirken hata:", error);
+    return [];
+  }
+  return data.map((item) => item.posts).filter(Boolean);
+}
+
 export default async function ToolDetailPage({ params }) {
   const { tool, usersRating, isFavorited, user } = await getToolData(
     params.slug
   );
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/tool/${tool.slug}`;
   const shareTitle = `Bu harika AI aracını keşfet: ${tool.name}`;
+  // Paylaşım için özel içerik objesini hazırlıyoruz
+  const sharedContent = {
+    type: "tool",
+    id: tool.id,
+    slug: tool.slug,
+    name: tool.name,
+    description: tool.description,
+    // Görseli olan bir alan varsa o da eklenebilir
+  };
+  const relatedGuides = await getRelatedGuides(tool.id);
 
   // DÜZELTME: Eksik olan değişkeni burada tanımlıyoruz.
   const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
@@ -177,8 +226,12 @@ export default async function ToolDetailPage({ params }) {
           <CardHeader>
             <CardTitle>Bu Aracı Paylaş</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex items-center justify-between">
+            {/* Harici Sosyal Medya Butonları */}
             <ShareButtons url={shareUrl} title={shareTitle} />
+
+            {/* YENİ: Platform İçi Mesajla Paylaşma Butonu */}
+            {user && <ShareButton content={sharedContent} />}
           </CardContent>
         </Card>
       </section>
@@ -196,6 +249,38 @@ export default async function ToolDetailPage({ params }) {
       <section>
         <PromptSection toolId={tool.id} toolSlug={tool.slug} />
       </section>
+
+      {/* YENİ: İlgili Rehberler Bölümü */}
+      {relatedGuides.length > 0 && (
+        <section>
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
+            <BookOpen className="w-6 h-6" />
+            Bu Araç ile İlgili Rehberler
+          </h2>
+          <div className="space-y-4">
+            {relatedGuides.map((guide) => (
+              <Link
+                key={guide.slug}
+                href={`/blog/${guide.slug}`}
+                className="group block"
+              >
+                <Card className="hover:border-primary transition-colors">
+                  <CardHeader>
+                    <CardTitle className="group-hover:text-primary">
+                      {guide.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground line-clamp-2 text-sm">
+                      {guide.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 5. Bölüm: Benzer Araçlar */}
       <section>

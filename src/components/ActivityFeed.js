@@ -1,14 +1,17 @@
+// Bu dosyayı "ActivityFeed.js" olarak güncelleyin.
+// Mevcut ActivityFeedClient.js dosyasını silebilirsiniz,
+// çünkü artık tüm mantık burada birleşti.
+
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
+import Image from "next/image"; // Image bileşenini import ediyoruz
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageSquare, Star, Image as ImageIcon } from "lucide-react";
+import { Heart, MessageSquare, Star, ImageIcon, Users } from "lucide-react";
 
-// Veritabanındaki RPC fonksiyonunu çağıran fonksiyon
 async function getActivityFeedData() {
   const supabase = createClient();
   const { data, error } = await supabase.rpc("get_community_activity_feed");
-
   if (error) {
     console.error("Aktivite akışı çekilirken hata:", error);
     return [];
@@ -16,7 +19,6 @@ async function getActivityFeedData() {
   return data;
 }
 
-// Her bir olay türü için farklı bir kart tasarımı
 const eventComponents = {
   new_favorite: ({ event }) => (
     <CardContent className="p-4 flex items-center gap-4">
@@ -64,8 +66,9 @@ const eventComponents = {
           </Link>{" "}
           aracına yeni bir yorum yaptı.
         </p>
-        <p className="text-xs italic text-muted-foreground mt-1">
-          "{event.details.comment_content}"
+        {/* DÜZELTME: &quot; kullanıldı */}
+        <p className="text-xs italic text-muted-foreground mt-1 line-clamp-2">
+          &quot;{event.details.comment_content}&quot;
         </p>
         <time className="text-xs text-muted-foreground mt-2 block">
           {new Date(event.event_time).toLocaleDateString("tr-TR")}
@@ -76,7 +79,7 @@ const eventComponents = {
   new_showcase: ({ event }) => (
     <CardContent className="p-4 flex items-center gap-4">
       <ImageIcon className="w-6 h-6 text-green-500" />
-      <div>
+      <div className="flex-1">
         <p className="text-sm">
           <Link
             href={`/u/${event.username}`}
@@ -97,11 +100,18 @@ const eventComponents = {
           {new Date(event.event_time).toLocaleDateString("tr-TR")}
         </time>
       </div>
-      <img
-        src={event.details.item_image_url}
-        alt={event.details.item_title}
-        className="w-12 h-12 object-cover rounded-md ml-auto"
-      />
+      {/* DÜZELTME: <img> yerine <Image> kullanıyoruz */}
+      {event.details.item_image_url && (
+        <Link href={`/eserler?eserId=${event.details.item_id}`}>
+          <Image
+            src={event.details.item_image_url}
+            alt={event.details.item_title}
+            width={48}
+            height={48}
+            className="w-12 h-12 object-cover rounded-md"
+          />
+        </Link>
+      )}
     </CardContent>
   ),
   new_prompt: ({ event }) => (
@@ -122,7 +132,8 @@ const eventComponents = {
           >
             {event.details.tool_name}
           </Link>{" "}
-          için yeni bir prompt paylaştı: "{event.details.prompt_title}"
+          için yeni bir prompt paylaştı: &quot;{event.details.prompt_title}
+          &quot;
         </p>
         <time className="text-xs text-muted-foreground">
           {new Date(event.event_time).toLocaleDateString("tr-TR")}
@@ -132,7 +143,6 @@ const eventComponents = {
   ),
 };
 
-// Ana Aktivite Akışı Bileşeni
 export async function ActivityFeed() {
   const feedItems = await getActivityFeedData();
 
@@ -155,7 +165,7 @@ export async function ActivityFeed() {
           const EventComponent = eventComponents[event.event_type];
           return EventComponent ? (
             <Card
-              key={`${event.event_type}-${index}`}
+              key={`${event.event_type}-${index}-${event.event_time}`}
               className="transition-all hover:shadow-md"
             >
               <EventComponent event={event} />

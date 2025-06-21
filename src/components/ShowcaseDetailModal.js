@@ -9,6 +9,7 @@ import {
   useRef,
 } from "react";
 import Link from "next/link";
+import Image from "next/image"; // Next.js'in Image bileşenini import ediyoruz
 import {
   DialogContent,
   DialogHeader,
@@ -27,7 +28,6 @@ import {
   addShowcaseComment,
   toggleShowcaseVote,
 } from "@/app/actions";
-import Image from "next/image"; // Next.js'in Image bileşenini import ediyoruz
 
 // Oylama Butonu
 function VoteButton({ item, isInitiallyVoted, user, onVote }) {
@@ -47,18 +47,16 @@ function VoteButton({ item, isInitiallyVoted, user, onVote }) {
     }
 
     startTransition(() => {
+      const wasVoted = optimisticState.isVoted;
       toggleOptimisticState();
       const formData = new FormData();
       formData.append("itemId", item.id);
-
-      // DEĞİŞİKLİK: Artık 'isVoted' bilgisini göndermiyoruz. Sunucu kendi kararını verecek.
+      formData.append("isVoted", wasVoted.toString());
 
       toggleShowcaseVote(formData).then((result) => {
         if (result?.error) {
           toast.error(result.error);
         } else {
-          // İşlem başarılı olduğunda, ebeveyn bileşene haber vererek
-          // en güncel oy durumunun tekrar çekilmesini sağlıyoruz.
           onVote();
         }
       });
@@ -170,10 +168,13 @@ export function ShowcaseDetailModal({
 
       <div className="relative bg-muted w-2/3 flex items-center justify-center">
         {item.content_type === "Görsel" ? (
+          // DEĞİŞİKLİK: <img> yerine <Image> kullanıyoruz
           <Image
             src={item.image_url}
             alt={item.title}
-            className="max-w-full max-h-full object-contain"
+            fill
+            className="object-contain"
+            sizes="66vw"
           />
         ) : (
           <div className="p-8 h-full w-full">
@@ -212,7 +213,6 @@ export function ShowcaseDetailModal({
               <p className="text-xs text-muted-foreground">Oluşturan</p>
             </div>
           </div>
-          {/* Artık isInitiallyVoted prop'u her render'da güncel olacak */}
           <VoteButton
             item={item}
             isInitiallyVoted={details.isVoted}
