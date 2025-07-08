@@ -56,7 +56,7 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
           </Link>
         </DropdownMenuItem>
         {/* Pro olmayanlar için yükseltme linki */}
-        {!isProUser && !isAdmin && (
+        {/*} {!isProUser && !isAdmin && (
           <DropdownMenuItem asChild>
             <Link href="/uyelik">
               <Sparkles className="mr-2 h-4 w-4 text-purple-500" />
@@ -64,7 +64,7 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
             </Link>
           </DropdownMenuItem>
         )}
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator />*/}
         <DropdownMenuItem asChild>
           <form action={signOut} className="w-full">
             <button

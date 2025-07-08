@@ -104,9 +104,9 @@ async function getToolsData(searchParams, user) {
   }
 
   // DEĞİŞİKLİK: Eğer kullanıcı Pro değilse, 'Pro' seviyesindeki araçları hariç tut
-  if (!isProUser) {
-    query = query.neq("tier", "Pro");
-  }
+  // if (!isProUser) {
+  //   query = query.neq('tier', 'Pro');
+  // }
 
   switch (sortBy) {
     case "rating":
@@ -141,7 +141,7 @@ async function getToolsData(searchParams, user) {
 
 export async function ToolsList({ searchParams, user, favoriteToolIds }) {
   // isProUser bilgisi artık getToolsData'dan gelecek
-  const { tools, currentPage, totalPages, isProUser } = await getToolsData(
+  const { tools, currentPage, totalPages } = await getToolsData(
     searchParams,
     user
   );
@@ -149,8 +149,8 @@ export async function ToolsList({ searchParams, user, favoriteToolIds }) {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {tools.length > 0 ? (
-          tools.map((tool) => {
+        
+          {tools.map((tool) => {
             const isFavorited = favoriteToolIds.has(tool.id);
             const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
 

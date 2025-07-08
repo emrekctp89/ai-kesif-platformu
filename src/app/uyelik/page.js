@@ -8,11 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { createCheckoutSession } from "@/app/actions";
 import { Check, Sparkles } from "lucide-react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-// DEĞİŞİKLİK: Eksik olan Badge bileşenini import ediyoruz
 import { Badge } from "@/components/ui/badge";
 
 // Veritabanından ürünleri ve fiyatları çeken fonksiyon
@@ -139,17 +137,10 @@ export default async function PricingPage() {
               </ul>
             </CardContent>
             <CardFooter>
-              <form action={createCheckoutSession} className="w-full">
-                <input
-                  type="hidden"
-                  name="priceId"
-                  value={proProduct.prices[0].id}
-                />
-                <Button type="submit" className="w-full" size="lg">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Pro'ya Şimdi Yükselt
-                </Button>
-              </form>
+              {/* DEĞİŞİKLİK: Butonu devre dışı bırakıp "Yakında" mesajı ekliyoruz */}
+              <Button className="w-full" size="lg" disabled>
+                Yakında...
+              </Button>
             </CardFooter>
           </Card>
         )}

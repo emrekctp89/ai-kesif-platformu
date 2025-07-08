@@ -2601,8 +2601,15 @@ export async function generateImageWithImagen(userPrompt) {
       body: JSON.stringify(payload),
     });
 
+    // DEĞİŞİKLİK: Hata kontrolünü daha detaylı hale getiriyoruz.
     if (!response.ok) {
-      return { error: "Görsel üretme servisinden hata alındı." };
+      const errorBody = await response.json();
+      console.error("Imagen API Hatası:", errorBody);
+      // DETAYLI HATA MESAJINI İSTEMCİYE GÖNDER
+      const errorMessage =
+        errorBody.error?.message ||
+        "Görsel üretme servisinden bilinmeyen bir hata alındı.";
+      return { error: `Hata: ${errorMessage}` };
     }
     const result = await response.json();
 

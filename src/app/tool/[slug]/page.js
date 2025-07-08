@@ -73,9 +73,10 @@ async function getToolData(slug) {
     (user && user.email === process.env.ADMIN_EMAIL);
 
   // YENİ: Eğer araç "Pro" ise ve kullanıcı Pro değilse, üyelik sayfasına yönlendir
-  if (tool.tier === "Pro" && !isProUser) {
-    redirect("/uyelik");
-  }
+  // Bu if bloğunu kaldırın veya yorum satırı yapın:
+  // if (tool.tier === 'Pro' && !isProUser) {
+  //   redirect('/uyelik');
+
   const { data: favoriteRecord } = userId
     ? await supabase
         .from("favorites")
