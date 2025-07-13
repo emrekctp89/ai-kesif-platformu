@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 // Yeni Kullanıcı Yönetim Tablosu bileşenini import ediyoruz
 import { UserManagementTable } from "@/components/UserManagementTable";
+import { AiBriefingCard } from "@/components/AiBriefingCard"; // Yeni bileşeni import ediyoruz
 
 // Veritabanındaki RPC fonksiyonlarını çağıran fonksiyonlar
 async function getDashboardData() {
@@ -56,6 +57,9 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
       <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+
+      {/* YENİ: AI Brifing Kartı */}
+      <AiBriefingCard />
 
       {/* İstatistikler Bölümü */}
       <DashboardClient stats={stats} />

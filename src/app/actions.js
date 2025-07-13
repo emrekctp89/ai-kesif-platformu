@@ -3165,38 +3165,29 @@ export async function getAiProjectStrategy(projectId) {
 
 // "AI Co-Pilot" analizini isteyen ana fonksiyon
 //"AI Co-Pilot" analizini isteyen, sohbet geçmişini hatırlayan ana fonksiyon
+// "AI Co-Pilot" analizini isteyen, sohbet geçmişini hatırlayan ana fonksiyon
 export async function getAdminCoPilotResponse(userPrompt, history) {
   "use server";
-
-  if (!process.env.SUPABASE_SERVICE_KEY || !process.env.GEMINI_API_KEY) {
-    return {
-      error: "Sunucu tarafı API anahtarları (.env.local) yapılandırılmamış.",
-    };
-  }
 
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user || user.email !== process.env.ADMIN_EMAIL) {
-    return { error: "Yetkiniz yok." };
+    return { error: "Bu özelliği kullanmak için yetkiniz yok." };
   }
 
   try {
     const supabaseAdmin = createAdminClient();
-
-    // DEĞİŞİKLİK: Artık sadece anlık verileri çekiyoruz, karmaşık şemayı kaldırıyoruz.
     const { data: snapshotData, error: snapshotError } =
       await supabaseAdmin.rpc("get_platform_snapshot");
 
     if (snapshotError)
       throw new Error(`Platform verileri alınamadı: ${snapshotError.message}`);
 
-    // DEĞİŞİKLİK: platformContext'i sadeleştiriyoruz.
     const platformContext = `
-        MEVCUT ÖZELLİKLER: Kullanıcılar kayıt olabilir, profil oluşturabilir (kullanıcı adı, bio, avatar). Araçları listeleyebilir, gelişmiş filtreleme ve sıralama yapabilir. Araçlara puan verebilir, yorum yapabilir, favorilerine ekleyebilir. Tam donanımlı bir Admin Paneli (onay, düzenle, sil, öne çıkan, kullanıcı yönetimi), Blog, Koleksiyonlar, Prompt Kütüphanesi, Topluluk Eserleri Galerisi, Gerçek Zamanlı Aktivite Akışı, Özel Mesajlaşma ve AI Tavsiye Motoru (Gemini) mevcuttur.
-        TEKNOLOJİLER: Next.js (App Router), JavaScript, React, Supabase (PostgreSQL), Tailwind CSS, shadcn/ui.
-        ANLIK VERİLER: Toplam Kullanıcı: ${snapshotData.totals.total_users}, Toplam Onaylı Araç: ${snapshotData.totals.total_tools}
+        PLATFORMUN ANLIK DURUMU:
+        - Toplam Kullanıcı: ${snapshotData.totals.total_users}, Toplam Araç: ${snapshotData.totals.total_tools}, Toplam Yorum: ${snapshotData.totals.total_comments}
     `;
 
     const chatHistory = history.map((msg) => {
@@ -3210,7 +3201,7 @@ export async function getAdminCoPilotResponse(userPrompt, history) {
       };
     });
 
-    const finalSystemPrompt = `Sen, 'AI Keşif Platformu' adlı projenin baş ürün yöneticisi ve baş geliştiricisisin. Sana platformun özelliklerini, teknik yapısını ve anlık verilerini sunuyorum. Görevin, tüm bu bağlamı kullanarak, admin ile olan konuşma geçmişini de dikkate alıp, sorduğu yeni soruya yönelik en akıllı ve en yaratıcı cevabı vermektir. Eğer senden bir özellik için kod yazman istenirse, bu teknolojilere uygun, tam ve çalıştırılabilir bir kod bloğu oluşturmalısın. Cevabını SADECE JSON formatında ver.`;
+    const finalSystemPrompt = `Sen, 'AI Keşif Platformu' adlı projenin baş ürün yöneticisisin. Sana platformun anlık verilerini ve önceki konuşmalarımızı sunuyorum. Görevin, tüm bu bağlamı kullanarak, adminin sorduğu son soruya yönelik en akıllı ve uygulanabilir cevabı vermektir. Cevabını SADECE JSON formatında ver.`;
 
     const finalUserMessage = {
       role: "user",
@@ -3229,22 +3220,28 @@ export async function getAdminCoPilotResponse(userPrompt, history) {
           type: "OBJECT",
           properties: {
             response_title: { type: "STRING" },
-            response_text: { type: "STRING" },
-            code_suggestion: {
-              type: "OBJECT",
-              properties: {
-                language: { type: "STRING" },
-                code: { type: "STRING" },
-                explanation: { type: "STRING" },
-              },
+            response_text: {
+              type: "STRING",
+              description: "Adminin sorusuna doğrudan ve net bir cevap ver.",
+            },
+            // YENİ: AI'dan, sohbeti devam ettirecek 3 soru önerisi istiyoruz.
+            follow_up_questions: {
+              type: "ARRAY",
+              items: { type: "STRING" },
+              description:
+                "Adminin bu cevaptan sonra sorabileceği 3 adet mantıklı ve ileriye dönük soru öner.",
             },
           },
+          required: ["response_title", "response_text", "follow_up_questions"],
         },
       },
     };
 
     const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -3399,4 +3396,163 @@ export async function assignToolsToPost(formData) {
 
   revalidatePath(`/admin/posts/${postId}/edit`);
   return { success: "Yazının ilişkili araçları güncellendi." };
+}
+
+// Basit bir e-posta şablonu
+const FeedbackEmail = ({ feedback, userEmail }) => (
+  <div>
+    <h1>Yeni Geri Bildirim Alındı</h1>
+    <p>
+      <strong>Gönderen:</strong> {userEmail || "Misafir Kullanıcı"}
+    </p>
+    <hr />
+    <h2>Mesaj:</h2>
+    <p style={{ whiteSpace: "pre-wrap" }}>{feedback}</p>
+  </div>
+);
+
+export async function sendFeedback(formData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const feedback = formData.get("feedback");
+
+  if (!feedback || feedback.trim() === "") {
+    return { error: "Geri bildirim mesajı boş olamaz." };
+  }
+
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const htmlContent = render(
+      <FeedbackEmail feedback={feedback} userEmail={user?.email} />
+    );
+
+    await resend.emails.send({
+      from: process.env.ADMIN_NOTIF_EMAIL_FROM,
+      to: process.env.ADMIN_NOTIF_EMAIL_TO,
+      subject: "AI Keşif Platformu - Yeni Geri Bildirim",
+      html: htmlContent,
+    });
+  } catch (emailError) {
+    console.error("Geri bildirim gönderme hatası:", emailError);
+    return { error: "Geri bildirim gönderilirken bir hata oluştu." };
+  }
+
+  return { success: "Geri bildiriminiz için teşekkürler!" };
+}
+
+// Bir kod parçasını analiz edip, iyileştirilmiş bir versiyonunu öneren fonksiyon
+export async function getAiCodeReview(codeToReview) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: "Bu özelliği kullanmak için yetkiniz yok." };
+  }
+
+  if (!codeToReview || codeToReview.trim().length < 50) {
+    return { error: "Lütfen analiz etmek için anlamlı bir kod parçası girin." };
+  }
+
+  try {
+    const platformContext = `
+        PROJENİN TEKNİK YAPISI:
+        - Framework: Next.js (App Router)
+        - Dil: JavaScript, React
+        - Veritabanı: Supabase (PostgreSQL)
+        - Stil: Tailwind CSS
+        - UI Kütüphanesi: shadcn/ui
+        - Sunucu Mantığı: Server Actions (src/app/actions.js içinde)
+        - Veri Çekme: Sunucu bileşenleri veya Server Action'lar içinden Supabase istemcisi ile.
+    `;
+
+    const prompt = `
+        Sen, bu projede çalışan, son derece deneyimli bir Senior Full-Stack Developer'sın. Görevin, sana verilen bir React bileşen kodunu, projenin teknik yapısını dikkate alarak analiz etmek ve iyileştirmektir.
+
+        ${platformContext}
+
+        ANALİZ EDİLECEK KOD:
+        \`\`\`jsx
+        ${codeToReview}
+        \`\`\`
+
+        YAPILACAKLAR:
+        1.  Bu kodu performans, okunabilirlik, güvenlik ve en iyi pratikler açısından incele.
+        2.  Bulduğun en önemli 3 iyileştirme potansiyelini listele.
+        3.  Bu iyileştirmeleri uygulayarak, kodun tamamen yeniden yazılmış (refactored), daha modern ve daha sağlam halini oluştur.
+        4.  Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin veya açıklama ekleme.
+    `;
+
+    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const payload = {
+      contents: chatHistory,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            analysis_title: {
+              type: "STRING",
+              description:
+                "Kod incelemesine, içeriği yansıtan kısa bir başlık ver.",
+            },
+            suggestions: {
+              type: "ARRAY",
+              items: { type: "STRING" },
+              description:
+                "Bulduğun en önemli 3 iyileştirme önerisini liste halinde sun.",
+            },
+            refactored_code: {
+              type: "STRING",
+              description:
+                "Önerileri uygulayarak oluşturduğun, tam ve çalıştırılabilir yeni kod.",
+            },
+          },
+          required: ["analysis_title", "suggestions", "refactored_code"],
+        },
+      },
+    };
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json();
+      return {
+        error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}`,
+      };
+    }
+
+    const result = await response.json();
+    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+      return {
+        success: true,
+        data: JSON.parse(result.candidates[0].content.parts[0].text),
+      };
+    } else {
+      return {
+        error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı.",
+      };
+    }
+  } catch (e) {
+    console.error("AI Kod İnceleme fonksiyonunda hata:", e.message);
+    return {
+      error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}`,
+    };
+  }
 }

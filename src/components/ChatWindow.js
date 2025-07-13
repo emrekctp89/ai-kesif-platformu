@@ -13,7 +13,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send } from "lucide-react";
+import { Send, ArrowLeft } from "lucide-react"; // ArrowLeft ikonunu import ediyoruz
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -173,6 +173,12 @@ export function ChatWindow({
   return (
     <div className="flex flex-col h-full">
       <header className="p-4 border-b flex items-center gap-3">
+        {/* YENİ: Mobil için "Geri" butonu */}
+        <Link href="/mesajlar" className="md:hidden mr-2">
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </Link>
         <Avatar>
           <AvatarImage src={otherParticipant?.avatar_url} />
           <AvatarFallback>

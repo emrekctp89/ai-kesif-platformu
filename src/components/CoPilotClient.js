@@ -2,70 +2,101 @@
 
 import * as React from "react";
 import { useTransition, useRef, useEffect } from "react";
-import { getAdminCoPilotResponse } from "@/app/actions";
+import { getAdminCoPilotResponse, getAiCodeReview } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, User, CornerDownLeft, Lightbulb, Clipboard } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Bot,
+  User,
+  CornerDownLeft,
+  Lightbulb,
+  Clipboard,
+  CheckCircle,
+} from "lucide-react";
 import toast from "react-hot-toast";
 
-// AI'ın cevabını formatlayan bileşen
-function AiResponse({ data }) {
+// AI'ın sohbet cevabını formatlayan bileşen
+function AiChatResponse({ data, onQuestionClick }) {
   if (!data)
     return <p className="text-destructive">Analiz verisi alınamadı.</p>;
+  return (
+    <div className="space-y-4">
+      <h3 className="font-bold text-lg">
+        {data.response_title || "Yapay Zeka Analizi"}
+      </h3>
+      <p className="text-sm text-muted-foreground">{data.response_text}</p>
+      {data.follow_up_questions?.length > 0 && (
+        <div className="pt-4 border-t border-background/50">
+          <h4 className="text-xs font-semibold mb-2">Devam edebiliriz:</h4>
+          <div className="flex flex-wrap gap-2">
+            {data.follow_up_questions.map((question, i) => (
+              <Button
+                key={i}
+                variant="outline"
+                size="sm"
+                onClick={() => onQuestionClick(question)}
+                className="text-xs"
+              >
+                {question}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
+// Kod analizi için AI'ın cevabını formatlayan bileşen
+function AiCodeReviewResponse({ data }) {
   const handleCopy = (code) => {
     navigator.clipboard.writeText(code);
     toast.success("Kod panoya kopyalandı!");
   };
-
+  if (!data)
+    return <p className="text-destructive">Analiz verisi alınamadı.</p>;
   return (
-    <Card className="bg-background/50 border">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Lightbulb className="w-5 h-5 text-yellow-500" />
-          {data.response_title || "Yapay Zeka Analizi"}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 text-sm">
-        {data.response_text && (
-          <p className="text-muted-foreground">{data.response_text}</p>
-        )}
-
-        {/* DEĞİŞİKLİK: Kod önerisi varsa, onu göster */}
-        {data.code_suggestion && (
-          <div className="space-y-2">
-            <h4 className="font-semibold">Kod Önerisi:</h4>
-            <p className="text-xs text-muted-foreground">
-              {data.code_suggestion.explanation}
-            </p>
-            <div className="relative bg-black rounded-md p-4 font-mono text-xs text-white">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-2 h-6 w-6"
-                onClick={() => handleCopy(data.code_suggestion.code)}
-              >
-                <Clipboard className="h-4 w-4" />
-              </Button>
-              <pre>
-                <code>{data.code_suggestion.code}</code>
-              </pre>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <h3 className="text-xl font-bold">{data.analysis_title}</h3>
+      <div>
+        <h4 className="font-semibold mb-2">Öneriler</h4>
+        <ul className="space-y-2 list-disc pl-5 text-sm">
+          {data.suggestions.map((suggestion, i) => (
+            <li key={i}>{suggestion}</li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <h4 className="font-semibold mb-2">Yeniden Yazılmış Kod</h4>
+        <div className="relative bg-black rounded-md p-4 font-mono text-xs text-white">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 h-6 w-6"
+            onClick={() => handleCopy(data.refactored_code)}
+          >
+            <Clipboard className="h-4 w-4" />
+          </Button>
+          <pre>
+            <code>{data.refactored_code}</code>
+          </pre>
+        </div>
+      </div>
+    </div>
   );
 }
 
-export function CoPilotClient() {
+// Sohbet Asistanı Sekmesi
+function ChatTab() {
   const [messages, setMessages] = React.useState([
     {
       role: "ai",
       content:
-        "Merhaba! Ben Admin Co-Pilot. Sitenizi geliştirmek için benden kod veya strateji isteyebilirsiniz.",
+        "Merhaba! Ben Admin Co-Pilot. Platformunuzu geliştirmek için bana stratejik sorular sorabilirsiniz.",
     },
   ]);
   const [input, setInput] = React.useState("");
@@ -79,17 +110,14 @@ export function CoPilotClient() {
     }
   }, [messages]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!input.trim() || isPending) return;
-
-    const newUserMessage = { role: "user", content: input };
+  const sendMessage = (promptText) => {
+    if (!promptText.trim() || isPending) return;
+    const newUserMessage = { role: "user", content: promptText };
     const newMessages = [...messages, newUserMessage];
     setMessages(newMessages);
     setInput("");
-
     startTransition(async () => {
-      const result = await getAdminCoPilotResponse(input, newMessages);
+      const result = await getAdminCoPilotResponse(promptText, newMessages);
       if (result.error) {
         setMessages((prev) => [
           ...prev,
@@ -102,6 +130,11 @@ export function CoPilotClient() {
         ]);
       }
     });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    sendMessage(input);
   };
 
   return (
@@ -126,7 +159,10 @@ export function CoPilotClient() {
               className={`max-w-xl rounded-lg p-3 ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
             >
               {msg.isResponse ? (
-                <AiResponse data={msg.content} />
+                <AiChatResponse
+                  data={msg.content}
+                  onQuestionClick={sendMessage}
+                />
               ) : (
                 <p className="whitespace-pre-wrap">{msg.content}</p>
               )}
@@ -153,13 +189,12 @@ export function CoPilotClient() {
           </div>
         )}
       </div>
-
       <div className="p-4 border-t bg-background">
         <form onSubmit={handleSubmit} className="relative">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Platformu geliştirmek için bir soru sorun veya kod isteyin..."
+            placeholder="Platformu geliştirmek için bir soru sorun..."
             className="pr-20 min-h-[50px] resize-none"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -179,5 +214,81 @@ export function CoPilotClient() {
         </form>
       </div>
     </div>
+  );
+}
+
+// Kod Analiz Stüdyosu Sekmesi
+function CodeStudioTab() {
+  const [isPending, startTransition] = useTransition();
+  const [code, setCode] = React.useState("");
+  const [analysis, setAnalysis] = React.useState(null);
+
+  const handleAnalyze = () => {
+    startTransition(async () => {
+      setAnalysis(null);
+      const result = await getAiCodeReview(code);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        setAnalysis(result.data);
+      }
+    });
+  };
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-6 h-full">
+      <div className="flex flex-col gap-4 lg:w-1/2">
+        <Label htmlFor="code-input" className="text-lg font-semibold">
+          Analiz Edilecek Kod
+        </Label>
+        <Textarea
+          id="code-input"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          placeholder="Analiz etmek istediğiniz React bileşen kodunu buraya yapıştırın..."
+          className="flex-1 font-mono resize-none"
+        />
+        <Button
+          onClick={handleAnalyze}
+          disabled={isPending || code.length < 50}
+        >
+          {isPending ? "Analiz Ediliyor..." : "Analiz Et ve İyileştir"}
+        </Button>
+      </div>
+      <div className="flex flex-col gap-4 lg:w-1/2">
+        <Label className="text-lg font-semibold">Analiz Sonuçları</Label>
+        <div className="bg-muted/50 p-6 rounded-lg overflow-y-auto flex-1 border">
+          {isPending && <p>Analiz ediliyor, lütfen bekleyin...</p>}
+          {analysis ? (
+            <AiCodeReviewResponse data={analysis} />
+          ) : (
+            !isPending && (
+              <p className="text-muted-foreground">
+                Analiz sonuçları burada görünecektir.
+              </p>
+            )
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Ana Co-Pilot Bileşeni
+export function CoPilotClient() {
+  return (
+    <Tabs defaultValue="chat" className="flex flex-col h-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="chat">Sohbet Asistanı</TabsTrigger>
+        <TabsTrigger value="code">Kod Analiz Stüdyosu</TabsTrigger>
+      </TabsList>
+      {/* DEĞİŞİKLİK: Her iki sekme içeriğinin de esnek bir şekilde büyümesini ve taşmamasını sağlıyoruz */}
+      <TabsContent value="chat" className="flex-1 min-h-0">
+        <ChatTab />
+      </TabsContent>
+      <TabsContent value="code" className="flex-1 flex flex-col p-4 min-h-0">
+        <CodeStudioTab />
+      </TabsContent>
+    </Tabs>
   );
 }

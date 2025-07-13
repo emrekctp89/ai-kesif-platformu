@@ -149,8 +149,8 @@ export async function ToolsList({ searchParams, user, favoriteToolIds }) {
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        
-          {tools.map((tool) => {
+        {tools.length > 0 ? (
+          tools.map((tool) => {
             const isFavorited = favoriteToolIds.has(tool.id);
             const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
 

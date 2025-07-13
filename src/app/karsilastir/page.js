@@ -150,7 +150,7 @@ export default async function ComparePage({ searchParams }) {
       ) : (
         <div className="text-center py-16">
           <p className="text-muted-foreground">
-            Lütfen karşılaştırmak için yukarıdan en az bir araç seçin.
+            Lütfen karşılaştırmak için yukarıdan en az iki araç seçin.
           </p>
         </div>
       )}

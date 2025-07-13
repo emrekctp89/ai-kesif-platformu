@@ -10,6 +10,8 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { CommandPalette } from "@/components/CommandPalette";
 // Yeni ipucu bileşenini import ediyoruz
 import { CommandHint } from "@/components/CommandHint";
+// Yeni duyuru şeridi bileşenini import ediyoruz
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 
 const onest = Onest({
   subsets: ["latin"],
@@ -54,6 +56,8 @@ export default function RootLayout({ children }) {
           <CommandPalette />
           {/* Yeni ipucu bileşenini buraya ekliyoruz */}
           <CommandHint />
+          {/* Yeni duyuru şeridini buraya ekliyoruz */}
+          <AnnouncementBanner />
 
           <Analytics />
         </ThemeProvider>
