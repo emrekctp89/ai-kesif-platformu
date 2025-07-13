@@ -1,8 +1,8 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export const createClient = () => {
-  const cookieStore = cookies()
+  const cookieStore = cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -10,11 +10,11 @@ export const createClient = () => {
     {
       cookies: {
         get(name) {
-          return cookieStore.get(name)?.value
+          return cookieStore.get(name)?.value;
         },
         set(name, value, options) {
           try {
-            cookieStore.set({ name, value, ...options })
+            cookieStore.set({ name, value, ...options });
           } catch (error) {
             // Server Component'ten çağrıldığında bu hata olabilir,
             // middleware oturumu tazelediği için güvenle görmezden gelinebilir.
@@ -22,7 +22,7 @@ export const createClient = () => {
         },
         remove(name, options) {
           try {
-            cookieStore.delete({ name, ...options })
+            cookieStore.delete({ name, ...options });
           } catch (error) {
             // Server Component'ten çağrıldığında bu hata olabilir,
             // middleware oturumu tazelediği için güvenle görmezden gelinebilir.
@@ -30,5 +30,5 @@ export const createClient = () => {
         },
       },
     }
-  )
-}
+  );
+};

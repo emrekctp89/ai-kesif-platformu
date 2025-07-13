@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 
 export function TagFilter({ allTags, selectedTags, onTagToggle }) {
   const [open, setOpen] = React.useState(false);

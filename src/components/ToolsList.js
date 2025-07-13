@@ -14,7 +14,6 @@ import {
   Star,
   Crown,
   Gem,
-  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -58,9 +57,9 @@ async function getToolsData(searchParams, user) {
   const selectedPlatforms = searchParams["platforms"]
     ? searchParams["platforms"].split(",")
     : [];
-  const selectedTier = searchParams["tier"]; // YENİ: Seviye filtresini alıyoruz
+  const selectedTier = searchParams["tier"]; // Seviye filtresi
 
-  // DEĞİŞİKLİK: Kullanıcının abonelik durumunu da çekiyoruz
+  // Kullanıcının abonelik durumunu alma
   const { data: profile } = user
     ? await supabase
         .from("profiles")
@@ -70,6 +69,7 @@ async function getToolsData(searchParams, user) {
     : { data: null };
   const isProUser = !!profile?.stripe_price_id;
 
+  // Kullanıcının favorilerini çekme
   const { data: favorites } = user
     ? await supabase.from("favorites").select("tool_id").eq("user_id", user.id)
     : { data: [] };
@@ -98,12 +98,11 @@ async function getToolsData(searchParams, user) {
   if (selectedPlatforms.length > 0)
     query = query.contains("platforms", selectedPlatforms);
 
-  // YENİ: Seviyeye göre filtrelemeyi sorguya ekliyoruz
   if (selectedTier) {
     query = query.eq("tier", selectedTier);
   }
 
-  // DEĞİŞİKLİK: Eğer kullanıcı Pro değilse, 'Pro' seviyesindeki araçları hariç tut
+  // Pro olmayanlar için Pro seviyesindeki araçları gizleme (isteğe bağlı)
   // if (!isProUser) {
   //   query = query.neq('tier', 'Pro');
   // }
@@ -140,7 +139,6 @@ async function getToolsData(searchParams, user) {
 }
 
 export async function ToolsList({ searchParams, user, favoriteToolIds }) {
-  // isProUser bilgisi artık getToolsData'dan gelecek
   const { tools, currentPage, totalPages } = await getToolsData(
     searchParams,
     user
