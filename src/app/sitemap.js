@@ -1,7 +1,11 @@
 // Eğer src/app/sitemap.js içindeysen ve server.ts bir üst klasördeyse:
 // Düzeltildi: supabase middleware dosyasının doğru yolu
-import { supabase } from "../utils/supabase/middleware.js";
-import process from "node:process";
+//import { supabase } from "../utils/supabase/middleware.js";
+
+import { supabase } from "../utils/supabase/admin.js"; // Supabase istemcisini içe aktarıyoruz
+//import { updateSession } from '../utils/supabase/middleware.js'
+
+//import process from "node:process";
 
 // Bu, sitemizin ana URL'idir. .env.local dosyasından alınması en doğrusu.
 const URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3005";
