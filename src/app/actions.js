@@ -5,8 +5,8 @@
 
 // Artık import'lar gelebilir.
 import Stripe from "stripe";
-import { createClient } from "@/utils/supabase/server";
-//import { createClient } from '@/utils/supabase/actions';
+//import { createClient } from "@/utils/supabase/server";
+import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Resend } from "resend";
@@ -2090,7 +2090,7 @@ export async function getShowcaseItemDetails(itemId) {
 export async function updateUserProfile(formData) {
   "use server";
 
-  const supabase = createClient();
+  const supabase = createClient(); // Artık doğru istemciyi kullanıyor
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -4246,7 +4246,7 @@ async function getEmbeddingForText(text) {
 export async function generateToolsWithAi(formData) {
   "use server";
 
-  const supabase = createClient();
+  const supabase = createClient(); // Artık doğru istemciyi kullanıyor
   const {
     data: { user },
   } = await supabase.auth.getUser();

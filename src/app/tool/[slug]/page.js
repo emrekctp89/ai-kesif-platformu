@@ -1,8 +1,10 @@
-import { createClient } from "@/utils/supabase/server";
-import React from "react";
+// src/app/tool/[slug]/page.jsx veya .tsx
 
+import React from "react";
 import { notFound, redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,20 +16,13 @@ import { SimilarTools } from "@/components/SimilarTools";
 import { ScrollHint } from "@/components/ScrollHint";
 import PromptSection from "@/components/PromptSection";
 import { ShareButton } from "@/components/ShareButton";
-import {
-  Globe,
-  Apple,
-  Bot,
-  Monitor,
-  Pen,
-  ShoppingCart,
-  Star,
-  Crown,
-  Gem,
-} from "lucide-react";
+import { BookOpen, Crown, Gem, Star, Globe, Apple, Bot, Monitor, Pen, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BookOpen } from "lucide-react";
 import { SuggestToolForBounty } from "@/components/SuggestToolForBounty";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 const platformIcons = {
   Web: <Globe className="w-5 h-5" />,
@@ -39,13 +34,6 @@ const platformIcons = {
   "Chrome Uzantısı": <ShoppingCart className="w-5 h-5" />,
 };
 
-const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: tool, error } = await supabase.from('tools_with_ratings').select('*').eq('slug', slug).single();
-  if (error || !tool) notFound();
-
-  
-// Seviyelere göre özel stiller ve ikonlar
 const tierStyles = {
   Pro: {
     badge: "bg-purple-600 text-white hover:bg-purple-700",
@@ -59,17 +47,22 @@ const tierStyles = {
 
 async function getToolData(slug) {
   const supabase = createClient();
+
+  // Kullanıcı bilgisi al
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const userId = user?.id;
+
+  // Araç verisini çek
   const { data: tool, error } = await supabase
     .from("tools_with_ratings")
     .select("*")
     .eq("slug", slug)
     .single();
+
   if (error || !tool) notFound();
-  // DEĞİŞİKLİK: Kullanıcının abonelik durumunu çekiyoruz
+
+  // Kullanıcının profil bilgisi
   const { data: profile } = user
     ? await supabase
         .from("profiles")
@@ -77,60 +70,41 @@ async function getToolData(slug) {
         .eq("id", user.id)
         .single()
     : { data: null };
+
   const isProUser =
     !!profile?.stripe_price_id ||
     (user && user.email === process.env.ADMIN_EMAIL);
 
-  // YENİ: Eğer araç "Pro" ise ve kullanıcı Pro değilse, üyelik sayfasına yönlendir
-  // Bu if bloğunu kaldırın veya yorum satırı yapın:
-  // if (tool.tier === 'Pro' && !isProUser) {
-  //   redirect('/uyelik');
-
-  const { data: favoriteRecord } = userId
+  // Favori kontrolü
+  const { data: favoriteRecord } = user
     ? await supabase
         .from("favorites")
         .select("id")
-        .eq("user_id", userId)
+        .eq("user_id", user.id)
         .eq("tool_id", tool.id)
         .single()
     : { data: null };
   const isFavorited = !!favoriteRecord;
-  const { data: ratingRecord } = userId
+
+  // Kullanıcının oy durumu
+  const { data: ratingRecord } = user
     ? await supabase
         .from("ratings")
         .select("rating")
-        .eq("user_id", userId)
+        .eq("user_id", user.id)
         .eq("tool_id", tool.id)
         .single()
     : { data: null };
   const usersRating = ratingRecord?.rating || 0;
-  return { tool, usersRating, isFavorited, user };
+
+  return { tool, usersRating, isFavorited, user, isProUser };
 }
 
-export async function generateMetadata({ params }) {
-  const supabase = createClient();
-  const { data: tool } = await supabase
-    .from("tools")
-    .select("name, description")
-    .eq("slug", params.slug)
-    .single();
-  if (!tool) return { title: "Araç Bulunamadı" };
-  return {
-    title: `${tool.name} | AI Keşif Platformu`,
-    description: tool.description,
-  };
-}
-
-// YENİ: Belirli bir araçla ilişkili rehberleri çeken fonksiyon
 async function getRelatedGuides(toolId) {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("post_tools")
-    .select(
-      `
-            posts (title, slug, description)
-        `
-    )
+    .select(`posts (title, slug, description)`)
     .eq("tool_id", toolId)
     .eq("posts.status", "Yayınlandı")
     .eq("posts.type", "Rehber");
@@ -139,11 +113,10 @@ async function getRelatedGuides(toolId) {
     console.error("İlgili rehberler çekilirken hata:", error);
     return [];
   }
+
   return data.map((item) => item.posts).filter(Boolean);
 }
 
-// YENİ: Giriş yapmış kullanıcının aktif ödül ilanlarını çeken fonksiyon
-// DEĞİŞİKLİK: Artık belirli bir kullanıcının değil, TÜM aktif ödül ilanlarını çeken fonksiyon
 async function getAllOpenBounties() {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -157,33 +130,44 @@ async function getAllOpenBounties() {
   }
   return data;
 }
+
+export async function generateMetadata({ params }) {
+  const supabase = createClient();
+  const { data: tool } = await supabase
+    .from("tools")
+    .select("name, description")
+    .eq("slug", params.slug)
+    .single();
+
+  if (!tool) {
+    return { title: "Araç Bulunamadı" };
+  }
+
+  return {
+    title: `${tool.name} | AI Keşif Platformu`,
+    description: tool.description,
+  };
+}
+
 export default async function ToolDetailPage({ params }) {
-  const { tool, usersRating, isFavorited, user } = await getToolData(
-    params.slug
-  );
+  const { slug } = params;
+  const { tool, usersRating, isFavorited, user, isProUser } = await getToolData(slug);
+
+  if (tool.tier === "Pro" && !isProUser) {
+    redirect("/uyelik");
+  }
+
+  const relatedGuides = await getRelatedGuides(tool.id);
+  const openBounties = await getAllOpenBounties();
+
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/tool/${tool.slug}`;
   const shareTitle = `Bu harika AI aracını keşfet: ${tool.name}`;
-  // Paylaşım için özel içerik objesini hazırlıyoruz
-  const sharedContent = {
-    type: "tool",
-    id: tool.id,
-    slug: tool.slug,
-    name: tool.name,
-    description: tool.description,
-    // Görseli olan bir alan varsa o da eklenebilir
-  };
-  const relatedGuides = await getRelatedGuides(tool.id);
 
-  // DÜZELTME: Eksik olan değişkeni burada tanımlıyoruz.
   const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
-  // Yeni veriyi çekiyoruz
-  //const openBounties = await getUserOpenBounties(user?.id);
-  // Yeni veriyi çekiyoruz
-  const openBounties = await getAllOpenBounties();
 
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4 space-y-16">
-      {/* 1. Bölüm: Ana Araç Detayları */}
+      {/* 1. Araç Detayları */}
       <section className="space-y-6">
         <div className="flex flex-wrap items-center gap-4">
           {isPremium && (
@@ -197,14 +181,10 @@ export default async function ToolDetailPage({ params }) {
           </span>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-            <span className="font-bold text-lg text-foreground">
-              {tool.average_rating.toFixed(1)}
-            </span>
+            <span className="font-bold text-lg text-foreground">{tool.average_rating.toFixed(1)}</span>
             <span>({tool.total_ratings} oy)</span>
           </div>
-          {tool.pricing_model && (
-            <Badge variant="default">{tool.pricing_model}</Badge>
-          )}
+          {tool.pricing_model && <Badge variant="default">{tool.pricing_model}</Badge>}
           {tool.platforms && tool.platforms.length > 0 && (
             <div className="flex items-center gap-2 text-muted-foreground">
               {tool.platforms.map((p) => (
@@ -215,40 +195,20 @@ export default async function ToolDetailPage({ params }) {
             </div>
           )}
         </div>
+
         <div className="flex justify-between items-start">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground pr-4">
-            {tool.name}
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground pr-4">{tool.name}</h1>
           {user && (
-            <FavoriteButton
-              toolId={tool.id}
-              toolSlug={tool.slug}
-              isInitiallyFavorited={isFavorited}
-            />
+            <FavoriteButton toolId={tool.id} toolSlug={tool.slug} isInitiallyFavorited={isFavorited} />
           )}
         </div>
         <p className="text-lg text-muted-foreground">{tool.description}</p>
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-border">
-          <StarRating
-            toolId={tool.id}
-            toolSlug={tool.slug}
-            currentUsersRating={usersRating}
-          />
-          {/* YENİ: Ödül Önerme Butonu artık doğru mantıkla çalışıyor */}
-          {user && (
-            <SuggestToolForBounty
-              toolId={tool.id}
-              openBounties={openBounties}
-            />
-          )}
 
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-border">
+          <StarRating toolId={tool.id} toolSlug={tool.slug} currentUsersRating={usersRating} />
+          {user && <SuggestToolForBounty toolId={tool.id} openBounties={openBounties} />}
           <Button asChild>
-            <a
-              href={tool.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto"
-            >
+            <a href={tool.link} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
               Web Sitesini Ziyaret Et
             </a>
           </Button>
@@ -257,23 +217,20 @@ export default async function ToolDetailPage({ params }) {
 
       <ScrollHint />
 
-      {/* 2. Bölüm: Paylaşım */}
+      {/* 2. Paylaşım */}
       <section>
         <Card className="rounded-xl shadow-xl">
           <CardHeader>
             <CardTitle>Bu Aracı Paylaş</CardTitle>
           </CardHeader>
           <CardContent className="flex items-center justify-between">
-            {/* Harici Sosyal Medya Butonları */}
             <ShareButtons url={shareUrl} title={shareTitle} />
-
-            {/* YENİ: Platform İçi Mesajla Paylaşma Butonu */}
-            {user && <ShareButton content={sharedContent} />}
+            {user && <ShareButton content={{ type: "tool", id: tool.id, slug: tool.slug, name: tool.name, description: tool.description }} />}
           </CardContent>
         </Card>
       </section>
 
-      {/* 3. Bölüm: Yorumlar */}
+      {/* 3. Yorumlar */}
       <section>
         <Card className="rounded-xl shadow-xl">
           <CardContent className="p-8 md:p-12">
@@ -282,12 +239,12 @@ export default async function ToolDetailPage({ params }) {
         </Card>
       </section>
 
-      {/* 4. Bölüm: Prompt Kütüphanesi */}
+      {/* 4. Prompt Kütüphanesi */}
       <section>
         <PromptSection toolId={tool.id} toolSlug={tool.slug} />
       </section>
 
-      {/* YENİ: İlgili Rehberler Bölümü */}
+      {/* 5. İlgili Rehberler */}
       {relatedGuides.length > 0 && (
         <section>
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
@@ -296,21 +253,13 @@ export default async function ToolDetailPage({ params }) {
           </h2>
           <div className="space-y-4">
             {relatedGuides.map((guide) => (
-              <Link
-                key={guide.slug}
-                href={`/blog/${guide.slug}`}
-                className="group block"
-              >
+              <Link key={guide.slug} href={`/blog/${guide.slug}`} className="group block">
                 <Card className="hover:border-primary transition-colors">
                   <CardHeader>
-                    <CardTitle className="group-hover:text-primary">
-                      {guide.title}
-                    </CardTitle>
+                    <CardTitle className="group-hover:text-primary">{guide.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground line-clamp-2 text-sm">
-                      {guide.description}
-                    </p>
+                    <p className="text-muted-foreground line-clamp-2 text-sm">{guide.description}</p>
                   </CardContent>
                 </Card>
               </Link>
@@ -319,7 +268,7 @@ export default async function ToolDetailPage({ params }) {
         </section>
       )}
 
-      {/* 5. Bölüm: Benzer Araçlar */}
+      {/* 6. Benzer Araçlar */}
       <section>
         <SimilarTools currentTool={tool} />
       </section>
