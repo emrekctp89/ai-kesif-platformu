@@ -2,7 +2,7 @@
 // Düzeltildi: supabase middleware dosyasının doğru yolu
 //import { supabase } from "../utils/supabase/middleware.js";
 
-import { supabase } from "../utils/supabase/admin.js"; // Supabase istemcisini içe aktarıyoruz
+import { supabase } from "../utils/supabase/client.js"; // Supabase istemcisini içe aktarıyoruz
 //import { updateSession } from '../utils/supabase/middleware.js'
 
 //import process from "node:process";
