@@ -17,6 +17,7 @@ import { BlogManager } from "@/components/BlogManager";
 import { CategoryManager } from "@/components/CategoryManager";
 // Yeni Bülten Yönetim bileşenini import ediyoruz
 import { NewsletterManager } from "@/components/NewsletterManager";
+import { AiToolFactory } from "@/components/AiToolFactory"; // Yeni bileşeni import ediyoruz
 
 // ... (Tüm veri çekme fonksiyonlarınız burada - değişiklik yok) ...
 async function getUnapprovedTools() {
@@ -32,13 +33,10 @@ async function getUnapprovedTools() {
   }
   return data;
 }
+// DEĞİŞİKLİK: getApprovedTools fonksiyonu artık bizim akıllı RPC fonksiyonumuzu çağırıyor.
 async function getApprovedTools() {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("tools")
-    .select("*, categories(id, name), tool_tags(tags(*))")
-    .eq("is_approved", true)
-    .order("created_at", { ascending: false });
+  const { data, error } = await supabase.rpc("get_admin_approved_tools");
   if (error) {
     console.error("Onaylanmış araçları çekerken hata:", error);
     return [];
@@ -138,6 +136,8 @@ export default async function AdminPage() {
           <NewsletterManager />
         </CardContent>
       </Card>
+      {/* YENİ: AI İçerik Fabrikası Paneli */}
+      <AiToolFactory categories={categories} />
 
       {/* Onay Bekleyen Eserler Kartı */}
       <Card>

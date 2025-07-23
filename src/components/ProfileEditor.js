@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/card";
 import { AvatarUploader } from "@/components/AvatarUploader";
 import toast from "react-hot-toast";
+import { PushNotificationManager } from './PushNotificationManager';
+import { cn } from "@/lib/utils";
 
 export function ProfileEditor({ user, profile }) {
   const [isPending, startTransition] = useTransition();
@@ -70,6 +72,11 @@ export function ProfileEditor({ user, profile }) {
               maxLength="200"
             />
           </div>
+          {/* YENİ: Bildirim Ayarları Bölümü */}
+                <div className="space-y-4 pt-6 border-t">
+                     <Label className="font-semibold">Bildirim Ayarları</Label>
+                     <PushNotificationManager initialSubscriptionStatus={profile.wants_push_notifications} />
+                </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={isPending}>
               {isPending ? "Kaydediliyor..." : "Profili Güncelle"}

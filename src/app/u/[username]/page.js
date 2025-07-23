@@ -17,11 +17,23 @@ import {
   Heart,
   Image as ImageIcon,
   Mail,
+  UserPlus,
 } from "lucide-react";
 import { startConversation } from "@/app/actions";
 import { FollowButton } from "@/components/FollowButton"; // Yeni bileşeni import ediyoruz
 import { BadgesShowcase } from "@/components/BadgesShowcase"; // Yeni bileşeni import ediyoruz
+import { cn } from "@/lib/utils";
 
+// Seviyelere göre özel renkler
+const tierColors = {
+  Newcomer: "bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
+  Contributor:
+    "bg-blue-200 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
+  Expert:
+    "bg-purple-200 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300",
+  Mentor:
+    "bg-amber-200 text-amber-800 dark:bg-amber-700/50 dark:text-amber-300",
+};
 // Veri çeken fonksiyonu, takipçi sayılarını da alacak şekilde güncelliyoruz
 async function getProfileData(username, currentUserId) {
   const supabase = createClient();
@@ -96,6 +108,17 @@ export default async function UserProfilePage({ params }) {
         </Avatar>
         <div className="text-center sm:text-left">
           <h1 className="text-4xl font-bold">{profile.username}</h1>
+          {/* YENİ: Kullanıcı Seviyesi Rozeti */}
+          {profile.tier && (
+            <Badge
+              className={cn(
+                "text-sm",
+                tierColors[profile.tier] || "bg-secondary"
+              )}
+            >
+              {profile.tier}
+            </Badge>
+          )}
           <p className="text-muted-foreground mt-2">{profile.bio}</p>
           <div className="flex items-center justify-center sm:justify-start gap-4 mt-4 text-sm text-muted-foreground">
             {/* YENİ: Tıklanabilir Takipçi/Takip edilen sayaçları */}

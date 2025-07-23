@@ -12,6 +12,8 @@ import { Check, Sparkles } from "lucide-react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { createCheckoutSession } from "@/app/actions";
+
 
 // Veritabanından ürünleri ve fiyatları çeken fonksiyon
 async function getProducts() {
@@ -137,10 +139,14 @@ export default async function PricingPage() {
               </ul>
             </CardContent>
             <CardFooter>
-              {/* DEĞİŞİKLİK: Butonu devre dışı bırakıp "Yakında" mesajı ekliyoruz */}
-              <Button className="w-full" size="lg" disabled>
-                Yakında...
-              </Button>
+                            {/* DEĞİŞİKLİK: Formu ve aktif butonu geri getiriyoruz */}
+                            <form action={createCheckoutSession} className="w-full">
+                                <input type="hidden" name="priceId" value={proProduct.prices[0].id} />
+                                <Button type="submit" className="w-full" size="lg">
+                                    <Sparkles className="w-4 h-4 mr-2"/>
+                                    Pro'ya Şimdi Yükselt
+                                </Button>
+                            </form>
             </CardFooter>
           </Card>
         )}

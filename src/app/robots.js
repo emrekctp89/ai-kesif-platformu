@@ -1,5 +1,7 @@
 // Bu dosya, sitenizin kökünde /robots.txt olarak sunulur.
 
+import process from "node:process";
+
 export default function robots() {
   const URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3005";
 

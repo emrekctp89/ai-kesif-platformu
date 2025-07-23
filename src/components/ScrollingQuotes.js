@@ -19,6 +19,30 @@ const quotes = [
     quote: "Kullanıcı dostu arayüzü ve akıcı deneyimiyle, bu proje potansiyelin tasarımla buluşmasıdır.",
     author: "UI/UX Tasarımcısı",
   },
+  {
+  quote: "Hayal gücü bilgiden daha önemlidir. Çünkü bilgi sınırlıdır, ama hayal gücü tüm dünyayı kapsar.",
+  author: "Albert Einstein",
+},
+{
+  quote: "Bir şeyi basitçe açıklayamıyorsan, onu yeterince iyi anlamamışsındır.",
+  author: "Richard Feynman",
+},
+{
+  quote: "Teknoloji iyi ya da kötü değildir; nasıl kullandığınıza bağlıdır.",
+  author: "Gene Spafford",
+},
+{
+  quote: "Gerçekten yeni bir fikri kabul etmek için eski kuşağın ölmesini beklemek gerekebilir.",
+  author: "Max Planck",
+},
+{
+  quote: "Hiçbir şey sorgulanamaz değildir. Bilim, sürekli şüpheyle ilerler.",
+  author: "Carl Sagan",
+},
+{
+  quote: "En derin gerçekler genellikle en basit ifadelerle anlatılabilir.",
+  author: "Stephen Hawking",
+},
 ];
 
 export default function ScrollingQuotes() {

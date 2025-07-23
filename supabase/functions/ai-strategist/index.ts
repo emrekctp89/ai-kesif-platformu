@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
@@ -15,19 +15,20 @@ serve(async (req) => {
 
     const { data: analyticsData, error: analyticsError } =
       await supabaseAdmin.rpc("get_full_platform_analytics");
+
     if (analyticsError) throw analyticsError;
 
     const formattedData = `
-        - Son 7 Günlük Büyüme: ${JSON.stringify(analyticsData.growth_rates)}
-        - Etkileşim Sıcak Noktaları: ${JSON.stringify(analyticsData.interaction_hotspots)}
-        - "Soğuk" Kategoriler: ${JSON.stringify(analyticsData.cold_categories)}
+      - Son 7 Günlük Büyüme: ${JSON.stringify(analyticsData.growth_rates)}
+      - Etkileşim Sıcak Noktaları: ${JSON.stringify(analyticsData.interaction_hotspots)}
+      - "Soğuk" Kategoriler: ${JSON.stringify(analyticsData.cold_categories)}
     `;
 
     const prompt = `
-        Sen 'AI Keşif Platformu'nun Baş Büyüme Sorumlusun. İşte bu haftanın analiz raporu. 
-        HAFTALIK VERİLER:
-        ${formattedData}
-        GÖREVİN: Bu verilere dayanarak, admin için bir "Haftalık Stratejik Brifing" hazırla. Bu brifingde, platformu büyütmek için somut ve yaratıcı önerilerde bulun. Cevabını SADECE aşağıdaki JSON formatında ver.
+      Sen 'AI Keşif Platformu'nun Baş Büyüme Sorumlusun. İşte bu haftanın analiz raporu. 
+      HAFTALIK VERİLER:
+      ${formattedData}
+      GÖREVİN: Bu verilere dayanarak, admin için bir "Haftalık Stratejik Brifing" hazırla. Bu brifingde, platformu büyütmek için somut ve yaratıcı önerilerde bulun. Cevabını SADECE aşağıdaki JSON formatında ver.
     `;
 
     const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
@@ -42,7 +43,6 @@ serve(async (req) => {
             summary: { type: "STRING" },
             opportunities: { type: "ARRAY", items: { type: "STRING" } },
             risks: { type: "ARRAY", items: { type: "STRING" } },
-            // YENİ: AI'dan somut bir aksiyon önerisi istiyoruz.
             action_suggestion: {
               type: "STRING",
               description:
@@ -81,7 +81,6 @@ serve(async (req) => {
       result.candidates[0].content.parts[0].text
     );
 
-    // Oluşturulan analizi veritabanına kaydet
     const { error: insertError } = await supabaseAdmin
       .from("ai_briefings")
       .insert({
@@ -101,8 +100,16 @@ serve(async (req) => {
         status: 200,
       }
     );
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) {
+    let errorMessage = "Bilinmeyen hata";
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === "string") {
+      errorMessage = error;
+    }
+
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
     });

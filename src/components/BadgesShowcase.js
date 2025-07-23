@@ -1,3 +1,9 @@
+/*
+ * ---------------------------------------------------
+ * 1. YENİ BİLEŞEN: src/components/BadgesShowcase.js
+ * Bu, kazanılan rozetleri şık ikonlarla gösterir.
+ * ---------------------------------------------------
+ */
 "use client";
 
 import {
@@ -15,26 +21,36 @@ import {
   Library,
   Trophy,
   Award,
+  Flame,
+  Crown,
+  Medal,
+  Gem,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // icon_name'i gerçek bir ikona dönüştüren yardımcı obje
 const iconMap = {
-  Handshake: Handshake,
-  MessageSquare: MessageSquare,
-  Heart: Heart,
-  Star: Star,
-  Image: Image,
-  Library: Library,
-  Trophy: Trophy,
-  Award: Award,
+  Handshake,
+  MessageSquare,
+  Heart,
+  Star,
+  Image,
+  Library,
+  Trophy,
+  Flame,
+  Award,
+  Crown,
+  Medal,
+  Gem,
 };
 
 // Rozet seviyesine göre renk belirleyen yardımcı obje
 const tierColors = {
-  bronze: "bg-orange-200 border-orange-400 text-orange-800",
-  silver: "bg-slate-200 border-slate-400 text-slate-800",
-  gold: "bg-yellow-200 border-yellow-400 text-yellow-800",
+  bronze:
+    "bg-orange-200 border-orange-400 text-orange-800 dark:bg-orange-900/50 dark:border-orange-700 dark:text-orange-300",
+  silver:
+    "bg-slate-200 border-slate-400 text-slate-800 dark:bg-slate-700/50 dark:border-slate-500 dark:text-slate-300",
+  gold: "bg-yellow-200 border-yellow-400 text-yellow-800 dark:bg-yellow-700/50 dark:border-yellow-500 dark:text-yellow-300",
 };
 
 export function BadgesShowcase({ badges }) {
@@ -58,7 +74,7 @@ export function BadgesShowcase({ badges }) {
               <TooltipTrigger>
                 <div
                   className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center border-2",
+                    "w-12 h-12 rounded-full flex items-center justify-center border-2 transition-transform hover:scale-110",
                     tierClass
                   )}
                 >

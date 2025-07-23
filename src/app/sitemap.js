@@ -1,11 +1,12 @@
-import { createClient } from "@/utils/supabase/server";
+// Eğer src/app/sitemap.js içindeysen ve server.ts bir üst klasördeyse:
+// Düzeltildi: supabase middleware dosyasının doğru yolu
+import { supabase } from "../utils/supabase/middleware.js";
+import process from "node:process";
 
 // Bu, sitemizin ana URL'idir. .env.local dosyasından alınması en doğrusu.
 const URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3005";
 
 export default async function sitemap() {
-  const supabase = createClient();
-
   // 1. Veritabanından tüm araçların slug'larını ve en son güncellenme tarihlerini çekiyoruz
   const { data: tools } = await supabase
     .from("tools")
@@ -18,7 +19,7 @@ export default async function sitemap() {
       lastModified: new Date(updated_at).toISOString(),
     })) ?? [];
 
-  // 2. Veritabanından tüm yayınlanmış blog yazılarının slug'larını ve tarihlerini çekiyoruz
+  // 2. Yayınlanan blog yazıları
   const { data: posts } = await supabase
     .from("posts")
     .select("slug, updated_at")
@@ -30,7 +31,7 @@ export default async function sitemap() {
       lastModified: new Date(updated_at).toISOString(),
     })) ?? [];
 
-  // 3. Statik sayfalarımızı manuel olarak ekliyoruz
+  // 3. Statik sayfalar
   const staticUrls = [
     { url: URL, lastModified: new Date().toISOString() },
     { url: `${URL}/blog`, lastModified: new Date().toISOString() },
@@ -44,6 +45,6 @@ export default async function sitemap() {
     },
   ];
 
-  // 4. Tüm URL listelerini birleştirip döndürüyoruz
+  // 4. Hepsini birleştir ve döndür
   return [...staticUrls, ...toolUrls, ...postUrls];
 }

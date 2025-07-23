@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Onest } from "next/font/google";
+import { createClient } from "@/utils/supabase/server";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Toaster } from "react-hot-toast";
@@ -8,10 +9,15 @@ import { TopLoader } from "@/components/TopLoader";
 import { Analytics } from "@vercel/analytics/react";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { CommandPalette } from "@/components/CommandPalette";
-// Yeni ipucu bileşenini import ediyoruz
 import { CommandHint } from "@/components/CommandHint";
-// Yeni duyuru şeridi bileşenini import ediyoruz
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
+// Yeni Karşılama Asistanı bileşenini import ediyoruz
+import { OnboardingAssistant } from "@/components/OnboardingAssistant";
+import { VoiceAgent } from '@/components/VoiceAgent';
+import { AiConcierge } from '@/components/AiConcierge'; // Yeni bileşeni import ediyoruz
+import { PushNotificationManager } from '@/components/PushNotificationManager'; // Yeni bildirim yöneticisini import ediyoruz
+import Link from "next/link";
+
 
 const onest = Onest({
   subsets: ["latin"],
@@ -21,11 +27,34 @@ const onest = Onest({
 export const metadata = {
   title: "AI Keşif Platformu",
   description: "Her İhtiyaca Yönelik En İyi Yapay Zeka Araçları Dizini",
+   // YENİ: PWA için manifest dosyasını ekliyoruz
+  manifest: '/manifest.json',
 };
 
-export default function RootLayout({ children }) {
+
+export default async function RootLayout({ children }) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Kullanıcının profilinden, karşılama sürecini tamamlayıp tamamlamadığını kontrol ediyoruz.
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", user.id)
+        .single()
+    : { data: null };
+
+  const showOnboarding = user && !profile?.onboarding_completed;
+
   return (
     <html lang="tr" suppressHydrationWarning>
+      <head>
+        {/* YENİ: iOS cihazları için tema rengi */}
+        <meta name="theme-color" content="#000000" />
+      </head>
       <body className={`${onest.className} bg-background text-foreground`}>
         <ThemeProvider
           attribute="class"
@@ -35,29 +64,29 @@ export default function RootLayout({ children }) {
         >
           <GoogleAnalytics />
           <TopLoader />
-          <Toaster
-            position="top-center"
-            reverseOrder={false}
-            toastOptions={{
-              style: {
-                background: "#333",
-                color: "#fff",
-              },
-            }}
-          />
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow container mx-auto p-4 md:p-6">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <Toaster position="top-center" />
+
+          {/* DEĞİŞİKLİK: Karşılama Asistanını Koşullu Olarak Gösterme */}
+          {showOnboarding ? (
+            <OnboardingAssistant />
+          ) : (
+            // Eğer karşılama süreci tamamlanmışsa veya kullanıcı misafirse, normal siteyi göster
+            <div className="relative flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">
+                <div className="container mx-auto p-4 md:p-6">{children}</div>
+              </main>
+              <Footer />
+            </div>
+          )}
 
           <CommandPalette />
-          {/* Yeni ipucu bileşenini buraya ekliyoruz */}
           <CommandHint />
-          {/* Yeni duyuru şeridini buraya ekliyoruz */}
           <AnnouncementBanner />
+          {/* Yeni Sesli Agent'ı buraya ekliyoruz. Sitenin her yerinden erişilebilir olacak. */}
+          {/*<VoiceAgent />*/}
+          <PushNotificationManager />
+                    <AiConcierge /> {/* YENİ: AI Konsiyerj'i buraya ekliyoruz */}
 
           <Analytics />
         </ThemeProvider>

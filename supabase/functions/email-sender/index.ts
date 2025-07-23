@@ -1,25 +1,34 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { Resend } from "npm:resend";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+// Deno Edge Function örneği:
 
-serve(async (req) => {
-  // CORS ayarları için
+import { createClient } from "npm:@supabase/supabase-js";
+import { Resend } from "npm:resend";
+
+const supabaseAdmin = createClient(
+  Deno.env.get("SUPABASE_URL") ?? "",
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+);
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY") ?? "");
+
+export default async function handler(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
+    });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   try {
-    // Admin yetkilerine sahip bir Supabase istemcisi oluşturuyoruz
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
-    // Resend istemcisini API anahtarımızla başlatıyoruz
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
-    // 1. Durumu 'pending' olan tüm e-postaları kuyruktan çekiyoruz
     const { data: pendingEmails, error: fetchError } = await supabaseAdmin
       .from("email_queue")
       .select("*")
@@ -30,40 +39,25 @@ serve(async (req) => {
     if (!pendingEmails || pendingEmails.length === 0) {
       return new Response(
         JSON.stringify({ message: "Gönderilecek e-posta bulunmuyor." }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // 2. Her bir e-postayı göndermek için Resend'in toplu gönderme (batch) özelliğini kullanıyoruz
-    const emailBatch = pendingEmails.map((email) => ({
-      from: Deno.env.get("ADMIN_NOTIF_EMAIL_FROM") ?? "onboarding@resend.dev",
-      to: email.recipient,
-      subject: email.subject,
-      html: email.html_body,
-    }));
+    const sentEmailIds: number[] = [];
 
-    const { data, error: sendError } = await resend.emails.send(emailBatch);
+    for (const email of pendingEmails) {
+      const { data, error } = await resend.emails.send({
+        from: Deno.env.get("ADMIN_NOTIF_EMAIL_FROM") ?? "onboarding@resend.dev",
+        to: email.recipient,
+        subject: email.subject,
+        html: email.html_body,
+      });
 
-    if (sendError) {
-      // Eğer toplu gönderme başarısız olursa, tek tek göndermeyi deneyebiliriz
-      // veya hatayı loglayıp çıkabiliriz. Şimdilik hatayı fırlatıyoruz.
-      throw sendError;
+      if (error) throw error;
+
+      if (data?.id) sentEmailIds.push(email.id);
     }
 
-    // 3. Başarıyla gönderilen e-postaların ID'lerini topluyoruz
-    const sentEmailIds = data
-      .map((result, index) => {
-        // Resend'in batch yanıtı 'id' içerir
-        if (result.id) {
-          return pendingEmails[index].id;
-        }
-        return null;
-      })
-      .filter((id) => id !== null);
-
-    // 4. Gönderilen e-postaların durumunu 'sent' olarak güncelliyoruz
     if (sentEmailIds.length > 0) {
       await supabaseAdmin
         .from("email_queue")
@@ -76,14 +70,21 @@ serve(async (req) => {
         message: `${sentEmailIds.length} e-posta başarıyla gönderildi.`,
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         status: 200,
       }
     );
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
+  } catch (error: unknown) {
+  let errorMessage = "Bilinmeyen hata";
+
+  if (error instanceof Error) {
+    errorMessage = error.message;
+  } else if (typeof error === "string") {
+    errorMessage = error;
   }
-});
+
+  return new Response(JSON.stringify({ error: errorMessage }), {
+    headers: { "Content-Type": "application/json" },
+    status: 400,
+  });
+}}

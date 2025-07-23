@@ -14,8 +14,42 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "./ui/badge";
 // İkonları import ediyoruz
-import { Bot, GitCompareArrows, Sparkles, Crown, Mail } from "lucide-react";
+import {
+  Bot,
+  GitCompareArrows,
+  Sparkles,
+  Crown,
+  Mail,
+  Users,
+  Trophy,
+  Rocket,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { MobileNav } from './MobileNav'; // Yeni mobil menüyü import ediyoruz
 
+
+// Korumalı buton için özel bir versiyon oluşturuyoruz
+const ProProtectedButton = ({ children, className }) => (
+    <Tooltip>
+        <TooltipTrigger asChild>
+            <span tabIndex={0}>
+                <Button variant="ghost" disabled style={{ pointerEvents: 'none' }} className={className}>
+                    {children}
+                </Button>
+            </span>
+        </TooltipTrigger>
+        <TooltipContent>
+            <p>Bu özellik Pro üyelere özeldir. <Link
+  href="/uyelik"
+  className="font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent hover:underline"
+>
+  Yükseltin
+</Link>
+
+</p>
+        </TooltipContent>
+    </Tooltip>
+);
 // Misafir kullanıcılar için ipucu gösteren korumalı bir buton bileşeni
 const ProtectedButton = ({ children, className, variant = "ghost" }) => (
   <Tooltip>
@@ -57,6 +91,30 @@ export function HeaderNav({
         >
           Tüm Araçlar
         </Link>
+        {/* DEĞİŞİKLİK: Yeni "Launchpad" linki eklendi */}
+        <Link
+          href="/launchpad"
+          className="text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Launchpad
+        </Link>
+
+        {/* YENİ: Topluluk Keşif Sayfası Linki */}
+        <Link
+          href="/topluluk"
+          className="text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Topluluk
+        </Link>
+
+        {/* YENİ: Ödül Avcılığı Sayfası Linki */}
+        <Link
+          href="/odul-avciligi"
+          className="text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Ödül Avcılığı
+        </Link>
+
         <Link
           href="/eserler"
           className="text-muted-foreground transition-colors hover:text-foreground"
@@ -84,26 +142,32 @@ export function HeaderNav({
         <TooltipProvider delayDuration={100}>
           {/* AI ve Aksiyon Butonları Grubu */}
           <div className="hidden lg:flex items-center gap-2">
+            {/* 
+  YENİ: Lansman Yap Butonu 
+  {user && (
+    <Button asChild variant="secondary">
+      <Link href="/launchpad/submit">
+        <Rocket className="w-4 h-4 mr-2" />
+        Lansman Yap
+      </Link>
+    </Button>
+  )}
+*/}
+
             <Button asChild variant="ghost">
               <Link href="/karsilastir">
                 <GitCompareArrows className="w-4 h-4 mr-2" />
                 Karşılaştır
               </Link>
             </Button>
-
-            {user ? (
-              <Button asChild variant="ghost">
-                <Link href="/studyo">
-                  <Bot className="w-4 h-4 mr-2" />
-                  Stüdyo
-                </Link>
-              </Button>
-            ) : (
-              <ProtectedButton variant="ghost">
-                <Bot className="w-4 h-4 mr-2" />
-                Stüdyo
-              </ProtectedButton>
-            )}
+{/* DEĞİŞİKLİK: Stüdyo butonu artık Pro üyelere özel */}
+                    {user && isProUser ? (
+                        <Button asChild variant="ghost"><Link href="/studyo"><Bot className="w-4 h-4 mr-2" />Stüdyo</Link></Button>
+                    ) : (
+                        <ProProtectedButton><Bot className="w-4 h-4 mr-2" />Stüdyo</ProProtectedButton>
+                    )}
+                    
+                    
 
             {user ? (
               <Button

@@ -22,6 +22,65 @@ import { render } from "@react-email/render";
 
 const ITEMS_PER_PAGE = 12; // Ana sayfadaki sayfa başına araç sayısıyla aynı olmalı
 
+const GEMINI_EMBEDDING_API_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent";
+
+// Bir metni, Gemini kullanarak anlamsal bir vektöre dönüştüren yardımcı fonksiyon
+// DÜZELTME: Eksik olan getEmbedding yardımcı fonksiyonunu buraya ekliyoruz.
+// Bu fonksiyon, bir metni, Gemini kullanarak anlamsal bir vektöre dönüştürür.
+// Bu fonksiyon, bir metni, Gemini kullanarak anlamsal bir vektöre dönüştürür.
+// Bir metni, Gemini kullanarak anlamsal bir vektöre dönüştüren yardımcı fonksiyon
+async function getEmbedding(text) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY bulunamadı.");
+  const payload = { model: "models/text-embedding-004", content: { parts: [{ text }] } };
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${apiKey}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    const errorBody = await response.json();
+    throw new Error(`Embedding API Hatası: ${errorBody.error?.message}`);
+  }
+  const result = await response.json();
+  if (result.embedding?.value) return result.embedding.value;
+  throw new Error("API'den geçerli bir embedding vektörü alınamadı.");
+}
+// async function getEmbedding(text) {
+//   const apiKey = process.env.GEMINI_API_KEY;
+//   if (!apiKey) throw new Error("GEMINI_API_KEY bulunamadı. Lütfen .env.local dosyanızı kontrol edin.");
+//
+//   const payload = {
+//     model: "models/text-embedding-004",
+//     content: { parts: [{ text }] }
+//   };
+//
+//   const response = await fetch(`${GEMINI_EMBEDDING_API_URL}?key=${apiKey}`, {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify(payload)
+//   });
+//
+//   const result = await response.json();
+//
+//   if (!response.ok) {
+//     console.error("Gemini Embedding API Hatası:", JSON.stringify(result, null, 2));
+//     const errorMessage = result.error?.message || "Bilinmeyen bir API hatası.";
+//     throw new Error(`Embedding API Hatası: ${errorMessage}`);
+//   }
+//
+//   if (result.embedding?.value) {
+//       return result.embedding.value;
+//   } else {
+//       // DÜZELTME: API'den neden vektör gelmediğini kontrol et
+//       const finishReason = result.candidates?.[0]?.finishReason;
+//       if (finishReason === 'SAFETY') {
+//           throw new Error("İsteğiniz güvenlik politikalarını ihlal ettiği için işlenemedi.");
+//       }
+//       console.error("Beklenmedik API Cevabı:", JSON.stringify(result, null, 2));
+//       throw new Error("API'den geçerli bir embedding vektörü alınamadı. Lütfen API yapılandırmanızı (faturalandırma, aktif API'ler) kontrol edin.");
+//   }
+// }
+
 // Stripe istemcisini başlatıyoruz
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2024-04-10",
@@ -2378,75 +2437,70 @@ export async function uploadBlogImage(formData) {
   return { success: true, url: data.publicUrl };
 }
 
-export async function fetchMoreTools({ page = 1, searchParams }) {
+export async function fetchMoreTools({ page = 0, searchParams }) {
   "use server";
 
   const supabase = createClient();
-
-  const from = page * ITEMS_PER_PAGE; // Sayfa 1'den başladığı için, offset'i direkt sayfa ile çarpıyoruz
+  const from = page * ITEMS_PER_PAGE;
   const to = from + ITEMS_PER_PAGE - 1;
 
-  // URL parametrelerinden tüm filtreleri alıyoruz
-  const categorySlug = searchParams?.category;
-  const searchText = searchParams?.search;
-  const sortBy = searchParams?.sort || "newest";
-  const selectedTags = searchParams?.tags
-    ? searchParams.tags.split(",").map(Number)
-    : [];
-  const pricingModel = searchParams?.pricing;
-  const selectedPlatforms = searchParams?.platforms
-    ? searchParams.platforms.split(",")
-    : [];
+  // Kullanıcının Pro olup olmadığını kontrol et
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("stripe_price_id")
+        .eq("id", user.id)
+        .single()
+    : { data: null };
+  const isProUser =
+    !!profile?.stripe_price_id ||
+    (user && user.email === process.env.ADMIN_EMAIL);
 
-  let query = supabase
-    .from("tools_with_ratings")
-    .select("*") // 'count' burada gerekli değil, sadece veri çekiyoruz
-    .eq("is_approved", true);
-
-  // Tüm filtreleri sorguya uyguluyoruz
-  if (categorySlug) query = query.eq("category_slug", categorySlug);
-  if (searchText)
-    query = query.or(
-      `name.ilike.%${searchText}%,description.ilike.%${searchText}%`
-    );
-  if (selectedTags.length > 0) {
-    const tagsToFilter = JSON.stringify(selectedTags.map((id) => ({ id })));
-    query = query.contains("tags", tagsToFilter);
-  }
-  if (pricingModel) query = query.eq("pricing_model", pricingModel);
-  if (selectedPlatforms.length > 0)
-    query = query.contains("platforms", selectedPlatforms);
-
-  switch (sortBy) {
-    case "rating":
-      query = query.order("average_rating", {
-        ascending: false,
-        nullsFirst: false,
-      });
-      break;
-    case "popularity":
-      query = query.order("total_ratings", {
-        ascending: false,
-        nullsFirst: false,
-      });
-      break;
-    default:
-      query = query.order("created_at", { ascending: false });
-      break;
-  }
-
-  query = query.range(from, to);
-
-  const { data: tools, error } = await query;
+  // DEĞİŞİKLİK: Artık tüm karmaşık filtreleme mantığı yerine,
+  // tek bir akıllı RPC fonksiyonunu çağırıyoruz.
+  const { data: tools, error } = await supabase.rpc("get_public_tools", {
+    p_page: page,
+    p_page_size: ITEMS_PER_PAGE,
+    p_search_text: searchParams?.search || null,
+    p_category_slug: searchParams?.category || null,
+    p_sort_by: searchParams?.sort || "newest",
+    p_tags: searchParams?.tags ? searchParams.tags.split(",").map(Number) : [],
+    p_pricing_model: searchParams?.pricing || null,
+    p_platforms: searchParams?.platforms
+      ? searchParams.platforms.split(",")
+      : [],
+    p_tier: searchParams?.tier || null,
+    p_is_pro_user: isProUser,
+  });
 
   if (error) {
-    console.error("Daha fazla araç çekerken hata:", error.message);
-    return []; // Hata durumunda boş bir dizi döndür
+    console.error("Araç çekerken hata:", error.message);
+    return [];
   }
 
   return tools;
 }
 
+// YENİ: Bir varyantın "gösterim" (impression) sayısını artıran fonksiyon
+export async function recordVariantImpression(variantId) {
+  "use server";
+  if (!variantId) return;
+  const supabase = createClient();
+  await supabase.rpc("increment_variant_impression", {
+    p_variant_id: variantId,
+  });
+}
+
+// YENİ: Bir varyantın "tıklanma" (click) sayısını artıran fonksiyon
+export async function recordVariantClick(variantId) {
+  "use server";
+  if (!variantId) return;
+  const supabase = createClient();
+  await supabase.rpc("increment_variant_click", { p_variant_id: variantId });
+}
 // Kullanıcıyı Stripe ödeme sayfasına yönlendiren fonksiyon
 export async function createCheckoutSession(formData) {
   "use server";
@@ -3064,39 +3118,154 @@ async function getProjectDetailsForAI(projectId) {
 }
 
 // "AI Stratejist" analizini isteyen ana fonksiyon
+//export async function getAiProjectStrategy(projectId) {
+// "use server";
+
+// if (!projectId) {
+//  return { error: "Proje ID'si bulunamadı." };
+//}
+//
+// try {
+// 1. Adım: Analiz edilecek tüm proje verisini çek
+//  const projectData = await getProjectDetailsForAI(projectId);
+
+// 2. Adım: Gemini için özel ve detaylı prompt'u oluştur
+//  const formattedData = `
+//     Proje Başlığı: ${projectData.project.title}
+//     Proje Açıklaması: ${projectData.project.description}
+//
+//     Kullanılan Araçlar:
+//     ${projectData.tools.map((t) => `- ${t.name}: ${t.description}`).join("\n") || "Yok"}
+
+//    Oluşturulan Eserler:
+//    ${projectData.showcaseItems.map((s) => `- ${s.title}: ${s.description}`).join("\n") || "Yok"}
+
+//    Kullanılan Prompt'lar:
+//    ${projectData.prompts.map((p) => `- ${p.title}: "${p.prompt_text}"`).join("\n") || "Yok"}
+// `;
+
+//  const prompt = `
+//    Sen bir proje yönetimi ve yapay zeka stratejistisin. Sana bir kullanıcının projesine eklediği araçların, eserlerin ve prompt'ların bir listesini vereceğim.
+
+//    Proje Verileri:
+//    ${formattedData}
+
+//    Görevin: Bu verilere dayanarak, kullanıcının projesini daha da ileriye taşıması için stratejik tavsiyeler sunmaktır. Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin veya açıklama ekleme.
+// `;
+
+// 3. Adım: Gemini API'sine isteği hazırla ve gönder
+//   const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+//   const payload = {
+//     contents: chatHistory,
+//     generationConfig: {
+//       responseMimeType: "application/json",
+//       responseSchema: {
+//         type: "OBJECT",
+//         properties: {
+//           project_summary: {
+//             type: "STRING",
+//             description:
+//               "Projenin genel amacını ve durumunu 2 cümleyle özetle.",
+//           },
+//           strategic_suggestions: {
+//            type: "ARRAY",
+//             items: { type: "STRING" },
+//           description:
+//              "Projenin hedefine ulaşması için 3 adet somut ve yaratıcı stratejik öneri sun.",
+//          },
+//          potential_tools: {
+//            type: "ARRAY",
+//            items: { type: "STRING" },
+//            description:
+//               "Bu projeye fayda sağlayabilecek, listede olmayan 2 farklı araç türü öner.",
+//           },
+//         },
+////       },
+//     },
+//   };
+
+//   const apiKey = process.env.GEMINI_API_KEY;
+////   if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+////
+//    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+//
+//   const response = await fetch(apiUrl, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify(payload),
+//   });
+
+//   if (!response.ok) {
+//     return { error: `Yapay zeka modelinden hata alındı.` };
+//  }
+
+//  const result = await response.json();
+
+//  if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+//   return {
+//      success: true,
+//     data: JSON.parse(result.candidates[0].content.parts[0].text),
+//   };
+//  } else {
+//    return {
+//      error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı.",
+//    };
+//  }
+//  } catch (e) {
+////   console.error("AI Stratejist fonksiyonunda genel hata:", e);
+//    return { error: "Analiz oluşturulurken beklenmedik bir hata oluştu." };
+//  }
+//}
+// "AI Proje Asistanı" analizini isteyen ana fonksiyon
 export async function getAiProjectStrategy(projectId) {
   "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    // Pro özelliği gelecekte ekleneceği için şimdilik sadece giriş kontrolü
+    return { error: "Bu özelliği kullanmak için giriş yapmalısınız." };
+  }
 
   if (!projectId) {
     return { error: "Proje ID'si bulunamadı." };
   }
 
   try {
-    // 1. Adım: Analiz edilecek tüm proje verisini çek
-    const projectData = await getProjectDetailsForAI(projectId);
+    // 1. Adım: Analiz edilecek tüm proje verisini, yeni RPC fonksiyonumuzla çek
+    const { data: projectData, error: projectError } = await supabase.rpc(
+      "get_project_details_for_ai",
+      { p_project_id: projectId }
+    );
+
+    if (projectError || !projectData) {
+      throw new Error("Proje detayları veritabanından alınamadı.");
+    }
 
     // 2. Adım: Gemini için özel ve detaylı prompt'u oluştur
     const formattedData = `
-        Proje Başlığı: ${projectData.project.title}
-        Proje Açıklaması: ${projectData.project.description}
+        Proje Başlığı: ${projectData.title}
+        Proje Açıklaması: ${projectData.description}
 
-        Kullanılan Araçlar:
-        ${projectData.tools.map((t) => `- ${t.name}: ${t.description}`).join("\n") || "Yok"}
+        Projeye Eklenen Araçlar:
+        ${projectData.tools?.map((t) => `- ${t.name}: ${t.description}`).join("\n") || "Yok"}
 
-        Oluşturulan Eserler:
-        ${projectData.showcaseItems.map((s) => `- ${s.title}: ${s.description}`).join("\n") || "Yok"}
+        Projeye Eklenen Eserler:
+        ${projectData.showcase_items?.map((s) => `- ${s.title}: ${s.description}`).join("\n") || "Yok"}
 
-        Kullanılan Prompt'lar:
-        ${projectData.prompts.map((p) => `- ${p.title}: "${p.prompt_text}"`).join("\n") || "Yok"}
+        Projeye Eklenen Prompt'lar:
+        ${projectData.prompts?.map((p) => `- ${p.title}: "${p.prompt_text}"`).join("\n") || "Yok"}
     `;
 
     const prompt = `
         Sen bir proje yönetimi ve yapay zeka stratejistisin. Sana bir kullanıcının projesine eklediği araçların, eserlerin ve prompt'ların bir listesini vereceğim. 
         
-        Proje Verileri:
+        PROJE VERİLERİ:
         ${formattedData}
 
-        Görevin: Bu verilere dayanarak, kullanıcının projesini daha da ileriye taşıması için stratejik tavsiyeler sunmaktır. Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin veya açıklama ekleme.
+        GÖREVİN: Bu verilere dayanarak, kullanıcının projesini daha da ileriye taşıması için stratejik tavsiyeler sunmaktır. Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin veya açıklama ekleme.
     `;
 
     // 3. Adım: Gemini API'sine isteği hazırla ve gönder
@@ -3126,6 +3295,11 @@ export async function getAiProjectStrategy(projectId) {
                 "Bu projeye fayda sağlayabilecek, listede olmayan 2 farklı araç türü öner.",
             },
           },
+          required: [
+            "project_summary",
+            "strategic_suggestions",
+            "potential_tools",
+          ],
         },
       },
     };
@@ -3142,7 +3316,10 @@ export async function getAiProjectStrategy(projectId) {
     });
 
     if (!response.ok) {
-      return { error: `Yapay zeka modelinden hata alındı.` };
+      const errorBody = await response.json();
+      return {
+        error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}`,
+      };
     }
 
     const result = await response.json();
@@ -3556,3 +3733,1085 @@ export async function getAiCodeReview(codeToReview) {
     };
   }
 }
+
+// Bir araç için 3 adet alternatif başlık ve açıklama üreten fonksiyon
+export async function generateToolVariants(toolId) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: "Bu özelliği kullanmak için yetkiniz yok." };
+  }
+
+  if (!toolId) {
+    return { error: "Analiz edilecek araç ID'si bulunamadı." };
+  }
+
+  try {
+    // 1. Adım: Analiz edilecek aracın mevcut bilgilerini çek
+    const { data: tool, error: toolError } = await supabase
+      .from("tools")
+      .select("name, description")
+      .eq("id", toolId)
+      .single();
+
+    if (toolError) throw new Error("Araç bilgileri alınamadı.");
+
+    // 2. Adım: Gemini için özel prompt'u oluştur
+    const prompt = `
+        Sen, teknoloji ürünleri için pazarlama metinleri yazma konusunda uzman bir metin yazarı (copywriter)'sın. Görevin, sana verilen bir yapay zeka aracının orijinal başlığına ve açıklamasına bakarak, kullanıcıların tıklama oranını (CTR) artıracak, daha dikkat çekici ve fayda odaklı 3 adet alternatif başlık ve açıklama çifti üretmektir.
+
+        ORİJİNAL İÇERİK:
+        - Başlık: "${tool.name}"
+        - Açıklama: "${tool.description}"
+
+        Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin veya açıklama ekleme.
+    `;
+
+    // 3. Adım: Gemini API'sine isteği hazırla ve gönder
+    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const payload = {
+      contents: chatHistory,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            variants: {
+              type: "ARRAY",
+              description: "3 adet başlık ve açıklama çifti içeren bir dizi.",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  title: { type: "STRING" },
+                  description: { type: "STRING" },
+                },
+                required: ["title", "description"],
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json();
+      return {
+        error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}`,
+      };
+    }
+
+    const result = await response.json();
+    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+      const parsedResult = JSON.parse(
+        result.candidates[0].content.parts[0].text
+      );
+      return { success: true, data: parsedResult.variants };
+    } else {
+      return {
+        error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı.",
+      };
+    }
+  } catch (e) {
+    console.error("AI Varyant Üretme fonksiyonunda hata:", e.message);
+    return {
+      error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}`,
+    };
+  }
+}
+// Bir aracın başlık/açıklama varyantlarını güncelleyen fonksiyon
+export async function updateToolVariants(formData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: "Yetkiniz yok." };
+  }
+
+  const toolId = formData.get("toolId");
+  // Formdan gelen tüm varyantları JSON olarak alıp ayrıştırıyoruz
+  const variants = JSON.parse(formData.get("variants") || "[]");
+
+  if (!toolId) {
+    return { error: "Araç ID'si bulunamadı." };
+  }
+
+  const supabaseAdmin = createAdminClient();
+
+  // 1. Önce, bu araca ait olan, orijinal OLMAYAN tüm eski varyantları siliyoruz.
+  // Bu, temiz bir başlangıç yapmamızı sağlar.
+  const { error: deleteError } = await supabaseAdmin
+    .from("tool_variants")
+    .delete()
+    .eq("tool_id", toolId)
+    .eq("is_original", false);
+
+  if (deleteError) {
+    console.error("Eski varyantları silme hatası:", deleteError);
+    return { error: "Varyantlar güncellenirken bir hata oluştu." };
+  }
+
+  // 2. Eğer gönderilen yeni varyantlar varsa, onları ekliyoruz.
+  if (variants.length > 0) {
+    const variantsToInsert = variants.map((v) => ({
+      tool_id: toolId,
+      title: v.title,
+      description: v.description,
+      is_active: v.is_active,
+      is_original: false, // Bunlar asla orijinal olamaz
+    }));
+
+    const { error: insertError } = await supabaseAdmin
+      .from("tool_variants")
+      .insert(variantsToInsert);
+
+    if (insertError) {
+      console.error("Yeni varyantları ekleme hatası:", insertError);
+      return { error: "Varyantlar güncellenirken bir hata oluştu." };
+    }
+  }
+
+  revalidatePath("/admin");
+  return { success: "Araç varyantları başarıyla güncellendi." };
+}
+
+// Yeni bir ödül ilanı oluşturan fonksiyon
+export async function createBounty(formData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Bu işlem için giriş yapmalısınız." };
+  }
+
+  const title = formData.get("title");
+  const description = formData.get("description");
+  const reward = parseInt(formData.get("reward"), 10);
+
+  if (!title || !reward || reward <= 0) {
+    return { error: "Başlık ve geçerli bir ödül puanı zorunludur." };
+  }
+
+  // DEĞİŞİKLİK: Kullanıcının admin olup olmadığını kontrol ediyoruz.
+  const isAdmin = user.email === process.env.ADMIN_EMAIL;
+
+  // Kullanıcının yeterli puanı olup olmadığını kontrol et (adminler hariç)
+  if (!isAdmin) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("reputation_points")
+      .eq("id", user.id)
+      .single();
+    if (!profile || profile.reputation_points < reward) {
+      return { error: "Bu ödülü oluşturmak için yeterli itibar puanınız yok." };
+    }
+  }
+
+  const { data: newBounty, error } = await supabase
+    .from("bounties")
+    .insert({ title, description, reputation_reward: reward, user_id: user.id })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("Ödül oluşturma hatası:", error);
+    return { error: "Ödül ilanı oluşturulurken bir hata oluştu." };
+  }
+
+  revalidatePath("/odul-avciligi");
+  return { success: "Ödül ilanı başarıyla oluşturuldu!" };
+}
+
+// ... (diğer fonksiyonlarınız aynı kalıyor)
+
+// Bir ödüle araç öneren fonksiyon
+export async function submitToBounty(formData) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Öneri yapmak için giriş yapmalısınız." };
+
+  const bountyId = formData.get("bountyId");
+  const toolId = formData.get("toolId");
+  const notes = formData.get("notes");
+
+  if (!bountyId || !toolId) return { error: "Gerekli bilgiler eksik." };
+
+  const { error } = await supabase.from("bounty_submissions").insert({
+    bounty_id: bountyId,
+    tool_id: toolId,
+    user_id: user.id,
+    notes,
+  });
+
+  if (error) {
+    // DEĞİŞİKLİK: Veritabanından '23505' (unique_violation) hatası geldiğinde,
+    // artık bunun doğru sebebini kullanıcıya gösteriyoruz.
+    if (error.code === "23505") {
+      return { error: "Bu araç bu ödüle zaten önerilmiş." };
+    }
+    console.error("Öneri gönderme hatası:", error);
+    return { error: "Öneri gönderilirken bir hata oluştu." };
+  }
+
+  revalidatePath(`/odul-avciligi/${bountyId}`);
+  return { success: "Öneriniz başarıyla gönderildi." };
+}
+
+// Bir öneriyi kazanan olarak seçen fonksiyon
+export async function acceptBountySubmission(formData) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Bu işlem için giriş yapmalısınız." };
+
+  const submissionId = formData.get("submissionId");
+  if (!submissionId) return { error: "Öneri ID'si bulunamadı." };
+
+  // Veritabanında oluşturduğumuz akıllı RPC fonksiyonunu çağırıyoruz
+  const { error } = await supabase.rpc("accept_bounty_submission", {
+    p_submission_id: submissionId,
+    p_bounty_creator_id: user.id,
+  });
+
+  if (error) {
+    console.error("Öneri kabul etme hatası:", error);
+    return { error: error.message }; // Veritabanından gelen net hata mesajını göster
+  }
+
+  revalidatePath("/odul-avciligi");
+  return { success: "Kazanan öneri seçildi ve ödül dağıtıldı!" };
+}
+
+// Yeni bir lansman gönderen fonksiyon
+export async function submitLaunch(formData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Lansman yapmak için giriş yapmalısınız." };
+  }
+
+  const toolId = formData.get("toolId");
+  const tagline = formData.get("tagline");
+  const galleryImages = formData.getAll("galleryImages");
+
+  if (!toolId || !tagline) {
+    return { error: "Araç seçimi ve slogan zorunludur." };
+  }
+
+  // 1. Galeri görsellerini Supabase Storage'a yükle
+  const imageUrls = [];
+  for (const imageFile of galleryImages) {
+    if (imageFile && imageFile.size > 0) {
+      const fileExt = imageFile.name.split(".").pop();
+      const filePath = `${user.id}/launches/${toolId}-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("launch-gallery-images")
+        .upload(filePath, imageFile);
+
+      if (uploadError) {
+        console.error("Lansman görseli yükleme hatası:", uploadError);
+        return { error: "Görseller yüklenirken bir hata oluştu." };
+      }
+
+      const { data } = supabase.storage
+        .from("launch-gallery-images")
+        .getPublicUrl(filePath);
+      imageUrls.push(data.publicUrl);
+    }
+  }
+
+  // 2. Lansman bilgilerini veritabanına kaydet
+  const { data: newLaunch, error: insertError } = await supabase
+    .from("launches")
+    .insert({
+      tool_id: toolId,
+      user_id: user.id,
+      tagline,
+      description: formData.get("description"),
+      gallery_image_urls: imageUrls,
+      youtube_video_url: formData.get("youtube_video_url"),
+      is_approved: false, // Lansmanlar da admin onayı bekleyecek
+      vote_count: 1, // Kendi oyuyla başlar
+    })
+    .select("id")
+    .single();
+
+  if (insertError) {
+    console.error("Lansman kaydetme hatası:", insertError);
+    return { error: "Lansmanınız kaydedilirken bir hata oluştu." };
+  }
+
+  // Lansmanı yapan kullanıcının, bu lansmanı otomatik olarak oylamasını sağlıyoruz.
+  await supabase
+    .from("launch_votes")
+    .insert({ launch_id: newLaunch.id, user_id: user.id });
+
+  revalidatePath("/launchpad");
+  return {
+    success:
+      "Lansmanınız başarıyla gönderildi! Onaylandıktan sonra yayınlanacaktır.",
+  };
+}
+
+// Bir lansmanı oylayan/oyunu geri alan fonksiyon
+export async function toggleLaunchVote(formData) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Oylama yapmak için giriş yapmalısınız." };
+
+  const launchId = formData.get("launchId");
+  if (!launchId) return { error: "Lansman ID'si bulunamadı." };
+
+  const { data: existingVote } = await supabase
+    .from("launch_votes")
+    .select("launch_id")
+    .eq("user_id", user.id)
+    .eq("launch_id", launchId)
+    .maybeSingle();
+
+  if (existingVote) {
+    await supabase
+      .from("launch_votes")
+      .delete()
+      .match({ user_id: user.id, launch_id: launchId });
+    await supabase.rpc("decrement_launch_vote", { p_launch_id: launchId });
+  } else {
+    await supabase
+      .from("launch_votes")
+      .insert({ user_id: user.id, launch_id: launchId });
+    await supabase.rpc("increment_launch_vote", { p_launch_id: launchId });
+  }
+
+  revalidatePath("/launchpad");
+  return { success: true };
+}
+
+// YENİ: Bir metni Gemini'nin embedding modelini kullanarak vektöre dönüştüren fonksiyon
+async function getEmbeddingForText(text) {
+  "use server";
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("Gemini API anahtarı bulunamadı.");
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${apiKey}`;
+    const payload = {
+      model: "models/text-embedding-004",
+      content: { parts: [{ text }] },
+    };
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.error("Embedding API Hatası:", await response.text());
+      throw new Error("Embedding oluşturulamadı.");
+    }
+
+    const result = await response.json();
+    return result.embedding.value;
+  } catch (error) {
+    console.error("Embedding hatası:", error);
+    return null;
+  }
+}
+
+// Bir araç için 3 adet alternatif başlık ve açıklama üreten fonksiyon
+//export async function generateToolVariants(toolId) {
+//"use server";
+
+//const supabase = createClient();
+//const { data: { user } } = await supabase.auth.getUser();
+//if (!user || user.email !== process.env.ADMIN_EMAIL) {
+// return { error: "Bu özelliği kullanmak için yetkiniz yok." };
+//}
+
+//if (!toolId) {
+// return { error: "Analiz edilecek araç ID'si bulunamadı." };
+//}
+
+//try {
+// 1. Adım: Analiz edilecek aracın mevcut bilgilerini çek
+//const { data: tool, error: toolError } = await supabase
+//    .from('tools')
+//    .select('name, description')
+//    .eq('id', toolId)
+//    .single();
+
+// if (toolError) throw new Error("Araç bilgileri alınamadı.");
+
+// 2. Adım: Gemini için özel prompt'u oluştur
+// const prompt = `
+//Sen, teknoloji ürünleri için pazarlama metinleri yazma konusunda uzman bir metin yazarı (copywriter)'sın. Görevin, sana verilen bir yapay zeka aracının orijinal başlığına ve açıklamasına bakarak, kullanıcıların tıklama oranını (CTR) artıracak, daha dikkat çekici ve fayda odaklı 3 adet alternatif başlık ve açıklama çifti üretmektir.
+
+// ORİJİNAL İÇERİK:
+// - Başlık: "${tool.name}"
+// - Açıklama: "${tool.description}"
+
+// Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin veya açıklama ekleme.
+//  `;
+
+// 3. Adım: Gemini API'sine isteği hazırla ve gönder
+//  const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+//  const payload = {
+//     contents: chatHistory,
+//    generationConfig: {
+//       responseMimeType: "application/json",
+//     responseSchema: {
+//      type: "OBJECT",
+//      properties: {
+//         "variants": {
+//             "type": "ARRAY",
+//            "description": "3 adet başlık ve açıklama çifti içeren bir dizi.",
+//            "items": {
+//                "type": "OBJECT",
+//                "properties": {
+//                     "title": { "type": "STRING" },
+//                     "description": { "type": "STRING" }
+//                },
+//                "required": ["title", "description"]
+//            }
+//        }
+//     }
+//    }
+//   }
+//  };
+
+//const apiKey = process.env.GEMINI_API_KEY;
+// if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+
+// const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+//  const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+//  if (!response.ok) {
+//     const errorBody = await response.json();
+//    return { error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}` };
+// }
+
+// const result = await response.json();
+//  if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+//      const parsedResult = JSON.parse(result.candidates[0].content.parts[0].text);
+//     return { success: true, data: parsedResult.variants };
+// } else {
+//     return { error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı." };
+// }
+
+//} catch (e) {
+//  console.error("AI Varyant Üretme fonksiyonunda hata:", e.message);
+//  return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
+// }
+//}
+
+// Belirli bir kategori için AI ile yeni araçlar üreten ve onaya sunan fonksiyon
+export async function generateToolsWithAi(formData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: "Bu özelliği kullanmak için yetkiniz yok." };
+  }
+
+  const categoryId = formData.get("categoryId");
+  const categoryName = formData.get("categoryName");
+
+  if (!categoryId || !categoryName) {
+    return { error: "Lütfen bir kategori seçin." };
+  }
+
+  try {
+    // 1. Adım: Gemini için özel prompt'u oluştur
+    const prompt = `
+        Sen, yapay zeka araçları konusunda uzman bir teknoloji araştırmacısısın. Görevin, sana verilen kategori için, internetteki en popüler ve GERÇEK 10 adet yapay zeka aracını bulmaktır. Her araç için kısa, dikkat çekici bir açıklama (description) ve aracın resmi web sitesinin linkini (link) bulmalısın.
+
+        KATEGORİ: "${categoryName}"
+
+        Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin veya açıklama ekleme. Linklerin geçerli ve çalışır olduğundan emin ol.
+    `;
+
+    // 2. Adım: Gemini API'sine isteği hazırla ve gönder
+    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const payload = {
+      contents: chatHistory,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            tools: {
+              type: "ARRAY",
+              description: "Bulunan 10 adet araç.",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  name: { type: "STRING" },
+                  description: { type: "STRING" },
+                  link: { type: "STRING" },
+                },
+                required: ["name", "description", "link"],
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      return { error: `Yapay zeka modelinden hata alındı.` };
+    }
+
+    const result = await response.json();
+    if (!result.candidates?.[0]?.content?.parts?.[0]?.text) {
+      return {
+        error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı.",
+      };
+    }
+
+    const generatedTools = JSON.parse(
+      result.candidates[0].content.parts[0].text
+    ).tools;
+
+    // 3. Adım: Akıllı Veritabanı Entegrasyonu
+    const supabaseAdmin = createAdminClient();
+    const { data: existingTools } = await supabaseAdmin
+      .from("tools")
+      .select("name, link");
+    const existingNames = new Set(
+      existingTools.map((t) => t.name.toLowerCase())
+    );
+    const existingLinks = new Set(existingTools.map((t) => t.link));
+
+    const newToolsToInsert = generatedTools.filter(
+      (tool) =>
+        !existingNames.has(tool.name.toLowerCase()) &&
+        !existingLinks.has(tool.link)
+    );
+
+    if (newToolsToInsert.length > 0) {
+      const toolsWithSlug = newToolsToInsert.map((tool) => ({
+        name: tool.name,
+        description: tool.description,
+        link: tool.link,
+        slug: tool.name
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, ""),
+        is_approved: false,
+        suggester_email: `ai-factory@${categoryName.toLowerCase()}.com`,
+        category_id: categoryId,
+      }));
+
+      const { error: insertError } = await supabaseAdmin
+        .from("tools")
+        .insert(toolsWithSlug);
+      if (insertError) throw insertError;
+    }
+
+    revalidatePath("/admin");
+    return { success: true, count: newToolsToInsert.length };
+  } catch (e) {
+    console.error("AI Araç Üretme fonksiyonunda hata:", e.message);
+    return { error: `Araçlar üretilirken beklenmedik bir hata oluştu.` };
+  }
+}
+
+// Bir varyantı "kazanan" olarak uygulayan fonksiyon
+export async function applyWinningVariant(formData) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: "Yetkiniz yok." };
+  }
+
+  const toolId = formData.get("toolId");
+  const newTitle = formData.get("newTitle");
+  const newDescription = formData.get("newDescription");
+
+  if (!toolId || !newTitle || !newDescription) {
+    return { error: "Gerekli bilgiler eksik." };
+  }
+
+  const supabaseAdmin = createAdminClient();
+
+  // 1. Ana 'tools' tablosunu, kazanan varyantın bilgileriyle güncelle
+  const { error: updateError } = await supabaseAdmin
+    .from("tools")
+    .update({ name: newTitle, description: newDescription })
+    .eq("id", toolId);
+
+  if (updateError) {
+    console.error("Kazanan varyant uygulanırken hata:", updateError);
+    return { error: "Araç güncellenirken bir hata oluştu." };
+  }
+
+  // 2. Testi sonlandırmak için, bu araca ait tüm A/B testi varyantlarını sil
+  // (Orijinal varyantın silinmemesi için bir kural eklenebilir, şimdilik hepsi siliniyor)
+  await supabaseAdmin
+    .from("tool_variants")
+    .delete()
+    .eq("tool_id", toolId)
+    .eq("is_original", false);
+
+  revalidatePath("/admin");
+  return {
+    success: "Kazanan varyant başarıyla uygulandı ve test sonlandırıldı.",
+  };
+}
+
+// Karşılama Asistanı sohbetini yöneten ana fonksiyon
+// Karşılama Asistanı sohbetini yöneten ana fonksiyon
+export async function handleOnboardingStep(history, userAnswer) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Bu işlem için giriş yapmalısınız." };
+
+  try {
+    const { data: categories } = await supabase
+      .from("categories")
+      .select("name");
+    const categoryList = categories.map((c) => c.name).join(", ");
+
+    const systemPrompt = `
+        Sen, 'AI Keşif Platformu'na yeni katılmış bir kullanıcıyı karşılayan, samimi ve yardımcı bir AI asistanısın. Görevin, kullanıcıya sorular sorarak ilgi alanlarını öğrenmek ve bu bilgilere göre onun platform deneyimini kişiselleştirmektir. Kısa ve net cevaplar ver.
+
+        Sohbet Akışı:
+        1.  Kullanıcıya hoş geldin de ve amacını anlat.
+        2.  Ona şu kategorilerden hangileriyle ilgilendiğini sor: ${categoryList}.
+        3.  Cevabına göre, teşekkür et ve onun için platformu kişiselleştireceğini söyle.
+        4.  Son olarak, sohbete "complete" anahtar kelimesini içeren bir JSON cevabı ile son ver.
+
+        KULLANICI İLE ÖNCEKİ KONUŞMA:
+        ${JSON.stringify(history)}
+
+        KULLANICININ YENİ CEVABI: "${userAnswer}"
+
+        Şimdi, bu bağlama göre bir sonraki cevabını, SADECE aşağıdaki JSON formatında ver:
+    `;
+
+    const chatHistory = [{ role: "user", parts: [{ text: systemPrompt }] }];
+    const payload = {
+      contents: chatHistory,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            response_text: { type: "STRING" },
+            action: {
+              type: "STRING",
+              description: "'complete' veya 'continue'",
+            },
+          },
+          required: ["response_text", "action"],
+        },
+      },
+    };
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) return { error: `Yapay zeka modelinden hata alındı.` };
+
+    const result = await response.json();
+    const aiResponse = JSON.parse(result.candidates[0].content.parts[0].text);
+
+    // Eğer AI sohbetin bittiğini söylerse, kullanıcının profilini güncelle
+    if (aiResponse.action === "complete") {
+      const supabaseAdmin = createAdminClient();
+      // DEĞİŞİKLİK: Hata kontrolü eklendi
+      const { error: updateError } = await supabaseAdmin
+        .from("profiles")
+        .update({ onboarding_completed: true })
+        .eq("id", user.id);
+
+      if (updateError) {
+        console.error("Onboarding tamamlama hatası:", updateError);
+        // Hata durumunda, istemciye net bir mesaj gönder
+        return {
+          error:
+            "Profiliniz güncellenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+        };
+      }
+      revalidatePath("/");
+    }
+
+    return { success: true, data: aiResponse };
+  } catch (e) {
+    console.error("Onboarding Asistanı hatası:", e.message);
+    return { error: `Bir hata oluştu: ${e.message}` };
+  }
+}
+
+// Bir kullanıcının push bildirim aboneliğini kaydeden fonksiyon
+export async function savePushSubscription(subscriptionJSON) {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Kullanıcı bulunamadı." };
+
+  // DEĞİŞİKLİK: Fonksiyon artık karmaşık bir obje değil,
+  // basit bir JSON objesi ('subscriptionJSON') alıyor.
+  const { error: upsertError } = await supabase
+    .from("push_subscriptions")
+    .upsert(
+      {
+        user_id: user.id,
+        subscription: subscriptionJSON, // Bu JSON objesini doğrudan veritabanına kaydediyoruz.
+      },
+      { onConflict: "user_id" }
+    );
+
+  if (upsertError) {
+    console.error("Push aboneliği kaydetme hatası:", upsertError);
+    return { error: "Abonelik kaydedilemedi." };
+  }
+
+  // Kullanıcının profilindeki ayarı 'true' olarak güncelle
+  await supabase
+    .from("profiles")
+    .update({ wants_push_notifications: true })
+    .eq("id", user.id);
+
+  revalidatePath("/profile");
+  return { success: true };
+}
+
+// deletePushSubscription fonksiyonunda değişiklik yok.
+
+// Bir kullanıcının push bildirim aboneliğini silen fonksiyon
+export async function deletePushSubscription() {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Kullanıcı bulunamadı." };
+
+  // 1. Aboneliği 'push_subscriptions' tablosundan sil
+  await supabase.from("push_subscriptions").delete().eq("user_id", user.id);
+
+  // 2. Kullanıcının profilindeki ayarı 'false' olarak güncelle
+  await supabase
+    .from("profiles")
+    .update({ wants_push_notifications: false })
+    .eq("id", user.id);
+
+  revalidatePath("/profile");
+  return { success: true };
+}
+
+// Sesli Agent'ın beyni olan ana fonksiyon
+export async function getVoiceAgentResponse(userQuery) {
+  "use server";
+
+  if (!userQuery) {
+    return { error: "Sorgu boş olamaz." };
+  }
+
+  try {
+    const supabase = createClient();
+    
+    // 1. ADIM: Kullanıcının sorgusunu bir "anlam vektörüne" dönüştür
+    const queryEmbedding = await getEmbedding(userQuery);
+    
+    // 2. ADIM: Bu vektörü kullanarak, veritabanından AI için gerekli tüm "hafızayı" (bağlamı) çek
+    const { data: context, error: contextError } = await supabase.rpc('get_context_for_voice_agent', {
+        query_embedding: queryEmbedding
+    });
+
+    if (contextError) throw contextError;
+
+    // 3. ADIM (Augmentation): Gemini için, bulduğumuz bu verilerle zenginleştirilmiş özel bir prompt oluştur
+    const formattedContext = `
+        Platform İstatistikleri: ${JSON.stringify(context.platform_stats)}
+        Kullanıcının Sorusuyla En Alakalı Araçlar: ${JSON.stringify(context.relevant_tools)}
+    `;
+
+    const prompt = `
+        Sen, 'AI Keşif Platformu'nun her şeyini bilen, son derece bilgili ve samimi sesli yardımcı asistanısın. Görevin, sana sunulan bağlamı (platform istatistikleri ve kullanıcının sorusuyla en alakalı araçlar) kullanarak, kullanıcının sorduğu soruya kısa, doğal ve akıcı bir dille sesli olarak cevap vermektir. Eğer kullanıcı "ChatGPT" gibi spesifik bir araç soruyorsa ve bu araç "En Alakalı Araçlar" listesinde görünmüyorsa, bunun yerine ona en yakın alternatifleri öner. Asla "bilmiyorum" deme, her zaman yardımcı olmaya çalış.
+
+        SAĞLANAN BAĞLAM:
+        ${formattedContext}
+
+        KULLANICININ SORUSU:
+        "${userQuery}"
+
+        Şimdi, bu bilgilere dayanarak kullanıcıya sesli olarak okunacak cevabını oluştur.
+    `;
+
+    // 4. ADIM (Generation): Gemini API'sine isteği gönder
+    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const payload = { contents: chatHistory };
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+    
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    
+    const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+        const errorBody = await response.json();
+        return { error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}` };
+    }
+
+    const result = await response.json();
+    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+        return { success: true, text: result.candidates[0].content.parts[0].text };
+    } else {
+        return { error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı." };
+    }
+
+  } catch (e) {
+    console.error("Sesli Agent fonksiyonunda hata:", e.message);
+    return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
+  }
+}
+// Bir aracın başlık/açıklama varyantlarını AI ile üreten fonksiyon
+
+// "Sesli Agent v2.0"ın beyni olan, gelişmiş sunucu fonksiyonu
+// "Sesli Agent v2.0"ın beyni olan, gelişmiş sunucu fonksiyonu
+// "Sesli Agent v2.0"ın beyni olan, gelişmiş sunucu fonksiyonu
+export async function getAdvancedVoiceAgentResponse(userQuery, history) {
+  "use server";
+
+  if (!userQuery) {
+    return { error: "Sorgu boş olamaz." };
+  }
+
+  try {
+    const supabase = createClient();
+    
+    // 1. ADIM: Kullanıcının sorgusunu bir "anlam vektörüne" dönüştür
+    const queryEmbedding = await getEmbedding(userQuery);
+    
+    // 2. ADIM: Veritabanından AI için gerekli tüm "hafızayı" (bağlamı) çek
+    const { data: context, error: contextError } = await supabase.rpc('get_full_context_for_ai', {
+        p_query_text: userQuery,
+        p_query_embedding: queryEmbedding
+    });
+
+    if (contextError) throw contextError;
+
+    // 3. ADIM (Augmentation): Gemini için zenginleştirilmiş prompt oluştur
+    const formattedContext = `
+        Kullanıcının Sorusuyla İlgili Platform Verileri:
+        - Anlamsal Olarak Benzer Araçlar: ${JSON.stringify(context.semantic_tools)}
+        - Anahtar Kelime Eşleşmesiyle Bulunan Araç: ${JSON.stringify(context.exact_match_tool)}
+        - İlgili Blog Yazıları/Rehberler: ${JSON.stringify(context.relevant_posts)}
+    `;
+
+    const prompt = `
+        Sen, 'AI Keşif Platformu'nun baş konsiyerjisin. Görevin, sana sunulan platform verilerini ve kullanıcıyla olan konuşma geçmişini sentezleyerek, kullanıcının sorduğu son soruya yönelik en akıllı, en yardımcı ve en insancıl cevabı vermektir. Cevabın, kullanıcıya hem sesli olarak okunacak bir metin hem de görsel olarak gösterilecek tıklanabilir içerik önerileri içermelidir.
+
+        SAĞLANAN BAĞLAM:
+        ${formattedContext}
+
+        KULLANICI İLE ÖNCEKİ KONUŞMA:
+        ${JSON.stringify(history)}
+
+        KULLANICININ YENİ SORUSU:
+        "${userQuery}"
+
+        Şimdi, bu bilgilere dayanarak cevabını SADECE aşağıdaki JSON formatında oluştur:
+    `;
+
+    // 4. ADIM (Generation): Gemini API'sine isteği gönder
+    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const payload = {
+        contents: chatHistory,
+        generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: "OBJECT",
+                properties: {
+                    "spoken_response": { "type": "STRING" },
+                    "suggested_content": {
+                        "type": "ARRAY",
+                        "items": {
+                            "type": "OBJECT",
+                            "properties": {
+                                "type": { "type": "STRING" },
+                                "title": { "type": "STRING" },
+                                "url": { "type": "STRING" }
+                            }
+                        }
+                    }
+                },
+                required: ["spoken_response"]
+            }
+        }
+    };
+    
+    const apiKey = process.env.GEMINI_API_KEY;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    
+    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+    if (!response.ok) {
+        const errorBody = await response.json();
+        return { error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}` };
+    }
+
+    const result = await response.json();
+    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+        return { success: true, data: JSON.parse(result.candidates[0].content.parts[0].text) };
+    } else {
+        return { error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı." };
+    }
+
+  } catch (e) {
+    console.error("Gelişmiş Sesli Agent fonksiyonunda hata:", e.message);
+    return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
+  }
+}
+// "AI Konsiyerj"in beyni olan, gelişmiş sunucu fonksiyonu
+export async function getAiConciergeResponse(userQuery, history) {
+  "use server";
+  if (!userQuery) return { error: "Sorgu boş olamaz." };
+
+  try {
+    const supabase = createClient();
+    const queryEmbedding = await getEmbedding(userQuery);
+    const { data: context, error: contextError } = await supabase.rpc('get_full_context_for_ai', {
+        p_query_text: userQuery,
+        p_query_embedding: queryEmbedding
+    });
+    if (contextError) throw contextError;
+
+    const formattedContext = `
+        Kullanıcının Sorusuyla İlgili Platform Verileri:
+        - Anlamsal Olarak Benzer Araçlar: ${JSON.stringify(context.semantic_tools)}
+        - Anahtar Kelime Eşleşmesiyle Bulunan Araç: ${JSON.stringify(context.exact_match_tool)}
+        - İlgili Blog Yazıları/Rehberler: ${JSON.stringify(context.relevant_posts)}
+    `;
+
+    const prompt = `
+        Sen, 'AI Keşif Platformu'nun baş konsiyerjisin. Görevin, sana sunulan platform verilerini ve kullanıcıyla olan konuşma geçmişini sentezleyerek, kullanıcının sorduğu son soruya yönelik en akıllı ve en yardımcı cevabı vermektir. Cevabın, kullanıcıya hem okunacak bir metin hem de görsel olarak gösterilecek tıklanabilir içerik önerileri içermelidir.
+
+        SAĞLANAN BAĞLAM: ${formattedContext}
+        ÖNCEKİ KONUŞMA: ${JSON.stringify(history)}
+        KULLANICININ YENİ SORUSU: "${userQuery}"
+
+        Şimdi, bu bilgilere dayanarak cevabını SADECE aşağıdaki JSON formatında oluştur:
+    `;
+
+    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const payload = {
+        contents: chatHistory,
+        generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: "OBJECT",
+                properties: {
+                    "spoken_response": { "type": "STRING" },
+                    "suggested_content": {
+                        "type": "ARRAY",
+                        "items": {
+                            "type": "OBJECT",
+                            "properties": { "type": { "type": "STRING" }, "title": { "type": "STRING" }, "url": { "type": "STRING" } }
+                        }
+                    }
+                },
+                required: ["spoken_response"]
+            }
+        }
+    };
+    
+    const apiKey = process.env.GEMINI_API_KEY;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+    if (!response.ok) {
+        const errorBody = await response.json();
+        return { error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}` };
+    }
+
+    const result = await response.json();
+    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+        return { success: true, data: JSON.parse(result.candidates[0].content.parts[0].text) };
+    } else {
+        return { error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı." };
+    }
+  } catch (e) {
+    console.error("AI Konsiyerj fonksiyonunda hata:", e.message);
+    return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
+  }
+}
+
+

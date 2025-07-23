@@ -1,4 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/ui/skeleton";
+import React from "react";
 
 export function ToolCardSkeleton() {
   return (
@@ -11,7 +12,7 @@ export function ToolCardSkeleton() {
             <Skeleton className="h-5 w-16 rounded-md" />
           </div>
         </div>
-        
+
         {/* Kategori için yer tutucu */}
         <Skeleton className="h-5 w-1/3 rounded-md" />
 
@@ -21,9 +22,9 @@ export function ToolCardSkeleton() {
           <Skeleton className="h-4 w-5/6" />
         </div>
       </div>
-      
+
       {/* Buton için yer tutucu */}
       <Skeleton className="h-10 w-full mt-4 rounded-lg" />
     </div>
-  )
+  );
 }

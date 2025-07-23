@@ -1,4 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
+import React from "react";
+
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BookOpen } from "lucide-react";
+import { SuggestToolForBounty } from "@/components/SuggestToolForBounty";
 
 const platformIcons = {
   Web: <Globe className="w-5 h-5" />,
@@ -36,6 +39,12 @@ const platformIcons = {
   "Chrome Uzantısı": <ShoppingCart className="w-5 h-5" />,
 };
 
+const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: tool, error } = await supabase.from('tools_with_ratings').select('*').eq('slug', slug).single();
+  if (error || !tool) notFound();
+
+  
 // Seviyelere göre özel stiller ve ikonlar
 const tierStyles = {
   Pro: {
@@ -133,6 +142,21 @@ async function getRelatedGuides(toolId) {
   return data.map((item) => item.posts).filter(Boolean);
 }
 
+// YENİ: Giriş yapmış kullanıcının aktif ödül ilanlarını çeken fonksiyon
+// DEĞİŞİKLİK: Artık belirli bir kullanıcının değil, TÜM aktif ödül ilanlarını çeken fonksiyon
+async function getAllOpenBounties() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("bounties")
+    .select("id, title, reputation_reward")
+    .eq("status", "Açık");
+
+  if (error) {
+    console.error("Açık ödüller çekilirken hata:", error);
+    return [];
+  }
+  return data;
+}
 export default async function ToolDetailPage({ params }) {
   const { tool, usersRating, isFavorited, user } = await getToolData(
     params.slug
@@ -152,6 +176,10 @@ export default async function ToolDetailPage({ params }) {
 
   // DÜZELTME: Eksik olan değişkeni burada tanımlıyoruz.
   const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
+  // Yeni veriyi çekiyoruz
+  //const openBounties = await getUserOpenBounties(user?.id);
+  // Yeni veriyi çekiyoruz
+  const openBounties = await getAllOpenBounties();
 
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4 space-y-16">
@@ -206,6 +234,14 @@ export default async function ToolDetailPage({ params }) {
             toolSlug={tool.slug}
             currentUsersRating={usersRating}
           />
+          {/* YENİ: Ödül Önerme Butonu artık doğru mantıkla çalışıyor */}
+          {user && (
+            <SuggestToolForBounty
+              toolId={tool.id}
+              openBounties={openBounties}
+            />
+          )}
+
           <Button asChild>
             <a
               href={tool.link}

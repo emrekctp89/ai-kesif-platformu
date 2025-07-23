@@ -4,6 +4,8 @@ import { AdminMenu } from "./AdminMenu";
 import { getNotifications } from "@/app/actions";
 import { HeaderNav } from "./HeaderNav";
 import { Bot } from "lucide-react";
+import { MobileNav } from './MobileNav'; // Yeni mobil menüyü import ediyoruz
+
 
 // Yeni veritabanı fonksiyonumuzu çağıran fonksiyon
 async function getTotalUnreadMessages(userId) {
@@ -49,6 +51,11 @@ export default async function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 max-w-screen-2xl items-center">
+        {/* DEĞİŞİKLİK: Mobil menü ve Admin menüsü bir grupta */}
+        <div className="flex items-center gap-2">
+            <MobileNav user={user} isProUser={isProUser} />
+            {isAdmin && <AdminMenu />}
+        </div>
         {isAdmin && <AdminMenu />}
 
         <Link href="/kesfet" className="mr-6 flex items-center space-x-2">

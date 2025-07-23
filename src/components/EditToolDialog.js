@@ -35,6 +35,7 @@ import { updateTool, assignTagsToTool } from "@/app/actions";
 import toast from "react-hot-toast";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ToolVariantManager } from "./ToolVariantManager";
 
 // Fiyatlandırma ve Platform seçeneklerini tanımlıyoruz
 const pricingModels = [
@@ -128,6 +129,8 @@ function MultiSelectTags({ allTags, initialSelectedTags }) {
 export function EditToolDialog({ tool, categories, allTags }) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Bu fonksiyon artık sadece ana araç bilgilerini ve etiketleri güncelliyor.
+  // Varyantlar kendi içlerinde yönetilecek.
   const handleFormAction = async (formData) => {
     const toolUpdateResult = await updateTool(formData);
     if (toolUpdateResult?.error) {
@@ -139,7 +142,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
       toast.error(tagAssignResult.error);
     } else {
       toast.success("Araç ve etiketleri başarıyla güncellendi.");
-      setIsOpen(false);
+      // Varyantlar ayrı kaydedildiği için pencereyi kapatmıyoruz
     }
   };
 
@@ -150,7 +153,9 @@ export function EditToolDialog({ tool, categories, allTags }) {
           Düzenle
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[525px]">
+      {/* DEĞİŞİKLİK: Pencereyi daha geniş yapıyoruz (max-w-3xl) */}
+      <DialogContent className="sm:max-w-3xl">
+        {" "}
         <DialogHeader>
           <DialogTitle>{tool.name} Aracını Düzenle</DialogTitle>
           <DialogDescription>
@@ -283,6 +288,8 @@ export function EditToolDialog({ tool, categories, allTags }) {
                 </option>
               ))}
             </select>
+            {/* YENİ: Varyant Yönetim Paneli */}
+            <ToolVariantManager tool={tool} />
           </div>
 
           <DialogFooter>

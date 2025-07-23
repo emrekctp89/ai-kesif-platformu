@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import process from "node:process";
 
 // BU İSTEMCİ SADECE GÜVENİLİR SUNUCU ORTAMLARINDA KULLANILMALIDIR!
 // Tüm güvenlik kurallarını (RLS) bypass eder.
