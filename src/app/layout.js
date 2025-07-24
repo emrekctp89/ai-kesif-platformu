@@ -12,7 +12,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { CommandHint } from "@/components/CommandHint";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 // Yeni Karşılama Asistanı bileşenini import ediyoruz
-//import { OnboardingAssistant } from "@/components/OnboardingAssistant";
+import { OnboardingAssistant } from "@/components/OnboardingAssistant";
 import { VoiceAgent } from '@/components/VoiceAgent';
 import { AiConcierge } from '@/components/AiConcierge'; // Yeni bileşeni import ediyoruz
 import { PushNotificationManager } from '@/components/PushNotificationManager'; // Yeni bildirim yöneticisini import ediyoruz
@@ -86,9 +86,8 @@ export default async function RootLayout({ children }) {
           {/* Yeni Sesli Agent'ı buraya ekliyoruz. Sitenin her yerinden erişilebilir olacak. */}
           {/*<VoiceAgent />*/}
           <PushNotificationManager />
-                   {/* DEĞİŞİKLİK: AI Konsiyerj'e kullanıcı bilgisini aktarıyoruz */}
+ {/* DEĞİŞİKLİK: AI Konsiyerj'e kullanıcı bilgisini aktarıyoruz */}
           <AiConcierge user={user} />
-
           <Analytics />
         </ThemeProvider>
       </body>
