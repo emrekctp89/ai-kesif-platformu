@@ -1,9 +1,3 @@
-/*
-* ---------------------------------------------------
-* 1. YENİ BİLEŞEN: src/components/AiConcierge.js
-* Bu, sitenin her yerinden erişilebilen, şık sohbet penceresidir.
-* ---------------------------------------------------
-*/
 'use client'
 
 import * as React from 'react'
@@ -37,10 +31,11 @@ function SuggestedContentCards({ content }) {
     );
 }
 
-export function AiConcierge() {
+// DEĞİŞİKLİK: Bileşen artık 'user' prop'unu alıyor
+export function AiConcierge({ user }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [messages, setMessages] = React.useState([
-      { role: 'ai', content: "Merhaba! Ben platformun AI konsiyerjiyim. Size nasıl yardımcı olabilirim? Örneğin, 'Sosyal medya için görseller nasıl oluştururum?' diye sorabilirsiniz." }
+      { role: 'ai', content: "Merhaba! Ben platformun AI konsiyerjiyim. Size nasıl yardımcı olabilirim?" }
   ]);
   const [input, setInput] = React.useState('');
   const [isPending, startTransition] = useTransition();
@@ -67,6 +62,11 @@ export function AiConcierge() {
         }
     });
   }
+  
+  // DEĞİŞİKLİK: Eğer kullanıcı giriş yapmamışsa, bileşeni hiç gösterme.
+  if (!user) {
+    return null;
+  }
 
   return (
     <>
@@ -75,7 +75,8 @@ export function AiConcierge() {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: 1, duration: 0.5 }}
-        className="fixed bottom-6 right-6 z-[100]"
+        // DEĞİŞİKLİK: Butonu, "Hızlı Arama" ipucunun üzerine taşıyoruz (bottom-20).
+        className="fixed bottom-20 right-6 z-[100]"
       >
         <Button onClick={() => setIsOpen(true)} size="icon" className="w-16 h-16 rounded-full shadow-lg">
           <Bot className="h-8 w-8" />
@@ -89,6 +90,7 @@ export function AiConcierge() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
+            // DEĞİŞİKLİK: Sohbet penceresini de yukarı taşıyoruz (bottom-24).
             className="fixed bottom-24 right-6 z-[100] w-[90vw] max-w-sm h-[70vh] bg-card border rounded-lg shadow-2xl flex flex-col"
           >
             <header className="p-4 border-b flex items-center justify-between">
@@ -125,5 +127,3 @@ export function AiConcierge() {
     </>
   )
 }
-
-

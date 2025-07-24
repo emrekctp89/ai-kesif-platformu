@@ -86,7 +86,8 @@ export default async function RootLayout({ children }) {
           {/* Yeni Sesli Agent'ı buraya ekliyoruz. Sitenin her yerinden erişilebilir olacak. */}
           {/*<VoiceAgent />*/}
           <PushNotificationManager />
-                    {/*<AiConcierge /> {/* YENİ: AI Konsiyerj'i buraya ekliyoruz */}
+                   {/* DEĞİŞİKLİK: AI Konsiyerj'e kullanıcı bilgisini aktarıyoruz */}
+          <AiConcierge user={user} />
 
           <Analytics />
         </ThemeProvider>
