@@ -12,7 +12,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { CommandHint } from "@/components/CommandHint";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 // Yeni Karşılama Asistanı bileşenini import ediyoruz
-import { OnboardingAssistant } from "@/components/OnboardingAssistant";
+//import { OnboardingAssistant } from "@/components/OnboardingAssistant";
 import { VoiceAgent } from '@/components/VoiceAgent';
 import { AiConcierge } from '@/components/AiConcierge'; // Yeni bileşeni import ediyoruz
 import { PushNotificationManager } from '@/components/PushNotificationManager'; // Yeni bildirim yöneticisini import ediyoruz
@@ -66,19 +66,7 @@ export default async function RootLayout({ children }) {
           <TopLoader />
           <Toaster position="top-center" />
 
-          {/* DEĞİŞİKLİK: Karşılama Asistanını Koşullu Olarak Gösterme */}
-          {showOnboarding ? (
-            <OnboardingAssistant />
-          ) : (
-            // Eğer karşılama süreci tamamlanmışsa veya kullanıcı misafirse, normal siteyi göster
-            <div className="relative flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">
-                <div className="container mx-auto p-4 md:p-6">{children}</div>
-              </main>
-              <Footer />
-            </div>
-          )}
+          
 
           <CommandPalette />
           <CommandHint />
