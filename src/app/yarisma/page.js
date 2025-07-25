@@ -1,14 +1,11 @@
-/*
-* ---------------------------------------------------
-* 2. YENİ SAYFA: src/app/yarisma/page.js
-* Bu, aktif yarışmayı ve gönderimleri gösteren ana sayfadır.
-* ---------------------------------------------------
-*/
 import { createClient } from '@/utils/supabase/server';
-import { ChallengeSubmissionsGrid } from '@/components/ChallengeSubmissionsGrid';
+import { ChallengeManager } from '../../components/ChallengeManager.js';
 import { Trophy } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
-// Aktif yarışmayı ve tüm gönderimlerini çeken fonksiyon
+// DEĞİŞİKLİK: Bu fonksiyon artık bir yarışmanın "gerçekten" aktif olup olmadığını
+// başlangıç ve bitiş tarihlerine göre kontrol ediyor.
 async function getActiveChallenge() {
     const supabase = createClient();
     const { data, error } = await supabase
@@ -19,72 +16,79 @@ async function getActiveChallenge() {
                 id,
                 vote_count,
                 showcase_item_id,
-                showcase_items (title, image_url),
-                profiles (username, avatar_url)
+                showcase_items ( title, image_url )
             )
         `)
         .eq('status', 'Aktif')
-        .order('vote_count', { referencedTable: 'challenge_submissions', ascending: false })
+        .lte('start_date', new Date().toISOString()) // Başlangıç tarihi bugün veya daha önce olmalı
+        .gte('end_date', new Date().toISOString())   // Bitiş tarihi bugün veya daha sonra olmalı
+        .order('start_date', { ascending: false })
         .limit(1)
         .single();
     
-    if (error) { /* Hata yönetimi */ return null; }
+    if (error) {
+        // Hata olması normal, aktif yarışma olmayabilir.
+        return null;
+    }
     return data;
-}
-
-// Giriş yapmış kullanıcının oylarını çeken fonksiyon
-async function getUserVotes(userId, submissionIds) {
-    if (!userId || !submissionIds || submissionIds.length === 0) return [];
-    const supabase = createClient();
-    const { data } = await supabase
-        .from('challenge_submission_votes')
-        .select('submission_id')
-        .eq('user_id', userId)
-        .in('submission_id', submissionIds);
-    return data || [];
 }
 
 export const metadata = {
     title: 'Haftalık Yarışma | AI Keşif Platformu',
+    description: 'Topluluğun katıldığı haftalık yaratıcılık yarışmalarını keşfedin ve en iyi eserlere oy verin.',
 };
 
 export default async function ChallengePage() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const activeChallenge = await getActiveChallenge();
+    const challenge = await getActiveChallenge();
 
-    if (!activeChallenge) {
-        return (
-            <div className="text-center py-24">
-                <Trophy className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h2 className="text-2xl font-bold">Şu Anda Aktif Bir Yarışma Yok</h2>
-                <p className="text-muted-foreground">Yeni yarışmalar için bizi takip etmeye devam edin!</p>
-            </div>
-        );
+    let userVotes = [];
+    if (user && challenge) {
+        const { data } = await supabase
+            .from('challenge_submission_votes')
+            .select('submission_id')
+            .eq('user_id', user.id)
+            .in('submission_id', challenge.challenge_submissions.map(s => s.id));
+        userVotes = data || [];
     }
-    
-    const submissionIds = activeChallenge.challenge_submissions.map(s => s.id);
-    const userVotes = await getUserVotes(user?.id, submissionIds);
 
     return (
         <div className="container mx-auto max-w-6xl py-12 px-4">
             <div className="text-center mb-12">
-                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
-                    {activeChallenge.title}
+                <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground">
+                    Haftalık Yarışma
                 </h1>
-                <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                    {activeChallenge.description}
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                    Son Katılım: {new Date(activeChallenge.end_date).toLocaleDateString('tr-TR')}
-                </p>
+                {challenge ? (
+                    <>
+                        <h2 className="mt-4 text-2xl font-semibold text-primary">{challenge.title}</h2>
+                        <p className="mt-2 max-w-2xl mx-auto text-lg text-muted-foreground">
+                            {challenge.description}
+                        </p>
+                    </>
+                ) : (
+                    <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+                        Şu anda aktif bir yarışma bulunmuyor. Yakında tekrar kontrol edin!
+                    </p>
+                )}
             </div>
 
-            <ChallengeSubmissionsGrid 
-                submissions={activeChallenge.challenge_submissions}
-                user={user}
-                userVotes={userVotes}
-            />
+            {challenge ? (
+                <ChallengeClient 
+                    submissions={challenge.challenge_submissions}
+                    user={user}
+                    userVotes={userVotes}
+                />
+            ) : (
+                // Aktif yarışma yoksa, kullanıcıyı yeni eserler paylaşmaya teşvik et
+                <div className="text-center">
+                    <p className="text-muted-foreground mb-4">Yeni bir yarışma başladığında haberdar olmak için takipte kalın. O zamana kadar, kendi eserlerinizi paylaşabilirsiniz!</p>
+                    <Button asChild>
+                        <Link href="/profile">Eserlerimi Yönet</Link>
+                    </Button>
+                </div>
+            )}
         </div>
     );
 }

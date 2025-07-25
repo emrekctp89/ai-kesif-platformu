@@ -19,6 +19,8 @@ import { CategoryManager } from "@/components/CategoryManager";
 import { NewsletterManager } from "@/components/NewsletterManager";
 import { AiToolFactory } from "@/components/AiToolFactory"; // Yeni bileşeni import ediyoruz
 import { ChallengeManager } from '@/components/ChallengeManager'; // Yeni bileşeni import ediyoruz
+import { ChallengeEditor } from "../../components/ChallengeEditor.js";
+
 
 
 // ... (Tüm veri çekme fonksiyonlarınız burada - değişiklik yok) ...
@@ -94,6 +96,20 @@ async function getUnapprovedShowcaseItems() {
   }
   return data;
 }
+// YENİ: Admin panelinde gösterilecek tüm yarışmaları çeken fonksiyon
+async function getAllChallenges() {
+    const supabase = createClient();
+    const { data, error } = await supabase
+        .from('challenges')
+        .select('*')
+        .order('start_date', { ascending: false });
+    
+    if (error) {
+        console.error("Tüm yarışmalar çekilirken hata:", error);
+        return [];
+    }
+    return data;
+}
 
 export default async function AdminPage() {
   const supabase = createClient();
@@ -112,6 +128,8 @@ export default async function AdminPage() {
     allTags,
     allPosts,
     unapprovedShowcaseItems,
+          challenges // <-- Yeni veri
+
   ] = await Promise.all([
     getUnapprovedTools(),
     getApprovedTools(),
@@ -119,6 +137,8 @@ export default async function AdminPage() {
     getAllTags(),
     getAllPosts(),
     getUnapprovedShowcaseItems(),
+        getAllChallenges() // <-- Yeni fonksiyonu çağırıyoruz
+
   ]);
 
   return (
@@ -138,10 +158,14 @@ export default async function AdminPage() {
           <NewsletterManager />
         </CardContent>
       </Card>
-      {/* YENİ: Yarışma Yönetimi Paneli */}
-        <ChallengeManager />
+      
+        {/* DEĞİŞİKLİK: ChallengeManager'a artık doğru veriyi gönderiyoruz */}
+        <ChallengeManager challenges={challenges} />
+        
+        
       {/* YENİ: AI İçerik Fabrikası Paneli */}
       <AiToolFactory categories={categories} />
+
 
       {/* Onay Bekleyen Eserler Kartı */}
       <Card>

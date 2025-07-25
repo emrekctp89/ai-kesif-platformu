@@ -4964,3 +4964,39 @@ export async function generateChallengeIdeasWithAi(topic) {
         return { error: `Bir hata oluştu.` };
     }
 }
+
+export async function updateChallenge(formData) {
+  "use server";
+  
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: "Bu işlem için yetkiniz yok." };
+  }
+
+  const id = formData.get("id");
+  const title = formData.get("title");
+  const description = formData.get("description");
+  const startDate = formData.get("start_date");
+  const endDate = formData.get("end_date");
+  const status = formData.get("status");
+
+  if (!id || !title || !startDate || !endDate || !status) {
+    return { error: "Tüm alanlar zorunludur." };
+  }
+
+  const { error } = await supabase
+    .from("challenges")
+    .update({ title, description, start_date: startDate, end_date: endDate, status })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Yarışma güncelleme hatası:", error);
+    return { error: "Yarışma güncellenirken bir hata oluştu." };
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/yarisma');
+  return { success: "Yarışma başarıyla güncellendi!" };
+}
+
