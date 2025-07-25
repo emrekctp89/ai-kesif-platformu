@@ -18,6 +18,8 @@ import { CategoryManager } from "@/components/CategoryManager";
 // Yeni Bülten Yönetim bileşenini import ediyoruz
 import { NewsletterManager } from "@/components/NewsletterManager";
 import { AiToolFactory } from "@/components/AiToolFactory"; // Yeni bileşeni import ediyoruz
+import { ChallengeManager } from '@/components/ChallengeManager'; // Yeni bileşeni import ediyoruz
+
 
 // ... (Tüm veri çekme fonksiyonlarınız burada - değişiklik yok) ...
 async function getUnapprovedTools() {
@@ -136,6 +138,8 @@ export default async function AdminPage() {
           <NewsletterManager />
         </CardContent>
       </Card>
+      {/* YENİ: Yarışma Yönetimi Paneli */}
+        <ChallengeManager />
       {/* YENİ: AI İçerik Fabrikası Paneli */}
       <AiToolFactory categories={categories} />
 

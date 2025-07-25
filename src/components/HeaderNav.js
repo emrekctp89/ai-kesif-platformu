@@ -106,7 +106,9 @@ export function HeaderNav({
         >
           Topluluk
         </Link>
-
+        {/* YENİ: Yarışma Sayfası Linki */}
+                <Link href="/yarisma" className="text-muted-foreground transition-colors hover:text-foreground">Yarışma</Link>
+        
         {/* YENİ: Ödül Avcılığı Sayfası Linki */}
         <Link
           href="/odul-avciligi"
