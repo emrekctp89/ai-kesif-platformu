@@ -1,13 +1,19 @@
 import { createClient } from '@/utils/supabase/server';
-import { ChallengeManager } from '../../components/ChallengeManager.js';
+import { ChallengeClient } from '@/components/ChallengeClient';
 import { Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-// DEĞİŞİKLİK: Bu fonksiyon artık bir yarışmanın "gerçekten" aktif olup olmadığını
-// başlangıç ve bitiş tarihlerine göre kontrol ediyor.
+
+
+
+
+// DEĞİŞİKLİK: Bu fonksiyon artık sadece "bugün" aktif olan yarışmayı arıyor.
 async function getActiveChallenge() {
     const supabase = createClient();
+    // DEĞİŞİKLİK: Saati ve zaman dilimini kaldırarak, sadece tarihi (YYYY-MM-DD) alıyoruz.
+    const today = new Date().toISOString().split('T')[0];
+
     const { data, error } = await supabase
         .from('challenges')
         .select(`
@@ -20,14 +26,14 @@ async function getActiveChallenge() {
             )
         `)
         .eq('status', 'Aktif')
-        .lte('start_date', new Date().toISOString()) // Başlangıç tarihi bugün veya daha önce olmalı
-        .gte('end_date', new Date().toISOString())   // Bitiş tarihi bugün veya daha sonra olmalı
+        .lte('start_date', today) // Başlangıç tarihi bugün veya daha önce olmalı
+        .gte('end_date', today)   // Bitiş tarihi bugün veya daha sonra olmalı
         .order('start_date', { ascending: false })
         .limit(1)
         .single();
     
     if (error) {
-        // Hata olması normal, aktif yarışma olmayabilir.
+        // Hata olması normal, o gün aktif bir yarışma olmayabilir.
         return null;
     }
     return data;
@@ -37,6 +43,13 @@ export const metadata = {
     title: 'Haftalık Yarışma | AI Keşif Platformu',
     description: 'Topluluğun katıldığı haftalık yaratıcılık yarışmalarını keşfedin ve en iyi eserlere oy verin.',
 };
+
+
+// DEĞİŞİKLİK: Bu fonksiyon artık ChallengeClient bileşenini kullanıyor.
+// Bu sayfa, haftalık yarışmayı gösterir ve kullanıcıların oylama yapmasına izin verir.
+// Kullanıcı, yarışmaya katılan eserleri görebilir ve oylama yapabilir              
+
+
 
 export default async function ChallengePage() {
     const supabase = createClient();
@@ -81,13 +94,15 @@ export default async function ChallengePage() {
                     userVotes={userVotes}
                 />
             ) : (
-                // Aktif yarışma yoksa, kullanıcıyı yeni eserler paylaşmaya teşvik et
-                <div className="text-center">
-                    <p className="text-muted-foreground mb-4">Yeni bir yarışma başladığında haberdar olmak için takipte kalın. O zamana kadar, kendi eserlerinizi paylaşabilirsiniz!</p>
-                    <Button asChild>
-                        <Link href="/profile">Eserlerimi Yönet</Link>
-                    </Button>
-                </div>
+                // Aktif yarışma yoksa, admini yeni bir yarışma oluşturmaya teşvik et
+                user && user.email === process.env.ADMIN_EMAIL && (
+                    <div className="text-center">
+                        <p className="text-muted-foreground mb-4">Yeni bir yarışma başlatmak ister misiniz?</p>
+                        <Button asChild>
+                            <Link href="/admin">Yarışma Yönetimine Git</Link>
+                        </Button>
+                    </div>
+                )
             )}
         </div>
     );

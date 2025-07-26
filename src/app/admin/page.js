@@ -20,6 +20,7 @@ import { NewsletterManager } from "@/components/NewsletterManager";
 import { AiToolFactory } from "@/components/AiToolFactory"; // Yeni bileşeni import ediyoruz
 import { ChallengeManager } from '@/components/ChallengeManager'; // Yeni bileşeni import ediyoruz
 import { ChallengeEditor } from "../../components/ChallengeEditor.js";
+import { ChallengeClient } from "../../components/ChallengeClient.js";
 
 
 

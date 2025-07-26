@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js";
 import { Resend } from "npm:resend";
 const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
 const resend = new Resend(Deno.env.get("RESEND_API_KEY") ?? "");
-export default async function handler(req) {
+export default async function handler(req: Request) {
   if (req.method === "OPTIONS") {
     return new Response("ok", {
       headers: {
