@@ -39,6 +39,22 @@ export const metadata = {
   title: "Admin Dashboard | AI Keşif Platformu",
 };
 
+// DEĞİŞİKLİK: En son AI brifingini çeken fonksiyonu buraya taşıyoruz.
+async function getLatestBriefing() {
+    const supabase = createClient();
+    const { data, error } = await supabase
+        .from('ai_briefings')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+    
+    if (error) {
+        // Hata olması normal, henüz brifing olmayabilir.
+        return null;
+    }
+    return data;
+}
 export default async function DashboardPage() {
   const supabase = createClient();
   const {
@@ -49,17 +65,19 @@ export default async function DashboardPage() {
   }
 
   // Hem genel istatistikleri hem de tüm kullanıcı listesini paralel olarak çekiyoruz
-  const [stats, allUsers] = await Promise.all([
+  const [stats, allUsers, latestBriefing] = await Promise.all([
     getDashboardData(),
     getAllUsersData(),
+            getLatestBriefing()
+
   ]);
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
       <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
 
-      {/* YENİ: AI Brifing Kartı */}
-      <AiBriefingCard />
+     {/* DEĞİŞİKLİK: AiBriefingCard'a artık veriyi bir prop olarak gönderiyoruz. */}
+            <AiBriefingCard briefing={latestBriefing} />
 
       {/* İstatistikler Bölümü */}
       <DashboardClient stats={stats} />
