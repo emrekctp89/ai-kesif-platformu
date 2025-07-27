@@ -20,6 +20,8 @@ import { ProfileEditor } from "@/components/ProfileEditor";
 // Yeni bileşenleri import ediyoruz
 import { ProjectList } from "@/components/ProjectList";
 import { CreateProjectButton } from "@/components/CreateProjectButton";
+import { DailyQuests } from '@/components/DailyQuests'; // Yeni bileşeni import ediyoruz
+
 // --- DATA FETCHING FUNCTIONS ---
 
 async function getUserProfile(userId) {
@@ -152,6 +154,34 @@ async function getUserProjects(userId) {
   return data;
 }
 
+// YENİ: Kullanıcının o günkü görevlerini çeken fonksiyon
+async function getUserDailyQuests(userId) {
+  const supabase = createClient();
+  const today = new Date().toISOString().split('T')[0];
+
+  const { data, error } = await supabase
+    .from('user_daily_quests')
+    .select(`
+        *,
+        quests (
+            description,
+            action_type,
+            target_count,
+            reputation_reward
+        )
+    `)
+    .eq('user_id', userId)
+    .eq('quest_date', today);
+
+  if (error) {
+    console.error("Günlük görevler çekilirken hata:", error);
+    return [];
+  }
+  return data;
+}
+
+
+
 export default async function ProfilePage() {
   const supabase = createClient();
   const {
@@ -170,6 +200,8 @@ export default async function ProfilePage() {
     favoriteTools,
     ratedTools,
     projects, // <-- Yeni veri
+        dailyQuests, // <-- Yeni veri
+
   ] = await Promise.all([
     getUserProfile(user.id),
     getUserReputationEvents(user.id),
@@ -180,6 +212,8 @@ export default async function ProfilePage() {
     getUserFavoriteTools(user.id),
     getUserRatedTools(user.id),
     getUserProjects(user.id), // <-- Yeni fonksiyonu çağırıyoruz
+        getUserDailyQuests(user.id), // <-- Yeni fonksiyonu çağırıyoruz
+
   ]);
 
   return (
@@ -189,8 +223,11 @@ export default async function ProfilePage() {
         <p className="text-muted-foreground">Hoş geldin, {user.email}</p>
       </div>
 
+      {/* Ana Profil Yönetimi ve İtibar Puanı */}
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
+          {/* YENİ: Günlük Görevler Kartı */}
+            <DailyQuests quests={dailyQuests} streak={profile?.daily_streak || 0} />
           <ProfileEditor user={user} profile={profile} />
         </div>
         <div>

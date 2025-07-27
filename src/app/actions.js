@@ -2571,12 +2571,18 @@ export async function createCheckoutSession(formData) {
   }
 }
 
+// Canlı akış tarafından, en güncel verileri çekmek için çağrılan fonksiyon
 export async function fetchActivityFeed() {
   "use server";
 
   const supabase = createClient();
-  // Mevcut RPC fonksiyonumuzu çağırarak en güncel akışı alıyoruz.
-  const { data, error } = await supabase.rpc("get_community_activity_feed");
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Daha önce oluşturduğumuz akıllı RPC fonksiyonunu, o anki kullanıcı
+  // bilgisiyle çağırarak kişiselleştirilmiş akışı alıyoruz.
+  const { data, error } = await supabase.rpc('get_community_activity_feed', {
+      p_user_id: user?.id
+  });
 
   if (error) {
     console.error("Aktivite akışı yeniden çekilirken hata:", error);

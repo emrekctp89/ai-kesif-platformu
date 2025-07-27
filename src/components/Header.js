@@ -56,7 +56,7 @@ export default async function Header() {
             <MobileNav user={user} isProUser={isProUser} />
             {isAdmin && <AdminMenu />}
         </div>
-        {isAdmin && <AdminMenu />}
+        
 
         <Link href="/kesfet" className="mr-6 flex items-center space-x-2">
           <Bot className="h-6 w-6 text-primary" />

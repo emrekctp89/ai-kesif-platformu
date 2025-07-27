@@ -18,6 +18,7 @@ import { AiConcierge } from '@/components/AiConcierge'; // Yeni bileşeni import
 import { PushNotificationManager } from '@/components/PushNotificationManager'; // Yeni bildirim yöneticisini import ediyoruz
 import Link from "next/link";
 
+
 import { SpeedInsights } from "@vercel/speed-insights/next"
 //import { Analytics } from "@vercel/analytics/next"
 
