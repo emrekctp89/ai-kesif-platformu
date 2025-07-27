@@ -5000,3 +5000,59 @@ export async function updateChallenge(formData) {
   return { success: "Yarışma başarıyla güncellendi!" };
 }
 
+// Mevcut bir eseri, aktif olan yarışmaya gönderen fonksiyon
+export async function submitShowcaseToChallenge(formData) {
+  "use server";
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Bu işlem için giriş yapmalısınız." };
+  }
+
+  const showcaseItemId = formData.get("showcaseItemId");
+  if (!showcaseItemId) {
+    return { error: "Eser ID'si bulunamadı." };
+  }
+
+  // 1. Aktif olan yarışmayı bul
+  const { data: activeChallenge, error: challengeError } = await supabase
+    .from('challenges')
+    .select('id')
+    .eq('status', 'Aktif')
+    .lte('start_date', 'now()::date')
+    .gte('end_date', 'now()::date')
+    .order('start_date', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (challengeError || !activeChallenge) {
+    return { error: "Şu anda katılabileceğiniz aktif bir yarışma bulunmuyor." };
+  }
+
+  // 2. Eserin sahibinin, işlemi yapan kullanıcı olduğundan emin ol (ekstra güvenlik)
+  const { data: showcaseOwner } = await supabase.from('showcase_items').select('user_id').eq('id', showcaseItemId).single();
+  if (showcaseOwner?.user_id !== user.id) {
+    return { error: "Sadece kendi eserinizi yarışmaya gönderebilirsiniz." };
+  }
+
+  // 3. Eseri bu yarışmaya gönder
+  const { error } = await supabase
+    .from('challenge_submissions')
+    .insert({
+      challenge_id: activeChallenge.id,
+      showcase_item_id: showcaseItemId,
+      user_id: user.id
+    });
+
+  if (error) {
+    if (error.code === '23505') { // unique_violation
+        return { error: "Bu eseri bu yarışmaya zaten göndermişsiniz." };
+    }
+    console.error("Yarışmaya gönderme hatası:", error);
+    return { error: "Eser yarışmaya gönderilirken bir hata oluştu." };
+  }
+
+  revalidatePath('/yarisma');
+  revalidatePath('/profile');
+  return { success: "Eseriniz başarıyla yarışmaya gönderildi!" };
+}

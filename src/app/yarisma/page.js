@@ -1,40 +1,40 @@
 import { createClient } from '@/utils/supabase/server';
 import { ChallengeClient } from '@/components/ChallengeClient';
-import { Trophy, CalendarClock, CalendarCheck2, CalendarX2 } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
+import { SubmitToShowcaseChallengeDialog } from '@/components/SubmitToShowcaseChallengeDialog'; // Yeni bileşeni import ediyoruz
 
-// Veri çekme fonksiyonunu, adminler için TÜM yarışmaları çekecek şekilde güncelliyoruz
-async function getChallengeData(isAdmin) {
+
+// Aktif olan son yarışmayı ve tüm gönderimlerini çeken fonksiyon
+async function getActiveChallenge() {
     const supabase = createClient();
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data, error } = await supabase
+        .from('challenges')
+        // DEĞİŞİKLİK: Supabase'e, hangi ilişkiyi kullanacağını açıkça belirtiyoruz.
+        .select(`
+            *,
+            challenge_submissions!challenge_submissions_challenge_id_fkey (
+                id,
+                vote_count,
+                showcase_item_id,
+                showcase_items ( title, image_url )
+            )
+        `)
+        .eq('status', 'Aktif')
+        .lte('start_date', today)
+        .gte('end_date', today)
+        .order('start_date', { ascending: false })
+        .limit(1)
+        .single();
     
-    if (isAdmin) {
-        // Eğer kullanıcı admin ise, tüm yarışmaları çek
-        const { data, error } = await supabase
-            .from('challenges')
-            .select(`*, challenge_submissions(*)`)
-            .order('start_date', { ascending: false });
-        if (error) {
-            console.error("Tüm yarışmalar çekilirken hata:", error);
-            return { allChallenges: [] };
-        }
-        return { allChallenges: data };
-    } else {
-        // Normal kullanıcılar için sadece bugünün aktif yarışmasını çek
-        const today = new Date().toISOString().split('T')[0];
-        const { data, error } = await supabase
-            .from('challenges')
-            .select(`*, challenge_submissions(*)`)
-            .eq('status', 'Aktif')
-            .lte('start_date', today)
-            .gte('end_date', today)
-            .order('start_date', { ascending: false })
-            .limit(1)
-            .single();
-        if (error) return { activeChallenge: null };
-        return { activeChallenge: data };
+    if (error) {
+        console.error("Aktif yarışma çekilirken hata:", error);
+        return null;
     }
+    return data;
 }
 
 export const metadata = {
@@ -42,16 +42,30 @@ export const metadata = {
     description: 'Topluluğun katıldığı haftalık yaratıcılık yarışmalarını keşfedin ve en iyi eserlere oy verin.',
 };
 
+// YENİ: Bir kullanıcının yarışmaya gönderebileceği eserlerini çeken fonksiyon
+async function getUserShowcaseItems(userId) {
+    if (!userId) return [];
+    const supabase = createClient();
+    const { data, error } = await supabase
+        .from('showcase_items')
+        .select('id, title, image_url')
+        .eq('user_id', userId)
+        .eq('is_approved', true);
+    if (error) return [];
+    return data;
+}
+
 export default async function ChallengePage() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const isAdmin = user?.email === process.env.ADMIN_EMAIL;
-    
-    const { activeChallenge, allChallenges } = await getChallengeData(isAdmin);
+     const [challenge, userShowcaseItems] = await Promise.all([
+        getActiveChallenge(),
+        getUserShowcaseItems(user?.id)
+    ]);
 
     let userVotes = [];
-    if (user && activeChallenge && activeChallenge.challenge_submissions) {
-        const submissionIds = activeChallenge.challenge_submissions.map(s => s.id);
+    if (user && challenge && challenge.challenge_submissions) {
+        const submissionIds = challenge.challenge_submissions.map(s => s.id);
         if (submissionIds.length > 0) {
             const { data } = await supabase
                 .from('challenge_submission_votes')
@@ -62,11 +76,6 @@ export default async function ChallengePage() {
         }
     }
 
-    // Admin için, yarışmaları durumlarına göre gruplandırıyoruz
-    const now = new Date();
-    const upcomingChallenges = isAdmin ? allChallenges.filter(c => new Date(c.start_date) > now && c.status === 'Aktif') : [];
-    const pastChallenges = isAdmin ? allChallenges.filter(c => new Date(c.end_date) < now || c.status !== 'Aktif') : [];
-
     return (
         <div className="container mx-auto max-w-6xl py-12 px-4">
             <div className="text-center mb-12">
@@ -74,10 +83,12 @@ export default async function ChallengePage() {
                 <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground">
                     Haftalık Yarışma
                 </h1>
-                {activeChallenge ? (
+                {challenge ? (
                     <>
-                        <h2 className="mt-4 text-2xl font-semibold text-primary">{activeChallenge.title}</h2>
-                        <p className="mt-2 max-w-2xl mx-auto text-lg text-muted-foreground">{activeChallenge.description}</p>
+                        <h2 className="mt-4 text-2xl font-semibold text-primary">{challenge.title}</h2>
+                        <p className="mt-2 max-w-2xl mx-auto text-lg text-muted-foreground">
+                            {challenge.description}
+                        </p>
                     </>
                 ) : (
                     <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
@@ -85,51 +96,36 @@ export default async function ChallengePage() {
                     </p>
                 )}
             </div>
+            {/* YENİ: "Yarışmaya Katıl" butonu */}
+            {user && challenge && (
+                <div className="flex justify-center mb-8">
+                    <SubmitToShowcaseChallengeDialog 
+                        userShowcaseItems={userShowcaseItems}
+                        challengeTitle={challenge.title}
+                    />
+                </div>
+            )}
 
-            {activeChallenge && activeChallenge.challenge_submissions ? (
+
+            {challenge && challenge.challenge_submissions ? (
                 <ChallengeClient 
-                    submissions={activeChallenge.challenge_submissions}
+                    submissions={challenge.challenge_submissions}
                     user={user}
                     userVotes={userVotes}
                 />
             ) : (
-                activeChallenge && <p className="text-center text-muted-foreground">Bu yarışmaya henüz katılım olmadı. İlk eseri sen gönder!</p>
-            )}
-
-            {/* ADMIN ÖZEL BÖLÜMÜ */}
-            {isAdmin && (
-                <div className="mt-16 space-y-8">
-                    <hr/>
-                    <h2 className="text-2xl font-bold text-center">Admin Yönetim Paneli</h2>
-                    {/* Yaklaşan Yarışmalar */}
-                    {upcomingChallenges.length > 0 && (
-                        <div>
-                            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2"><CalendarClock className="w-5 h-5"/>Yaklaşan Yarışmalar</h3>
-                            <div className="space-y-2">
-                                {upcomingChallenges.map(c => (
-                                    <div key={c.id} className="p-3 border rounded-lg flex justify-between items-center">
-                                        <span>{c.title} ({new Date(c.start_date).toLocaleDateString('tr-TR')})</span>
-                                        <Button asChild variant="secondary" size="sm"><Link href={`/admin/challenges/${c.id}/edit`}>Düzenle</Link></Button>
-                                    </div>
-                                ))}
-                            </div>
+                challenge ? (
+                    <p className="text-center text-muted-foreground">Bu yarışmaya henüz katılım olmadı. İlk eseri sen gönder!</p>
+                ) : (
+                    user && user.email === process.env.ADMIN_EMAIL && (
+                        <div className="text-center">
+                            <p className="text-muted-foreground mb-4">Yeni bir yarışma başlatmak ister misiniz?</p>
+                            <Button asChild>
+                                <Link href="/admin">Yarışma Yönetimine Git</Link>
+                            </Button>
                         </div>
-                    )}
-                    {/* Geçmiş Yarışmalar */}
-                    {pastChallenges.length > 0 && (
-                        <div>
-                            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2"><CalendarX2 className="w-5 h-5"/>Geçmiş Yarışmalar</h3>
-                             <div className="space-y-2">
-                                {pastChallenges.map(c => (
-                                    <div key={c.id} className="p-3 border rounded-lg flex justify-between items-center">
-                                        <span>{c.title} <Badge>{c.status}</Badge></span>
-                                        <Button asChild variant="secondary" size="sm"><Link href={`/admin/challenges/${c.id}/edit`}>Düzenle</Link></Button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
+                    )
+                )
             )}
         </div>
     );
