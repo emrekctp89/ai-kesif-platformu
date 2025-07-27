@@ -19,6 +19,7 @@ import { PushNotificationManager } from '@/components/PushNotificationManager'; 
 import Link from "next/link";
 
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 const onest = Onest({
   subsets: ["latin"],
