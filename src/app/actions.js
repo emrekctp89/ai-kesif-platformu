@@ -5056,3 +5056,93 @@ export async function submitShowcaseToChallenge(formData) {
   revalidatePath('/profile');
   return { success: "Eseriniz başarıyla yarışmaya gönderildi!" };
 }
+
+// Bir aracın hızlı önizleme verilerini çeken fonksiyon
+export async function getToolPreviewData(toolSlug) {
+  "use server";
+
+  if (!toolSlug) {
+    return { error: "Araç kimliği bulunamadı." };
+  }
+
+  const supabase = createClient();
+  const { data: tool, error } = await supabase
+    .from('tools_with_ratings')
+    .select('id, name, description, slug, average_rating, total_ratings, category_name, pricing_model, link')
+    .eq('slug', toolSlug)
+    .single();
+
+  if (error || !tool) {
+    console.error("Önizleme verisi çekilirken hata:", error);
+    return { error: "Araç detayları alınamadı." };
+  }
+
+  return { success: true, data: tool };
+}
+
+export async function getToolDetailsForPreview(toolId) {
+  "use server";
+
+  if (!toolId) {
+    return { error: "Araç ID'si bulunamadı." };
+  }
+
+  try {
+    const supabase = createClient();
+
+    // DEĞİŞİKLİK: 'tools_with_ratings' VIEW'i yerine, daha güvenilir olan
+    // ana 'tools' tablosunu sorguluyoruz. Bu, RLS sorunlarını çözer.
+    // İhtiyacımız olan diğer bilgileri (kategori adı, puanlar) ayrı ayrı çekiyoruz.
+    const { data: tool, error: toolError } = await supabase
+        .from('tools')
+        .select(`
+            *,
+            categories ( name )
+        `)
+        .eq('id', toolId)
+        .single();
+
+    if (toolError) throw new Error("Araç detayları alınamadı.");
+    
+    // Aracın puanını hesaplamak için ayrı bir sorgu yapıyoruz.
+    const { data: ratingsData, error: ratingsError } = await supabase
+        .from('ratings')
+        .select('rating')
+        .eq('tool_id', toolId);
+
+    const totalRatings = ratingsData?.length || 0;
+    const averageRating = totalRatings > 0 
+        ? ratingsData.reduce((acc, curr) => acc + curr.rating, 0) / totalRatings 
+        : 0;
+
+    // Yorumları ve prompt'ları çekiyoruz (bu kısımlar aynı kalabilir).
+    const [
+        { data: comments },
+        { data: prompts }
+    ] = await Promise.all([
+        supabase.from('comments').select('content, profiles(username, avatar_url)').eq('tool_id', toolId).limit(2),
+        supabase.from('prompts').select('title').eq('tool_id', toolId).order('vote_count', { ascending: false }).limit(2)
+    ]);
+
+    // Tüm verileri tek bir obje altında birleştiriyoruz.
+    const finalToolData = {
+        ...tool,
+        category_name: tool.categories.name,
+        average_rating: averageRating,
+        total_ratings: totalRatings
+    };
+
+    return { 
+        success: true, 
+        data: {
+            tool: finalToolData,
+            comments: comments || [],
+            prompts: prompts || []
+        } 
+    };
+
+  } catch (e) {
+    console.error("Araç önizleme verisi çekilirken hata:", e.message);
+    return { error: `Veri alınırken bir hata oluştu.` };
+  }
+}
