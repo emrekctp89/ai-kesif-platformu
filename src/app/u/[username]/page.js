@@ -24,6 +24,7 @@ import { FollowButton } from "@/components/FollowButton"; // Yeni bileşeni impo
 import { BadgesShowcase } from "@/components/BadgesShowcase"; // Yeni bileşeni import ediyoruz
 import { cn } from "@/lib/utils";
 
+
 // Seviyelere göre özel renkler
 const tierColors = {
   Newcomer: "bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
@@ -88,13 +89,11 @@ export default async function UserProfilePage({ params }) {
 
   const profile = await getProfileData(params.username, currentUser?.id);
 
-  const memberSince = new Date(profile.member_since).toLocaleDateString(
-    "tr-TR",
-    {
-      year: "numeric",
-      month: "long",
-    }
-  );
+  const memberSince = new Date(profile.created_at).toLocaleDateString("tr-TR", {
+  year: "numeric",
+  month: "long",
+});
+
 
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4">

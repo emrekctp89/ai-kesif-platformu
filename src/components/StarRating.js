@@ -1,84 +1,56 @@
 'use client'
 
-import { useState } from 'react'
-import { rateTool } from '@/app/actions'
-// react-hot-toast'tan 'toast' fonksiyonunu import ediyoruz
+import * as React from 'react'
+import { useTransition } from 'react'
+import { Star } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { upsertRating } from '@/app/actions' // Yeni fonksiyonu import ediyoruz
 import toast from 'react-hot-toast'
-
-// Yıldız ikonu için bir SVG component'i (Değişiklik yok)
-function StarIcon({ isFilled, isHovered, ...props }) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      className={`cursor-pointer transition-colors duration-200 
-        ${isFilled ? 'text-yellow-400' : 'text-gray-300'} 
-        ${isHovered ? '!text-yellow-400' : ''}`
-      }
-      fill={isFilled || isHovered ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-    </svg>
-  )
-}
+import { Button } from './ui/button'
 
 export default function StarRating({ toolId, toolSlug, currentUsersRating = 0 }) {
-  const [hoverRating, setHoverRating] = useState(0);
-  const [currentRating, setCurrentRating] = useState(currentUsersRating);
+    const [rating, setRating] = React.useState(currentUsersRating);
+    const [hover, setHover] = React.useState(0);
+    const [isPending, startTransition] = useTransition();
 
-  // Bir yıldıza tıklandığında çalışacak fonksiyonu güncelliyoruz
-  const handleRatingSubmit = async (rating) => {
-    setCurrentRating(rating);
-    
-    const formData = new FormData();
-    formData.append('toolId', toolId);
-    formData.append('toolSlug', toolSlug);
-    formData.append('rating', rating);
+    const handleRating = (newRating) => {
+        setRating(newRating);
+        
+        startTransition(async () => {
+            const formData = new FormData();
+            formData.append('toolId', toolId);
+            formData.append('toolSlug', toolSlug);
+            formData.append('rating', newRating);
+            
+            const result = await upsertRating(formData);
+            if (result?.error) {
+                toast.error(result.error);
+                // Hata durumunda, oylamayı eski haline geri al
+                setRating(currentUsersRating);
+            } else {
+                toast.success(result.success);
+            }
+        });
+    };
 
-    // DEĞİŞİKLİK BURADA BAŞLIYOR
-    // Server action'dan dönen sonucu yakalıyoruz
-    const result = await rateTool(formData);
-
-    // Dönen sonuca göre başarılı veya hatalı bildirim gösteriyoruz
-    if (result?.success) {
-      toast.success(result.success);
-    } else if (result?.error) {
-      toast.error(result.error);
-    }
-    // DEĞİŞİKLİK BİTTİ
-  };
-
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex">
-        {[1, 2, 3, 4, 5].map((star) => {
-          const ratingValue = star;
-          return (
-            <form action={() => handleRatingSubmit(ratingValue)} key={ratingValue}>
-                <button
-                    type="submit"
-                    onMouseEnter={() => setHoverRating(ratingValue)}
-                    onMouseLeave={() => setHoverRating(0)}
-                >
-                    <StarIcon 
-                        isFilled={ratingValue <= currentRating}
-                        isHovered={ratingValue <= hoverRating}
-                    />
-                </button>
-            </form>
-          );
-        })}
-      </div>
-      <p className="text-muted-foreground text-sm">
-        ({currentRating > 0 ? `Oyunuz: ${currentRating}` : "Puan verin"})
-      </p>
-    </div>
-  );
+    return (
+        <div className="flex items-center gap-2">
+            {[...Array(5)].map((star, index) => {
+                const ratingValue = index + 1;
+                return (
+                    <button
+                        type="button"
+                        key={ratingValue}
+                        className={cn("transition-colors", ratingValue <= (hover || rating) ? "text-yellow-400" : "text-gray-300 dark:text-gray-600")}
+                        onClick={() => handleRating(ratingValue)}
+                        onMouseEnter={() => setHover(ratingValue)}
+                        onMouseLeave={() => setHover(0)}
+                        disabled={isPending}
+                    >
+                        <Star className="w-8 h-8 fill-current" />
+                    </button>
+                );
+            })}
+        </div>
+    );
 }

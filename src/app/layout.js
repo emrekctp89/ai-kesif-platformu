@@ -90,7 +90,7 @@ export default async function RootLayout({ children }) {
           {/*<VoiceAgent />*/}
           <PushNotificationManager />
  {/* DEĞİŞİKLİK: AI Konsiyerj'e kullanıcı bilgisini aktarıyoruz */}
-          <AiConcierge user={user} />
+          {/** <AiConcierge user={user} />*/}
           <Analytics />
         </ThemeProvider>
       </body>

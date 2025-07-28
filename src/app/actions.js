@@ -5152,3 +5152,39 @@ export async function getToolDetailsForPreview(toolId) {
     return { error: `Veri alınırken bir hata oluştu.` };
   }
 }
+
+// Bir araca puan veren/puanını güncelleyen fonksiyon
+export async function upsertRating(formData) {
+  "use server";
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Puan vermek için giriş yapmalısınız." };
+  }
+
+  const toolId = formData.get("toolId");
+  const rating = formData.get("rating");
+  const toolSlug = formData.get("toolSlug");
+
+  if (!toolId || !rating) {
+    return { error: "Araç veya puan bilgisi eksik." };
+  }
+
+  // 'upsert' komutu, eğer bir kayıt varsa onu günceller, yoksa yenisini ekler.
+  const { error } = await supabase
+    .from("ratings")
+    .upsert({ 
+        tool_id: toolId, 
+        user_id: user.id, 
+        rating: rating 
+    });
+
+  if (error) {
+    console.error("Puanlama hatası:", error);
+    return { error: "Puanınız kaydedilirken bir hata oluştu." };
+  }
+
+  revalidatePath(`/tool/${toolSlug}`);
+  return { success: "Puanınız başarıyla kaydedildi." };
+}

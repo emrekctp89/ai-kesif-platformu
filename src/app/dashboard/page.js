@@ -1,48 +1,30 @@
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
-import { DashboardClient } from "@/components/DashboardClient";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-// Yeni Kullanıcı Yönetim Tablosu bileşenini import ediyoruz
-import { UserManagementTable } from "@/components/UserManagementTable";
-import { AiBriefingCard } from "@/components/AiBriefingCard"; // Yeni bileşeni import ediyoruz
+import { createClient } from '@/utils/supabase/server';
+// DEĞİŞİKLİK: "Süper Admin" istemcisini import ediyoruz
+import { createAdminClient } from '@/utils/supabase/admin';
+import { redirect } from 'next/navigation';
+import { DashboardClient } from '@/components/DashboardClient';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { UserManagementTable } from '@/components/UserManagementTable';
+import { AiBriefingCard } from '@/components/AiBriefingCard';
 
-// Veritabanındaki RPC fonksiyonlarını çağıran fonksiyonlar
+// DEĞİŞİKLİK: Bu fonksiyonlar artık "Süper Admin" yetkileriyle çalışacak
 async function getDashboardData() {
-  const supabase = createClient();
-  const { data, error } = await supabase.rpc("get_dashboard_stats");
-  if (error) {
-    console.error("Dashboard verileri çekilirken hata:", error);
-    return null;
-  }
-  return data;
+    const supabaseAdmin = createAdminClient();
+    const { data, error } = await supabaseAdmin.rpc('get_dashboard_stats');
+    if (error) { console.error("Dashboard verileri çekilirken hata:", error); return null; }
+    return data;
 }
 
-// Tüm kullanıcı detaylarını çeken fonksiyon
 async function getAllUsersData() {
-  const supabase = createClient();
-  // RPC ile özel admin fonksiyonumuzu çağırıyoruz
-  const { data, error } = await supabase.rpc("get_all_user_details");
-  if (error) {
-    console.error("Kullanıcı detayları çekilirken hata:", error);
-    return [];
-  }
-  return data;
+    const supabaseAdmin = createAdminClient();
+    const { data, error } = await supabaseAdmin.rpc('get_all_user_details');
+    if (error) { console.error("Kullanıcı detayları çekilirken hata:", error); return []; }
+    return data;
 }
 
-export const metadata = {
-  title: "Admin Dashboard | AI Keşif Platformu",
-};
-
-// DEĞİŞİKLİK: En son AI brifingini çeken fonksiyonu buraya taşıyoruz.
 async function getLatestBriefing() {
-    const supabase = createClient();
-    const { data, error } = await supabase
+    const supabaseAdmin = createAdminClient();
+    const { data, error } = await supabaseAdmin
         .from('ai_briefings')
         .select('*')
         .order('created_at', { ascending: false })
@@ -55,47 +37,43 @@ async function getLatestBriefing() {
     }
     return data;
 }
+
+export const metadata = {
+    title: 'Admin Dashboard | AI Keşif Platformu',
+};
+
 export default async function DashboardPage() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user || user.email !== process.env.ADMIN_EMAIL) {
-    redirect("/");
-  }
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user || user.email !== process.env.ADMIN_EMAIL) {
+        redirect('/');
+    }
 
-  // Hem genel istatistikleri hem de tüm kullanıcı listesini paralel olarak çekiyoruz
-  const [stats, allUsers, latestBriefing] = await Promise.all([
-    getDashboardData(),
-    getAllUsersData(),
-            getLatestBriefing()
+    const [stats, allUsers, latestBriefing] = await Promise.all([
+        getDashboardData(),
+        getAllUsersData(),
+        getLatestBriefing()
+    ]);
 
-  ]);
-
-  return (
-    <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
-      <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-
-     {/* DEĞİŞİKLİK: AiBriefingCard'a artık veriyi bir prop olarak gönderiyoruz. */}
+    return (
+        <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
+            <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+            
             <AiBriefingCard briefing={latestBriefing} />
 
-      {/* İstatistikler Bölümü */}
-      <DashboardClient stats={stats} />
+            <DashboardClient stats={stats} />
 
-      {/* Kullanıcı Yönetim Tablosu Bölümü */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Kullanıcı Yönetimi</CardTitle>
-          <CardDescription>
-            Platformdaki tüm kullanıcıları ve aktivitelerini buradan
-            yönetebilirsiniz.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* Yeni bileşenimizi burada kullanıyoruz ve gerekli bilgileri iletiyoruz */}
-          <UserManagementTable users={allUsers} adminId={user.id} />
-        </CardContent>
-      </Card>
-    </div>
-  );
+            <Card>
+                <CardHeader>
+                    <CardTitle>Kullanıcı Yönetimi</CardTitle>
+                    <CardDescription>
+                        Platformdaki tüm kullanıcıları ve aktivitelerini buradan yönetebilirsiniz.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <UserManagementTable users={allUsers} adminId={user.id} />
+                </CardContent>
+            </Card>
+        </div>
+    );
 }

@@ -61,9 +61,9 @@ export default function LoginPage() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <form action={() => oAuthSignIn('github')}>
+            {/* <form action={() => oAuthSignIn('github')}>
               <Button variant="outline" className="w-full">GitHub</Button>
-            </form>
+            </form> */}
             <form action={() => oAuthSignIn('google')}>
               <Button variant="outline" className="w-full">Google</Button>
             </form>
