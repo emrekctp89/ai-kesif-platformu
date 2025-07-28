@@ -83,8 +83,8 @@ export default async function RootLayout({ children }) {
             </div>
           )}
 
-          <CommandPalette />
-          <CommandHint />
+          {/*<CommandPalette />
+          <CommandHint /> */}
           <AnnouncementBanner />
           {/* Yeni Sesli Agent'ı buraya ekliyoruz. Sitenin her yerinden erişilebilir olacak. */}
           {/*<VoiceAgent />*/}
