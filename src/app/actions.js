@@ -22,64 +22,44 @@ import { render } from "@react-email/render";
 
 const ITEMS_PER_PAGE = 12; // Ana sayfadaki sayfa başına araç sayısıyla aynı olmalı
 
-const GEMINI_EMBEDDING_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent";
+const GEMINI_EMBEDDING_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent';
 
-// Bir metni, Gemini kullanarak anlamsal bir vektöre dönüştüren yardımcı fonksiyon
-// DÜZELTME: Eksik olan getEmbedding yardımcı fonksiyonunu buraya ekliyoruz.
-// Bu fonksiyon, bir metni, Gemini kullanarak anlamsal bir vektöre dönüştürür.
-// Bu fonksiyon, bir metni, Gemini kullanarak anlamsal bir vektöre dönüştürür.
 // Bir metni, Gemini kullanarak anlamsal bir vektöre dönüştüren yardımcı fonksiyon
 async function getEmbedding(text) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY bulunamadı.");
-  const payload = { model: "models/text-embedding-004", content: { parts: [{ text }] } };
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${apiKey}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+
+  const payload = {
+    model: "models/text-embedding-004",
+    content: { parts: [{ text }] }
+  };
+
+  const response = await fetch(`${GEMINI_EMBEDDING_API_URL}?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
   });
-  if (!response.ok) {
-    const errorBody = await response.json();
-    throw new Error(`Embedding API Hatası: ${errorBody.error?.message}`);
-  }
+
   const result = await response.json();
-  if (result.embedding?.value) return result.embedding.value;
-  throw new Error("API'den geçerli bir embedding vektörü alınamadı.");
+
+  if (!response.ok) {
+    console.error("Gemini Embedding API Hatası:", JSON.stringify(result, null, 2));
+    const errorMessage = result.error?.message || "Bilinmeyen bir API hatası.";
+    throw new Error(`Embedding API Hatası: ${errorMessage}`);
+  }
+
+  // DEĞİŞİKLİK: 'result.embedding.value' yerine 'result.embedding.values' kullanıyoruz.
+  if (result.embedding?.values) {
+      return result.embedding.values;
+  } else {
+      const finishReason = result.candidates?.[0]?.finishReason;
+      if (finishReason === 'SAFETY') {
+          throw new Error("İsteğiniz güvenlik politikalarını ihlal ettiği için işlenemedi.");
+      }
+      console.error("Beklenmedik API Cevabı:", JSON.stringify(result, null, 2));
+      throw new Error("API'den geçerli bir embedding vektörü alınamadı. Lütfen API yapılandırmanızı (faturalandırma, aktif API'ler) kontrol edin.");
+  }
 }
-// async function getEmbedding(text) {
-//   const apiKey = process.env.GEMINI_API_KEY;
-//   if (!apiKey) throw new Error("GEMINI_API_KEY bulunamadı. Lütfen .env.local dosyanızı kontrol edin.");
-//
-//   const payload = {
-//     model: "models/text-embedding-004",
-//     content: { parts: [{ text }] }
-//   };
-//
-//   const response = await fetch(`${GEMINI_EMBEDDING_API_URL}?key=${apiKey}`, {
-//     method: 'POST',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify(payload)
-//   });
-//
-//   const result = await response.json();
-//
-//   if (!response.ok) {
-//     console.error("Gemini Embedding API Hatası:", JSON.stringify(result, null, 2));
-//     const errorMessage = result.error?.message || "Bilinmeyen bir API hatası.";
-//     throw new Error(`Embedding API Hatası: ${errorMessage}`);
-//   }
-//
-//   if (result.embedding?.value) {
-//       return result.embedding.value;
-//   } else {
-//       // DÜZELTME: API'den neden vektör gelmediğini kontrol et
-//       const finishReason = result.candidates?.[0]?.finishReason;
-//       if (finishReason === 'SAFETY') {
-//           throw new Error("İsteğiniz güvenlik politikalarını ihlal ettiği için işlenemedi.");
-//       }
-//       console.error("Beklenmedik API Cevabı:", JSON.stringify(result, null, 2));
-//       throw new Error("API'den geçerli bir embedding vektörü alınamadı. Lütfen API yapılandırmanızı (faturalandırma, aktif API'ler) kontrol edin.");
-//   }
-// }
 
 // Stripe istemcisini başlatıyoruz
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -2441,8 +2421,26 @@ export async function fetchMoreTools({ page = 0, searchParams }) {
   "use server";
 
   const supabase = createClient();
-  const from = page * ITEMS_PER_PAGE;
-  const to = from + ITEMS_PER_PAGE - 1;
+  const searchText = searchParams?.search;
+
+  if (searchText) {
+    try {
+      const queryEmbedding = await getEmbedding(searchText);
+      
+      const { data: tools, error } = await supabase.rpc('semantic_search_tools', {
+        query_embedding: queryEmbedding,
+        match_threshold: 0.5, 
+        match_count: 50
+      });
+
+      if (error) throw error;
+      return tools;
+
+    } catch (e) {
+      console.error("Anlamsal arama hatası:", e.message);
+      return [];
+    }
+  }
 
   // Kullanıcının Pro olup olmadığını kontrol et
   const {
@@ -3351,113 +3349,101 @@ export async function getAiProjectStrategy(projectId) {
 // "AI Co-Pilot" analizini isteyen, sohbet geçmişini hatırlayan ana fonksiyon
 export async function getAdminCoPilotResponse(userPrompt, history) {
   "use server";
-
+  
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user || user.email !== process.env.ADMIN_EMAIL) {
     return { error: "Bu özelliği kullanmak için yetkiniz yok." };
   }
 
   try {
     const supabaseAdmin = createAdminClient();
-    const { data: snapshotData, error: snapshotError } =
-      await supabaseAdmin.rpc("get_platform_snapshot");
-
-    if (snapshotError)
-      throw new Error(`Platform verileri alınamadı: ${snapshotError.message}`);
+    const { data: snapshotData } = await supabaseAdmin.rpc('get_platform_snapshot');
+    if (!snapshotData) throw new Error("Platform verileri alınamadı.");
 
     const platformContext = `
+        PLATFORM TEKNOLOJİLERİ:
+        - Framework: Next.js (App Router)
+        - Dil: JavaScript, React
+        - Veritabanı: Supabase (PostgreSQL)
+        - Stil: Tailwind CSS
+        - UI Kütüphanesi: shadcn/ui
+        - Sunucu Mantığı: Server Actions (src/app/actions.js içinde)
+        - Veri Çekme: Sunucu bileşenleri veya Server Action'lar içinden Supabase istemcisi ile.
+
         PLATFORMUN ANLIK DURUMU:
-        - Toplam Kullanıcı: ${snapshotData.totals.total_users}, Toplam Araç: ${snapshotData.totals.total_tools}, Toplam Yorum: ${snapshotData.totals.total_comments}
+        - Toplam Kullanıcı: ${snapshotData.totals.total_users}, Toplam Araç: ${snapshotData.totals.total_tools}
     `;
 
-    const chatHistory = history.map((msg) => {
-      let contentText =
-        typeof msg.content === "string"
-          ? msg.content
-          : JSON.stringify(msg.content);
+    // Sohbet geçmişini Gemini'nin anlayacağı formata çeviriyoruz
+    const chatHistory = history.map(msg => {
+      let contentText = (typeof msg.content === 'string') ? msg.content : JSON.stringify(msg.content);
       return {
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: contentText }],
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: contentText }]
       };
     });
 
-    const finalSystemPrompt = `Sen, 'AI Keşif Platformu' adlı projenin baş ürün yöneticisisin. Sana platformun anlık verilerini ve önceki konuşmalarımızı sunuyorum. Görevin, tüm bu bağlamı kullanarak, adminin sorduğu son soruya yönelik en akıllı ve uygulanabilir cevabı vermektir. Cevabını SADECE JSON formatında ver.`;
-
+    const finalSystemPrompt = `
+      Sen, 'AI Keşif Platformu' adlı projenin baş ürün yöneticisi ve baş geliştiricisisin. Sana platformun teknik yapısını, anlık verilerini ve önceki konuşmalarımızı sunuyorum. Görevin, tüm bu bağlamı kullanarak, adminin sorduğu son soruya yönelik en akıllı ve uygulanabilir cevabı vermektir. Eğer admin senden bir özellik için kod yazmanı isterse, bu teknolojilere uygun, tam ve çalıştırılabilir bir kod bloğu oluşturmalısın. Cevabını SADECE aşağıdaki JSON formatında ver.
+    `;
+    
     const finalUserMessage = {
-      role: "user",
-      parts: [
-        {
-          text: `${finalSystemPrompt}\n\n${platformContext}\n\nADMİNİN YENİ SORUSU: "${userPrompt}"`,
-        },
-      ],
+        role: 'user',
+        parts: [{ text: `${finalSystemPrompt}\n\n${platformContext}\n\nADMİNİN YENİ SORUSU: "${userPrompt}"` }]
     };
 
     const payload = {
-      contents: [...chatHistory, finalUserMessage],
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "OBJECT",
-          properties: {
-            response_title: { type: "STRING" },
-            response_text: {
-              type: "STRING",
-              description: "Adminin sorusuna doğrudan ve net bir cevap ver.",
-            },
-            // YENİ: AI'dan, sohbeti devam ettirecek 3 soru önerisi istiyoruz.
-            follow_up_questions: {
-              type: "ARRAY",
-              items: { type: "STRING" },
-              description:
-                "Adminin bu cevaptan sonra sorabileceği 3 adet mantıklı ve ileriye dönük soru öner.",
-            },
-          },
-          required: ["response_title", "response_text", "follow_up_questions"],
-        },
-      },
+        contents: [...chatHistory, finalUserMessage],
+        generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: "OBJECT",
+                properties: {
+                    "response_title": { "type": "STRING", "description": "Cevabına yaratıcı bir başlık bul." },
+                    "response_text": { "type": "STRING", "description": "Analizini veya açıklamanı metin olarak yaz." },
+                    "code_suggestion": {
+                        "type": "OBJECT",
+                        "description": "Eğer istendiyse, kod önerisi.",
+                        "properties": {
+                            "language": { "type": "STRING", "description": "Kodun dili (örn: javascript, jsx, sql)." },
+                            "code": { "type": "STRING", "description": "Oluşturduğun tam kod." },
+                            "explanation": { "type": "STRING", "description": "Bu kodun ne işe yaradığını ve nasıl kullanılacağını kısaca açıkla." }
+                        }
+                    }
+                },
+                 required: ["response_title", "response_text"]
+            }
+        }
     };
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
-
+    
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    
+    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
 
     if (!response.ok) {
-      const errorBody = await response.json();
-      return {
-        error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}`,
-      };
+        const errorBody = await response.json();
+        return { error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}` };
     }
 
     const result = await response.json();
     if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-      return {
-        success: true,
-        data: JSON.parse(result.candidates[0].content.parts[0].text),
-      };
+        return { success: true, data: JSON.parse(result.candidates[0].content.parts[0].text) };
     } else {
-      return {
-        error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı.",
-      };
+        return { error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı." };
     }
+
   } catch (e) {
     console.error("AI Co-Pilot fonksiyonunda genel hata:", e.message);
-    return {
-      error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}`,
-    };
+    return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
   }
 }
 
-// "Komut Paleti" için arama yapan fonksiyon
+
+// "Komut Paleti" için gelişmiş arama yapan nihai fonksiyon
 export async function runOmniSearch(query) {
   "use server";
 
@@ -3465,20 +3451,71 @@ export async function runOmniSearch(query) {
     return [];
   }
 
-  const supabase = createClient();
-  // Daha önce oluşturduğumuz özel veritabanı fonksiyonunu çağırıyoruz
-  const { data, error } = await supabase.rpc("omni_search", {
-    p_search_term: query,
-  });
+  try {
+    const supabase = createClient();
+    
+    // 1. ADIM: Kullanıcının sorgusunu bir "anlam vektörüne" dönüştür
+    const queryEmbedding = await getEmbedding(query);
 
-  if (error) {
-    console.error("Omni-search hatası:", error);
+    // 2. ADIM: Hem vektörü hem de orijinal metni kullanarak gelişmiş arama fonksiyonunu çağır
+    const { data, error } = await supabase.rpc('advanced_omni_search', {
+      p_query_embedding: queryEmbedding,
+      p_query_text: query
+    });
+
+    if (error) {
+      console.error("Gelişmiş Omni-search hatası:", error);
+      return [];
+    }
+
+    // Sonuçların türünü daha okunabilir hale getiriyoruz (örn: 'posts' -> 'Blog Yazısı')
+    const formattedData = data.map(item => ({
+        ...item,
+        result_type: item.result_type.charAt(0).toUpperCase() + item.result_type.slice(1).replace('_', ' ')
+    }));
+
+    return formattedData;
+
+  } catch (e) {
+    console.error("runOmniSearch fonksiyonunda hata:", e.message);
     return [];
   }
-
-  return data;
 }
 
+export async function runAdvancedOmniSearch(query) {
+  "use server";
+  if (!query) return { results: [], suggestions: [], error: null };
+
+  try {
+    const supabase = createClient();
+    const queryEmbedding = await getEmbedding(query);
+    
+    const { data: searchResults, error: rpcError } = await supabase.rpc('advanced_omni_search', {
+      p_query_embedding: queryEmbedding,
+      p_query_text: query
+    });
+    if (rpcError) throw rpcError;
+
+    const formatItem = (item) => ({
+        ...item,
+        result_type: item.result_type.charAt(0).toUpperCase() + item.result_type.slice(1).replace(/_/g, ' ')
+    });
+
+    if (searchResults && searchResults.length > 0) {
+        return { results: searchResults.map(formatItem), suggestions: [], error: null };
+    }
+
+    const { data: suggestions, error: suggestionError } = await supabase.rpc('get_popular_fallback_content');
+    if (suggestionError) throw suggestionError;
+    
+    return { results: [], suggestions: (suggestions || []).map(formatItem), error: null };
+
+  } catch (e) {
+    console.error("Gelişmiş Omni-Search hatası:", e.message);
+    // DEĞİŞİKLİK: Detaylı hata mesajını istemciye döndürüyoruz.
+    return { results: [], suggestions: [], error: e.message };
+  }
+}
 export async function toggleFollowUser(formData) {
   "use server";
 
