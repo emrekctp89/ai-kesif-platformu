@@ -1,27 +1,34 @@
 import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
-import Image from "next/image";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+
+import Link from 'next/link';
+import Image from 'next/image';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Zap, Rss, Users, Sparkles } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Zap, Rss, Bot, Library, Map, Users, Sparkles, collections, learningPaths } from 'lucide-react';
 
+// Veritabanındaki RPC fonksiyonlarını çağıran ana fonksiyon
 async function getDiscoverData() {
-  const supabase = createClient();
-  const { data, error } = await supabase.rpc("get_discover_page_data");
+    const supabase = createClient();
+    // DEĞİŞİKLİK: Artık 3 farklı RPC'yi tek seferde çağırıyoruz
+    const [
+        { data: mainData, error: mainError },
+        { data: collections, error: collectionsError },
+        { data: learningPaths, error: learningPathsError }
+    ] = await Promise.all([
+        supabase.rpc('get_discover_page_data'),
+        supabase.rpc('get_popular_collections'),
+        supabase.rpc('get_learning_paths')
+    ]);
 
-  if (error) {
-    console.error("Keşfet sayfası verisi çekilirken hata:", error);
-    return null;
-  }
-  return data;
+    if (mainError || collectionsError || learningPathsError) {
+        console.error("Keşfet sayfası verisi çekilirken hata:", mainError || collectionsError || learningPathsError);
+        return null;
+    }
+    
+    return { ...mainData, collections, learningPaths };
 }
+
 
 export const metadata = {
   title: "Keşfet | AI Keşif Platformu",
@@ -30,51 +37,80 @@ export const metadata = {
 };
 
 export default async function DiscoverPage() {
-  const discoverData = await getDiscoverData();
+    const discoverData = await getDiscoverData();
 
-  if (!discoverData) {
+    if (!discoverData) {
+        return <p className="text-center text-muted-foreground">İçerik yüklenirken bir sorun oluştu.</p>;
+    }
+    
+    const { tool_of_the_day, latest_tools, latest_showcase, latest_posts, top_users, collections, learningPaths } = discoverData;
+
     return (
-      <p className="text-center text-muted-foreground">
-        İçerik yüklenirken bir sorun oluştu.
-      </p>
-    );
-  }
+        <div className="container mx-auto py-12 px-4 space-y-16">
+            {tool_of_the_day && (
+                <section>
+                    <Card className="w-full bg-gradient-to-br from-primary/10 via-background to-background border-2 border-primary/50 shadow-lg">
+                        <CardContent className="p-8 grid md:grid-cols-2 gap-8 items-center">
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3 text-primary font-bold text-lg"><Zap className="w-6 h-6" /><span>GÜNÜN ARACI</span></div>
+                                <h2 className="text-4xl font-extrabold tracking-tight text-foreground">{tool_of_the_day.name}</h2>
+                                <p className="text-muted-foreground text-lg">{tool_of_the_day.description}</p>
+                                <Button asChild size="lg"><Link href={`/tool/${tool_of_the_day.slug}`}>İncele & Keşfet</Link></Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </section>
+            )}
+      
+      {/* YENİ: Popüler Koleksiyonlar Bölümü */}
+            {collections?.length > 0 && (
+                <section>
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground mb-6 flex items-center gap-3">
+                        <Library className="w-8 h-8 text-blue-500" />
+                        Popüler Koleksiyonlar
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {collections.map((collection) => (
+                             <Link key={collection.slug} href={`/koleksiyonlar/${collection.slug}`} className="group">
+                                <Card className="h-full overflow-hidden transition-all hover:shadow-lg hover:border-blue-500">
+                                    <CardHeader>
+                                        <CardTitle className="group-hover:text-blue-500">{collection.title}</CardTitle>
+                                        <CardDescription className="line-clamp-2">{collection.description}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-xs text-muted-foreground">Oluşturan: {collection.author_username}</p>
+                                    </CardContent>
+                                </Card>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+            )}
 
-  const {
-    tool_of_the_day,
-    latest_tools,
-    latest_showcase,
-    latest_posts,
-    top_users,
-  } = discoverData;
-
-  return (
-    <div className="container mx-auto py-12 px-4 space-y-16">
-      {tool_of_the_day && (
-        <section>
-          <Card className="w-full bg-gradient-to-br from-primary/10 via-background to-background border-2 border-primary/50 shadow-lg">
-            <CardContent className="p-8 grid md:grid-cols-2 gap-8 items-center">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-primary font-bold text-lg">
-                  <Zap className="w-6 h-6" />
-                  <span>GÜNÜN ARACI</span>
-                </div>
-                <h2 className="text-4xl font-extrabold tracking-tight text-foreground">
-                  {tool_of_the_day.name}
-                </h2>
-                <p className="text-muted-foreground text-lg">
-                  {tool_of_the_day.description}
-                </p>
-                <Button asChild size="lg">
-                  <Link href={`/tool/${tool_of_the_day.slug}`}>
-                    İncele & Keşfet
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      )}
+            {/* YENİ: Öğrenme Yolları Bölümü */}
+            {learningPaths?.length > 0 && (
+                <section>
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground mb-6 flex items-center gap-3">
+                        <Map className="w-8 h-8 text-green-500" />
+                        Öğrenme Yolları
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {learningPaths.map((path) => (
+                             <Link key={path.slug} href={`/koleksiyonlar/${path.slug}`} className="group">
+                                <Card className="h-full overflow-hidden transition-all hover:shadow-lg hover:border-green-500">
+                                    <CardHeader>
+                                        <CardTitle className="group-hover:text-green-500">{path.title}</CardTitle>
+                                        <CardDescription className="line-clamp-2">{path.description}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-xs text-muted-foreground">Oluşturan: {path.author_username}</p>
+                                    </CardContent>
+                                </Card>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+            )}
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">

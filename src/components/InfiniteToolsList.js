@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useInView } from "react-intersection-observer";
 import { useRouter } from "next/navigation";
-import { fetchMoreTools, recordVariantClick } from "@/app/actions";
+import { fetchMoreTools, recordVariantClick, recordToolVisit } from "@/app/actions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +20,7 @@ import {
   Monitor,
   Pen,
   ShoppingCart,
-  Heart
+  Heart, Eye
 } from "lucide-react";
 import { ToolPreviewDialog } from './ToolPreviewDialog';
 
@@ -48,84 +48,66 @@ const tierStyles = {
   },
 };
 
-// Tek bir araç kartını yöneten bileşen
-function ToolCard({ tool, user, isFavorited, onCardClick }) {
-  const isPremium = tool.tier === 'Pro' || tool.tier === 'Sponsorlu';
+// Tek bir araç kartını yöneten akıllı bileşen
+function ToolCard({ tool, user, isFavorited, onPreviewClick  }) {
+    const router = useRouter();
+    
+    // "Ziyaret Et" butonuna tıklandığında çalışacak fonksiyon
+    const handleVisitClick = (e) => {
+        // Linkin yeni bir sekmede açılmasını engellemiyoruz,
+        // sadece arka planda ziyareti kaydediyoruz.
+        recordToolVisit(tool.id);
+    };
+    
+    const isPremium = tool.tier === 'Pro' || tool.tier === 'Sponsorlu';
 
-  return (
-    <div className={cn("bg-card border rounded-xl p-6 shadow-lg flex flex-col relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1", isPremium && tierStyles[tool.tier]?.card)}>
-      {user && (
-        <div className="absolute top-4 right-4 z-10">
-          <FavoriteButton toolId={tool.id} toolSlug={tool.slug} isInitiallyFavorited={isFavorited} />
-        </div>
-      )}
-      <div className="flex-grow">
-        {isPremium && (
-          <Badge className={cn("mb-2 flex w-fit items-center", tierStyles[tool.tier]?.badge)}>
-            {tierStyles[tool.tier]?.icon}
-            {tool.tier}
-          </Badge>
-        )}
+    return (
+        <div className={cn("bg-card border rounded-xl p-6 shadow-lg flex flex-col relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group/card")}>
+            {user && ( <div className="absolute top-4 right-4 z-10"><FavoriteButton toolId={tool.id} toolSlug={tool.slug} isInitiallyFavorited={isFavorited} /></div> )}
+            <div className="flex-grow">
+                {isPremium && (<Badge className={cn("mb-2 flex w-fit items-center", tierStyles[tool.tier]?.badge)}>{tierStyles[tool.tier]?.icon}{tool.tier}</Badge>)}
+                
+                <Link href={`/tool/${tool.slug}`} className="group">
+                    <h2 className="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">{tool.name}</h2>
+                </Link>
 
-        <Link href={`/tool/${tool.slug}`} onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          onCardClick(tool);
-        }} className="group">
-          <h2 className="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">
-            {tool.name}
-          </h2>
-        </Link>
-
-        <Link href={`/?category=${tool.category_slug}`} className="inline-block mt-2">
-          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground w-fit block hover:bg-primary hover:text-primary-foreground transition-colors">
-            {tool.category_name}
-          </span>
-        </Link>
-
-        {tool.tags && tool.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 my-3">
-            {[...new Map(tool.tags.map(tag => [tag.id, tag])).values()].map(tag => (
-              <Link key={tag.id} href={`/?tags=${tag.id}`}>
-                <Badge variant="outline" className="hover:bg-accent hover:border-primary transition-colors">
-                  {tag.name}
-                </Badge>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        <p className="text-muted-foreground text-sm my-4 line-clamp-2">{tool.description}</p>
-      </div>
-
-      <div className="mt-auto pt-4 border-t border-border space-y-3">
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5" title="Ortalama Puan">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              <span className="font-bold text-foreground">{tool.average_rating.toFixed(1)}</span>
-              <span className="hidden sm:inline">({tool.total_ratings})</span>
+                <p className="text-muted-foreground text-sm my-4 line-clamp-2">{tool.description}</p>
             </div>
-            <div className="flex items-center gap-1.5" title="Favorilenme Sayısı">
-              <Heart className="w-4 h-4 text-red-500" />
-              <span className="font-bold text-foreground">{tool.total_favorites}</span>
+            
+            {/* YENİ: Hızlı Bakış Butonu */}
+            {/* Bu buton, sadece fare kartın üzerine geldiğinde görünür */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <Button 
+                    onClick={() => onPreviewClick(tool)}
+                    variant="secondary"
+                    className="opacity-0 group-hover/card:opacity-100 transition-opacity"
+                >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Hızlı Bakış
+                </Button>
             </div>
-          </div>
-          {tool.pricing_model && <Badge variant="default">{tool.pricing_model}</Badge>}
+
+            <div className="mt-auto pt-4 border-t border-border space-y-3">
+                 <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1.5"><Star className="w-4 h-4 text-yellow-400 fill-yellow-400" /><span className="font-bold text-foreground">{tool.average_rating.toFixed(1)}</span></div>
+                        <div className="flex items-center gap-1.5"><Heart className="w-4 h-4 text-red-500" /><span className="font-bold text-foreground">{tool.total_favorites}</span></div>
+                    </div>
+                    {tool.pricing_model && <Badge variant="default">{tool.pricing_model}</Badge>}
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                        {tool.platforms?.map((p, index) => (<span key={`${tool.id}-${p}-${index}`} title={p}>{platformIcons[p] || null}</span>))}
+                    </div>
+{/* DEĞİŞİKLİK: "Ziyaret Et" butonu artık onClick olayını dinliyor */}
+                   <Button asChild size="sm">
+                       <a href={tool.link} target="_blank" rel="noopener noreferrer" onClick={handleVisitClick}>
+                           Ziyaret Et
+                       </a>
+                   </Button>                 </div>
+            </div>
         </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            {tool.platforms?.map((p, index) => (
-              <span key={`${tool.id}-${p}-${index}`} title={p}>{platformIcons[p] || null}</span>
-            ))}
-          </div>
-          <Button asChild size="sm">
-            <a href={tool.link} target="_blank" rel="noopener noreferrer">Ziyaret Et</a>
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
+    );
 }
 
 // Ana "Sonsuz Kaydırma" Listesi
@@ -135,27 +117,25 @@ export function InfiniteToolsList({ initialTools, searchParams, user, favoriteTo
   const [hasMore, setHasMore] = useState(initialTools.length > 0);
   const [isLoading, setIsLoading] = useState(false);
   const { ref, inView } = useInView({ threshold: 0.5 });
+  
   const [previewTool, setPreviewTool] = useState(null);
 
   const loadMoreTools = useCallback(async () => {
-    setIsLoading(true);
-    const newTools = await fetchMoreTools({ page, searchParams });
-
-    if (newTools?.length) {
-      const existingIds = new Set(tools.map(t => t.id));
-      const filteredNew = newTools.filter(t => !existingIds.has(t.id));
-      setTools(prev => [...prev, ...filteredNew]);
-      setPage(prev => prev + 1);
-    } else {
-      setHasMore(false);
-    }
-
-    setIsLoading(false);
-  }, [page, searchParams, tools]);
+      setIsLoading(true);
+      const newTools = await fetchMoreTools({ page, searchParams });
+      
+      if (newTools?.length) {
+          setPage(prev => prev + 1);
+          setTools((prev) => [...prev, ...newTools]);
+      } else {
+          setHasMore(false);
+      }
+      setIsLoading(false);
+  }, [page, searchParams]);
 
   useEffect(() => {
     if (inView && hasMore && !isLoading) {
-      loadMoreTools();
+        loadMoreTools();
     }
   }, [inView, hasMore, isLoading, loadMoreTools]);
 
@@ -169,31 +149,31 @@ export function InfiniteToolsList({ initialTools, searchParams, user, favoriteTo
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {tools.map((tool) => (
-          <ToolCard
-            key={tool.id}
-            tool={tool}
-            user={user}
-            isFavorited={favoriteToolIds.has(tool.id)}
-            onCardClick={setPreviewTool}
-          />
+            <ToolCard 
+                key={tool.id}
+                tool={tool}
+                user={user}
+                isFavorited={favoriteToolIds.has(tool.id)}
+                onPreviewClick={setPreviewTool}
+            />
         ))}
       </div>
 
       {hasMore && (
         <div ref={ref} className="col-span-full mt-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <ToolCardSkeleton />
-            <ToolCardSkeleton />
-            <ToolCardSkeleton />
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <ToolCardSkeleton />
+                <ToolCardSkeleton />
+                <ToolCardSkeleton />
+            </div>
         </div>
       )}
 
       {previewTool && (
-        <ToolPreviewDialog
-          tool={previewTool}
-          isOpen={!!previewTool}
-          onClose={() => setPreviewTool(null)}
+        <ToolPreviewDialog 
+            tool={previewTool}
+            isOpen={!!previewTool}
+            onClose={() => setPreviewTool(null)}
         />
       )}
     </>

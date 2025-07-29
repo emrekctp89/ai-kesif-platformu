@@ -5123,6 +5123,32 @@ export async function getToolPreviewData(toolSlug) {
   return { success: true, data: tool };
 }
 
+// Bir kullanıcının bir aracı ziyaret ettiğini kaydeden fonksiyon.
+// Bu, gelecekte daha detaylı analizler için de kullanılabilir.
+export async function recordToolVisit(toolId) {
+  "use server";
+
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    // Giriş yapmamış kullanıcıların tıklamalarını saymıyoruz.
+    return; 
+  }
+
+  // Bu eylemi, 'update_quest_progress' fonksiyonunu tetikleyecek olan
+  // 'handle_visit_quest' trigger'ına bağlamak için, bu ziyareti
+  // kaydedecek geçici bir tabloya ihtiyacımız var. Şimdilik, doğrudan
+  // görev ilerlemesini güncelleyen RPC'yi çağırabiliriz.
+  const { error } = await supabase.rpc('update_quest_progress', {
+      p_user_id: user.id,
+      p_action_type: 'visit_tool'
+  });
+
+  if (error) {
+    console.error("Araç ziyareti görevi güncellenirken hata:", error);
+  }
+}
+
 export async function getToolDetailsForPreview(toolId) {
   "use server";
 
@@ -5133,32 +5159,18 @@ export async function getToolDetailsForPreview(toolId) {
   try {
     const supabase = createClient();
 
-    // DEĞİŞİKLİK: 'tools_with_ratings' VIEW'i yerine, daha güvenilir olan
-    // ana 'tools' tablosunu sorguluyoruz. Bu, RLS sorunlarını çözer.
-    // İhtiyacımız olan diğer bilgileri (kategori adı, puanlar) ayrı ayrı çekiyoruz.
+    // 1. ADIM: Aracın tüm ana verilerini, puan ve favori sayılarıyla birlikte çekiyoruz.
     const { data: tool, error: toolError } = await supabase
-        .from('tools')
-        .select(`
-            *,
-            categories ( name )
-        `)
+        .from('tools_with_ratings')
+        .select('*')
         .eq('id', toolId)
         .single();
 
-    if (toolError) throw new Error("Araç detayları alınamadı.");
-    
-    // Aracın puanını hesaplamak için ayrı bir sorgu yapıyoruz.
-    const { data: ratingsData, error: ratingsError } = await supabase
-        .from('ratings')
-        .select('rating')
-        .eq('tool_id', toolId);
+    if (toolError || !tool) {
+        throw new Error("Araç detayları veritabanında bulunamadı.");
+    }
 
-    const totalRatings = ratingsData?.length || 0;
-    const averageRating = totalRatings > 0 
-        ? ratingsData.reduce((acc, curr) => acc + curr.rating, 0) / totalRatings 
-        : 0;
-
-    // Yorumları ve prompt'ları çekiyoruz (bu kısımlar aynı kalabilir).
+    // 2. ADIM: Bu araca ait en son 2 yorumu ve en popüler 2 prompt'u paralel olarak çekiyoruz.
     const [
         { data: comments },
         { data: prompts }
@@ -5167,18 +5179,11 @@ export async function getToolDetailsForPreview(toolId) {
         supabase.from('prompts').select('title').eq('tool_id', toolId).order('vote_count', { ascending: false }).limit(2)
     ]);
 
-    // Tüm verileri tek bir obje altında birleştiriyoruz.
-    const finalToolData = {
-        ...tool,
-        category_name: tool.categories.name,
-        average_rating: averageRating,
-        total_ratings: totalRatings
-    };
-
+    // 3. ADIM: Tüm verileri tek bir pakette birleştirip döndürüyoruz.
     return { 
         success: true, 
         data: {
-            tool: finalToolData,
+            tool,
             comments: comments || [],
             prompts: prompts || []
         } 
@@ -5186,9 +5191,10 @@ export async function getToolDetailsForPreview(toolId) {
 
   } catch (e) {
     console.error("Araç önizleme verisi çekilirken hata:", e.message);
-    return { error: `Veri alınırken bir hata oluştu.` };
+    return { error: `Veri alınırken bir hata oluştu: ${e.message}` };
   }
 }
+
 
 // Bir araca puan veren/puanını güncelleyen fonksiyon
 export async function upsertRating(formData) {
