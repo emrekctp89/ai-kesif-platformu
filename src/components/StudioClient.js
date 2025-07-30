@@ -17,6 +17,8 @@ import { Sparkles, Image as ImageIcon, Download, Share2 } from "lucide-react"; /
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { generateTextWithGemini, generateImageWithImagen } from "@/app/actions";
+import { AiMentorTab } from './AiMentorTab'; // Yeni bileşeni import ediyoruz
+
 
 // Metin Üretici Sekmesi (Değişiklik yok)
 function TextGeneratorTab() {
@@ -197,11 +199,15 @@ function ImageGeneratorTab() {
 // Ana Stüdyo Arayüz Bileşeni
 export function StudioClient() {
   return (
-    <Tabs defaultValue="text" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
+    <Tabs defaultValue="mentor" className="w-full">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="mentor">Yaratıcı Atölye</TabsTrigger>
         <TabsTrigger value="text">Metin Üretici</TabsTrigger>
         <TabsTrigger value="image">Görsel Üretici</TabsTrigger>
       </TabsList>
+      <TabsContent value="mentor">
+        <AiMentorTab />
+      </TabsContent>
       <TabsContent value="text">
         <TextGeneratorTab />
       </TabsContent>
@@ -209,5 +215,5 @@ export function StudioClient() {
         <ImageGeneratorTab />
       </TabsContent>
     </Tabs>
-  );
+  )
 }

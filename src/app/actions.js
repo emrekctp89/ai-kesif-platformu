@@ -1686,6 +1686,8 @@ export async function deletePrompt(formData) {
   return { success: "Prompt başarıyla silindi." };
 }
 
+
+
 // Bir eseri gönderen/güncelleyen ana fonksiyon
 export async function submitShowcaseItem(formData) {
   "use server";
@@ -1704,6 +1706,8 @@ export async function submitShowcaseItem(formData) {
   const contentType = formData.get("content_type");
   const imageFile = formData.get("image");
   const contentText = formData.get("content_text");
+    const creativeProcess = formData.get("creative_process"); // YENİ
+
 
   if (!title || !contentType) {
     return { error: "Başlık ve içerik türü zorunludur." };
@@ -1742,6 +1746,8 @@ export async function submitShowcaseItem(formData) {
     image_url: imageUrl,
     user_id: user.id,
     is_approved: false, // Eserler de admin onayı bekleyecek
+          creative_process: creativeProcess ? JSON.parse(creativeProcess) : null, // YENİ
+
   };
 
   const { error: insertError } = await supabase
@@ -1820,21 +1826,45 @@ export async function deleteShowcaseItem(formData) {
 
 // -- ESER ONAYLAMA --
 // Bu fonksiyon artık sadece onay durumunu günceller. Puanlama ve bildirim, trigger tarafından yapılır.
+// Bir topluluk eserini onaylayan fonksiyon
 export async function approveShowcaseItem(formData) {
   "use server";
-  const supabaseAdmin = createAdminClient();
-  const itemId = formData.get("itemId");
 
+  // 1. Önce, işlemi kimin tetiklediğini kontrol et
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    // Bu, arayüze bir hata döndürmez ama işlemi sessizce durdurur.
+    // Daha güvenli bir yapı için { error: "Yetkiniz yok." } döndürülebilir.
+    return;
+  }
+
+  const itemId = formData.get("itemId");
+  if (!itemId) {
+    return { error: "Eser ID'si bulunamadı." };
+  }
+
+  // 2. Güvenlik kontrolü geçildikten sonra, YAZMA İŞLEMİ İÇİN ADMIN CLIENT KULLAN
+  // Bu, RLS (Row Level Security) kurallarını güvenli bir şekilde bypass eder.
+  const supabaseAdmin = createAdminClient();
   const { error } = await supabaseAdmin
     .from("showcase_items")
     .update({ is_approved: true })
     .eq("id", itemId);
 
-  if (error) return { error: "Eser onaylanırken bir hata oluştu." };
+  if (error) {
+    console.error("Eser onaylama hatası:", error);
+    // İsteğe bağlı: toast.error() ile kullanıcıya hata gösterilebilir.
+    return { error: "Eser onaylanırken bir veritabanı hatası oluştu." };
+  }
 
+  // 3. İlgili sayfaların önbelleğini temizleyerek anında güncellenmesini sağla
   revalidatePath("/admin");
   revalidatePath("/eserler");
-  return { success: "Eser başarıyla onaylandı ve yayınlandı." };
+  
+  // Başarılı olduğunda bir bildirim gösterilebilir.
+  // toast.success("Eser başarıyla onaylandı!");
+  return { success: true };
 }
 
 // Bir eserin detaylarını güncelleyen fonksiyon (admin için)
@@ -5230,4 +5260,80 @@ export async function upsertRating(formData) {
 
   revalidatePath(`/tool/${toolSlug}`);
   return { success: "Puanınız başarıyla kaydedildi." };
+}
+
+// Bir kullanıcının prompt'unu analiz edip geliştirme önerileri sunan fonksiyon
+export async function getAiMentorFeedback(userPrompt) {
+  "use server";
+  
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Bu özelliği kullanmak için giriş yapmalısınız." };
+  }
+
+  if (!userPrompt || userPrompt.trim().length < 10) {
+    return { error: "Lütfen daha detaylı bir fikir veya prompt girin." };
+  }
+
+  try {
+    // 1. Adım: Gemini için özel "mentor" prompt'unu oluştur
+    const prompt = `
+        Sen, yapay zeka ile görsel veya metin üreten bir kullanıcıya akıl hocalığı yapan, son derece yaratıcı ve yardımcı bir "AI Mentor"'sun. Görevin, sana verilen bir fikri veya prompt'u analiz ederek, onu daha zengin, daha detaylı ve daha etkileyici hale getirecek somut öneriler sunmaktır.
+
+        KULLANICININ İLK FİKRİ/PROMPT'U:
+        "${userPrompt}"
+
+        YAPILACAKLAR:
+        1.  Bu fikrin potansiyelini analiz et.
+        2.  Fikri daha iyi hale getirmek için 3 adet somut ve yaratıcı öneri sun. Bu öneriler, stile, atmosfere, detaylara veya konuya yönelik olabilir.
+        3.  Bu önerileri birleştirerek, kullanıcının doğrudan kopyalayıp kullanabileceği, geliştirilmiş ve zenginleştirilmiş yeni bir prompt metni oluştur.
+        4.  Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin veya açıklama ekleme.
+    `;
+
+    // 2. Adım: Gemini API'sine isteği hazırla ve gönder
+    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const payload = {
+        contents: chatHistory,
+        generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: "OBJECT",
+                properties: {
+                    "analysis": { "type": "STRING", "description": "İlk fikrin potansiyeli hakkında kısa bir analiz." },
+                    "suggestions": {
+                        "type": "ARRAY",
+                        "items": { "type": "STRING" },
+                        "description": "Fikri geliştirmek için 3 adet somut öneri."
+                    },
+                    "improved_prompt": { "type": "STRING", "description": "Önerileri içeren, geliştirilmiş yeni prompt metni." }
+                },
+                required: ["analysis", "suggestions", "improved_prompt"]
+            }
+        }
+    };
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+    
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    
+    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+    if (!response.ok) {
+        const errorBody = await response.json();
+        return { error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}` };
+    }
+
+    const result = await response.json();
+    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+        return { success: true, data: JSON.parse(result.candidates[0].content.parts[0].text) };
+    } else {
+        return { error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı." };
+    }
+
+  } catch (e) {
+    console.error("AI Mentor fonksiyonunda hata:", e.message);
+    return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
+  }
 }

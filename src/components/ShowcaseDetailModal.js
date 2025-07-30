@@ -28,6 +28,9 @@ import {
   addShowcaseComment,
   toggleShowcaseVote,
 } from "@/app/actions";
+import { Lightbulb, Sparkles } from 'lucide-react'
+
+
 
 // Oylama Butonu
 function VoteButton({ item, isInitiallyVoted, user, onVote }) {
@@ -128,7 +131,9 @@ export function ShowcaseDetailModal({
   hasPrev,
   user,
 }) {
-  const [details, setDetails] = useState({ comments: [], isVoted: false });
+ const [details, setDetails] = useState({ comments: [], isVoted: false });
+const creativeProcess = details?.creativeProcess;
+
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchDetails = React.useCallback(async () => {
@@ -253,6 +258,26 @@ export function ShowcaseDetailModal({
         </div>
 
         {user && <CommentForm itemId={item.id} onCommentAdded={fetchDetails} />}
+        {/* YENİ: Sahne Arkası (Yaratıcı Yolculuk) Bölümü */}
+                {creativeProcess && (
+                    <div className="space-y-4 pt-4 mt-4 border-t">
+                        <h3 className="text-sm font-semibold">Sahne Arkası</h3>
+                        <div className="space-y-3 text-xs">
+                            <div>
+                                <p className="font-medium text-muted-foreground">İlk Fikir:</p>
+                                <p className="italic p-2 bg-muted/50 rounded-md">&quot;{creativeProcess.initial_prompt}&quot;</p>
+                            </div>
+                            <div>
+                                <p className="font-medium text-muted-foreground flex items-center gap-1"><Lightbulb className="w-3 h-3" />AI Mentor Tavsiyesi:</p>
+                                <p className="italic p-2 bg-muted/50 rounded-md">&quot;{creativeProcess.mentor_feedback}&quot;</p>
+                            </div>
+                            <div>
+                                <p className="font-medium text-muted-foreground flex items-center gap-1"><Sparkles className="w-3 h-3" />Son Prompt:</p>
+                                <p className="italic p-2 bg-muted/50 rounded-md">&quot;{creativeProcess.final_prompt}&quot;</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
       </div>
     </DialogContent>
   );
