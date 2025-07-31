@@ -12,7 +12,7 @@ export default async function StudioPage() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-        redirect('/login?message=AI Stüdyosunu kullanmak için giriş yapmalısınız.');
+redirect('/login?message=' + encodeURIComponent('AI Stüdyosunu kullanmak için giriş yapmalısınız.'));
     }
 
     // DEĞİŞİKLİK: Kullanıcının "Pro" olup olmadığını kontrol ediyoruz.
@@ -27,7 +27,7 @@ export default async function StudioPage() {
 
     // Eğer kullanıcı ne Pro ne de Admin ise, üyelik sayfasına yönlendir.
     if (!isProUser) {
-        redirect('/uyelik?message=AI Stüdyosunu kullanmak için Pro üyeliğe yükseltmelisiniz.');
+redirect('/uyelik?message=' + encodeURIComponent('AI Stüdyosunu kullanmak için Pro üyeliğe yükseltmelisiniz.'));
     }
 
     return (

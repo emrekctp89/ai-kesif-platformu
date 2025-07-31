@@ -19,6 +19,9 @@ import { ShareButton } from "@/components/ShareButton";
 import { BookOpen, Crown, Gem, Star, Globe, Apple, Bot, Monitor, Pen, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SuggestToolForBounty } from "@/components/SuggestToolForBounty";
+import { AcademicBackground } from '@/components/AcademicBackground'; // Yeni bileşeni import ediyoruz
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"; // Shadcn bileşen yolu
+
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -61,6 +64,7 @@ async function getToolData(slug) {
     .single();
 
   if (error || !tool) notFound();
+  
 
   // Kullanıcının profil bilgisi
   const { data: profile } = user
@@ -74,6 +78,10 @@ async function getToolData(slug) {
   const isProUser =
     !!profile?.stripe_price_id ||
     (user && user.email === process.env.ADMIN_EMAIL);
+    
+    // YENİ: Araca bağlı akademik makaleleri çekiyoruz
+  const { data: papers } = await supabase.rpc('get_papers_for_tool', { p_tool_id: tool.id });
+
 
   // Favori kontrolü
   const { data: favoriteRecord } = user
@@ -151,7 +159,7 @@ export async function generateMetadata({ params }) {
 
 export default async function ToolDetailPage({ params }) {
   const { slug } = params;
-  const { tool, usersRating, isFavorited, user, isProUser } = await getToolData(slug);
+  const { tool, usersRating, isFavorited, user, isProUser, papers } = await getToolData(slug);
 
   if (tool.tier === "Pro" && !isProUser) {
     redirect("/uyelik");
@@ -230,19 +238,8 @@ export default async function ToolDetailPage({ params }) {
         </Card>
       </section>
 
-      {/* 3. Yorumlar */}
-      <section>
-        <Card className="rounded-xl shadow-xl">
-          <CardContent className="p-8 md:p-12">
-            <CommentSection toolId={tool.id} toolSlug={tool.slug} />
-          </CardContent>
-        </Card>
-      </section>
 
-      {/* 4. Prompt Kütüphanesi */}
-      <section>
-        <PromptSection toolId={tool.id} toolSlug={tool.slug} />
-      </section>
+     
 
       {/* 5. İlgili Rehberler */}
       {relatedGuides.length > 0 && (
@@ -268,6 +265,23 @@ export default async function ToolDetailPage({ params }) {
         </section>
       )}
 
+{/* DEĞİŞİKLİK: Yorumlar ve Prompt'lar artık sekmeli bir yapıda */}
+      <Tabs defaultValue="comments" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="comments">Yorumlar</TabsTrigger>
+            <TabsTrigger value="prompts">Prompt Kütüphanesi</TabsTrigger>
+            <TabsTrigger value="academic">Akademik Arka Plan</TabsTrigger>
+        </TabsList>
+        <TabsContent value="comments">
+            <Card><CardContent className="p-8 md:p-12"><CommentSection toolId={tool.id} toolSlug={tool.slug} /></CardContent></Card>
+        </TabsContent>
+        <TabsContent value="prompts">
+            <PromptSection toolId={tool.id} toolSlug={tool.slug} />
+        </TabsContent>
+        <TabsContent value="academic">
+            <Card><CardContent className="p-8 md:p-12"><AcademicBackground papers={papers} /></CardContent></Card>
+        </TabsContent>
+      </Tabs>
       {/* 6. Benzer Araçlar */}
       <section>
         <SimilarTools currentTool={tool} />

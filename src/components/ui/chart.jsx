@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils.js"
 
 // Chart Container
 const ChartContainer = React.forwardRef(
