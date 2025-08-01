@@ -15,27 +15,41 @@ serve(async (req) => {
     );
 
     // 1. ADIM: Aynı linke sahip olan araç gruplarını bul
-    const { data: duplicateGroups, error: queryError } = await supabaseAdmin
+    const { data: _duplicateGroups, error: _queryError } = await supabaseAdmin
       .from('tools')
       .select('link, ids:id, names:name')
-      .in('id', (await supabaseAdmin.from('tools').select('id').gt('link', ''))) // link'i boş olmayanları al
-      .rpc('group_by_link'); // Bu bir varsayımsal RPC, gerçek sorgu aşağıda
+      .in(
+        'id',
+        (
+          (await supabaseAdmin.from('tools').select('id').gt('link', '')).data?.map((row: { id: string }) => row.id) ?? []
+        )
+      ) // link'i boş olmayanları al
+      // .rpc('group_by_link'); // Bu bir varsayımsal RPC, gerçek sorgu aşağıda
 
     // Gerçek sorgu:
-     const { data: duplicateToolsByLink, error: linkError } = await supabaseAdmin
+     // Fetch all tools with non-empty links
+     const { data: allToolsWithLinks, error: linkError } = await supabaseAdmin
         .from('tools')
         .select('link, id, name')
-        .in('link', (
-            await supabaseAdmin.from('tools').select('link').gt('link', '').groupBy('link').having('count', '>', 1).then(res => res.data.map(r => r.link))
-        ));
+        .gt('link', '');
+
+     if (linkError) throw linkError;
+
+     // Group by link and filter only those with duplicates
+     const linkCounts: { [key: string]: number } = {};
+     allToolsWithLinks.forEach(tool => {
+        linkCounts[tool.link] = (linkCounts[tool.link] || 0) + 1;
+     });
+     const duplicateLinks = Object.keys(linkCounts).filter(link => linkCounts[link] > 1);
+     const duplicateToolsByLink = allToolsWithLinks.filter(tool => duplicateLinks.includes(tool.link));
 
     if (linkError) throw linkError;
     
-    const groupedByLink = duplicateToolsByLink.reduce((acc, tool) => {
+    const groupedByLink = duplicateToolsByLink.reduce((acc: { [key: string]: typeof duplicateToolsByLink }, tool) => {
         acc[tool.link] = acc[tool.link] || [];
         acc[tool.link].push(tool);
         return acc;
-    }, {});
+    }, {} as { [key: string]: typeof duplicateToolsByLink });
 
 
     let newAlertsCount = 0;
@@ -83,7 +97,8 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = (error instanceof Error) ? error.message : String(error);
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     })
