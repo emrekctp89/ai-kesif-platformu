@@ -5337,3 +5337,30 @@ export async function getAiMentorFeedback(userPrompt) {
     return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
   }
 }
+
+
+// src/app/actions.js dosyasının sonuna ekleyin
+export async function updateUserPapers(formData) {
+  "use server";
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Bu işlem için giriş yapmalısınız." };
+
+  const paperIds = formData.getAll("paperId").map(id => parseInt(id, 10));
+
+  // 1. Önce bu kullanıcıya ait tüm mevcut yayın bağlantılarını siliyoruz.
+  await supabase.from("author_papers").delete().eq("author_id", user.id);
+
+  // 2. Eğer formdan seçilen yeni yayınlar varsa, onları ekliyoruz.
+  if (paperIds.length > 0) {
+    const newLinks = paperIds.map(paperId => ({
+        author_id: user.id,
+        paper_id: paperId
+    }));
+    const { error } = await supabase.from("author_papers").insert(newLinks);
+    if (error) return { error: "Akademik yayınlar güncellenirken bir hata oluştu." };
+  }
+  
+  revalidatePath('/profile');
+  return { success: "Akademik yayınlarınız başarıyla güncellendi." };
+}
