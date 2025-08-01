@@ -19,14 +19,14 @@ serve(async (req)=>{
     const { data: allToolsWithLinks, error: linkError } = await supabaseAdmin.from('tools').select('link, id, name').gt('link', '');
     if (linkError) throw linkError;
     // Group by link and filter only those with duplicates
-    const linkCounts = {};
+    const linkCounts: { [key: string]: number } = {};
     allToolsWithLinks.forEach((tool)=>{
       linkCounts[tool.link] = (linkCounts[tool.link] || 0) + 1;
     });
     const duplicateLinks = Object.keys(linkCounts).filter((link)=>linkCounts[link] > 1);
     const duplicateToolsByLink = allToolsWithLinks.filter((tool)=>duplicateLinks.includes(tool.link));
     if (linkError) throw linkError;
-    const groupedByLink = duplicateToolsByLink.reduce((acc, tool)=>{
+    const groupedByLink = duplicateToolsByLink.reduce<Record<string, { link: string; id: number; name: string }[]>>((acc, tool)=>{
       acc[tool.link] = acc[tool.link] || [];
       acc[tool.link].push(tool);
       return acc;
