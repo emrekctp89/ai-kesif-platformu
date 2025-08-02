@@ -2451,84 +2451,58 @@ export async function fetchMoreTools({ page = 0, searchParams }) {
   "use server";
 
   const supabase = createClient();
-  const searchText = searchParams?.search;
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = user ? await supabase.from('profiles').select('stripe_price_id').eq('id', user.id).single() : { data: null };
+  const isProUser = !!profile?.stripe_price_id || (user && user.email === process.env.ADMIN_EMAIL);
 
-  if (searchText) {
-    try {
-      const queryEmbedding = await getEmbedding(searchText);
-      
-      const { data: tools, error } = await supabase.rpc('semantic_search_tools', {
-        query_embedding: queryEmbedding,
-        match_threshold: 0.5, 
-        match_count: 50
-      });
+  // DEĞİŞİKLİK: Artık her zaman basit bir JavaScript objesi bekliyoruz
+  // ve parametreleri buna göre okuyoruz.
+  const searchText = searchParams.search || null;
+  const categorySlug = searchParams.category || null;
+  const sortBy = searchParams.sort || 'newest';
+  const tags = searchParams.tags ? searchParams.tags.split(',').map(Number) : [];
+  const pricingModel = searchParams.pricing || null;
+  const platforms = searchParams.platforms ? searchParams.platforms.split(',') : [];
+  const tier = searchParams.tier || null;
 
-      if (error) throw error;
-      return tools;
-
-    } catch (e) {
-      console.error("Anlamsal arama hatası:", e.message);
-      return [];
-    }
-  }
-
-  // Kullanıcının Pro olup olmadığını kontrol et
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: profile } = user
-    ? await supabase
-        .from("profiles")
-        .select("stripe_price_id")
-        .eq("id", user.id)
-        .single()
-    : { data: null };
-  const isProUser =
-    !!profile?.stripe_price_id ||
-    (user && user.email === process.env.ADMIN_EMAIL);
-
-  // DEĞİŞİKLİK: Artık tüm karmaşık filtreleme mantığı yerine,
-  // tek bir akıllı RPC fonksiyonunu çağırıyoruz.
-  const { data: tools, error } = await supabase.rpc("get_public_tools", {
+  const { data: tools, error } = await supabase.rpc('get_public_tools', {
     p_page: page,
     p_page_size: ITEMS_PER_PAGE,
-    p_search_text: searchParams?.search || null,
-    p_category_slug: searchParams?.category || null,
-    p_sort_by: searchParams?.sort || "newest",
-    p_tags: searchParams?.tags ? searchParams.tags.split(",").map(Number) : [],
-    p_pricing_model: searchParams?.pricing || null,
-    p_platforms: searchParams?.platforms
-      ? searchParams.platforms.split(",")
-      : [],
-    p_tier: searchParams?.tier || null,
-    p_is_pro_user: isProUser,
+    p_search_text: searchText,
+    p_category_slug: categorySlug,
+    p_sort_by: sortBy,
+    p_tags: tags,
+    p_pricing_model: pricingModel,
+    p_platforms: platforms,
+    p_tier: tier,
+    p_is_pro_user: isProUser
   });
 
   if (error) {
-    console.error("Araç çekerken hata:", error.message);
+    console.error('Araç çekerken hata:', error.message);
     return [];
   }
 
   return tools;
 }
 
-// YENİ: Bir varyantın "gösterim" (impression) sayısını artıran fonksiyon
+// Bir varyantın "gösterim" (impression) sayısını artıran fonksiyon
 export async function recordVariantImpression(variantId) {
   "use server";
   if (!variantId) return;
   const supabase = createClient();
-  await supabase.rpc("increment_variant_impression", {
-    p_variant_id: variantId,
-  });
+  await supabase.rpc('increment_variant_impression', { p_variant_id: variantId });
 }
 
-// YENİ: Bir varyantın "tıklanma" (click) sayısını artıran fonksiyon
+// Bir varyantın "tıklanma" (click) sayısını artıran fonksiyon
 export async function recordVariantClick(variantId) {
   "use server";
   if (!variantId) return;
   const supabase = createClient();
-  await supabase.rpc("increment_variant_click", { p_variant_id: variantId });
+  await supabase.rpc('increment_variant_click', { p_variant_id: variantId });
 }
+
 // Kullanıcıyı Stripe ödeme sayfasına yönlendiren fonksiyon
 export async function createCheckoutSession(formData) {
   "use server";
@@ -5363,4 +5337,39 @@ export async function updateUserPapers(formData) {
   
   revalidatePath('/profile');
   return { success: "Akademik yayınlarınız başarıyla güncellendi." };
+}
+
+// Admin uyarılarının durumunu güncelleyen fonksiyon
+export async function updateAdminAlertStatus(formData) {
+  "use server";
+  
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: "Yetkiniz yok." };
+  }
+
+  const alertId = formData.get("alertId");
+  const newStatus = formData.get("newStatus"); // 'Çözüldü' veya 'Yoksayıldı'
+
+  if (!alertId || !newStatus) {
+    return { error: "Gerekli bilgiler eksik." };
+  }
+
+  const supabaseAdmin = createAdminClient();
+  const { error } = await supabaseAdmin
+    .from("admin_alerts")
+    .update({ 
+        status: newStatus,
+        resolved_at: new Date().toISOString() 
+    })
+    .eq("id", alertId);
+
+  if (error) {
+    console.error("Uyarı durumu güncellenirken hata:", error);
+    return { error: "Uyarı durumu güncellenemedi." };
+  }
+
+  revalidatePath("/admin");
+  return { success: "Uyarı durumu güncellendi." };
 }
