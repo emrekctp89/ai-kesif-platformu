@@ -70,7 +70,7 @@ export default function ScrollingQuotes() {
           >
             <div className={index === currentIndex ? "animate-fade-in-scroll-up" : ""}>
               <blockquote className="text-2xl italic font-semibold text-foreground">
-                "{item.quote}"
+                {item.quote}
               </blockquote>
               <p className="text-base text-muted-foreground mt-4">- {item.author}</p>
             </div>
