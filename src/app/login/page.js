@@ -40,11 +40,12 @@ export default function LoginPage() {
               </div>
               <Input id="password" type="password" name="password" required />
             </div>
-            {message && (
-              <p className="text-sm p-2 bg-foreground/10 text-destructive text-center rounded-md">
-                {message}
-              </p>
-            )}
+            {typeof message === 'string' && (
+  <p className="text-sm p-2 bg-foreground/10 text-destructive text-center rounded-md">
+    {message}
+  </p>
+)}
+
             <Button type="submit" className="w-full">
               Giriş Yap
             </Button>
@@ -64,9 +65,10 @@ export default function LoginPage() {
             {/* <form action={() => oAuthSignIn('github')}>
               <Button variant="outline" className="w-full">GitHub</Button>
             </form> */}
-            <form action={() => oAuthSignIn('google')}>
-              <Button variant="outline" className="w-full">Google</Button>
-            </form>
+            <form action={oAuthSignIn.bind(null, 'google')}>
+  <Button variant="outline" className="w-full">Google</Button>
+</form>
+
           </div>
           <div className="mt-4 text-center text-sm">
             Hesabınız yok mu?{" "}
