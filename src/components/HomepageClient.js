@@ -15,14 +15,11 @@ export function HomepageClient({
   searchParams: serverSearchParams,
   discoverySections,
 }) {
-  const { user, favoriteToolIds, initialTools, categories, allTags } =
-    initialData;
+  // Sadece ihtiyacımız olan veriler
+  const { initialTools, categories, allTags } = initialData;
 
-  // DEĞİŞİKLİK: Sunucudan gelen basit objeyi, istemcideki hook ile birleştiriyoruz.
-  // Bu, hem sunucu hem de istemci tarafında tutarlı bir veri yapısı sağlar.
   const searchParams = useSearchParams();
 
-  // Herhangi bir filtrenin aktif olup olmadığını kontrol ediyoruz.
   const hasActiveFilters = useMemo(() => {
     const keys = Array.from(searchParams.keys());
     return keys.some((key) => key !== "page");
@@ -67,7 +64,9 @@ export function HomepageClient({
             >
               <SearchInput />
               <FilterSheet categories={categories} allTags={allTags} />
-              <Button
+
+              {/* burada keşif butonu vardı tüm araçlar kısmındaki keşif butonu */ }
+              {/*<Button  
                 variant="outline"
                 onClick={() => setShowDiscovery(!showDiscovery)}
               >
@@ -77,7 +76,7 @@ export function HomepageClient({
                   <Sparkles className="mr-2 h-4 w-4" />
                 )}
                 {showDiscovery ? "Keşfi Gizle" : "Keşfet"}
-              </Button>
+              </Button>*/}
             </motion.div>
           )}
         </AnimatePresence>
@@ -106,8 +105,6 @@ export function HomepageClient({
           <InfiniteToolsList
             initialTools={initialTools}
             searchParams={searchParams}
-            user={user}
-            favoriteToolIds={favoriteToolIds}
           />
         </Suspense>
       </div>

@@ -95,7 +95,7 @@ export function ToolPreviewDialog({ tool, isOpen, onClose }) {
               {details.prompts.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-semibold flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" /> Popüler Prompt'lar
+                    <Sparkles className="w-4 h-4" /> Popüler Promptlar
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {details.prompts.map((prompt, i) => (

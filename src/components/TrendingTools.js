@@ -21,7 +21,7 @@ export async function TrendingTools() {
     return (
       <div className="my-12 p-4 text-center bg-muted rounded-lg">
         <p className="text-muted-foreground">
-          "Haftanın Trendleri" bölümü için yeterli veri bulunamadı. <br />
+          Haftanın Trendleri bölümü için yeterli veri bulunamadı. <br />
           (Veritabanınızda son 7 günde favoriye eklenmiş, en az 1 onaylanmış
           araç olmalı)
         </p>

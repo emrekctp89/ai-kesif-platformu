@@ -1,21 +1,18 @@
-'use client'
+// src/components/ToolCard.js
 
-import { useState, useEffect, useCallback } from 'react';
-import { useInView } from 'react-intersection-observer';
-import { useSearchParams } from 'next/navigation';
-import { fetchMoreTools } from '@/app/actions';
+'use client';
+
 import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
-import FavoriteButton from '@/components/FavoriteButton';
+import FavoriteButton from '@/components/FavoriteButton'; // Bu dosya yolunun doğru olduğunu varsayıyoruz
 import { Star, Heart, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ToolCardSkeleton } from './ToolCardSkeleton';
-import { ToolPreviewDialog } from './ToolPreviewDialog';
 import { Button } from '@/components/ui/button';
 
+// Bu sabitleri de bileşenin kendi dosyasına taşıyoruz
 const tierStyles = {
-  'Pro': { badge: "bg-purple-600 text-white hover:bg-purple-700", card: "border-purple-500/50 shadow-lg shadow-purple-500/10", icon: <Crown className="w-4 h-4 mr-1.5" /> },
-  'Sponsorlu': { badge: "bg-amber-500 text-white hover:bg-amber-600", card: "border-amber-500/50 shadow-lg shadow-amber-500/10", icon: <Gem className="w-4 h-4 mr-1.5" /> }
+  'Pro': { badge: "bg-purple-600 text-white hover:bg-purple-700", icon: <Crown className="w-4 h-4 mr-1.5" /> },
+  'Sponsorlu': { badge: "bg-amber-500 text-white hover:bg-amber-600", icon: <Gem className="w-4 h-4 mr-1.5" /> }
 };
 
 const platformIcons = {
@@ -28,11 +25,11 @@ const platformIcons = {
     'Chrome Uzantısı': <ShoppingCart className="w-4 h-4" />
 };
 
-// 🔹 Araç başına sabit rastgele değerler için cache
 const ratingCache = new Map();
 const favoritesCache = new Map();
 
-function ToolCard({ tool, user, isFavorited, onPreviewClick }) {
+// Bileşeni "export" ile dışa aktarıyoruz
+export function ToolCard({ tool, user, isFavorited, onPreviewClick }) {
   const isPremium = tool.tier === 'Pro' || tool.tier === 'Sponsorlu';
 
   const averageRating =
@@ -134,80 +131,5 @@ function ToolCard({ tool, user, isFavorited, onPreviewClick }) {
         </div>
       </div>
     </div>
-  );
-}
-
-// Sonsuz Kaydırma Listesi
-export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
-  const [tools, setTools] = useState(initialTools);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(initialTools.length > 0);
-  const [isLoading, setIsLoading] = useState(false);
-  const { ref, inView } = useInView({ threshold: 0.5 });
-  const searchParams = useSearchParams();
-  const [previewTool, setPreviewTool] = useState(null);
-  const favorites = favoriteToolIds || new Set();
-
-  const loadMoreTools = useCallback(async () => {
-      setIsLoading(true);
-      const paramsAsObject = Object.fromEntries(searchParams.entries());
-      const newTools = await fetchMoreTools({ page, searchParams: paramsAsObject });
-
-      if (newTools?.length) {
-          setPage(prev => prev + 1);
-          setTools(prev => {
-              const existingIds = new Set(prev.map(t => t.id));
-              const uniqueNewTools = newTools.filter(t => !existingIds.has(t.id));
-              return [...prev, ...uniqueNewTools];
-          });
-      } else {
-          setHasMore(false);
-      }
-
-      setIsLoading(false);
-  }, [page, searchParams]);
-
-  useEffect(() => {
-    if (inView && hasMore && !isLoading) loadMoreTools();
-  }, [inView, hasMore, isLoading, loadMoreTools]);
-
-  useEffect(() => {
-    setTools(initialTools);
-    setPage(1);
-    setHasMore(initialTools.length > 0);
-  }, [searchParams.toString()]);
-
-  return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {tools.map(tool => (
-          <ToolCard 
-            key={tool.id}
-            tool={tool}
-            user={user}
-            isFavorited={favorites.has(tool.id)}
-            onPreviewClick={setPreviewTool}
-          />
-        ))}
-      </div>
-
-      {hasMore && (
-        <div ref={ref} className="col-span-full mt-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <ToolCardSkeleton />
-                <ToolCardSkeleton />
-                <ToolCardSkeleton />
-            </div>
-        </div>
-      )}
-
-      {previewTool && (
-        <ToolPreviewDialog 
-            tool={previewTool}
-            isOpen={!!previewTool}
-            onClose={() => setPreviewTool(null)}
-        />
-      )}
-    </>
   );
 }
