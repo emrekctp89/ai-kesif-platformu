@@ -8,6 +8,7 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { PushNotificationManager } from "@/components/PushNotificationManager";
 import Footer from "@/components/Footer";
+import { Suspense } from 'react';
 
 const onest = Onest({
   subsets: ["latin"],
@@ -33,21 +34,22 @@ export default function RootLayout({ children }) {
           enableSystem
           disableTransitionOnChange
         >
-          <GoogleAnalytics />
+          {/* Analitik bileşenlerini Suspense ile sarın */}
+          <Suspense fallback={null}>
+            <GoogleAnalytics />
+            <Analytics />
+          </Suspense>
+          
           <TopLoader />
           <Toaster position="top-center" />
 
-          {/* İçerik */}
           <main className="flex-1 min-h-screen">
             <div className="container mx-auto p-4 md:p-6">{children}</div>
           </main>
-
-          {/* Footer kalıyor */}
+          
           <Footer />
-
           <AnnouncementBanner />
           <PushNotificationManager />
-          <Analytics />
         </ThemeProvider>
       </body>
     </html>
