@@ -99,7 +99,7 @@ export function HomepageClient({
 
       <div className="mt-12">
         <Suspense
-          key={searchParams.toString()}
+          // key={searchParams.toString()}
           fallback={<ToolsGridSkeleton />}
         >
           <InfiniteToolsList
