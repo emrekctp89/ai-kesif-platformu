@@ -6,18 +6,10 @@ import { SearchInput } from "@/components/SearchInput";
 import { FilterSheet } from "@/components/FilterSheet";
 import { InfiniteToolsList } from "@/components/InfiniteToolsList";
 import { ToolsGridSkeleton } from "@/components/ToolsGridSkeleton";
-import { Button } from "@/components/ui/button";
-import { Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function HomepageClient({
-  initialData,
-  searchParams: serverSearchParams,
-  discoverySections,
-}) {
-  // Sadece ihtiyacımız olan veriler
+function HomepageClientContent({ initialData, discoverySections }) {
   const { initialTools, categories, allTags } = initialData;
-
   const searchParams = useSearchParams();
 
   const hasActiveFilters = useMemo(() => {
@@ -41,9 +33,7 @@ export function HomepageClient({
         className="text-center pt-8 sticky top-16 bg-background/95 backdrop-blur-sm z-40 py-4 border-b"
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => {
-          if (!hasActiveFilters) {
-            setShowControls(false);
-          }
+          if (!hasActiveFilters) setShowControls(false);
         }}
       >
         <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
@@ -64,19 +54,6 @@ export function HomepageClient({
             >
               <SearchInput />
               <FilterSheet categories={categories} allTags={allTags} />
-
-              {/* burada keşif butonu vardı tüm araçlar kısmındaki keşif butonu */ }
-              {/*<Button  
-                variant="outline"
-                onClick={() => setShowDiscovery(!showDiscovery)}
-              >
-                {showDiscovery ? (
-                  <X className="mr-2 h-4 w-4" />
-                ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
-                )}
-                {showDiscovery ? "Keşfi Gizle" : "Keşfet"}
-              </Button>*/}
             </motion.div>
           )}
         </AnimatePresence>
@@ -98,10 +75,7 @@ export function HomepageClient({
       </AnimatePresence>
 
       <div className="mt-12">
-        <Suspense
-          // key={searchParams.toString()}
-          fallback={<ToolsGridSkeleton />}
-        >
+        <Suspense fallback={<ToolsGridSkeleton />}>
           <InfiniteToolsList
             initialTools={initialTools}
             searchParams={searchParams}
@@ -109,5 +83,14 @@ export function HomepageClient({
         </Suspense>
       </div>
     </div>
+  );
+}
+
+// Suspense boundary wrapper
+export function HomepageClient(props) {
+  return (
+    <Suspense fallback={<ToolsGridSkeleton />}>
+      <HomepageClientContent {...props} />
+    </Suspense>
   );
 }
