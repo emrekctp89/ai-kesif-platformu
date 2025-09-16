@@ -1,4 +1,3 @@
-// src/app/karsilastir/page.js
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import {
@@ -12,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
 import { ToolSelectForComparison } from "@/components/ToolSelectForComparison";
 import { AiComparison } from "@/components/AiComparison";
-import { Suspense } from "react";
 
 // URL'den gelen araç slug'larına göre verileri çeken fonksiyon
 async function getComparisonData(toolSlugs) {
@@ -78,12 +76,10 @@ export default async function ComparePage({ searchParams }) {
       </div>
 
       <div className="mb-8 flex justify-center">
-        <Suspense fallback={<div>Yükleniyor...</div>}>
-          <ToolSelectForComparison
-            allTools={allTools}
-            selectedSlugs={toolSlugs}
-          />
-        </Suspense>
+        <ToolSelectForComparison
+          allTools={allTools}
+          selectedSlugs={toolSlugs}
+        />
       </div>
 
       {/* AI Karşılaştırma Bölümü */}
@@ -95,6 +91,7 @@ export default async function ComparePage({ searchParams }) {
 
       {/* Karşılaştırma Tablosu */}
       {comparedTools.length > 0 ? (
+        // DEĞİŞİKLİK: Mobil için dikey, masaüstü için yatay grid yapısı
         <div
           className="space-y-8 md:space-y-0 md:grid md:gap-8"
           style={{
@@ -156,6 +153,7 @@ export default async function ComparePage({ searchParams }) {
             Lütfen karşılaştırmak için yukarıdan en az iki araç seçin.
           </p>
         </div>
+        
       )}
     </div>
   );

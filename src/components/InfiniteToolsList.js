@@ -1,17 +1,17 @@
-'use client'
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useSearchParams } from 'next/navigation';
 import { fetchMoreTools } from '@/app/actions';
 import Link from 'next/link';
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import FavoriteButton from '@/components/FavoriteButton';
-import { Star, Heart, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye } from 'lucide-react';
+import { Star, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Heart, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolCardSkeleton } from './ToolCardSkeleton';
 import { ToolPreviewDialog } from './ToolPreviewDialog';
-import { Button } from '@/components/ui/button';
 
 const tierStyles = {
   'Pro': { badge: "bg-purple-600 text-white hover:bg-purple-700", card: "border-purple-500/50 shadow-lg shadow-purple-500/10", icon: <Crown className="w-4 h-4 mr-1.5" /> },
@@ -19,48 +19,25 @@ const tierStyles = {
 };
 
 const platformIcons = {
-    Web: <Globe className="w-4 h-4" />,
-    iOS: <Apple className="w-4 h-4" />,
-    Android: <Bot className="w-4 h-4" />,
-    Windows: <Monitor className="w-4 h-4" />,
-    macOS: <Monitor className="w-4 h-4" />,
-    Linux: <Pen className="w-4 h-4" />,
-    'Chrome Uzantısı': <ShoppingCart className="w-4 h-4" />
+  Web: <Globe className="w-4 h-4" />,
+  iOS: <Apple className="w-4 h-4" />,
+  Android: <Bot className="w-4 h-4" />,
+  Windows: <Monitor className="w-4 h-4" />,
+  macOS: <Monitor className="w-4 h-4" />,
+  Linux: <Pen className="w-4 h-4" />,
+  'Chrome Uzantısı': <ShoppingCart className="w-4 h-4" />
 };
 
-// 🔹 Araç başına sabit rastgele değerler için cache
-const ratingCache = new Map();
-const favoritesCache = new Map();
-
+// Tek bir araç kartını yöneten bileşen
 function ToolCard({ tool, user, isFavorited, onPreviewClick }) {
   const isPremium = tool.tier === 'Pro' || tool.tier === 'Sponsorlu';
-
-  const averageRating =
-    typeof tool.average_rating === 'number'
-      ? tool.average_rating.toFixed(1)
-      : ratingCache.has(tool.id)
-        ? ratingCache.get(tool.id)
-        : (() => {
-            const val = (Math.random() * 5).toFixed(1);
-            ratingCache.set(tool.id, val);
-            return val;
-          })();
-
-  const totalFavorites =
-    typeof tool.total_favorites === 'number'
-      ? tool.total_favorites
-      : favoritesCache.has(tool.id)
-        ? favoritesCache.get(tool.id)
-        : (() => {
-            const val = Math.floor(Math.random() * 200) + 1;
-            favoritesCache.set(tool.id, val);
-            return val;
-          })();
 
   return (
     <div 
       onClick={() => onPreviewClick(tool)}
-      className={cn("bg-card border rounded-xl p-6 shadow-lg flex flex-col relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer group/card")}
+      className={cn(
+        "bg-card border rounded-xl p-6 shadow-lg flex flex-col relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer group/card"
+      )}
     >
       {user && (
         <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
@@ -75,17 +52,18 @@ function ToolCard({ tool, user, isFavorited, onPreviewClick }) {
           </Badge>
         )}
 
-        <h2 className="text-xl font-semibold text-card-foreground group-hover/card:text-primary transition-colors">
+        <h2 className="text-xl font-bold text-card-foreground group-hover/card:text-primary transition-colors">
           {tool.name}
         </h2>
 
+        {/* Kategori ve Etiket rozetleri */}
         <Link href={`/?category=${tool.category_slug}`} onClick={(e) => e.stopPropagation()} className="inline-block mt-2">
           <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground w-fit block hover:bg-primary hover:text-primary-foreground transition-colors">
             {tool.category_name}
           </span>
         </Link>
 
-        {tool.tags?.length > 0 && (
+        {tool.tags && tool.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 my-3">
             {tool.tags.map(tag => (
               <Link key={tag.id} href={`/?tags=${tag.id}`} onClick={(e) => e.stopPropagation()}>
@@ -114,11 +92,11 @@ function ToolCard({ tool, user, isFavorited, onPreviewClick }) {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
               <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              <span className="font-bold text-foreground">{averageRating}</span>
+              <span className="font-bold text-foreground">{tool.average_rating.toFixed(1)}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Heart className="w-4 h-4 text-red-500" />
-              <span className="font-bold text-foreground">{totalFavorites}</span>
+              <span className="font-bold text-foreground">{tool.total_favorites}</span>
             </div>
           </div>
           {tool.pricing_model && <Badge variant="default">{tool.pricing_model}</Badge>}
@@ -126,7 +104,9 @@ function ToolCard({ tool, user, isFavorited, onPreviewClick }) {
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-muted-foreground">
-            {tool.platforms?.map((p, index) => (<span key={`${tool.id}-${p}-${index}`} title={p}>{platformIcons[p] || null}</span>))}
+            {tool.platforms?.map((p, index) => (
+              <span key={`${tool.id}-${p}-${index}`} title={p}>{platformIcons[p] || null}</span>
+            ))}
           </div>
           <Button asChild size="sm" onClick={(e) => e.stopPropagation()}>
             <a href={tool.link} target="_blank" rel="noopener noreferrer">Ziyaret Et</a>
@@ -137,7 +117,7 @@ function ToolCard({ tool, user, isFavorited, onPreviewClick }) {
   );
 }
 
-// Sonsuz Kaydırma Listesi
+// Sonsuz kaydırma listesi
 export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
   const [tools, setTools] = useState(initialTools);
   const [page, setPage] = useState(1);
@@ -146,29 +126,30 @@ export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
   const { ref, inView } = useInView({ threshold: 0.5 });
   const searchParams = useSearchParams();
   const [previewTool, setPreviewTool] = useState(null);
-  const favorites = favoriteToolIds || new Set();
 
   const loadMoreTools = useCallback(async () => {
-      setIsLoading(true);
-      const paramsAsObject = Object.fromEntries(searchParams.entries());
-      const newTools = await fetchMoreTools({ page, searchParams: paramsAsObject });
+    setIsLoading(true);
+    const paramsAsObject = Object.fromEntries(searchParams.entries());
+    const newTools = await fetchMoreTools({ page, searchParams: paramsAsObject });
 
-      if (newTools?.length) {
-          setPage(prev => prev + 1);
-          setTools(prev => {
-              const existingIds = new Set(prev.map(t => t.id));
-              const uniqueNewTools = newTools.filter(t => !existingIds.has(t.id));
-              return [...prev, ...uniqueNewTools];
-          });
-      } else {
-          setHasMore(false);
-      }
+    if (newTools?.length) {
+      setPage(prev => prev + 1);
+      setTools(prev => {
+        const existingIds = new Set(prev.map(t => t.id));
+        const uniqueNewTools = newTools.filter(t => !existingIds.has(t.id));
+        return [...prev, ...uniqueNewTools];
+      });
+    } else {
+      setHasMore(false);
+    }
 
-      setIsLoading(false);
+    setIsLoading(false);
   }, [page, searchParams]);
 
   useEffect(() => {
-    if (inView && hasMore && !isLoading) loadMoreTools();
+    if (inView && hasMore && !isLoading) {
+      loadMoreTools();
+    }
   }, [inView, hasMore, isLoading, loadMoreTools]);
 
   useEffect(() => {
@@ -185,7 +166,7 @@ export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
             key={tool.id}
             tool={tool}
             user={user}
-            isFavorited={favorites.has(tool.id)}
+            isFavorited={favoriteToolIds.has(tool.id)}
             onPreviewClick={setPreviewTool}
           />
         ))}
@@ -193,19 +174,19 @@ export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
 
       {hasMore && (
         <div ref={ref} className="col-span-full mt-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <ToolCardSkeleton />
-                <ToolCardSkeleton />
-                <ToolCardSkeleton />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <ToolCardSkeleton />
+            <ToolCardSkeleton />
+            <ToolCardSkeleton />
+          </div>
         </div>
       )}
 
       {previewTool && (
         <ToolPreviewDialog 
-            tool={previewTool}
-            isOpen={!!previewTool}
-            onClose={() => setPreviewTool(null)}
+          tool={previewTool}
+          isOpen={!!previewTool}
+          onClose={() => setPreviewTool(null)}
         />
       )}
     </>
