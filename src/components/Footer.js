@@ -32,18 +32,7 @@ export default function Footer() {
                     <Link href="/kullanim-kosullari" className="text-sm font-medium hover:text-primary transition-colors">Kullanım Koşulları</Link>
                 </div>
 
-                {/* Sağ Taraf: Sosyal Medya İkonları */}
-                <div className="flex items-center gap-4">
-                    <SocialLink href="https://twitter.com">
-                        <Twitter className="h-5 w-5" />
-                    </SocialLink>
-                    <SocialLink href="https://github.com">
-                        <Github className="h-5 w-5" />
-                    </SocialLink>
-                    <SocialLink href="https://linkedin.com">
-                        <Linkedin className="h-5 w-5" />
-                    </SocialLink>
-                </div>
+                
             </div>
         </div>
     </footer>
