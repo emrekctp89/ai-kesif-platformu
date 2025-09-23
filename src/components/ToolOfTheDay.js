@@ -41,18 +41,12 @@ export async function ToolOfTheDay() {
             </h2>
             <p className="text-muted-foreground text-lg">{tool.description}</p>
             <div className="flex items-center gap-4 pt-2">
-              <Button asChild size="lg">
-                <Link href={`/tool/${tool.slug}`}>İncele & Keşfet</Link>
-              </Button>
-              <div className="flex items-center gap-1.5 text-sm">
-                <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                <span className="font-bold text-foreground">
-                  {tool.average_rating.toFixed(1)}
-                </span>
-                <span className="text-muted-foreground">
-                  ({tool.total_ratings} oy)
-                </span>
-              </div>
+              <Button asChild size="lg" className="bg-green-600 hover:bg-green-700">
+  <a href={tool.link} target="_blank" rel="noopener noreferrer">
+    İncele & Keşfet
+  </a>
+</Button>
+              
             </div>
           </div>
           {/* Sağ Taraf: Etiketler ve Kategori */}

@@ -69,8 +69,8 @@ export function FilterSheet({ categories, allTags }) {
       <SheetTrigger asChild>
         <Button variant="outline">
           <Filter className="mr-2 h-4 w-4" />
-          Filtrele & Sırala
-          {activeFilterCount > 0 && (
+          Filtrele 
+                    {activeFilterCount > 0 && (
             <Badge variant="secondary" className="ml-2">
               {activeFilterCount}
             </Badge>
@@ -85,13 +85,7 @@ export function FilterSheet({ categories, allTags }) {
           </SheetDescription>
         </SheetHeader>
         <div className="py-4 space-y-6">
-          <div className="space-y-2">
-            <Label>Sırala</Label>
-            <SortSelect
-              value={tempFilters.sort}
-              onValueChange={(v) => setTempFilters((f) => ({ ...f, sort: v }))}
-            />
-          </div>
+          
           <Separator />
           <div className="space-y-2">
             <Label>Kategori</Label>

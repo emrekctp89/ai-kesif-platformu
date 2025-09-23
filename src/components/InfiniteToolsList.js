@@ -88,19 +88,7 @@ function ToolCard({ tool, user, isFavorited, onPreviewClick }) {
       </div>
 
       <div className="mt-auto pt-4 border-t border-border space-y-3">
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              <span className="font-bold text-foreground">{tool.average_rating.toFixed(1)}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Heart className="w-4 h-4 text-red-500" />
-              <span className="font-bold text-foreground">{tool.total_favorites}</span>
-            </div>
-          </div>
-          {tool.pricing_model && <Badge variant="default">{tool.pricing_model}</Badge>}
-        </div>
+        
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-muted-foreground">

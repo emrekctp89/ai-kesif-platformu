@@ -50,7 +50,7 @@ export default async function HomePage({ searchParams }) {
     <div className="space-y-12">
       <ToolOfTheDay />
       <FeaturedTools />
-      <TrendingTools />
+
     </div>
   );
 
