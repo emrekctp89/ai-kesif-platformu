@@ -24,7 +24,7 @@ export default function Footer() {
                 </div>
 
                 {/* Orta: Sayfa Linkleri */}
-                <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+                <div className="flex flex-wrap justify-end gap-x-6 gap-y-2">
                     <Link href="/hakkimizda" className="text-sm font-medium hover:text-primary transition-colors">Hakkımızda</Link>
                     {/* YENİ: İletişim linki eklendi */}
                     <Link href="/iletisim" className="text-sm font-medium hover:text-primary transition-colors">İletişim</Link>
