@@ -77,8 +77,11 @@ export function FeaturedTools() {
             return (
               <CarouselItem key={tool.id} className="md:basis-1/2 lg:basis-1/3">
                 <div className="p-1 h-full">
-                  <Card className={cn("h-full group", isPremium && tierStyles[tool.tier]?.card)}>
-                    <CardContent className="relative flex flex-col items-start justify-between p-6 h-full">
+<Card className={cn(
+  "h-full group text-white border-none shadow-xl",
+  "bg-gradient-to-r from-[#7F00FF] via-[#00BFFF] to-[#FF1493] bg-[length:200%_200%] animate-[gradientShift_6s_ease_infinite]",
+  isPremium && tierStyles[tool.tier]?.card
+)}>                    <CardContent className="relative flex flex-col items-start justify-between p-6 h-full">
                       <div>
                         {isPremium && (
                           <Badge className={cn("mb-2 flex w-fit items-center", tierStyles[tool.tier]?.badge)}>
@@ -114,8 +117,14 @@ export function FeaturedTools() {
                           <Eye className="w-4 h-4 mr-2" />
                           Hızlı Bakış
                         </Button>
+                        
                       </div>
-
+                          <div className="flex items-center justify-between">
+                                  
+                                    <Button asChild size="sm" onClick={(e) => e.stopPropagation()}>
+                                      <a href={tool.link} target="_blank" rel="noopener noreferrer">Ziyaret Et</a>
+                                    </Button>
+                                  </div>
                   
                     </CardContent>
                   </Card>
