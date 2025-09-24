@@ -12,7 +12,7 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { CommandPalette } from "@/components/CommandPalette";
 import { CommandHint } from "@/components/CommandHint";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
-
+//
 // Yeni Karşılama Asistanı bileşenini import ediyoruz
 import { OnboardingAssistant } from "@/components/OnboardingAssistant";
 import { VoiceAgent } from "@/components/VoiceAgent";
