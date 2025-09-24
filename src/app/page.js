@@ -4,6 +4,8 @@ import { HomepageClient } from "@/components/HomepageClient";
 import { FeaturedTools } from "@/components/FeaturedTools";
 import { TrendingTools } from "@/components/TrendingTools";
 import { ToolOfTheDay } from "@/components/ToolOfTheDay";
+import { cn } from "../lib/utils.js";
+import { SpeedInsights } from "@vercel/speed-insights/next" 
 
 // Bu fonksiyon, sayfa için gerekli olan tüm verileri sunucuda tek seferde çeker.
 async function getPageData(searchParams) {

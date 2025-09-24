@@ -67,16 +67,20 @@ export function HomepageClient({
               <SearchInput />
               <FilterSheet categories={categories} allTags={allTags} />
               <Button
-                variant="outline"
-                onClick={() => setShowDiscovery(!showDiscovery)}
-              >
-                {showDiscovery ? (
-                  <X className="mr-2 h-4 w-4" />
-                ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
-                )}
-                {showDiscovery ? "Keşfi Gizle" : "Keşfet"}
-              </Button>
+  variant="outline"
+  onClick={() => setShowDiscovery(!showDiscovery)}
+  className="h-full group text-white border-none shadow-xl bg-gradient-to-r from-[#7F00FF] via-[#00BFFF] to-[#FF1493] bg-[length:200%_200%] animate-[gradientShift_6s_ease_infinite]"
+>
+  {showDiscovery ? (
+    <X className="mr-2 h-4 w-4" />
+  ) : (
+    <Sparkles className="mr-2 h-4 w-4" />
+  )}
+  {showDiscovery ? "Keşfi Gizle" : "Keşfet"}
+</Button>
+
+
+
             </motion.div>
           )}
         </AnimatePresence>
