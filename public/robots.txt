@@ -3,11 +3,11 @@ User-agent: *
 Allow: /
 
 # Admin ve kullanıcıya özel sayfaları tarama
-Disallow: /admin
-Disallow: /profile
-Disallow: /dashboard
-Disallow: /login
-Disallow: /signup
+#Disallow: /admin
+#Disallow: /profile
+#Disallow: /dashboard
+#Disallow: /login
+#Disallow: /signup
 
 # Site Haritası'nın konumunu belirt
-Sitemap: https://sizin-domain-adresiniz.com/sitemap.xml
+Sitemap: https://aikesif.com/sitemap.xml
