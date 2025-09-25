@@ -13,11 +13,10 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { sendFeedback } from "@/app/actions";
+import { Textarea } from "@/components/ui/textarea";
 import toast from "react-hot-toast";
-import { motion } from "framer-motion";
+import { sendFeedback } from "@/app/actions";
 import { MessageSquarePlus } from "lucide-react";
 
 export function FeedbackDialog() {
@@ -40,29 +39,16 @@ export function FeedbackDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        {/* Animasyonlu, kayan buton */}
-        <motion.div
-          initial={{ width: 0, opacity: 0 }}
-          animate={{ width: "auto", opacity: 1 }}
-          exit={{ width: 0, opacity: 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="overflow-hidden whitespace-nowrap"
-        >
-          <Button
-            variant="ghost"
-            className="h-full text-xs p-2 bg-primary/10 hover:bg-primary/20 text-primary"
-          >
-            <MessageSquarePlus className="h-4 w-4 mr-2" />
-            Geri Bildirim Gönder
-          </Button>
-        </motion.div>
+        <Button variant="outline" className="text-sm">
+          <MessageSquarePlus className="mr-2 h-4 w-4" />
+          Geri Bildirim Gönder
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Admin'e mesaj Gönder</DialogTitle>
+          <DialogTitle>Geri Bildirim</DialogTitle>
           <DialogDescription>
-            Platformu geliştirmemize yardımcı olacak bir sorun, istek veya
-            fikrinizi bizimle paylaşın.
+            Platformla ilgili görüşlerinizi veya yaşadığınız sorunları bizimle paylaşın.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -71,16 +57,30 @@ export function FeedbackDialog() {
           className="space-y-4 py-2"
         >
           <div className="space-y-2">
-            <Label htmlFor="feedback-content">Mesajınız</Label>
-            <Textarea
-              id="feedback-content"
-              name="feedback"
-              placeholder="Karşılaştığınız bir sorunu veya platformda görmek istediğiniz bir özelliği anlatın..."
+            <Label htmlFor="email">E-posta adresiniz</Label>
+            <input
+              type="email"
+              id="email"
+              name="email"
               required
               disabled={isPending}
+              placeholder="ornek@eposta.com"
+              className="w-full px-3 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="feedback">Mesajınız</Label>
+            <Textarea
+              id="feedback"
+              name="feedback"
+              required
+              disabled={isPending}
+              placeholder="Görüşünüzü veya yaşadığınız sorunu yazın..."
               className="min-h-[150px]"
             />
           </div>
+
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary" disabled={isPending}>
