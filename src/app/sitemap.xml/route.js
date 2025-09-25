@@ -17,7 +17,7 @@ export async function GET() {
   const urls = [
     { url: URL, lastModified: new Date().toISOString() },
     //{ url: `${URL}/blog`, lastModified: new Date().toISOString() },
-    { url: `${URL}/tavsiye`, lastModified: new Date().toISOString() },
+    //{ url: `${URL}/tavsiye`, lastModified: new Date().toISOString() },
     { url: `${URL}/hakkimizda`, lastModified: new Date().toISOString() },
     { url: `${URL}/iletisim`, lastModified: new Date().toISOString() },
     { url: `${URL}/gizlilik`, lastModified: new Date().toISOString() },
