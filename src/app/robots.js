@@ -12,15 +12,15 @@ export default function robots() {
       // Ana sayfa ve tüm alt sayfaları taramasına izin ver
       allow: "/",
       // Ancak bu özel sayfaları taramasını engelle
-      disallow: [
-        "/admin/",
-        "/dashboard/",
-        "/profile/",
-        "/login",
-        "/signup",
-        "/forgot-password",
-        "/reset-password",
-      ],
+     // disallow: [
+      //  "/admin/",
+      //  "/dashboard/",
+      //  "/profile/",
+      //  "/login",
+      //  "/signup",
+     //   "/forgot-password",
+       // "/reset-password",
+     // ],
     },
     // Site haritasının yerini de burada belirtiyoruz
     sitemap: `${URL}/sitemap.xml`,
