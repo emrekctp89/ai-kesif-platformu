@@ -19,6 +19,9 @@ import { createAdminClient } from "@/utils/supabase/admin"; // Özel admin istem
 import { WeeklyNewsletterEmail } from "@/components/emails/WeeklyNewsletterEmail";
 // Node'un renderToString fonksiyonunu kullanacağız
 import { render } from "@react-email/render";
+import * as cheerio from "cheerio";
+
+
 
 const ITEMS_PER_PAGE = 12; // Ana sayfadaki sayfa başına araç sayısıyla aynı olmalı
 
@@ -2447,26 +2450,60 @@ export async function uploadBlogImage(formData) {
   return { success: true, url: data.publicUrl };
 }
 
+// -----------------------------
+// DeepSearch ile popülerlik skorunu al
+// -----------------------------
+async function getPopularityScore(toolName) {
+  try {
+    const res = await fetch("https://api.jina.ai/deepsearch/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.DEEPSEARCH_API_KEY}`
+      },
+      body: JSON.stringify({
+        query: `${toolName} AI tool popularity`,
+        top_k: 5
+      })
+    });
+
+    const data = await res.json();
+    // Basit skor: dönen sonuç sayısı
+    return data?.hits?.length || 0;
+  } catch (err) {
+    console.error("DeepSearch error:", err.message);
+    return 0;
+  }
+}
+
+// -----------------------------
+// Araçları çek ve popülerlik skorunu ekle
+// -----------------------------
 export async function fetchMoreTools({ page = 0, searchParams }) {
   "use server";
 
   const supabase = createClient();
-  
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = user ? await supabase.from('profiles').select('stripe_price_id').eq('id', user.id).single() : { data: null };
-  const isProUser = !!profile?.stripe_price_id || (user && user.email === process.env.ADMIN_EMAIL);
 
-  // DEĞİŞİKLİK: Artık her zaman basit bir JavaScript objesi bekliyoruz
-  // ve parametreleri buna göre okuyoruz.
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = user 
+    ? await supabase.from("profiles")
+        .select("stripe_price_id")
+        .eq("id", user.id)
+        .single()
+    : { data: null };
+
+  const isProUser = !!profile?.stripe_price_id || 
+                    (user && user.email === process.env.ADMIN_EMAIL);
+
   const searchText = searchParams.search || null;
   const categorySlug = searchParams.category || null;
-  const sortBy = searchParams.sort || 'newest';
-  const tags = searchParams.tags ? searchParams.tags.split(',').map(Number) : [];
+  const sortBy = searchParams.sort || "newest";
+  const tags = searchParams.tags ? searchParams.tags.split(",").map(Number) : [];
   const pricingModel = searchParams.pricing || null;
-  const platforms = searchParams.platforms ? searchParams.platforms.split(',') : [];
+  const platforms = searchParams.platforms ? searchParams.platforms.split(",") : [];
   const tier = searchParams.tier || null;
 
-  const { data: tools, error } = await supabase.rpc('get_public_tools', {
+  const { data: tools, error } = await supabase.rpc("get_public_tools", {
     p_page: page,
     p_page_size: ITEMS_PER_PAGE,
     p_search_text: searchText,
@@ -2480,11 +2517,21 @@ export async function fetchMoreTools({ page = 0, searchParams }) {
   });
 
   if (error) {
-    console.error('Araç çekerken hata:', error.message);
+    console.error("Araç çekerken hata:", error.message);
     return [];
   }
 
-  return tools;
+  // -----------------------------
+  // Her tool için DeepSearch popülerlik skorunu ekle
+  // -----------------------------
+  const toolsWithPopularity = await Promise.all(
+    tools.map(async (tool) => {
+      const popularity = await getPopularityScore(tool.name);
+      return { ...tool, popularity_score: popularity };
+    })
+  );
+
+  return toolsWithPopularity;
 }
 
 // Bir varyantın "gösterim" (impression) sayısını artıran fonksiyon
@@ -4289,18 +4336,13 @@ async function getEmbeddingForText(text) {
 // }
 //}
 
-// Belirli bir kategori için AI ile yeni araçlar üreten ve onaya sunan fonksiyon
-export async function generateToolsWithAi(formData) {
+// -----------------------------
+// Deep search + AI araç üretimi
+// -----------------------------
+export async function generateToolsWithAi(formData, categories) {
   "use server";
 
-  const supabase = createClient(); // Artık doğru istemciyi kullanıyor
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user || user.email !== process.env.ADMIN_EMAIL) {
-    return { error: "Bu özelliği kullanmak için yetkiniz yok." };
-  }
-
+  const supabaseAdmin = createAdminClient();
   const categoryId = formData.get("categoryId");
   const categoryName = formData.get("categoryName");
 
@@ -4309,111 +4351,127 @@ export async function generateToolsWithAi(formData) {
   }
 
   try {
-    // 1. Adım: Gemini için özel prompt'u oluştur
-    const prompt = `
-        Sen, yapay zeka araçları konusunda uzman bir teknoloji araştırmacısısın. Görevin, sana verilen kategori için, internetteki en popüler ve GERÇEK 10 adet yapay zeka aracını bulmaktır. Her araç için kısa, dikkat çekici bir açıklama (description) ve aracın resmi web sitesinin linkini (link) bulmalısın.
-
-        KATEGORİ: "${categoryName}"
-
-        Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin veya açıklama ekleme. Linklerin geçerli ve çalışır olduğundan emin ol.
-    `;
-
-    // 2. Adım: Gemini API'sine isteği hazırla ve gönder
-    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
-    const payload = {
-      contents: chatHistory,
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "OBJECT",
-          properties: {
-            tools: {
-              type: "ARRAY",
-              description: "Bulunan 10 adet araç.",
-              items: {
-                type: "OBJECT",
-                properties: {
-                  name: { type: "STRING" },
-                  description: { type: "STRING" },
-                  link: { type: "STRING" },
-                },
-                required: ["name", "description", "link"],
-              },
-            },
-          },
-        },
-      },
-    };
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
-
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      return { error: `Yapay zeka modelinden hata alındı.` };
-    }
-
-    const result = await response.json();
-    if (!result.candidates?.[0]?.content?.parts?.[0]?.text) {
-      return {
-        error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı.",
-      };
-    }
-
-    const generatedTools = JSON.parse(
-      result.candidates[0].content.parts[0].text
-    ).tools;
-
-    // 3. Adım: Akıllı Veritabanı Entegrasyonu
-    const supabaseAdmin = createAdminClient();
+    // -----------------------------
+    // 1️⃣ Mevcut araçları DB'den al
+    // -----------------------------
     const { data: existingTools } = await supabaseAdmin
       .from("tools")
       .select("name, link");
-    const existingNames = new Set(
-      existingTools.map((t) => t.name.toLowerCase())
-    );
-    const existingLinks = new Set(existingTools.map((t) => t.link));
 
-    const newToolsToInsert = generatedTools.filter(
-      (tool) =>
-        !existingNames.has(tool.name.toLowerCase()) &&
-        !existingLinks.has(tool.link)
-    );
+    const existingNames = new Set(existingTools.map(t => t.name.toLowerCase()));
+    const existingLinks = new Set(existingTools.map(t => t.link));
 
-    if (newToolsToInsert.length > 0) {
-      const toolsWithSlug = newToolsToInsert.map((tool) => ({
-        name: tool.name,
-        description: tool.description,
-        link: tool.link,
-        slug: tool.name
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^a-z0-9-]/g, ""),
-        is_approved: false,
-        suggester_email: `ai-factory@${categoryName.toLowerCase()}.com`,
-        category_id: categoryId,
-      }));
+    // -----------------------------
+    // 2️⃣ Scraper ile web'den araçları çek
+    // -----------------------------
+    const scrapeTools = async () => {
+      const sources = [
+        `https://www.futurepedia.io/tools?category=${encodeURIComponent(categoryName)}`,
+        `https://theresanaiforthat.com/`,
+        `https://www.producthunt.com/topics/ai`
+      ];
 
-      const { error: insertError } = await supabaseAdmin
-        .from("tools")
-        .insert(toolsWithSlug);
-      if (insertError) throw insertError;
+      const scrapedTools = [];
+
+      for (const url of sources) {
+        try {
+          const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+          const html = await res.text();
+          const $ = cheerio.load(html);
+
+          $(".tool-card").each((_, el) => {
+            const name = $(el).find(".tool-name").text().trim();
+            const link = $(el).find("a").attr("href");
+            const description = $(el).find(".tool-description").text().trim();
+            if (name && link && !existingNames.has(name.toLowerCase()) && !existingLinks.has(link)) {
+              scrapedTools.push({ name, description, link });
+            }
+          });
+        } catch {}
+      }
+
+      return scrapedTools;
+    };
+
+    let newTools = await scrapeTools();
+
+    // -----------------------------
+    // 3️⃣ Eğer yeterli araç yoksa AI devreye girsin
+    // -----------------------------
+    if (newTools.length < 10) { // Minimum 10 araç garantisi
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+
+      // Zaten sitede olan araçları AI prompt'unda bildir
+      const existingList = existingTools.map(t => `- ${t.name}`).join("\n");
+
+      const prompt = `
+Sen, yapay zeka araçları konusunda uzman bir teknoloji araştırmacısısın.
+Görevin, "${categoryName}" kategorisi için internetteki popüler ve GERÇEK yapay zeka araçlarını bulmak.
+Aşağıdaki araçları ÜRETME, zaten sitede varlar:
+${existingList}
+
+Her araç için name, description ve link ver.
+Toplam 20 yeni araç üretmeye çalış.
+Cevabını SADECE JSON formatında ver:
+{ "tools": [ { "name": "...", "description": "...", "link": "..." } ] }
+      `;
+
+      const payload = {
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json" }
+      };
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (res.ok) {
+        const result = await res.json();
+        const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) {
+          const aiTools = JSON.parse(text).tools || [];
+          // AI'dan gelenleri mevcut listeden filtrele
+          newTools = [...newTools, ...aiTools.filter(t =>
+            !existingNames.has(t.name.toLowerCase()) &&
+            !existingLinks.has(t.link)
+          )];
+        }
+      }
     }
 
+    if (!newTools.length) return { error: "Yeni araç bulunamadı." };
+
+    // -----------------------------
+    // 4️⃣ DB'ye ekle
+    // -----------------------------
+    const toolsToInsert = newTools.map(tool => ({
+      name: tool.name,
+      description: tool.description,
+      link: tool.link,
+      slug: tool.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+      is_approved: false,
+      suggester_email: `ai-factory@${categoryName.toLowerCase()}.com`,
+      category_id: categoryId
+    }));
+
+    const { error: insertError } = await supabaseAdmin.from("tools").insert(toolsToInsert);
+    if (insertError) throw insertError;
+
     revalidatePath("/admin");
-    return { success: true, count: newToolsToInsert.length };
+    return { success: true, count: toolsToInsert.length };
   } catch (e) {
-    console.error("AI Araç Üretme fonksiyonunda hata:", e.message);
-    return { error: `Araçlar üretilirken beklenmedik bir hata oluştu.` };
+    console.error("DeepSearch AI Araç Hatası:", e.message);
+    return { error: "Araçlar üretilirken beklenmedik bir hata oluştu." };
   }
 }
+
+
 
 // Bir varyantı "kazanan" olarak uygulayan fonksiyon
 export async function applyWinningVariant(formData) {
