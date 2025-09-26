@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Twitter, Github, Linkedin } from 'lucide-react'
+import { Twitter, Github, Linkedin, Instagram } from 'lucide-react'
 
 // Sosyal Medya İkonları için bir alt bileşen
 const SocialLink = ({ href, children }) => (
@@ -13,28 +13,43 @@ export default function Footer() {
     <footer className="bg-card border-t border-border mt-12">
         <div className="container mx-auto px-4 py-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+                
                 {/* Sol Taraf: Logo ve Copyright */}
                 <div className="text-center md:text-left">
                     <Link href="/" className="text-xl font-bold tracking-tight text-foreground mb-2 block">
                         AI Keşif
                     </Link>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground mb-1">
                         © {new Date().getFullYear()} AI Keşif Platformu. Tüm hakları saklıdır.
+                    </p>
+
+                   
+
+                    {/* Tasarımcı bilgisi */}
+                    <p className="text-xs text-muted-foreground mt-1">
+                        by Emre KOCATEPE
                     </p>
                 </div>
 
                 {/* Orta: Sayfa Linkleri */}
                 <div className="flex flex-wrap justify-end gap-x-6 gap-y-2">
                     <Link href="/hakkimizda" className="text-sm font-medium hover:text-primary transition-colors">Hakkımızda</Link>
-                    {/* YENİ: İletişim linki eklendi */}
                     <Link href="/iletisim" className="text-sm font-medium hover:text-primary transition-colors">İletişim</Link>
                     <Link href="/gizlilik" className="text-sm font-medium hover:text-primary transition-colors">Gizlilik Politikası</Link>
                     <Link href="/kullanim-kosullari" className="text-sm font-medium hover:text-primary transition-colors">Kullanım Koşulları</Link>
                 </div>
 
-                
+                {/* Sağ Taraf: Sosyal ikonlar 
+                <div className="flex gap-4 mt-4 md:mt-0">
+                    <SocialLink href="https://twitter.com/your_twitter_username"><Twitter /></SocialLink>
+                    <SocialLink href="https://github.com/your_github_username"><Github /></SocialLink>
+                    <SocialLink href="https://linkedin.com/in/your_linkedin_username"><Linkedin /></SocialLink>
+                    <SocialLink href="https://instagram.com/your_instagram_username"><Instagram /></SocialLink>
+                </div> */}
+
             </div>
         </div>
     </footer>
   )
 }
+ 
