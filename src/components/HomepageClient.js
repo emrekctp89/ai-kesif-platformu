@@ -40,7 +40,9 @@ export function HomepageClient({
     <div className="space-y-12">
       {/* Üst Başlık ve Arama/Filtre Kontrolleri */}
       <div
-        className="text-center pt-8 sticky top-16 bg-background/95 backdrop-blur-sm z-40 py-4 border-b"
+        className="text-center sticky top-16 z-40 py-8 border-b 
+             bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => {
           if (!hasActiveFilters) {
