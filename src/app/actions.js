@@ -51,7 +51,7 @@ async function getEmbedding(text) {
     throw new Error(`Embedding API Hatası: ${errorMessage}`);
   }
 
-  // DEĞİŞİKLİK: 'result.embedding.value' yerine 'result.embedding.values' kullanıyoruz.
+  // DEĞİŞİKLİK: 'result.embedding.value' yerine 'result.embedding.values' kullanıyoruz..
   if (result.embedding?.values) {
       return result.embedding.values;
   } else {
