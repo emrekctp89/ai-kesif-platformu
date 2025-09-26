@@ -8,6 +8,8 @@ export async function GET() {
     { url: `${URL}/iletisim`, lastModified: new Date().toISOString() },
     { url: `${URL}/gizlilik`, lastModified: new Date().toISOString() },
     { url: `${URL}/kullanim-kosullari`, lastModified: new Date().toISOString() },
+    { url: `${URL}/submit`, lastModified: new Date().toISOString() },
+    { url: `${URL}/feedback`, lastModified: new Date().toISOString() },
   ];
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
