@@ -1,4 +1,4 @@
-const URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikesif.com";
+const URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.xn--aikeif-zjb.com";
 
 function withBase(path = "") {
   return `${URL.replace(/\/$/, "")}${path}`;
