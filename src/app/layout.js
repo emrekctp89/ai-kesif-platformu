@@ -21,6 +21,8 @@ import { PushNotificationManager } from "@/components/PushNotificationManager"; 
 
 import Link from "next/link";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import Canonical from "@/components/Canonical";
+
 
 const onest = Onest({
   subsets: ["latin"],
@@ -56,6 +58,7 @@ export default async function RootLayout({ children }) {
       <head>
         {/* YENİ: iOS cihazları için tema rengi */}
         <meta name="theme-color" content="#000000" />
+         <Canonical />
       </head>
       <body className={`${onest.className} bg-background text-foreground`}>
         <ThemeProvider
