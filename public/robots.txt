@@ -10,4 +10,4 @@ Disallow: /login
 Disallow: /signup
 
 # Site Haritası'nın konumunu belirt
-Sitemap: https://www.xn--aikeif-zjb.com/sitemap.xml
+Sitemap: https://aikesif.com/sitemap.xml
