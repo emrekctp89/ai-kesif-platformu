@@ -13,6 +13,7 @@ export async function GET() {
     { url: withBase("/kullanim-kosullari"), lastModified: new Date().toISOString() },
     { url: withBase("/submit"), lastModified: new Date().toISOString() },
     { url: withBase("/feedback"), lastModified: new Date().toISOString() },
+    { url: withBase("/tavsiye"), lastModified: new Date().toISOString() },
   ];
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
