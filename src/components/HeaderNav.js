@@ -110,12 +110,7 @@ export function HeaderNav({
               <Button asChild variant="secondary">
                 <Link href="/submit">Araç Öner</Link>
               </Button>
-              <Button
-            asChild
-            className="font-semibold text-white bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 bg-[size:300%_auto] animate-breathing-glow hover:opacity-90"
-          >
-            <Link href="/tavsiye">AI Tavsiye</Link>
-          </Button>
+              
 
 
             </div>
