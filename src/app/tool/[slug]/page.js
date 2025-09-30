@@ -51,9 +51,9 @@ async function getToolData(slug) {
   const supabase = createClient();
 
   // Kullanıcı bilgisi al
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+ // const {
+ //   data: { user },
+  //} = await supabase.auth.getUser();
 
   // Araç verisini çek
   const { data: tool, error } = await supabase
@@ -65,43 +65,43 @@ async function getToolData(slug) {
   if (error || !tool) notFound();
 
   // Kullanıcının profil bilgisi
-  const { data: profile } = user
-    ? await supabase
-        .from("profiles")
-        .select("stripe_price_id")
-        .eq("id", user.id)
-        .single()
-    : { data: null };
+  //const { data: profile } = user
+  //  ? await supabase
+  //      .from("profiles")
+   //     .select("stripe_price_id")
+  //      .eq("id", user.id)
+  //      .single()
+   // : { data: null };
 
-  const isProUser =
-    !!profile?.stripe_price_id || (user && user.email === process.env.ADMIN_EMAIL);
+  //const isProUser =
+   // !!profile?.stripe_price_id || (user && user.email === process.env.ADMIN_EMAIL);
 
   // Araca bağlı akademik makaleleri çek
-  const { data: papers } = await supabase.rpc("get_papers_for_tool", { p_tool_id: tool.id });
+  //const { data: papers } = await supabase.rpc("get_papers_for_tool", { p_tool_id: tool.id });
 
   // Favori kontrolü
-  const { data: favoriteRecord } = user
-    ? await supabase
-        .from("favorites")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("tool_id", tool.id)
-        .single()
-    : { data: null };
-  const isFavorited = !!favoriteRecord;
+  //const { data: favoriteRecord } = user
+  //  ? await supabase
+  //      .from("favorites")
+  //      .select("id")
+  //      .eq("user_id", user.id)
+ //       .eq("tool_id", tool.id)
+ //       .single()
+  //  : { data: null };
+ // const isFavorited = !!favoriteRecord;
 
   // Kullanıcının oy durumu
-  const { data: ratingRecord } = user
-    ? await supabase
-        .from("ratings")
-        .select("rating")
-        .eq("user_id", user.id)
-        .eq("tool_id", tool.id)
-        .single()
-    : { data: null };
-  const usersRating = ratingRecord?.rating || 0;
+ // const { data: ratingRecord } = user
+  //  ? await supabase
+  //      .from("ratings")
+  //      .select("rating")
+  //      .eq("user_id", user.id)
+  //      .eq("tool_id", tool.id)
+  //      .single()
+  //  : { data: null };
+ // const usersRating = ratingRecord?.rating || 0;
 
-  return { tool, usersRating, isFavorited, user, isProUser, papers };
+  return { tool  };
 }
 
 async function getRelatedGuides(toolId) {
