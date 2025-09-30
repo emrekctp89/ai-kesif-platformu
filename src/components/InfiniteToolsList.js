@@ -95,6 +95,15 @@ export default function ToolCard({ tool }) {
         <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
           <div className="flex items-center gap-2 text-muted-foreground">
             {/* platform ikonları */}
+            {tool.platforms && tool.platforms.slice(0, 3).map((platform) => (
+              <span key={platform} title={platform}>
+                {platformIcons[platform] || <Eye className="w-4 h-4" />}
+              </span>
+            ))}
+            {tool.platforms && tool.platforms.length > 3 && (
+              <span className="text-xs">+{tool.platforms.length - 3}</span>
+            )}
+            
           </div>
 
           {tool.link && (
