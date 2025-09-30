@@ -11,6 +11,7 @@ import FavoriteButton from '@/components/FavoriteButton';
 import { Star, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolCardSkeleton } from './ToolCardSkeleton';
+import { createClient } from '@/utils/supabase/client';
 // import { ToolPreviewDialog } from './ToolPreviewDialog';
 
 const tierStyles = {
