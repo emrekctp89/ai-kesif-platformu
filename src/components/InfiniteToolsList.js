@@ -61,6 +61,31 @@ export default function ToolCard({ tool }) {
         {/* Araç Adı */}
         <h2 className="text-xl font-bold">{tool.name}</h2>
 
+        {/* Kategori */}
+        <div className="my-2">
+          <Link href={`/?category=${tool.category_slug}`} className="inline-block">
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground w-fit hover:bg-primary hover:text-primary-foreground transition-colors"> 
+              {tool.category_name}
+            </span>
+          </Link>
+        </div>
+
+        {/* Etiketler */ }
+        {tool.tags && tool.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 my-3">
+            {tool.tags.map((tag) => ( 
+              <Link key={tag.id} href={`/?tags=${tag.id}`}>
+                <Badge
+                  variant="outline"
+                  className="hover:bg-accent hover:border-primary transition-colors"
+                >
+                  {tag.name}  
+                </Badge>
+              </Link>
+            ))}
+          </div>
+        )}
+
         {/* Açıklama */}
         <p className="text-muted-foreground text-sm mt-4 line-clamp-3 min-h-[72px]">
           {tool.description}
