@@ -176,11 +176,11 @@ export default async function ToolDetailPage({ params }) {
           <span className="bg-secondary text-secondary-foreground text-sm font-semibold px-3 py-1 rounded-full w-fit">
             {tool.category_name}
           </span>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+          {/*<div className="flex items-center gap-2 text-sm text-muted-foreground">
+             <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
             <span className="font-bold text-lg text-foreground">{tool.average_rating.toFixed(1)}</span>
             <span>({tool.total_ratings} oy)</span>
-          </div>
+          </div> */}
           {tool.pricing_model && <Badge variant="default">{tool.pricing_model}</Badge>}
           {tool.platforms && tool.platforms.length > 0 && (
             <div className="flex items-center gap-2 text-muted-foreground">
@@ -195,13 +195,13 @@ export default async function ToolDetailPage({ params }) {
 
         <div className="flex justify-between items-start">
           <h1 className="text-4xl md:text-5xl font-extrabold text-foreground pr-4">{tool.name}</h1>
-          {user && <FavoriteButton toolId={tool.id} toolSlug={tool.slug} isInitiallyFavorited={isFavorited} />}
+          {/*{user && <FavoriteButton toolId={tool.id} toolSlug={tool.slug} isInitiallyFavorited={isFavorited} />} */}
         </div>
         <p className="text-lg text-muted-foreground">{tool.description}</p>
 
         <div className="flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-border">
-          <StarRating toolId={tool.id} toolSlug={tool.slug} currentUsersRating={usersRating} />
-          {user && <SuggestToolForBounty toolId={tool.id} openBounties={openBounties} />}
+          {/*<StarRating toolId={tool.id} toolSlug={tool.slug} currentUsersRating={usersRating} /> */}
+          {/* {user && <SuggestToolForBounty toolId={tool.id} openBounties={openBounties} />} */}
           <Button asChild>
             <a href={tool.link} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
               Web Sitesini Ziyaret Et
@@ -212,7 +212,7 @@ export default async function ToolDetailPage({ params }) {
 
       <ScrollHint />
 
-      {/* 2. Paylaşım */}
+      {/* 2. Paylaşım 
       <section>
         <Card className="rounded-xl shadow-xl">
           <CardHeader>
@@ -225,7 +225,7 @@ export default async function ToolDetailPage({ params }) {
         </Card>
       </section>
 
-      {/* 5. İlgili Rehberler */}
+      {/* 5. İlgili Rehberler   
       {relatedGuides.length > 0 && (
         <section>
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
@@ -249,7 +249,7 @@ export default async function ToolDetailPage({ params }) {
         </section>
       )}
 
-      {/* Yorumlar ve Prompt'lar artık sekmeli bir yapıda */}
+      {/* Yorumlar ve Prompt'lar artık sekmeli bir yapıda 
       <Tabs defaultValue="comments" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="comments">Yorumlar</TabsTrigger>
@@ -273,7 +273,7 @@ export default async function ToolDetailPage({ params }) {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+      </Tabs> */}
 
       {/* 6. Benzer Araçlar */}
       <section>
