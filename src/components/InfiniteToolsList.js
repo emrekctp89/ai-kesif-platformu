@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { fetchMoreTools } from '@/app/actions';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import FavoriteButton from '@/components/FavoriteButton';
 import { Star, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolCardSkeleton } from './ToolCardSkeleton';
-import { ToolPreviewDialog } from './ToolPreviewDialog';
+// import { ToolPreviewDialog } from './ToolPreviewDialog';
 
 const tierStyles = {
   'Pro': { badge: "bg-purple-600 text-white hover:bg-purple-700", icon: <Crown className="w-4 h-4 mr-1.5" /> },
@@ -31,111 +31,62 @@ const platformIcons = {
 // -----------------------------
 // Tek bir araç kartı
 // -----------------------------
-function ToolCard({ tool, user, isFavorited, onPreviewClick }) {
-  if (!tool || !tool.name) return null; // Guard
+export default function ToolCard({ tool }) {
+  const router = useRouter();
+  if (!tool || !tool.name) return null;
 
   const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
 
   return (
-   <div
-  className={cn(
-    "relative p-6 rounded-xl border shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden",
-    {
-      "border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card": tool.tier === "Pro",
+    <div
+      onClick={() => router.push(`/tool/${tool.slug}`)}
+      className={cn(
+        "relative p-6 rounded-xl border shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden",
+        {
+           "border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card": tool.tier === "Pro",
       "border-amber-400/40 shadow-amber-400/20 hover:shadow-amber-500/40 bg-card": tool.tier === "Sponsorlu",
       // default AI araçlar için koyu lacivert tema
       "border-blue-800/50 shadow-blue-900/30 hover:shadow-blue-700/50 bg-blue-950": !tool.tier
-    }
-  )}
-  onClick={() => onPreviewClick(tool)}
->
-
-
-
-
-      {/* Favori Butonu */}
-      {/*{user && (
-        <div
-          className="absolute top-4 right-4 z-20"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <FavoriteButton
-            toolId={tool.id}
-            toolSlug={tool.slug}
-            isInitiallyFavorited={isFavorited}
-          />
-        </div>
-      )}*/}
-
+        }
+      )}
+    >
       <div className="flex flex-col h-full">
         {/* Premium Badge */}
         {isPremium && (
-          <Badge className={`mb-2 flex w-fit items-center px-3 py-1 rounded-full ${tierStyles[tool.tier]?.badge || "bg-gradient-to-r from-yellow-400 to-orange-500 text-white"}`}>
+         <Badge className={`mb-2 flex w-fit items-center px-3 py-1 rounded-full ${tierStyles[tool.tier]?.badge || "bg-gradient-to-r from-yellow-400 to-orange-500 text-white"}`}>
             {tierStyles[tool.tier]?.icon || <Star className="w-4 h-4 mr-1.5" />} {tool.tier}
           </Badge>
         )}
 
         {/* Araç Adı */}
-        <h2 className="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">
-          {tool.name}
-        </h2>
-
-        {/* Kategori */}
-        {tool.category_slug && (
-          <Link
-            href={`/?category=${tool.category_slug}`}
-            onClick={(e) => e.stopPropagation()}
-            className="inline-block mt-2"
-          >
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground transition-colors">
-              {tool.category_name}
-            </span>
-          </Link>
-        )}
-
-        {/* Etiketler */}
-        {tool.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-3">
-            {tool.tags.map(tag => (
-              <Link key={tag.id} href={`/?tags=${tag.id}`} onClick={(e) => e.stopPropagation()}>
-                <Badge className="text-xs px-2 py-0.5 rounded-full border hover:bg-accent hover:border-primary transition-colors">
-                  {tag.name}
-                </Badge>
-              </Link>
-            ))}
-          </div>
-        )}
+        <h2 className="text-xl font-bold">{tool.name}</h2>
 
         {/* Açıklama */}
         <p className="text-muted-foreground text-sm mt-4 line-clamp-3 min-h-[72px]">
           {tool.description}
         </p>
 
-        {/* Overlay Hızlı Bakış */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-25 transition-all duration-300">
-          <Button
-            onClick={(e) => { e.stopPropagation(); onPreviewClick(tool); }}
-            variant="secondary"
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <Eye className="w-4 h-4 mr-2" /> Hızlı Bakış
-          </Button>
-        </div>
-
-        {/* Footer: Platform ve Ziyaret Et */}
+        {/* Footer */}
         <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
           <div className="flex items-center gap-2 text-muted-foreground">
-            {tool.platforms?.map((p, index) => (
-              <span key={`${tool.id}-${p}-${index}`} title={p}>
-                {platformIcons[p] || null}
-              </span>
-            ))}
+            {/* platform ikonları */}
           </div>
+
           {tool.link && (
-            <Button asChild size="sm" className="hover:bg-primary/80 transition-colors">
-              <a href={tool.link} target="_blank" rel="noopener noreferrer" className="px-3 py-1 text-sm">
+            <Button
+              asChild
+              size="sm"
+              className="hover:bg-primary/80 transition-colors"
+              onClick={(e) => e.stopPropagation()} // Kart tıklamasını engelle
+            >
+              <Link
+                href={tool.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1 text-sm"
+              >
                 Ziyaret Et
-              </a>
+              </Link>
             </Button>
           )}
         </div>
@@ -143,6 +94,7 @@ function ToolCard({ tool, user, isFavorited, onPreviewClick }) {
     </div>
   );
 }
+
 
 // -----------------------------
 // Sonsuz Kaydırma Listesi
@@ -218,13 +170,13 @@ export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
         </div>
       )}
 
-      {previewTool && (
+      {/*{previewTool && (
         <ToolPreviewDialog
           tool={previewTool}
           isOpen={!!previewTool}
-          onClose={() => setPreviewTool(null)}
-        />
-      )}
+          onClose={() => setPreviewTool(null)} 
+        /> 
+      )}  */}
     </>
   );
 }
