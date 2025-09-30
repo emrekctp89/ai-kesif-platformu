@@ -148,10 +148,10 @@ export async function generateMetadata({ params }) {
 
 export default async function ToolDetailPage({ params }) {
   const { slug } = params;
-  const { tool, usersRating, isFavorited, user, isProUser, papers } = await getToolData(slug);
+  const { tool, usersRating, isFavorited, papers } = await getToolData(slug);
 
-  if (tool.tier === "Pro" && !isProUser) {
-    redirect("/uyelik");
+  if (!tool) {
+    notFound();
   }
 
   const relatedGuides = await getRelatedGuides(tool.id);
@@ -161,7 +161,6 @@ export default async function ToolDetailPage({ params }) {
   const shareTitle = `Bu harika AI aracını keşfet: ${tool.name}`;
 
   const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
-
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4 space-y-16">
       {/* 1. Araç Detayları */}
