@@ -30,24 +30,25 @@ const platformIcons = {
 };
 
 // -----------------------------
-// Tek bir araç kartı
+// Tek bir araç kartı (DÜZELTİLMİŞ HALİ)
 // -----------------------------
 export default function ToolCard({ tool }) {
-  const router = useRouter();
+  // router'a artık burada ihtiyacımız yok.
+  // const router = useRouter(); 
   if (!tool || !tool.name) return null;
 
   const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
 
+  // DEĞİŞİKLİK 1: Ana sarmalayıcıyı <div onClick> yerine <Link> yapın.
   return (
-    <div
-      onClick={() => router.push(`/tool/${tool.slug}`)}
+    <Link
+      href={`/tool/${tool.slug}`}
       className={cn(
-        "relative p-6 rounded-xl border shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden",
+        "relative block p-6 rounded-xl border shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden",
         {
-           "border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card": tool.tier === "Pro",
-      "border-amber-400/40 shadow-amber-400/20 hover:shadow-amber-500/40 bg-card": tool.tier === "Sponsorlu",
-      // default AI araçlar için koyu lacivert tema
-      "border-blue-800/50 shadow-blue-900/30 hover:shadow-blue-700/50 bg-blue-950": !tool.tier
+          "border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card": tool.tier === "Pro",
+          "border-amber-400/40 shadow-amber-400/20 hover:shadow-amber-500/40 bg-card": tool.tier === "Sponsorlu",
+          "border-blue-800/50 shadow-blue-900/30 hover:shadow-blue-700/50 bg-blue-950": !tool.tier
         }
       )}
     >
@@ -64,18 +65,28 @@ export default function ToolCard({ tool }) {
 
         {/* Kategori */}
         <div className="my-2">
-          <Link href={`/?category=${tool.category_slug}`} className="inline-block">
+          {/* DEĞİŞİKLİK 2: İçteki Link'e tıklamanın dış Link'i tetiklemesini engellemek için stopPropagation ekleyin. */}
+          <Link 
+            href={`/?category=${tool.category_slug}`} 
+            className="inline-block"
+            onClick={(e) => e.stopPropagation()}
+          >
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground w-fit hover:bg-primary hover:text-primary-foreground transition-colors"> 
               {tool.category_name}
             </span>
           </Link>
         </div>
 
-        {/* Etiketler */ }
+        {/* Etiketler */}
         {tool.tags && tool.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 my-3">
             {tool.tags.map((tag) => ( 
-              <Link key={tag.id} href={`/?tags=${tag.id}`}>
+              // DEĞİŞİKLİK 3: Etiket Link'lerine de stopPropagation ekleyin.
+              <Link 
+                key={tag.id} 
+                href={`/?tags=${tag.id}`}
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Badge
                   variant="outline"
                   className="hover:bg-accent hover:border-primary transition-colors"
@@ -104,15 +115,15 @@ export default function ToolCard({ tool }) {
             {tool.platforms && tool.platforms.length > 3 && (
               <span className="text-xs">+{tool.platforms.length - 3}</span>
             )}
-            
           </div>
 
+          {/* Ziyaret Et butonu zaten doğru yapılandırılmış, onClick={(e) => e.stopPropagation()} içeriyor. */}
           {tool.link && (
             <Button
               asChild
               size="sm"
               className="hover:bg-primary/80 transition-colors"
-              onClick={(e) => e.stopPropagation()} // Kart tıklamasını engelle
+              onClick={(e) => e.stopPropagation()} // Bu zaten vardı ve doğruydu.
             >
               <Link
                 href={tool.link}
@@ -126,9 +137,10 @@ export default function ToolCard({ tool }) {
           )}
         </div>
       </div>
-    </div>
+    </Link> // DEĞİŞİKLİK 4: div yerine Link'i kapatın.
   );
 }
+
 
 
 // -----------------------------
