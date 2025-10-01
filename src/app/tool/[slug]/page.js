@@ -57,12 +57,17 @@ async function getToolData(slug) {
 
   // Araç verisini çek
   const { data: tool, error } = await supabase
-    .from("tools_with_ratings")
+   // DEĞİŞİKLİK: 'tools_with_ratings' yerine 'tools' kullanın
+    .from("tools") 
+    //.from("tools_with_ratings")
     .select("*")
     .eq("slug", slug)
     .single();
 
-  if (error || !tool) notFound();
+  if (error || !tool) {
+    console.error("Hata veya araç bulunamadı:", { slug, error });
+    notFound();
+  }
 
   // Kullanıcının profil bilgisi
   //const { data: profile } = user
@@ -101,7 +106,7 @@ async function getToolData(slug) {
   //  : { data: null };
  // const usersRating = ratingRecord?.rating || 0;
 
-  return { tool  };
+  return { tool };
 }
 
 async function getRelatedGuides(toolId) {
