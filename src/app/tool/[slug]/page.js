@@ -50,58 +50,24 @@ const tierStyles = {
 async function getToolData(slug) {
   const supabase = createClient();
 
-  // Kullanıcı bilgisi al
- // const {
- //   data: { user },
-  //} = await supabase.auth.getUser();
-
-  // Araç verisini çek
   const { data: tool, error } = await supabase
     .from("tools_with_ratings")
     .select("*")
     .eq("slug", slug)
     .single();
 
+  // ---- HATA AYIKLAMA İÇİN EKLEDİĞİMİZ KOD ----
+  if (error) {
+    console.error("Supabase query error:", error.message);
+  }
+  if (!tool) {
+    console.log("Tool not found for slug:", slug);
+  }
+  // ------------------------------------------
+
   if (error || !tool) notFound();
 
-  // Kullanıcının profil bilgisi
-  //const { data: profile } = user
-  //  ? await supabase
-  //      .from("profiles")
-   //     .select("stripe_price_id")
-  //      .eq("id", user.id)
-  //      .single()
-   // : { data: null };
-
-  //const isProUser =
-   // !!profile?.stripe_price_id || (user && user.email === process.env.ADMIN_EMAIL);
-
-  // Araca bağlı akademik makaleleri çek
-  //const { data: papers } = await supabase.rpc("get_papers_for_tool", { p_tool_id: tool.id });
-
-  // Favori kontrolü
-  //const { data: favoriteRecord } = user
-  //  ? await supabase
-  //      .from("favorites")
-  //      .select("id")
-  //      .eq("user_id", user.id)
- //       .eq("tool_id", tool.id)
- //       .single()
-  //  : { data: null };
- // const isFavorited = !!favoriteRecord;
-
-  // Kullanıcının oy durumu
- // const { data: ratingRecord } = user
-  //  ? await supabase
-  //      .from("ratings")
-  //      .select("rating")
-  //      .eq("user_id", user.id)
-  //      .eq("tool_id", tool.id)
-  //      .single()
-  //  : { data: null };
- // const usersRating = ratingRecord?.rating || 0;
-
-  return { tool  };
+  return { tool };
 }
 
 async function getRelatedGuides(toolId) {
