@@ -37,6 +37,9 @@ export default function ToolCard({ tool }) {
   // const router = useRouter(); 
   if (!tool || !tool.name) return null;
 
+    console.log("Tool slug:", tool.slug, "Tool name:", tool.name);
+
+
   const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
 
   // DEĞİŞİKLİK 1: Ana sarmalayıcıyı <div onClick> yerine <Link> yapın.
