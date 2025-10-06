@@ -16,7 +16,11 @@ import { createClient } from '@/utils/supabase/client';
 
 const tierStyles = {
   'Pro': { badge: "bg-purple-600 text-white hover:bg-purple-700", icon: <Crown className="w-4 h-4 mr-1.5" /> },
-  'Sponsorlu': { badge: "bg-amber-500 text-white hover:bg-amber-600", icon: <Gem className="w-4 h-4 mr-1.5" /> }
+  'Sponsorlu': { badge: "bg-amber-500 text-white hover:bg-amber-600", icon: <Gem className="w-4 h-4 mr-1.5" /> },
+  'default': { 
+    badge: "bg-blue-900 text-white hover:bg-blue-800", 
+    icon: null // default araçlarda ikon yok
+  }
 };
 
 const platformIcons = {
