@@ -44,11 +44,11 @@ async redirects() {
         destination: '/',
         permanent: true,
       },
-      {
-        source: '/tool/:slug*', // EN ÖNEMLİSİ: Tüm araç detay sayfalarını kapat
-        destination: '/',
-        permanent: true,
-      },
+     // {
+       // source: '/tool/:slug*', // EN ÖNEMLİSİ: Tüm araç detay sayfalarını kapat
+      //  destination: '/',
+      //  permanent: true,
+    //  },
        {
         source: '/blog/:path*',
         destination: '/',
