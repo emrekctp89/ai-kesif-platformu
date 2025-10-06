@@ -55,7 +55,7 @@ export default function ToolCard({ tool }) {
         {
           "border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card": tool.tier === "Pro",
           "border-amber-400/40 shadow-amber-400/20 hover:shadow-amber-500/40 bg-card": tool.tier === "Sponsorlu",
-          "border-blue-800/50 shadow-blue-900/30 hover:shadow-blue-700/50 bg-blue-950": !tool.tier || !(tool.tier in tierStyles)
+          "bg-card": tool.tier === 'default' || !tool.tier
         }
       )}
     >
