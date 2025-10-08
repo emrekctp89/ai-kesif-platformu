@@ -52,7 +52,8 @@ export default async function HomePage({ searchParams }) {
     <div className="space-y-12">
       <ToolOfTheDay />
       <FeaturedTools />
-
+    {/* Burada Speed Insights'ı da ekliyoruz */}
+      <SpeedInsights url="https://your-website-url.com" />
     </div>
   );
 
