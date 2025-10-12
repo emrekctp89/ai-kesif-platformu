@@ -71,10 +71,10 @@ async redirects() {
         destination: '/',
         permanent: true
         },
-        { source: '/tavsiye',
-          destination: '/',
-          permanent: true
-        },
+        //{ source: '/tavsiye',
+         // destination: '/',
+          //permanent: true
+        //},
         { source: '/studyo',
           destination: '/',
           permanent: true
