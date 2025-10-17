@@ -24,26 +24,26 @@ async redirects() {
     return [
       // Artık var olmayan tüm eski sayfaları ana sayfaya yönlendiriyoruz.
       // Bu, SEO ve kullanıcı deneyimi için çok önemlidir.
-      {
-        source: '/login',
-        destination: '/',
-        permanent: true,
-      },
-      {
-        source: '/register',
-        destination: '/',
-        permanent: true,
-      },
+     // {
+    //    source: '/login',
+    //    destination: '/',
+    //    permanent: true,
+    //  },
+    //  {
+    //    source: '/register',
+    //    destination: '/',
+    //    permanent: true,
+    //  },
       {
         source: '/profile/:path*',
         destination: '/',
         permanent: true,
       },
-      {
-        source: '/dashboard',
-        destination: '/',
-        permanent: true,
-      },
+    //  {
+    //    source: '/dashboard',
+    //    destination: '/',
+    //    permanent: true,
+    //  },
      // {
        // source: '/tool/:slug*', // EN ÖNEMLİSİ: Tüm araç detay sayfalarını kapat
       //  destination: '/',
@@ -79,10 +79,10 @@ async redirects() {
           destination: '/',
           permanent: true
         },
-        { source: '/signup',
-          destination: '/',
-          permanent: true
-        },
+       // { source: '/signup',
+         // destination: '/',
+         // permanent: true
+      //  },
         { source: '/reset-password',
           destination: '/',
           permanent: true
@@ -91,10 +91,10 @@ async redirects() {
           destination: '/',
           permanent: true
         },
-        { source: '/profile',
-          destination: '/',
-          permanent: true
-        },
+       //// { source: '/profile',
+        ////  destination: '/',
+        //  permanent: true
+      //  },
         { source: '/ogren',
           destination: '/',
           permanent: true
@@ -135,10 +135,10 @@ async redirects() {
           destination: '/',
           permanent: true
         },
-        { source: '/auth/:callback*',
-          destination: '/',
-          permanent: true
-        },
+     //   { source: '/auth/:callback*',
+     //     destination: '/',
+    //      permanent: true
+    //    },
         { source: '/arastirma',
           destination: '/',
           permanent: true
