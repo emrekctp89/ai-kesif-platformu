@@ -24,11 +24,11 @@ async redirects() {
     return [
       // Artık var olmayan tüm eski sayfaları ana sayfaya yönlendiriyoruz.
       // Bu, SEO ve kullanıcı deneyimi için çok önemlidir.
-      {
-      source: '/login',
-        destination: '/',
-       permanent: true,
-      },
+     // {
+     // source: '/login',
+     //   destination: '/',
+   //    permanent: true,
+    //  },
       {
         source: '/register',
        destination: '/',
@@ -39,11 +39,11 @@ async redirects() {
         destination: '/',
         permanent: true,
       },
-      {
-        source: '/dashboard',
-       destination: '/',
-       permanent: true,
-      },
+     // {
+       // source: '/dashboard',
+      // destination: '/',
+      // permanent: true,
+      //},
      // {
        // source: '/tool/:slug*', // EN ÖNEMLİSİ: Tüm araç detay sayfalarını kapat
       //  destination: '/',
