@@ -25,7 +25,7 @@ function AiResponse({ data }) {
     // YENI: Geri bildirim gönderme fonksiyonu (örnek olarak)
     const handleFeedback = (isHelpful) => {
         toast.success(`Geri bildiriminiz için teşekkürler! ${isHelpful ? '👍' : '👎'}`);
-        // Burada geri bildirimi sunucuya gönderme işlemini gerçekleştirebilirsiniz.
+        // Burada geri bildirimi sunucuya gönderme işlemini gerçekleştirebilirsin.
     };
 
     return (
@@ -78,7 +78,7 @@ function AiResponse({ data }) {
 
 export function CoPilotClient() {
     const [messages, setMessages] = React.useState([
-        { role: 'ai', content: "Merhaba! Ben Admin Co-Pilot. Sitenizi geliştirmek için benden kod veya strateji isteyebilirsiniz." }
+        { role: 'ai', content: "Merhaba! Ben Admin Co-Pilot. Sitenizi geliştirmek için benden kod veya strateji isteyebilirsiniz.| *ben gemini 1.5 ile desteklenmiş bir dil modeliyim ve yaratıcımda admindir.*" }
     ]);
     const [input, setInput] = React.useState('');
     const [isPending, startTransition] = useTransition();
