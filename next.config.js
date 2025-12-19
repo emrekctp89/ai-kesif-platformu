@@ -15,7 +15,7 @@ const nextConfig = {
       },
     ],
   },
-  // 🔥 Burayı ekledik: ESLint hataları build'i durdurmasın
+  //  Burayı ekledik: ESLint hataları build'i durdurmasın
   eslint: {
     ignoreDuringBuilds: true,
   },
