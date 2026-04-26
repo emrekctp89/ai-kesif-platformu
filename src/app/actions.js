@@ -952,7 +952,6 @@ async function getAllToolsForAI() {
   return data;
 }
 
-// Ana Tavsiye Fonksiyonu
 export async function getAiRecommendation(userPrompt) {
   "use server";
 
@@ -961,102 +960,113 @@ export async function getAiRecommendation(userPrompt) {
   }
 
   try {
-    // 1. Adım: Veritabanından tüm araçları çek
     const allTools = await getAllToolsForAI();
+
     if (allTools.length === 0) {
       return { success: false, error: "Veritabanında hiç araç bulunamadı." };
     }
 
-    // 2. Adım: Gemini için özel prompt'u oluştur
     const formattedTools = allTools
       .map((t) => `- ${t.name} (${t.slug}): ${t.description}`)
       .join("\n");
+
     const prompt = `
-          Bir "AI Araçları Keşif Platformu" için tavsiye motorusun. Kullanıcının isteğine göre, aşağıdaki listeden en uygun 3 aracı seçmelisin.
-          
-          Kullanıcının isteği: "${userPrompt}"
+Bir "AI Araçları Keşif Platformu" için tavsiye motorusun.
 
-          Mevcut Araç Listesi:
-          ${formattedTools}
+Kullanıcının isteği: "${userPrompt}"
 
-          Görevin: Kullanıcının isteğine en uygun 3 aracı seçmek ve her biri için neden uygun olduğunu TEK bir cümle ile açıklamaktır. Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin ekleme.
-      `;
+Araç listesi:
+${formattedTools}
 
-    // 3. Adım: Gemini'den yapılandırılmış JSON cevabı isteme
-    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+SADECE JSON döndür:
+{
+  "recommendations": [
+    { "name": "", "slug": "", "reason": "" }
+  ]
+}
+`;
+
     const payload = {
-      contents: chatHistory,
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: {
-          type: "OBJECT",
-          properties: {
-            recommendations: {
-              type: "ARRAY",
-              items: {
-                type: "OBJECT",
-                properties: {
-                  name: { type: "STRING" },
-                  slug: { type: "STRING" },
-                  reason: { type: "STRING" },
-                },
-                required: ["name", "slug", "reason"],
-              },
-            },
-          },
-        },
       },
     };
 
-    const apiKey = process.env.GEMINI_API_KEY; // Bu boş kalacak, Canvas çalışma zamanında kendi anahtarını kullanacak.
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    console.log("🔑 API KEY VAR MI:", !!apiKey);
+
     if (!apiKey) {
       return { success: false, error: "Gemini API anahtarı bulunamadı." };
     }
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-    // 4. Adım: Gemini API'ye isteği gönder
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }
+    );
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("Gemini API Hatası:", errorBody);
+
+      console.error("❌ Gemini API Hatası:", {
+        status: response.status,
+        body: errorBody,
+      });
+
       return {
         success: false,
-        error: `Yapay zeka modelinden bir hata alındı. (Status: ${response.status})`,
+        error: `Gemini hata verdi (${response.status})`,
       };
     }
 
     const result = await response.json();
 
-    // 5. Adım: Gelen cevabı işle ve döndür
-    if (
-      result.candidates &&
-      result.candidates[0].content &&
-      result.candidates[0].content.parts[0].text
-    ) {
-      const textResponse = result.candidates[0].content.parts[0].text;
-      const parsedJson = JSON.parse(textResponse);
-      return { success: true, data: parsedJson.recommendations };
-    } else {
+    console.log("📦 RAW RESPONSE:", JSON.stringify(result, null, 2));
+
+    const textResponse =
+      result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!textResponse) {
+      console.error("❌ Beklenen veri yok:", result);
+
       return {
         success: false,
-        error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı.",
+        error: "Beklenen formatta cevap yok",
       };
     }
+
+    let parsedJson;
+
+    try {
+      parsedJson = JSON.parse(textResponse);
+    } catch (err) {
+      console.error("❌ JSON parse hatası:", err);
+      console.error("📄 Gelen text:", textResponse);
+
+      return {
+        success: false,
+        error: "JSON parse edilemedi",
+      };
+    }
+
+    return {
+      success: true,
+      data: parsedJson.recommendations || [],
+    };
   } catch (e) {
-    console.error("Tavsiye fonksiyonunda genel hata:", e);
+    console.error("🔥 GENEL HATA:", e);
+
     return {
       success: false,
-      error: "Tavsiye alınırken beklenmedik bir hata oluştu.",
+      error: "Beklenmedik hata oluştu",
     };
   }
 }
-
 export async function sendContactMessage(formData) {
   "use server";
 
