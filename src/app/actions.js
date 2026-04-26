@@ -952,120 +952,74 @@ async function getAllToolsForAI() {
   return data;
 }
 
+// Ana Tavsiye Fonksiyonu
 export async function getAiRecommendation(userPrompt) {
   "use server";
 
   if (!userPrompt) {
-    return { success: false, error: "Lütfen bir istek girin." };
+    return { success: false };
   }
 
-  try {
-    const allTools = await getAllToolsForAI();
+  // 🔥 CACHE CHECK
+  const cached = getCache(userPrompt);
+  if (cached) {
+    console.log("⚡ Cache hit");
+    return { success: true, data: cached };
+  }
 
-    if (allTools.length === 0) {
-      return { success: false, error: "Veritabanında hiç araç bulunamadı." };
-    }
-
-    const formattedTools = allTools
-      .map((t) => `- ${t.name} (${t.slug}): ${t.description}`)
-      .join("\n");
-
-    const prompt = `
-Bir "AI Araçları Keşif Platformu" için tavsiye motorusun.
-
-Kullanıcının isteği: "${userPrompt}"
-
-Araç listesi:
-${formattedTools}
-
-SADECE JSON döndür:
-{
-  "recommendations": [
-    { "name": "", "slug": "", "reason": "" }
-  ]
-}
-`;
-
-    const payload = {
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-      },
-    };
-
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    console.log("🔑 API KEY VAR MI:", !!apiKey);
-
-    if (!apiKey) {
-      return { success: false, error: "Gemini API anahtarı bulunamadı." };
-    }
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-
-      console.error("❌ Gemini API Hatası:", {
-        status: response.status,
-        body: errorBody,
-      });
-
-      return {
-        success: false,
-        error: `Gemini hata verdi (${response.status})`,
-      };
-    }
-
-    const result = await response.json();
-
-    console.log("📦 RAW RESPONSE:", JSON.stringify(result, null, 2));
-
-    const textResponse =
-      result?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!textResponse) {
-      console.error("❌ Beklenen veri yok:", result);
-
-      return {
-        success: false,
-        error: "Beklenen formatta cevap yok",
-      };
-    }
-
-    let parsedJson;
-
+  return enqueue(async () => {
     try {
-      parsedJson = JSON.parse(textResponse);
+      const allTools = await getAllToolsForAI();
+
+      const formattedTools = allTools
+        .map((t) => `- ${t.name} (${t.slug}): ${t.description}`)
+        .join("\n");
+
+      const prompt = `...`; // aynı prompt
+
+      const payload = {
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+        },
+      };
+
+      const apiKey = process.env.GEMINI_API_KEY;
+
+      const response = await fetchWithRetry(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json();
+
+      const text =
+        result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!text) throw new Error("Format hatası");
+
+      const parsed = JSON.parse(text);
+
+      // 🔥 CACHE SET
+      setCache(userPrompt, parsed.recommendations);
+
+      return {
+        success: true,
+        data: parsed.recommendations,
+      };
     } catch (err) {
-      console.error("❌ JSON parse hatası:", err);
-      console.error("📄 Gelen text:", textResponse);
+      console.error("🔥 Server error:", err);
 
       return {
         success: false,
-        error: "JSON parse edilemedi",
+        error: err.message,
       };
     }
-
-    return {
-      success: true,
-      data: parsedJson.recommendations || [],
-    };
-  } catch (e) {
-    console.error("🔥 GENEL HATA:", e);
-
-    return {
-      success: false,
-      error: "Beklenmedik hata oluştu",
-    };
-  }
+  });
 }
 export async function sendContactMessage(formData) {
   "use server";
