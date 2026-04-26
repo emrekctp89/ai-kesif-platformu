@@ -16,25 +16,57 @@ export default function RecommendationPage() {
   const [isPending, startTransition] = useTransition();
 
   // Bu fonksiyon, form gönderildiğinde çalışır
-  const handleFormSubmit = (formData) => {
-    const userPrompt = formData.get("prompt");
-    if (!userPrompt) {
-      toast.error("Lütfen bir istek girin.");
-      return;
-    }
+ // const handleFormSubmit = (formData) => {
+   // const userPrompt = formData.get("prompt");
+   // if (!userPrompt) {
+     // toast.error("Lütfen bir istek girin.");
+     // return;
+   // }
 
     // Yükleme durumunu başlat
-    startTransition(async () => {
+   // startTransition(async () => {
+     // const result = await getAiRecommendation(userPrompt);
+     // if (result.success) {
+       // setRecommendations(result.data);
+     // } else {
+       // toast.error(result.error || "Tavsiye alınırken bir hata oluştu.");
+       // setRecommendations([]);
+     // }
+   // });
+ // };
+
+  const handleFormSubmit = (formData) => {
+  const userPrompt = formData.get("prompt");
+
+  console.log("📥 Form gönderildi:", userPrompt);
+
+  if (!userPrompt) {
+    toast.error("Lütfen bir istek girin.");
+    return;
+  }
+
+  startTransition(async () => {
+    try {
+      console.log("🚀 AI isteği başlıyor...");
+
       const result = await getAiRecommendation(userPrompt);
+
+      console.log("✅ Gelen sonuç:", result);
+
       if (result.success) {
         setRecommendations(result.data);
       } else {
+        console.error("❌ API hata:", result.error);
         toast.error(result.error || "Tavsiye alınırken bir hata oluştu.");
         setRecommendations([]);
       }
-    });
-  };
-
+    } catch (err) {
+      console.error("🔥 Beklenmeyen hata:", err);
+      toast.error("Sistem hatası oluştu.");
+      setRecommendations([]);
+    }
+  });
+};
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
       <div className="text-center mb-10">
