@@ -32,19 +32,19 @@ export function AnnouncementBanner() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 100 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="fixed bottom-0 left-0 right-0 z-50 p-4"
+          className="fixed bottom-0 left-0 right-0 z-50 p-2 sm:p-4"
         >
           <div className="container mx-auto">
             <div
-              className="flex items-center justify-between gap-4 rounded-lg border bg-background/95 p-4 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/60"
+              className="flex items-start justify-between gap-2 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:items-center sm:gap-4 sm:p-4"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 p-2 rounded-full">
+              <div className="flex min-w-0 items-start gap-2 sm:items-center sm:gap-3">
+                <div className="hidden rounded-full bg-primary/10 p-2 sm:block">
                   <Megaphone className="h-5 w-5 text-primary" />
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="line-clamp-3 text-xs leading-5 text-muted-foreground sm:line-clamp-none sm:text-sm">
                   <span className="font-semibold text-foreground">
                     Geliştirme Notu:
                   </span>{" "}
@@ -53,9 +53,11 @@ export function AnnouncementBanner() {
                   varsa, bizimle paylaşmaktan çekinmeyin!
                 </p>
                 {/* DEĞİŞİKLİK: Geri bildirim butonu fare üzerine gelince görünüyor */}
+                <div className="hidden sm:block">
                 <AnimatePresence>
                   {isHovered && <FeedbackDialog />}
                 </AnimatePresence>
+                </div>
               </div>
               <Button
                 onClick={handleDismiss}

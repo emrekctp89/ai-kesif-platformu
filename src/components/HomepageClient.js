@@ -26,7 +26,7 @@ export function HomepageClient({
   }, [searchParams]);
 
   const [showDiscovery, setShowDiscovery] = useState(!hasActiveFilters);
-  const [showControls, setShowControls] = useState(hasActiveFilters);
+  const [showControls] = useState(true);
 
   useEffect(() => {
     if (hasActiveFilters) {
@@ -39,31 +39,24 @@ export function HomepageClient({
     <div className="space-y-12">
       {/* Üst Başlık ve Arama/Filtre Kontrolleri */}
       <div
-        className="text-center sticky top-16 z-40 py-8 border-b 
+        className="sticky top-16 z-40 border-b py-4 text-center sm:py-6 md:py-8
              bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-
-        onMouseEnter={() => setShowControls(true)}
-        onMouseLeave={() => {
-          if (!hasActiveFilters) {
-            setShowControls(false);
-          }
-        }}
       >
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl">
           Tüm Araçlar
         </h1>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mx-auto mt-1 max-w-xl text-sm text-muted-foreground sm:mt-2 sm:text-base">
           Yapay zeka dünyasını keşfedin veya aradığınızı anında bulun.
         </p>
 
         {showControls && (
-            <div className="flex justify-center items-center gap-4 mt-6 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="mt-4 flex flex-col items-stretch justify-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 sm:flex-row sm:items-center sm:gap-3 md:mt-6">
               <SearchInput />
               <FilterSheet categories={categories} allTags={allTags} />
               <Button
   variant="outline"
   onClick={() => setShowDiscovery(!showDiscovery)}
-  className="h-full group text-white border-none shadow-xl bg-gradient-to-r from-[#7F00FF] via-[#00BFFF] to-[#FF1493] bg-[length:200%_200%] animate-[gradientShift_6s_ease_infinite]"
+  className="h-10 w-full group text-white border-none shadow-xl bg-gradient-to-r from-[#7F00FF] via-[#00BFFF] to-[#FF1493] bg-[length:200%_200%] animate-[gradientShift_6s_ease_infinite] sm:w-auto"
 >
   {showDiscovery ? (
     <X className="mr-2 h-4 w-4" />

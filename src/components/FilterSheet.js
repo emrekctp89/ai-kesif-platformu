@@ -67,7 +67,7 @@ export function FilterSheet({ categories, allTags }) {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" className="h-10 w-full sm:w-auto">
           <Filter className="mr-2 h-4 w-4" />
           Filtrele 
                     {activeFilterCount > 0 && (
@@ -77,7 +77,7 @@ export function FilterSheet({ categories, allTags }) {
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+      <SheetContent side="left" className="w-[92vw] max-w-[400px] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Filtreler</SheetTitle>
           <SheetDescription>
@@ -125,7 +125,7 @@ export function FilterSheet({ categories, allTags }) {
             />
           </div>
         </div>
-        <SheetFooter>
+        <SheetFooter className="gap-2 pb-4">
           <SheetClose asChild>
             <Button
               type="button"
