@@ -72,7 +72,7 @@ export default function ToolCard({ tool }) {
         <div className="my-2">
           {/* DEĞİŞİKLİK 2: İçteki Link'e tıklamanın dış Link'i tetiklemesini engellemek için stopPropagation ekleyin. */}
           <Link 
-            href={`/?category=${tool.category_slug}`} 
+            href={`/kategori/${tool.category_slug}`}
             className="inline-block"
             onClick={(e) => e.stopPropagation()}
           >
@@ -151,7 +151,12 @@ export default function ToolCard({ tool }) {
 // -----------------------------
 // Sonsuz Kaydırma Listesi
 // -----------------------------
-export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
+export function InfiniteToolsList({
+  initialTools,
+  user,
+  favoriteToolIds,
+  fixedSearchParams,
+}) {
   const [tools, setTools] = useState(initialTools || []);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialTools?.length > 0);
@@ -164,7 +169,10 @@ export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
   const loadMoreTools = useCallback(async () => {
     setIsLoading(true);
 
-    const paramsAsObject = Object.fromEntries(searchParams.entries());
+    const paramsAsObject = {
+      ...Object.fromEntries(searchParams.entries()),
+      ...fixedSearchParams,
+    };
 
     try {
       const newTools = await fetchMoreTools({ page, searchParams: paramsAsObject });
@@ -185,7 +193,7 @@ export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
     } finally {
       setIsLoading(false);
     }
-  }, [page, searchParams]);
+  }, [fixedSearchParams, page, searchParams]);
 
   useEffect(() => {
     if (inView && hasMore && !isLoading) {

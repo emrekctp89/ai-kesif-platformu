@@ -13,6 +13,9 @@ export function HomepageClient({
   initialData,
   searchParams: serverSearchParams,
   discoverySections,
+  pageTitle = "Tüm Araçlar",
+  pageDescription = "Yapay zeka dünyasını keşfedin veya aradığınızı anında bulun.",
+  fixedSearchParams,
 }) {
   const { user, favoriteToolIds, initialTools, categories, allTags } =
     initialData;
@@ -21,9 +24,13 @@ export function HomepageClient({
 
   // Herhangi bir filtrenin aktif olup olmadığını kontrol ediyoruz.
   const hasActiveFilters = useMemo(() => {
+    if (fixedSearchParams && Object.keys(fixedSearchParams).length > 0) {
+      return true;
+    }
+
     const keys = Array.from(searchParams.keys());
     return keys.some((key) => key !== "page");
-  }, [searchParams]);
+  }, [fixedSearchParams, searchParams]);
 
   const [showDiscovery, setShowDiscovery] = useState(!hasActiveFilters);
   const [showControls] = useState(true);
@@ -31,7 +38,6 @@ export function HomepageClient({
   useEffect(() => {
     if (hasActiveFilters) {
       setShowDiscovery(false);
-      setShowControls(true);
     }
   }, [hasActiveFilters]);
 
@@ -43,10 +49,10 @@ export function HomepageClient({
              bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
         <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl">
-          Tüm Araçlar
+          {pageTitle}
         </h1>
         <p className="mx-auto mt-1 max-w-xl text-sm text-muted-foreground sm:mt-2 sm:text-base">
-          Yapay zeka dünyasını keşfedin veya aradığınızı anında bulun.
+          {pageDescription}
         </p>
 
         {showControls && (
@@ -89,6 +95,7 @@ export function HomepageClient({
           <InfiniteToolsList
             initialTools={initialTools}
             searchParams={searchParams}
+            fixedSearchParams={fixedSearchParams}
             user={user}
             favoriteToolIds={favoriteToolIds}
           />
