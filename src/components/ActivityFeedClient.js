@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client"; // İstemci tarafı client'ını kullanıyoruz
 import { fetchActivityFeed } from "@/app/actions";
 import Link from "next/link";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, MessageSquare, Star, Image as ImageIcon } from "lucide-react";
@@ -92,9 +93,11 @@ const eventComponents = {
           {new Date(event.event_time).toLocaleDateString("tr-TR")}
         </time>
       </div>
-      <img
+      <Image
         src={event.details.item_image_url}
         alt={event.details.item_title}
+        width={48}
+        height={48}
         className="w-12 h-12 object-cover rounded-md ml-auto"
       />
     </CardContent>

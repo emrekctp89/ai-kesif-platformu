@@ -1,52 +1,72 @@
-// src/app/sitemap.xml/route.js
-import { createClient } from "../../utils/supabase/actions.js";
+import { createClient } from "@supabase/supabase-js";
 
-const URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com/";
+const SITE_URL = new URL(
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com"
+).origin;
+
+export const revalidate = 3600;
 
 function withBase(path = "") {
-  return `${URL.replace(/\/$/, "")}${path}`;
+  return `${SITE_URL}${path}`;
+}
+
+function escapeXml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
 }
 
 export async function GET() {
-  const supabase = createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    }
+  );
 
-  // 1. Araçları çek
   const { data: tools, error } = await supabase
     .from("tools")
-    .select("slug, updated_at");
+    .select("slug, updated_at")
+    .eq("is_approved", true)
+    .not("slug", "is", null);
 
   if (error) {
     console.error("Araçlar alınamadı:", error);
   }
 
-  // 2. Statik sayfalar
+  const generatedAt = new Date().toISOString();
   const urls = [
-    { url: withBase("/"), lastModified: new Date().toISOString() },
-    { url: withBase("/hakkimizda"), lastModified: new Date().toISOString() },
-    { url: withBase("/iletisim"), lastModified: new Date().toISOString() },
-    { url: withBase("/gizlilik"), lastModified: new Date().toISOString() },
-    { url: withBase("/kullanim-kosullari"), lastModified: new Date().toISOString() },
-    { url: withBase("/submit"), lastModified: new Date().toISOString() },
-    { url: withBase("/feedback"), lastModified: new Date().toISOString() },
+    { url: withBase("/"), lastModified: generatedAt },
+    { url: withBase("/tavsiye"), lastModified: generatedAt },
+    { url: withBase("/hakkimizda"), lastModified: generatedAt },
+    { url: withBase("/iletisim"), lastModified: generatedAt },
+    { url: withBase("/gizlilik"), lastModified: generatedAt },
+    { url: withBase("/kullanim-kosullari"), lastModified: generatedAt },
+    { url: withBase("/submit"), lastModified: generatedAt },
   ];
 
-  // 3. Dinamik araç sayfalarını ekle
   tools?.forEach((tool) => {
     urls.push({
       url: withBase(`/tool/${tool.slug}`),
-      lastModified: tool.updated_at || new Date().toISOString(),
+      lastModified: tool.updated_at || generatedAt,
     });
   });
 
-  // 4. XML oluştur
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls
     .map(
       ({ url, lastModified }) => `
   <url>
-    <loc>${url}</loc>
-    <lastmod>${lastModified}</lastmod>
+    <loc>${escapeXml(url)}</loc>
+    <lastmod>${escapeXml(lastModified)}</lastmod>
   </url>`
     )
     .join("")}
@@ -54,7 +74,9 @@ ${urls
 
   return new Response(sitemap, {
     headers: {
-      "Content-Type": "application/xml",
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control":
+        "public, s-maxage=3600, stale-while-revalidate=86400",
     },
   });
 }

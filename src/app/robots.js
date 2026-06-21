@@ -1,10 +1,9 @@
 // Bu dosya, sitenizin kökünde /robots.txt olarak sunulur.
 
-import process from "node:process";
-
 export default function robots() {
-  //const URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3005";
-  const URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com/";
+  const siteUrl = new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com"
+  ).origin;
   return {
     rules: {
       // Tüm arama motorlarına (User-agent: *)
@@ -20,9 +19,12 @@ export default function robots() {
         "/signup",
         "/forgot-password",
         "/reset-password",
+        "/mesajlar/",
+        "/auth/",
+        "/api/",
       ],
     },
-    // Site haritasının yerini de burada belirtiyoruz
-    sitemap: `${URL}/sitemap.xml`,
+    sitemap: `${siteUrl}/sitemap.xml`,
+    host: siteUrl,
   };
 }

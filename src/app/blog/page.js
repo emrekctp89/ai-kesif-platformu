@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -54,9 +55,11 @@ export default async function BlogPage() {
               <Card className="h-full overflow-hidden transition-all hover:border-primary">
                 {post.featured_image_url && (
                   <div className="aspect-video overflow-hidden">
-                    <img
+                    <Image
                       src={post.featured_image_url}
                       alt={post.title}
+                      width={1200}
+                      height={675}
                       className="w-full h-full object-cover transition-transform group-hover:scale-105"
                     />
                   </div>

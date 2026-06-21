@@ -1,82 +1,135 @@
-//import Stripe from "stripe";
-//import { NextResponse } from "next/server";
-// Bu, admin yetkileriyle Supabase'i kullanmamızı sağlayan özel istemcimizdir.
-//import { createAdminClient } from "@/utils/supabase/admin.js";
-//import { supabaseAdmin } from "../../../utils/supabase/admin.js";
+import Stripe from "stripe";
+import { NextResponse } from "next/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
+export const runtime = "nodejs";
 
-// Gerekli ortam değişkenlerini alıyoruz
-//const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-//const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+function getStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY ortam değişkeni tanımlı değil.");
+  }
 
-// Gelen istekleri yönetecek olan POST fonksiyonu
-//export async function POST(req) {
- // const sig = req.headers.get("stripe-signature");
-//  const body = await req.text();
- // const supabase = createAdminClient();
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2024-04-10",
+  });
+}
 
- // let event;
+function getCustomerId(customer) {
+  return typeof customer === "string" ? customer : customer?.id;
+}
 
- // try {
-    // Güvenlik için, isteğin gerçekten Stripe'dan geldiğini doğruluyoruz
-  //  event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
- // } catch (err) {
-  //  console.error(`Stripe webhook imza doğrulama hatası: ${err.message}`);
-  //  return NextResponse.json(
-   //   { error: `Webhook Error: ${err.message}` },
-  //    { status: 400 }
-   // );
- // }
+function getSubscriptionData(subscription) {
+  const keepsAccess = !["canceled", "unpaid", "incomplete_expired"].includes(
+    subscription.status
+  );
 
-  // Farklı Stripe olaylarına göre işlem yapıyoruz
- // switch (event.type) {
-  //  case "checkout.session.completed": {
-  //    const session = event.data.object;
-      // Abonelik bilgilerini alıp veritabanını güncelle
-  //    const subscription = await stripe.subscriptions.retrieve(
-   //     session.subscription
-   //   );
+  return {
+    stripe_subscription_id: keepsAccess ? subscription.id : null,
+    stripe_price_id: keepsAccess
+      ? subscription.items.data[0]?.price?.id || null
+      : null,
+    stripe_current_period_end:
+      keepsAccess && subscription.current_period_end
+        ? new Date(subscription.current_period_end * 1000).toISOString()
+        : null,
+  };
+}
 
-   //   await supabase
-    //    .from("profiles")
-    //    .update({
-     //     stripe_subscription_id: subscription.id,
-       //   stripe_price_id: subscription.items.data[0].price.id,
-      //    stripe_current_period_end: new Date(
-      //      subscription.current_period_end * 1000
-      //    ),
-     //  })
-    //    .eq("stripe_customer_id", subscription.customer);
-     // break;
-   // }
-   // case "customer.subscription.updated": {
-  //    const subscription = event.data.object;
-      // Abonelik güncellendiğinde (örn: iptal edildiğinde) veritabanını güncelle
-    //  await supabase
-    //    .from("profiles")
-    //    .update({
-    //      stripe_price_id: subscription.items.data[0].price.id,
-    //      stripe_current_period_end: new Date(
-    //        subscription.current_period_end * 1000
-    //      ),
-    //    })
-   //     .eq("stripe_subscription_id", subscription.id);
-   //   break;
-   // }
-  //  case "customer.subscription.deleted": {
-   //   const subscription = event.data.object;
-      // Abonelik silindiğinde veritabanını temizle
-    //  await supabase
-    //    .from("profiles")
-   //    .update({
-    //      stripe_subscription_id: null,
-   //       stripe_price_id: null,
-   //       stripe_current_period_end: null,
-   //     })
-   //     .eq("stripe_subscription_id", subscription.id);
-    //  break;
-  //  }
-// }
+async function updateProfile(subscription) {
+  const customerId = getCustomerId(subscription.customer);
 
-//  return NextResponse.json({ received: true });
-//}
+  if (!customerId) {
+    throw new Error(`Abonelik için müşteri bulunamadı: ${subscription.id}`);
+  }
+
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update(getSubscriptionData(subscription))
+    .eq("stripe_customer_id", customerId);
+
+  if (error) {
+    throw new Error(`Profil güncellenemedi: ${error.message}`);
+  }
+}
+
+async function clearSubscription(subscription) {
+  const supabase = createAdminClient();
+  const customerId = getCustomerId(subscription.customer);
+
+  let query = supabase.from("profiles").update({
+    stripe_subscription_id: null,
+    stripe_price_id: null,
+    stripe_current_period_end: null,
+  });
+
+  query = customerId
+    ? query.eq("stripe_customer_id", customerId)
+    : query.eq("stripe_subscription_id", subscription.id);
+
+  const { error } = await query;
+
+  if (error) {
+    throw new Error(`Abonelik profilden temizlenemedi: ${error.message}`);
+  }
+}
+
+export async function POST(request) {
+  const signature = request.headers.get("stripe-signature");
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!signature || !webhookSecret) {
+    return NextResponse.json(
+      { error: "Stripe webhook yapılandırması eksik." },
+      { status: 400 }
+    );
+  }
+
+  const stripe = getStripe();
+  const body = await request.text();
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+  } catch (error) {
+    console.error("Stripe webhook imza doğrulama hatası:", error.message);
+    return NextResponse.json({ error: "Geçersiz webhook imzası." }, { status: 400 });
+  }
+
+  try {
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object;
+
+        if (session.subscription) {
+          const subscription = await stripe.subscriptions.retrieve(
+            session.subscription
+          );
+          await updateProfile(subscription);
+        }
+        break;
+      }
+
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
+        await updateProfile(event.data.object);
+        break;
+
+      case "customer.subscription.deleted":
+        await clearSubscription(event.data.object);
+        break;
+
+      default:
+        break;
+    }
+
+    return NextResponse.json({ received: true });
+  } catch (error) {
+    console.error(`Stripe webhook işleme hatası (${event.type}):`, error);
+    return NextResponse.json(
+      { error: "Webhook olayı işlenemedi." },
+      { status: 500 }
+    );
+  }
+}

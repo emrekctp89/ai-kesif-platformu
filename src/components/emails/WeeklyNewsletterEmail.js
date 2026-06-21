@@ -130,6 +130,7 @@ export const WeeklyNewsletterEmail = ({ newsletterData }) => (
               style={{ textDecoration: "none" }}
             >
               <div style={{ ...cardStyle, textAlign: "center" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- E-posta istemcileri Next Image bileşenini desteklemez. */}
                 <img
                   src={newsletterData.top_showcase.image_url}
                   alt={newsletterData.top_showcase.title}

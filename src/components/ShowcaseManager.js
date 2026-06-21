@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -77,9 +78,11 @@ export function ShowcaseManager({ items }) {
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center">
                   {item.image_url ? (
-                    <img
+                    <Image
                       src={item.image_url}
                       alt={item.title}
+                      width={64}
+                      height={64}
                       className="w-full h-full object-cover rounded-md"
                     />
                   ) : (

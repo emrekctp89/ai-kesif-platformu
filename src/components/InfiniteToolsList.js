@@ -160,6 +160,7 @@ export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
   const [isLoading, setIsLoading] = useState(false);
   const { ref, inView } = useInView({ threshold: 0.5 });
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
   const [previewTool, setPreviewTool] = useState(null);
 
   const loadMoreTools = useCallback(async () => {
@@ -198,7 +199,7 @@ export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
     setTools(initialTools || []);
     setPage(1);
     setHasMore(initialTools?.length > 0);
-  }, [searchParams.toString(), initialTools]);
+  }, [searchParamsString, initialTools]);
 
   return (
     <>

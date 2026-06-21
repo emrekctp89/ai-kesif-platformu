@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -248,9 +249,11 @@ export default async function UserProfilePage({ params }) {
             <CardContent className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {profile.showcase_items.map((item) => (
                 <Link key={item.id} href={`/eserler?eserId=${item.id}`}>
-                  <img
+                  <Image
                     src={item.image_url}
                     alt={item.title}
+                    width={400}
+                    height={400}
                     className="aspect-square w-full object-cover rounded-md hover:scale-105 transition-transform"
                   />
                 </Link>
