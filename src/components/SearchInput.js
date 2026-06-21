@@ -34,8 +34,15 @@ export function SearchInput() {
   }, [debouncedSearchTerm, searchParams, router, pathname]);
 
   return (
-    <div className="w-full md:w-auto md:flex-grow max-w-md">
+    <search
+      className="w-full max-w-md md:w-auto md:flex-grow"
+      aria-label="Araçlarda ara"
+    >
+      <label htmlFor="tool-search" className="sr-only">
+        Yapay zeka aracı ara
+      </label>
       <Input
+        id="tool-search"
         type="text"
         // DEĞİŞİKLİK: Kullanıcıyı doğal dilde arama yapmaya teşvik ediyoruz
         placeholder="Bir araç arayın" //"Bir problem veya fikir yazın..."
@@ -43,6 +50,6 @@ export function SearchInput() {
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
-    </div>
+    </search>
   );
 }

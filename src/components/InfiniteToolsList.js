@@ -63,7 +63,7 @@ export default function ToolCard({ tool }) {
 
         {/* Araç Adı */}
         <h2 className="text-xl font-bold">
-          <Link href={`/tool/${tool.slug}`} className="hover:underline">
+          <Link href={`/tool/${tool.slug}`} className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
             {tool.name}
           </Link>
         </h2>
@@ -73,7 +73,7 @@ export default function ToolCard({ tool }) {
           {/* DEĞİŞİKLİK 2: İçteki Link'e tıklamanın dış Link'i tetiklemesini engellemek için stopPropagation ekleyin. */}
           <Link 
             href={`/kategori/${tool.category_slug}`}
-            className="inline-block"
+            className="inline-block rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             onClick={(e) => e.stopPropagation()}
           >
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground w-fit hover:bg-primary hover:text-primary-foreground transition-colors"> 
@@ -113,7 +113,7 @@ export default function ToolCard({ tool }) {
           <div className="flex items-center gap-2 text-muted-foreground">
             {/* platform ikonları */}
             {tool.platforms && tool.platforms.slice(0, 3).map((platform) => (
-              <span key={platform} title={platform}>
+              <span key={platform} title={platform} aria-label={platform}>
                 {platformIcons[platform] || <Eye className="w-4 h-4" />}
               </span>
             ))}
@@ -222,7 +222,8 @@ export function InfiniteToolsList({
       </div>
 
       {hasMore && (
-        <div ref={ref} className="col-span-full mt-8">
+        <div ref={ref} className="col-span-full mt-8" role="status" aria-live="polite">
+          <span className="sr-only">Daha fazla araç yükleniyor</span>
           <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-8">
             <ToolCardSkeleton />
             <ToolCardSkeleton />

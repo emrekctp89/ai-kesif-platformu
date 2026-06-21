@@ -39,8 +39,8 @@ export default async function Header() {
         
         {isAdmin && <AdminMenu />}
         
-        <Link href="/" className="mr-3 flex shrink-0 items-center space-x-2 md:mr-6">
-          <Bot className="h-6 w-6 text-primary" />
+        <Link href="/" aria-label="AI Keşif ana sayfa" className="mr-3 flex shrink-0 items-center space-x-2 md:mr-6">
+          <Bot aria-hidden="true" className="h-6 w-6 text-primary" />
           <span className="text-lg font-bold tracking-tight sm:text-xl">
             AI Keşif
           </span>

@@ -86,7 +86,7 @@ export function HeaderNav({
       <MobileNav user={user} isProUser={isProUser} />
 
       {/* Ana Navigasyon Linkleri (Sol Taraf) */}
-      <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+      <nav aria-label="Ana navigasyon" className="hidden md:flex items-center gap-6 text-sm font-medium">
         <Link
           href="/"
           className="text-muted-foreground transition-colors hover:text-foreground"

@@ -72,8 +72,14 @@ export default async function RootLayout({ children }) {
           <Toaster position="top-center" />
 
           <div className="relative flex min-h-screen flex-col">
+            <a
+              href="#main-content"
+              className="sr-only fixed left-4 top-4 z-[100] rounded-md bg-background px-4 py-2 font-semibold text-foreground shadow-lg focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              İçeriğe geç
+            </a>
             <Header />
-            <main className="flex-1">
+            <main id="main-content" tabIndex={-1} className="flex-1">
               <div className="container mx-auto p-4 md:p-6">{children}</div>
             </main>
             <Footer />

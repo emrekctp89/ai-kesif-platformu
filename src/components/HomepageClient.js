@@ -48,7 +48,7 @@ export function HomepageClient({
         className="sticky top-16 z-40 border-b py-4 text-center sm:py-6 md:py-8
              bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl">
+        <h1 id="tools-page-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl">
           {pageTitle}
         </h1>
         <p className="mx-auto mt-1 max-w-xl text-sm text-muted-foreground sm:mt-2 sm:text-base">
@@ -87,7 +87,7 @@ export function HomepageClient({
       )}
 
       {/* Sonsuz Kaydırma Listesi */}
-      <div className="mt-12">
+      <section className="mt-12" aria-labelledby="tools-page-title">
         <Suspense
           key={searchParams.toString()}
           fallback={<ToolsGridSkeleton />}
@@ -100,7 +100,7 @@ export function HomepageClient({
             favoriteToolIds={favoriteToolIds}
           />
         </Suspense>
-      </div>
+      </section>
     </div>
   );
 }
