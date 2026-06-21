@@ -2452,32 +2452,6 @@ export async function uploadBlogImage(formData) {
 }
 
 // -----------------------------
-// DeepSearch ile popülerlik skorunu al
-// -----------------------------
-async function getPopularityScore(toolName) {
-  try {
-    const res = await fetch("https://api.jina.ai/deepsearch/search", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.DEEPSEARCH_API_KEY}`
-      },
-      body: JSON.stringify({
-        query: `${toolName} AI tool popularity`,
-        top_k: 5
-      })
-    });
-
-    const data = await res.json();
-    // Basit skor: dönen sonuç sayısı
-    return data?.hits?.length || 0;
-  } catch (err) {
-    console.error("DeepSearch error:", err.message);
-    return 0;
-  }
-}
-
-// -----------------------------
 // Araçları çek ve popülerlik skorunu ekle
 // -----------------------------
 export async function fetchMoreTools({ page = 0, searchParams }) {
@@ -2522,17 +2496,10 @@ export async function fetchMoreTools({ page = 0, searchParams }) {
     return [];
   }
 
-  // -----------------------------
-  // Her tool için DeepSearch popülerlik skorunu ekle
-  // -----------------------------
-  const toolsWithPopularity = await Promise.all(
-    tools.map(async (tool) => {
-      const popularity = await getPopularityScore(tool.name);
-      return { ...tool, popularity_score: popularity };
-    })
-  );
-
-  return toolsWithPopularity;
+  return tools.map((tool) => ({
+    ...tool,
+    popularity_score: Number(tool.popularity_score) || 0,
+  }));
 }
 
 // Bir varyantın "gösterim" (impression) sayısını artıran fonksiyon

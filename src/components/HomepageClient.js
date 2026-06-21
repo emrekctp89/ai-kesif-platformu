@@ -8,7 +8,6 @@ import { InfiniteToolsList } from "@/components/InfiniteToolsList";
 import { ToolsGridSkeleton } from "@/components/ToolsGridSkeleton";
 import { Button } from "@/components/ui/button";
 import { Sparkles, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
 export function HomepageClient({
   initialData,
@@ -57,15 +56,8 @@ export function HomepageClient({
           Yapay zeka dünyasını keşfedin veya aradığınızı anında bulun.
         </p>
 
-        <AnimatePresence>
-          {showControls && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="flex justify-center items-center gap-4 mt-6"
-            >
+        {showControls && (
+            <div className="flex justify-center items-center gap-4 mt-6 animate-in fade-in slide-in-from-top-2 duration-200">
               <SearchInput />
               <FilterSheet categories={categories} allTags={allTags} />
               <Button
@@ -83,26 +75,17 @@ export function HomepageClient({
 
 
 
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+        )}
       </div>
 
       {/* Keşif Bölümü */}
-      <AnimatePresence>
-        {showDiscovery && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
-            className="animate-in fade-in-50"
-          >
+      {showDiscovery && (
+          <div className="animate-in fade-in slide-in-from-top-4 duration-300">
             {discoverySections}
             <div className="w-full border-t border-dashed mt-12"></div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+      )}
 
       {/* Sonsuz Kaydırma Listesi */}
       <div className="mt-12">
