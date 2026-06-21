@@ -36,13 +36,15 @@ export function AnnouncementBanner() {
         >
           <div className="container mx-auto">
             <div
+              role="region"
+              aria-label="Geliştirme duyurusu"
               className="flex items-start justify-between gap-2 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:items-center sm:gap-4 sm:p-4"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
               <div className="flex min-w-0 items-start gap-2 sm:items-center sm:gap-3">
                 <div className="hidden rounded-full bg-primary/10 p-2 sm:block">
-                  <Megaphone className="h-5 w-5 text-primary" />
+                  <Megaphone aria-hidden="true" className="h-5 w-5 text-primary" />
                 </div>
                 <p className="line-clamp-3 text-xs leading-5 text-muted-foreground sm:line-clamp-none sm:text-sm">
                   <span className="font-semibold text-foreground">
@@ -65,7 +67,7 @@ export function AnnouncementBanner() {
                 size="icon"
                 className="h-7 w-7 flex-shrink-0"
               >
-                <X className="h-4 w-4" />
+                <X aria-hidden="true" className="h-4 w-4" />
                 <span className="sr-only">Kapat</span>
               </Button>
             </div>

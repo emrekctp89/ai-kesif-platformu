@@ -1,49 +1,61 @@
-'use client'
+"use client";
 
 import {
-  TwitterShareButton,
-  LinkedinShareButton,
-  WhatsappShareButton,
-  FacebookShareButton,
-} from "react-share";
-
-import {
-  TwitterIcon,
-  LinkedinIcon,
-  WhatsappIcon,
   FacebookIcon,
+  FacebookShareButton,
+  LinkedinIcon,
+  LinkedinShareButton,
+  TwitterIcon,
+  TwitterShareButton,
+  WhatsappIcon,
+  WhatsappShareButton,
 } from "react-share";
 
 export function ShareButtons({ url, title }) {
-  const iconSize = 32; // İkonların boyutu
+  const iconSize = 32;
 
   return (
-    <div className="flex items-center gap-3">
-        <p className="text-sm font-medium text-muted-foreground">Bu aracı paylaş:</p>
-        
-        {/* Twitter Paylaşım Butonu */}
-        <TwitterShareButton
-            url={url}
-            title={title}
-            hashtags={["AIKeşif", "YapayZeka"]} // Paylaşıma eklenecek etiketler
-        >
-            <TwitterIcon size={iconSize} round />
-        </TwitterShareButton>
+    <div
+      className="flex flex-wrap items-center gap-3"
+      aria-label="Paylaşım seçenekleri"
+    >
+      <p className="text-sm font-medium text-muted-foreground">
+        Bu aracı paylaş:
+      </p>
 
-        {/* LinkedIn Paylaşım Butonu */}
-        <LinkedinShareButton url={url} title={title}>
-            <LinkedinIcon size={iconSize} round />
-        </LinkedinShareButton>
-        
-        {/* WhatsApp Paylaşım Butonu */}
-        <WhatsappShareButton url={url} title={title} separator=":: ">
-            <WhatsappIcon size={iconSize} round />
-        </WhatsappShareButton>
+      <TwitterShareButton
+        url={url}
+        title={title}
+        hashtags={["AIKeşif", "YapayZeka"]}
+        aria-label="X üzerinde paylaş"
+      >
+        <TwitterIcon size={iconSize} round aria-hidden="true" />
+      </TwitterShareButton>
 
-        {/* Facebook Paylaşım Butonu */}
-        <FacebookShareButton url={url} quote={title}>
-            <FacebookIcon size={iconSize} round />
-        </FacebookShareButton>
+      <LinkedinShareButton
+        url={url}
+        title={title}
+        aria-label="LinkedIn üzerinde paylaş"
+      >
+        <LinkedinIcon size={iconSize} round aria-hidden="true" />
+      </LinkedinShareButton>
+
+      <WhatsappShareButton
+        url={url}
+        title={title}
+        separator=":: "
+        aria-label="WhatsApp ile paylaş"
+      >
+        <WhatsappIcon size={iconSize} round aria-hidden="true" />
+      </WhatsappShareButton>
+
+      <FacebookShareButton
+        url={url}
+        quote={title}
+        aria-label="Facebook üzerinde paylaş"
+      >
+        <FacebookIcon size={iconSize} round aria-hidden="true" />
+      </FacebookShareButton>
     </div>
   );
 }
