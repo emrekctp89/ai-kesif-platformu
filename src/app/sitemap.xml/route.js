@@ -31,14 +31,21 @@ export async function GET() {
     }
   );
 
-  const { data: tools, error } = await supabase
-    .from("tools")
-    .select("slug, updated_at")
-    .eq("is_approved", true)
-    .not("slug", "is", null);
+  const [toolsResult, categoriesResult] = await Promise.all([
+    supabase
+      .from("tools")
+      .select("slug, updated_at")
+      .eq("is_approved", true)
+      .not("slug", "is", null),
+    supabase.from("categories").select("slug").not("slug", "is", null),
+  ]);
 
-  if (error) {
-    console.error("Araçlar alınamadı:", error);
+  if (toolsResult.error) {
+    console.error("Araçlar alınamadı:", toolsResult.error);
+  }
+
+  if (categoriesResult.error) {
+    console.error("Kategoriler alınamadı:", categoriesResult.error);
   }
 
   const generatedAt = new Date().toISOString();
@@ -52,7 +59,14 @@ export async function GET() {
     { url: withBase("/submit"), lastModified: generatedAt },
   ];
 
-  tools?.forEach((tool) => {
+  categoriesResult.data?.forEach((category) => {
+    urls.push({
+      url: withBase(`/kategori/${category.slug}`),
+      lastModified: generatedAt,
+    });
+  });
+
+  toolsResult.data?.forEach((tool) => {
     urls.push({
       url: withBase(`/tool/${tool.slug}`),
       lastModified: tool.updated_at || generatedAt,

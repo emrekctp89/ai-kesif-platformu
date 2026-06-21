@@ -66,7 +66,7 @@ export default function ToolCard({ tool }) {
         <div className="my-2">
           {/* DEĞİŞİKLİK 2: İçteki Link'e tıklamanın dış Link'i tetiklemesini engellemek için stopPropagation ekleyin. */}
           <Link 
-            href={`/?category=${tool.category_slug}`} 
+            href={`/kategori/${tool.category_slug}`}
             className="inline-block"
             onClick={(e) => e.stopPropagation()}
           >

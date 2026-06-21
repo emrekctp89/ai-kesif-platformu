@@ -60,7 +60,7 @@ export async function FeaturedTools() {
               </div>
               <div className="mt-auto flex items-center justify-between gap-3 pt-5">
                 <Link
-                  href={`/?category=${tool.category_slug}`}
+                  href={`/kategori/${tool.category_slug}`}
                   className="text-xs font-medium text-white/90 hover:underline"
                 >
                   {tool.category_name}
