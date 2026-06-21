@@ -30,19 +30,19 @@ export async function ToolOfTheDay() {
   return (
     <div className="mb-12">
       <Card className="w-full bg-gradient-to-br from-primary/10 via-background to-background border-2 border-primary/50 shadow-lg">
-        <CardContent className="p-8 grid md:grid-cols-2 gap-8 items-center">
+        <CardContent className="grid items-center gap-6 p-5 sm:p-6 md:grid-cols-2 md:gap-8 md:p-8">
           {/* Sol Taraf: Açıklamalar */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3 text-primary font-bold text-lg">
-              <Zap className="w-6 h-6" />
+            <div className="flex items-center gap-2 text-base font-bold text-primary sm:text-lg">
+              <Zap className="h-5 w-5 sm:h-6 sm:w-6" />
               <span>GÜNÜN ARACI</span>
             </div>
-            <h2 className="text-4xl font-extrabold tracking-tight text-foreground">
+            <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl md:text-4xl">
               {tool.name}
             </h2>
-            <p className="text-muted-foreground text-lg">{tool.description}</p>
+            <p className="text-sm leading-6 text-muted-foreground sm:text-base md:text-lg">{tool.description}</p>
             <div className="flex items-center gap-4 pt-2">
-              <Button asChild size="lg" className="bg-green-600 hover:bg-green-700">
+              <Button asChild className="w-full bg-green-600 hover:bg-green-700 sm:w-auto" size="lg">
   <a href={tool.link} target="_blank" rel="noopener noreferrer">
     İncele & Keşfet
   </a>

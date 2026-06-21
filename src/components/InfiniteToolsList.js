@@ -45,7 +45,7 @@ export default function ToolCard({ tool }) {
   return (
     <article
       className={cn(
-        "relative block p-6 rounded-xl border shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden",
+        "relative block overflow-hidden rounded-xl border p-5 shadow-md transition-all duration-300 sm:p-6 md:hover:-translate-y-2 md:hover:shadow-xl",
         {
           "border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card": tool.tier === "Pro",
           "border-amber-400/40 shadow-amber-400/20 hover:shadow-amber-500/40 bg-card": tool.tier === "Sponsorlu",
@@ -201,7 +201,7 @@ export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-8">
         {tools.map(tool => (
           <ToolCard 
             key={tool.id}
@@ -215,7 +215,7 @@ export function InfiniteToolsList({ initialTools, user, favoriteToolIds }) {
 
       {hasMore && (
         <div ref={ref} className="col-span-full mt-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-8">
             <ToolCardSkeleton />
             <ToolCardSkeleton />
             <ToolCardSkeleton />

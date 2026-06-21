@@ -25,7 +25,7 @@ import {
   Rocket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MobileNav } from './MobileNav'; // Yeni mobil menüyü import ediyoruz
+import { MobileNav } from "./MobileNav";
 
 
 // Korumalı buton için özel bir versiyon oluşturuyoruz
@@ -83,6 +83,8 @@ export function HeaderNav({
 }) {
   return (
     <>
+      <MobileNav user={user} isProUser={isProUser} />
+
       {/* Ana Navigasyon Linkleri (Sol Taraf) */}
       <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
         <Link
@@ -105,8 +107,8 @@ export function HeaderNav({
       </nav>
 
       {/* Sağ Taraftaki Butonlar */}
-      <div className="ml-auto flex items-center gap-2">
-            <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-1 sm:gap-2">
+        <div className="hidden items-center gap-2 sm:flex">
         <Button
                 asChild
                 className="font-semibold text-white bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 bg-[size:300%_auto] animate-breathing-glow hover:opacity-90"
@@ -119,9 +121,9 @@ export function HeaderNav({
               
 
 
-            </div>
-          <ThemeToggle />
         </div>
+        <ThemeToggle />
+      </div>
     </>
   );
 }
