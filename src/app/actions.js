@@ -21,6 +21,7 @@ import { WeeklyNewsletterEmail } from "@/components/emails/WeeklyNewsletterEmail
 // Node'un renderToString fonksiyonunu kullanacağız
 import { render } from "@react-email/render";
 import * as cheerio from "cheerio";
+import { logServerError } from "@/utils/serverLogger";
 
 
 
@@ -2521,33 +2522,26 @@ export async function recordVariantClick(variantId) {
 // Kullanıcıyı Stripe ödeme sayfasına yönlendiren fonksiyon
 export async function createCheckoutSession(formData) {
   "use server";
-  console.log("--- createCheckoutSession Aksiyonu Başladı ---");
+  const supabase = createClient(await cookies());
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect("/login");
+  }
+
+  let checkoutUrl;
 
   try {
-    const supabase = createClient(await cookies());
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      console.log("-> Kullanıcı bulunamadı, login sayfasına yönlendiriliyor.");
-      return redirect("/login");
-    }
-    console.log(`-> Kullanıcı doğrulandı: ${user.email}`);
-
     const { data: profile } = await supabase
       .from("profiles")
       .select("stripe_customer_id")
       .eq("id", user.id)
       .single();
-    console.log(
-      "-> Profil verisi çekildi. Mevcut Stripe Müşteri ID:",
-      profile?.stripe_customer_id
-    );
 
     const priceId = formData.get("priceId");
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-    console.log(`-> Fiyat ID: ${priceId}, Site URL: ${siteUrl}`);
 
     if (!priceId || !siteUrl) {
       throw new Error("Stripe fiyatı veya site adresi yapılandırılmamış.");
@@ -2567,24 +2561,22 @@ export async function createCheckoutSession(formData) {
     let customerId = profile?.stripe_customer_id;
 
     if (!customerId) {
-      console.log(
-        "-> Stripe müşteri ID'si yok, yeni bir tane oluşturuluyor..."
-      );
       const customer = await stripe.customers.create({
         email: user.email,
         metadata: { supabaseUUID: user.id },
       });
       customerId = customer.id;
-      console.log("-> Yeni Stripe müşteri ID'si oluşturuldu:", customerId);
 
-      await supabase
+      const { error: customerUpdateError } = await supabase
         .from("profiles")
         .update({ stripe_customer_id: customerId })
         .eq("id", user.id);
-      console.log("-> Profil, yeni Stripe müşteri ID'si ile güncellendi.");
+
+      if (customerUpdateError) {
+        throw new Error("Stripe müşteri kaydı profile yazılamadı.");
+      }
     }
 
-    console.log("-> Stripe ödeme oturumu oluşturuluyor...");
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "subscription",
@@ -2602,14 +2594,14 @@ export async function createCheckoutSession(formData) {
       success_url: `${siteUrl}/profile?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/uyelik`,
     });
-    console.log("✅ Stripe oturumu başarıyla oluşturuldu. Yönlendiriliyor...");
-
-    return redirect(session.url);
+    checkoutUrl = session.url;
   } catch (error) {
-    console.error("!!! createCheckoutSession HATASI:", error);
+    logServerError("checkout.create-session", error);
     const errorMessage = "Ödeme sayfasına yönlendirilirken bir hata oluştu.";
     return redirect(`/uyelik?message=${encodeURIComponent(errorMessage)}`);
   }
+
+  return redirect(checkoutUrl);
 }
 
 // Canlı akış tarafından, en güncel verileri çekmek için çağrılan fonksiyon

@@ -137,8 +137,7 @@ export function ActivityFeedClient({ initialFeedItems }) {
 
   useEffect(() => {
     // Yeni bir olay gerçekleştiğinde çalışacak olan fonksiyon
-    const handleNewEvent = (payload) => {
-      console.log("Yeni bir olay alındı!", payload);
+    const handleNewEvent = () => {
       // Sunucudan en güncel akışı yeniden çekiyoruz
       fetchActivityFeed().then((newItems) => {
         setFeedItems(newItems);

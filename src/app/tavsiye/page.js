@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useTransition } from "react";
 import { getAiRecommendation } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +10,6 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 
 export default function RecommendationPage() {
-  const searchParams = useSearchParams();
   const [recommendations, setRecommendations] = useState([]);
   const [isPending, startTransition] = useTransition();
 
@@ -38,8 +36,6 @@ export default function RecommendationPage() {
   const handleFormSubmit = (formData) => {
   const userPrompt = formData.get("prompt");
 
-  console.log("📥 Form gönderildi:", userPrompt);
-
   if (!userPrompt) {
     toast.error("Lütfen bir istek girin.");
     return;
@@ -47,21 +43,15 @@ export default function RecommendationPage() {
 
   startTransition(async () => {
     try {
-      console.log("🚀 AI isteği başlıyor...");
-
       const result = await getAiRecommendation(userPrompt);
-
-      console.log("✅ Gelen sonuç:", result);
 
       if (result.success) {
         setRecommendations(result.data);
       } else {
-        console.error("❌ API hata:", result.error);
         toast.error(result.error || "Tavsiye alınırken bir hata oluştu.");
         setRecommendations([]);
       }
-    } catch (err) {
-      console.error("🔥 Beklenmeyen hata:", err);
+    } catch {
       toast.error("Sistem hatası oluştu.");
       setRecommendations([]);
     }
