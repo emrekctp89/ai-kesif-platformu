@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { logServerError } from "@/utils/serverLogger";
 
 export const runtime = "nodejs";
 
@@ -93,7 +94,7 @@ export async function POST(request) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (error) {
-    console.error("Stripe webhook imza doğrulama hatası:", error.message);
+    logServerError("stripe.webhook.signature", error);
     return NextResponse.json({ error: "Geçersiz webhook imzası." }, { status: 400 });
   }
 
@@ -126,7 +127,10 @@ export async function POST(request) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error(`Stripe webhook işleme hatası (${event.type}):`, error);
+    logServerError("stripe.webhook.process", error, {
+      eventType: event.type,
+      eventId: event.id,
+    });
     return NextResponse.json(
       { error: "Webhook olayı işlenemedi." },
       { status: 500 }
