@@ -9,6 +9,7 @@ import Stripe from "stripe";
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { Resend } from "resend";
 import { NewToolSuggestionEmail } from "@/components/emails/NewToolSuggestionEmail";
 import { WelcomeEmail } from "@/components/emails/WelcomeEmail"; // Yeni e-posta şablonunu import ediyoruz
@@ -92,7 +93,7 @@ function slugify(text) {
 export async function submitTool(formData) {
   "use server";
 
-  const supabase = createClient();
+  const supabase = createClient(await cookies());
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   const {
@@ -2482,7 +2483,7 @@ async function getPopularityScore(toolName) {
 export async function fetchMoreTools({ page = 0, searchParams }) {
   "use server";
 
-  const supabase = createClient();
+  const supabase = createClient(await cookies());
 
   const { data: { user } } = await supabase.auth.getUser();
   const { data: profile } = user 
@@ -2556,7 +2557,7 @@ export async function createCheckoutSession(formData) {
   console.log("--- createCheckoutSession Aksiyonu Başladı ---");
 
   try {
-    const supabase = createClient();
+    const supabase = createClient(await cookies());
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -2578,8 +2579,23 @@ export async function createCheckoutSession(formData) {
     );
 
     const priceId = formData.get("priceId");
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
     console.log(`-> Fiyat ID: ${priceId}, Site URL: ${siteUrl}`);
+
+    if (!priceId || !siteUrl) {
+      throw new Error("Stripe fiyatı veya site adresi yapılandırılmamış.");
+    }
+
+    const { data: activePrice, error: priceError } = await supabase
+      .from("prices")
+      .select("id")
+      .eq("id", priceId)
+      .eq("active", true)
+      .maybeSingle();
+
+    if (priceError || !activePrice) {
+      throw new Error("Geçersiz veya aktif olmayan Stripe fiyatı.");
+    }
 
     let customerId = profile?.stripe_customer_id;
 
@@ -2607,6 +2623,15 @@ export async function createCheckoutSession(formData) {
       mode: "subscription",
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
+      client_reference_id: user.id,
+      metadata: {
+        supabase_user_id: user.id,
+      },
+      subscription_data: {
+        metadata: {
+          supabase_user_id: user.id,
+        },
+      },
       success_url: `${siteUrl}/profile?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/uyelik`,
     });

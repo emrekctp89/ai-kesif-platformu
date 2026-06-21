@@ -8,6 +8,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { submitLaunch } from "@/app/actions";
@@ -155,9 +156,12 @@ export function LaunchForm({ userTools }) {
         />
         <div className="flex flex-wrap gap-2 mt-2">
           {imagePreviews.map((src, index) => (
-            <img
+            <Image
               key={index}
               src={src}
+              width={80}
+              height={80}
+              unoptimized
               className="h-20 w-20 object-cover rounded-md border"
               alt="Önizleme"
             />

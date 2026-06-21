@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
+import Image from "next/image";
 
 // Veritabanından belirli bir yazıyı slug'ına göre çeken fonksiyon
 async function getPost(slug) {
@@ -56,9 +57,11 @@ export default async function PostPage({ params }) {
       {/* Öne Çıkan Görsel */}
       {post.featured_image_url && (
         <div className="aspect-video rounded-xl overflow-hidden mb-8">
-          <img
+          <Image
             src={post.featured_image_url}
             alt={post.title}
+            width={1200}
+            height={675}
             className="w-full h-full object-cover"
           />
         </div>

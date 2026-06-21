@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Star, Zap } from "lucide-react"; // Zap ikonu "Günün Aracı" temasın
 
 // Veritabanındaki RPC fonksiyonunu çağıran fonksiyon
 async function getToolOfTheDayData() {
-  const supabase = createClient();
+  const supabase = createClient(await cookies());
   // RPC ile özel fonksiyonumuzu çağırıyoruz ve tek bir sonuç bekliyoruz.
   const { data, error } = await supabase.rpc("get_tool_of_the_day").single();
 

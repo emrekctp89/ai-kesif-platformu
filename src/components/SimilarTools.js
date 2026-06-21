@@ -1,8 +1,7 @@
-import { getSimilarTools } from "@/app/actions";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { Lightbulb } from "lucide-react";
-// Carousel bileşenlerini import ediyoruz
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
@@ -11,17 +10,63 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-// Bu bir asenkron Server Component
-export async function SimilarTools({ currentTool }) {
-  // Server action'ı çağırıp sonucu bekliyoruz
-  const result = await getSimilarTools(currentTool);
+async function getSimilarTools(currentTool) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    }
+  );
 
-  // Eğer başarılı bir sonuç yoksa veya tavsiye listesi boşsa, bileşeni hiç gösterme
-  if (!result.success || !result.data || result.data.length === 0) {
-    return null;
+  let query = supabase
+    .from("tools")
+    .select("id, name, slug, description, category_id")
+    .eq("is_approved", true)
+    .neq("id", currentTool.id)
+    .limit(3);
+
+  if (currentTool.category_id) {
+    query = query.eq("category_id", currentTool.category_id);
   }
 
-  const similarTools = result.data;
+  let { data, error } = await query;
+
+  if (!error && (!data || data.length === 0) && currentTool.category_id) {
+    const fallback = await supabase
+      .from("tools")
+      .select("id, name, slug, description, category_id")
+      .eq("is_approved", true)
+      .neq("id", currentTool.id)
+      .limit(3);
+
+    data = fallback.data;
+    error = fallback.error;
+  }
+
+  if (error) {
+    console.error("Benzer araçlar çekilirken hata:", error);
+    return [];
+  }
+
+  return (data || []).map((tool) => ({
+    ...tool,
+    reason:
+      tool.category_id === currentTool.category_id
+        ? "Aynı kategoride benzer bir kullanım alanı sunuyor."
+        : "Keşif listenizi tamamlayabilecek alternatif bir yapay zeka aracı.",
+  }));
+}
+
+export async function SimilarTools({ currentTool }) {
+  const similarTools = await getSimilarTools(currentTool);
+
+  if (similarTools.length === 0) {
+    return null;
+  }
 
   return (
     <div className="space-y-8">
@@ -29,11 +74,9 @@ export async function SimilarTools({ currentTool }) {
         <Lightbulb className="w-7 h-7 text-primary" />
         Bunları da Beğenebilirsiniz
       </h2>
-      {/* DEĞİŞİKLİK: Grid yerine Carousel kullanıyoruz */}
       <Carousel
         opts={{
           align: "start",
-          // Eğer 3'ten az araç varsa loop'u kapat, daha iyi görünür
           loop: similarTools.length > 2,
         }}
         className="w-full"

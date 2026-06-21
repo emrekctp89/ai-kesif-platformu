@@ -1,6 +1,6 @@
 import React from "react";
-import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
+import { notFound } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -22,9 +22,7 @@ import { SuggestToolForBounty } from "@/components/SuggestToolForBounty";
 import { AcademicBackground } from "@/components/AcademicBackground";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-export const fetchCache = "force-no-store";
+export const revalidate = 3600;
 
 const platformIcons = {
   Web: <Globe className="w-5 h-5" />,
@@ -47,8 +45,21 @@ const tierStyles = {
   },
 };
 
+function createPublicClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    }
+  );
+}
+
 async function getToolData(slug) {
-  const supabase = createClient();
+  const supabase = createPublicClient();
 
   // Kullanıcı bilgisi al
  // const {
@@ -62,7 +73,8 @@ async function getToolData(slug) {
     //.from("tools_with_ratings")
     .select("*")
     .eq("slug", slug)
-    .single();
+    .eq("is_approved", true)
+    .maybeSingle();
 
   if (error || !tool) {
     console.error("Hata veya araç bulunamadı:", { slug, error });
@@ -110,7 +122,7 @@ async function getToolData(slug) {
 }
 
 async function getRelatedGuides(toolId) {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("post_tools")
     .select(`posts (title, slug, description)`)
@@ -127,7 +139,7 @@ async function getRelatedGuides(toolId) {
 }
 
 async function getAllOpenBounties() {
-  const supabase = createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase.from("bounties").select("id, title, reputation_reward").eq("status", "Açık");
 
   if (error) {
@@ -138,8 +150,14 @@ async function getAllOpenBounties() {
 }
 
 export async function generateMetadata({ params }) {
-  const supabase = createClient();
-  const { data: tool } = await supabase.from("tools").select("name, description").eq("slug", params.slug).single();
+  const { slug } = await params;
+  const supabase = createPublicClient();
+  const { data: tool } = await supabase
+    .from("tools")
+    .select("name, description, slug")
+    .eq("slug", slug)
+    .eq("is_approved", true)
+    .maybeSingle();
 
   if (!tool) {
     return { title: "Araç Bulunamadı" };
@@ -148,11 +166,20 @@ export async function generateMetadata({ params }) {
   return {
     title: `${tool.name} | AI Keşif Platformu`,
     description: tool.description,
+    alternates: {
+      canonical: `/tool/${tool.slug}`,
+    },
+    openGraph: {
+      type: "website",
+      title: `${tool.name} | AI Keşif Platformu`,
+      description: tool.description,
+      url: `/tool/${tool.slug}`,
+    },
   };
 }
 
 export default async function ToolDetailPage({ params }) {
-  const { slug } = params;
+  const { slug } = await params;
   const { tool, usersRating, isFavorited, papers } = await getToolData(slug);
 
   if (!tool) {
@@ -160,8 +187,6 @@ export default async function ToolDetailPage({ params }) {
   }
 
   const relatedGuides = await getRelatedGuides(tool.id);
-  const openBounties = await getAllOpenBounties();
-
   const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/tool/${tool.slug}`;
   const shareTitle = `Bu harika AI aracını keşfet: ${tool.name}`;
 

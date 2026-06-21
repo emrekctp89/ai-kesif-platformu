@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Onest } from "next/font/google";
 import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -9,20 +10,14 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { TopLoader } from "@/components/TopLoader";
 import { Analytics } from "@vercel/analytics/react";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
-import { CommandPalette } from "@/components/CommandPalette";
-import { CommandHint } from "@/components/CommandHint";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
-//
-// Yeni Karşılama Asistanı bileşenini import ediyoruz
-import { OnboardingAssistant } from "@/components/OnboardingAssistant";
-import { VoiceAgent } from "@/components/VoiceAgent";
-import { AiConcierge } from "@/components/AiConcierge"; // Yeni bileşeni import ediyoruz
 import { PushNotificationManager } from "@/components/PushNotificationManager"; // Yeni bildirim yöneticisini import ediyoruz
 
-import Link from "next/link";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import Canonical from "@/components/Canonical";
 
+const siteUrl = new URL(
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com"
+).origin;
 
 const onest = Onest({
   subsets: ["latin"],
@@ -30,14 +25,39 @@ const onest = Onest({
 });
 
 export const metadata = {
+  metadataBase: new URL(siteUrl),
+  applicationName: "AI Keşif Platformu",
   title: "AI Keşif Platformu",
-  description: "Her İhtiyaca Yönelik En İyi Yapay Zeka Araçları Dizini",
-  // YENİ: PWA için manifest dosyasını ekliyoruz
+  description:
+    "İhtiyacınıza uygun yapay zeka araçlarını keşfedin, karşılaştırın ve doğru aracı daha hızlı bulun.",
   manifest: "/manifest.json",
+  openGraph: {
+    type: "website",
+    locale: "tr_TR",
+    url: siteUrl,
+    siteName: "AI Keşif Platformu",
+    title: "AI Keşif Platformu",
+    description:
+      "İhtiyacınıza uygun yapay zeka araçlarını keşfedin ve doğru aracı daha hızlı bulun.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Keşif Platformu",
+    description:
+      "İhtiyacınıza uygun yapay zeka araçlarını keşfedin ve doğru aracı daha hızlı bulun.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+export const viewport = {
+  themeColor: "#000000",
 };
 
 export default async function RootLayout({ children }) {
-  const supabase = createClient();
+  const supabase = createClient(await cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -56,9 +76,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
-        {/* YENİ: iOS cihazları için tema rengi */}
-        <meta name="theme-color" content="#000000" />
-         <Canonical />
+        <Canonical />
       </head>
       <body className={`${onest.className} bg-background text-foreground`}>
         <ThemeProvider

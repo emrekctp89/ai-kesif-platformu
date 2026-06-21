@@ -1,6 +1,7 @@
 // src/app/auth/callback/route.js
 
 import { createClient } from '@/utils/supabase/server'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request) {
@@ -8,7 +9,7 @@ export async function GET(request) {
   const code = requestUrl.searchParams.get('code')
 
   if (code) {
-    const supabase = createClient()
+    const supabase = createClient(await cookies())
     await supabase.auth.exchangeCodeForSession(code)
   }
 

@@ -24,7 +24,9 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 export function PushNotificationManager({ initialSubscriptionStatus }) {
-    const [isSubscribed, setIsSubscribed] = React.useState(initialSubscriptionStatus);
+    const [isSubscribed, setIsSubscribed] = React.useState(
+        Boolean(initialSubscriptionStatus)
+    );
     const [isPending, setIsPending] = React.useState(false);
 
     React.useEffect(() => {
