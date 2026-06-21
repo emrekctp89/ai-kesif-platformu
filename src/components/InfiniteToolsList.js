@@ -2,16 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { fetchMoreTools } from '@/app/actions';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import FavoriteButton from '@/components/FavoriteButton';
 import { Star, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolCardSkeleton } from './ToolCardSkeleton';
-import { createClient } from '@/utils/supabase/client';
 // import { ToolPreviewDialog } from './ToolPreviewDialog';
 
 const tierStyles = {
@@ -41,15 +39,11 @@ export default function ToolCard({ tool }) {
   // const router = useRouter(); 
   if (!tool || !tool.name) return null;
 
-    console.log("Tool slug:", tool.slug, "Tool name:", tool.name);
-
-
   const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
 
   // DEĞİŞİKLİK 1: Ana sarmalayıcıyı <div onClick> yerine <Link> yapın.
   return (
-    <Link
-      href={`/tool/${tool.slug}`}
+    <article
       className={cn(
         "relative block p-6 rounded-xl border shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden",
         {
@@ -68,7 +62,11 @@ export default function ToolCard({ tool }) {
         )}
 
         {/* Araç Adı */}
-        <h2 className="text-xl font-bold">{tool.name}</h2>
+        <h2 className="text-xl font-bold">
+          <Link href={`/tool/${tool.slug}`} className="hover:underline">
+            {tool.name}
+          </Link>
+        </h2>
 
         {/* Kategori */}
         <div className="my-2">
@@ -144,7 +142,7 @@ export default function ToolCard({ tool }) {
           )}
         </div>
       </div>
-    </Link> // DEĞİŞİKLİK 4: div yerine Link'i kapatın.
+    </article>
   );
 }
 

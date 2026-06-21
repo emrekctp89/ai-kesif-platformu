@@ -1,8 +1,6 @@
 import "./globals.css";
 import { Onest } from "next/font/google";
-import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
-
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Toaster } from "react-hot-toast";
@@ -11,8 +9,6 @@ import { TopLoader } from "@/components/TopLoader";
 import { Analytics } from "@vercel/analytics/react";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
-import { PushNotificationManager } from "@/components/PushNotificationManager"; // Yeni bildirim yöneticisini import ediyoruz
-
 import Canonical from "@/components/Canonical";
 
 const siteUrl = new URL(
@@ -57,21 +53,7 @@ export const viewport = {
 };
 
 export default async function RootLayout({ children }) {
-  const supabase = createClient(await cookies());
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Kullanıcının profilinden, karşılama sürecini tamamlayıp tamamlamadığını kontrol ediyoruz.
-  const { data: profile } = user
-    ? await supabase
-        .from("profiles")
-        .select("onboarding_completed")
-        .eq("id", user.id)
-        .single()
-    : { data: null };
-
-  const showOnboarding = user && !profile?.onboarding_completed;
+  await cookies();
 
   return (
     <html lang="tr" suppressHydrationWarning>
@@ -89,29 +71,15 @@ export default async function RootLayout({ children }) {
           <TopLoader />
           <Toaster position="top-center" />
 
-          {/* DEĞİŞİKLİK: Karşılama Asistanını Koşullu Olarak Gösterme */}
-          {showOnboarding ? (
-            // <OnboardingAssistant /> // Şu anda yorum satırı halinde
-            null
-          ) : (
-            // Eğer karşılama süreci tamamlanmışsa veya kullanıcı misafirse, normal siteyi göster
-            <div className="relative flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">
-                <div className="container mx-auto p-4 md:p-6">{children}</div>
-              </main>
-              <Footer />
-            </div>
-          )}
+          <div className="relative flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">
+              <div className="container mx-auto p-4 md:p-6">{children}</div>
+            </main>
+            <Footer />
+          </div>
 
-          {/* <CommandPalette />
-              <CommandHint /> */}
           <AnnouncementBanner />
-          {/* Yeni Sesli Agent'ı buraya ekliyoruz. Sitenin her yerinden erişilebilir olacak. */}
-          {/* <VoiceAgent /> */}
-          <PushNotificationManager />
-          {/* DEĞİŞİKLİK: AI Konsiyerj'e kullanıcı bilgisini aktarıyoruz */}
-          {/* <AiConcierge user={user} /> */}
           <Analytics />
         </ThemeProvider>
       </body>

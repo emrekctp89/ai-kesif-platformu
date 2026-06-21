@@ -9,35 +9,28 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 async function getPageData(searchParams) {
   const supabase = createClient(await cookies());
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { fetchMoreTools } = await import("@/app/actions");
+  const [authResult, initialTools, categoriesResult, tagsResult] =
+    await Promise.all([
+      supabase.auth.getUser(),
+      fetchMoreTools({ page: 0, searchParams }),
+      supabase.from("categories").select("name, slug").order("name"),
+      supabase.from("tags").select("id, name").order("name"),
+    ]);
 
+  const user = authResult.data.user;
   const { data: favorites } = user
     ? await supabase.from("favorites").select("tool_id").eq("user_id", user.id)
     : { data: [] };
 
   const favoriteToolIds = new Set(favorites?.map((f) => f.tool_id) || []);
 
-  const { fetchMoreTools } = await import("@/app/actions");
-  const initialTools = await fetchMoreTools({ page: 0, searchParams });
-
-  const { data: categoriesData } = await supabase
-    .from("categories")
-    .select("name, slug")
-    .order("name");
-
-  const { data: allTagsData } = await supabase
-    .from("tags")
-    .select("*")
-    .order("name");
-
   return {
     user,
     favoriteToolIds,
     initialTools,
-    categories: categoriesData || [],
-    allTags: allTagsData || [],
+    categories: categoriesResult.data || [],
+    allTags: tagsResult.data || [],
   };
 }
 
