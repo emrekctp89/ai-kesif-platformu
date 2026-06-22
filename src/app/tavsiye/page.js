@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { trackEvent } from "@/utils/analytics";
 
 const examplePrompts = [
   "Sosyal medya için hızlıca görsel ve kısa video üretmek istiyorum.",
@@ -38,6 +39,10 @@ export default function RecommendationPage() {
       return;
     }
 
+    trackEvent("recommendation_started", {
+      prompt_length: userPrompt.length,
+    });
+
     startTransition(async () => {
       try {
         const result = await getAiRecommendation(userPrompt);
@@ -50,6 +55,9 @@ export default function RecommendationPage() {
 
         setSubmittedPrompt(userPrompt);
         setRecommendations(result.data);
+        trackEvent("recommendation_completed", {
+          result_count: result.data.length,
+        });
         requestAnimationFrame(() => {
           resultsRef.current?.scrollIntoView({
             behavior: "smooth",
@@ -230,7 +238,16 @@ export default function RecommendationPage() {
                       {tool.reason}
                     </p>
                     <Button asChild className="mt-6 w-full">
-                      <Link href={`/tool/${tool.slug}`} prefetch={false}>
+                      <Link
+                        href={`/tool/${tool.slug}`}
+                        prefetch={false}
+                        onClick={() =>
+                          trackEvent("recommendation_result_click", {
+                            tool_slug: tool.slug,
+                            result_position: index + 1,
+                          })
+                        }
+                      >
                         Detayları incele
                         <ArrowRight
                           aria-hidden="true"

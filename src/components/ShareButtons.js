@@ -10,6 +10,7 @@ import {
   WhatsappIcon,
   WhatsappShareButton,
 } from "react-share";
+import { trackEvent } from "@/utils/analytics";
 
 export function ShareButtons({ url, title }) {
   const iconSize = 32;
@@ -28,6 +29,7 @@ export function ShareButtons({ url, title }) {
         title={title}
         hashtags={["AIKeşif", "YapayZeka"]}
         aria-label="X üzerinde paylaş"
+        onClick={() => trackEvent("tool_share", { channel: "x" })}
       >
         <TwitterIcon size={iconSize} round aria-hidden="true" />
       </TwitterShareButton>
@@ -36,6 +38,7 @@ export function ShareButtons({ url, title }) {
         url={url}
         title={title}
         aria-label="LinkedIn üzerinde paylaş"
+        onClick={() => trackEvent("tool_share", { channel: "linkedin" })}
       >
         <LinkedinIcon size={iconSize} round aria-hidden="true" />
       </LinkedinShareButton>
@@ -45,6 +48,7 @@ export function ShareButtons({ url, title }) {
         title={title}
         separator=":: "
         aria-label="WhatsApp ile paylaş"
+        onClick={() => trackEvent("tool_share", { channel: "whatsapp" })}
       >
         <WhatsappIcon size={iconSize} round aria-hidden="true" />
       </WhatsappShareButton>
@@ -53,6 +57,7 @@ export function ShareButtons({ url, title }) {
         url={url}
         quote={title}
         aria-label="Facebook üzerinde paylaş"
+        onClick={() => trackEvent("tool_share", { channel: "facebook" })}
       >
         <FacebookIcon size={iconSize} round aria-hidden="true" />
       </FacebookShareButton>

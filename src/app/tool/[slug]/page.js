@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShareButtons } from "@/components/ShareButtons";
 import { SimilarTools } from "@/components/SimilarTools";
+import { TrackedExternalLink } from "@/components/TrackedExternalLink";
 
 export const revalidate = 3600;
 
@@ -236,14 +237,19 @@ export default async function ToolDetailPage({ params }) {
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button asChild size="lg" className="min-h-12 sm:min-w-56">
-                  <a
+                  <TrackedExternalLink
                     href={tool.link}
                     target="_blank"
                     rel="noopener noreferrer nofollow"
+                    eventParameters={{
+                      tool_slug: tool.slug,
+                      category: tool.category_slug,
+                      placement: "hero",
+                    }}
                   >
                     Aracı Ücretsiz İncele
                     <ExternalLink className="ml-2 h-4 w-4" />
-                  </a>
+                  </TrackedExternalLink>
                 </Button>
                 <p className="flex items-center gap-2 text-xs text-muted-foreground">
                   <ShieldCheck className="h-4 w-4 text-emerald-500" />
@@ -315,14 +321,19 @@ export default async function ToolDetailPage({ params }) {
                   </p>
                 </div>
                 <Button asChild className="min-h-11 w-full">
-                  <a
+                  <TrackedExternalLink
                     href={tool.link}
                     target="_blank"
                     rel="noopener noreferrer nofollow"
+                    eventParameters={{
+                      tool_slug: tool.slug,
+                      category: tool.category_slug,
+                      placement: "sidebar",
+                    }}
                   >
                     {tool.name} Sitesine Git
                     <ExternalLink className="ml-2 h-4 w-4" />
-                  </a>
+                  </TrackedExternalLink>
                 </Button>
                 <div className="border-t pt-4">
                   <ShareButtons

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Star, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolCardSkeleton } from './ToolCardSkeleton';
+import { trackEvent } from '@/utils/analytics';
 // import { ToolPreviewDialog } from './ToolPreviewDialog';
 
 const tierStyles = {
@@ -63,7 +64,18 @@ export default function ToolCard({ tool }) {
 
         {/* Araç Adı */}
         <h2 className="text-xl font-bold">
-          <Link href={`/tool/${tool.slug}`} prefetch={false} className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+          <Link
+            href={`/tool/${tool.slug}`}
+            prefetch={false}
+            onClick={() =>
+              trackEvent("tool_detail_click", {
+                tool_slug: tool.slug,
+                source: "tool_card_title",
+                category: tool.category_slug,
+              })
+            }
+            className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
             {tool.name}
           </Link>
         </h2>
@@ -128,6 +140,13 @@ export default function ToolCard({ tool }) {
             <Link
               href={`/tool/${tool.slug}`}
               prefetch={false}
+              onClick={() =>
+                trackEvent("tool_detail_click", {
+                  tool_slug: tool.slug,
+                  source: "tool_card_button",
+                  category: tool.category_slug,
+                })
+              }
               className="px-3 py-1 text-sm"
             >
               Detayları İncele

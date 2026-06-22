@@ -4,6 +4,7 @@ import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "use-debounce";
+import { trackEvent } from "@/utils/analytics";
 
 export function SearchInput() {
   const searchParams = useSearchParams();
@@ -25,6 +26,10 @@ export function SearchInput() {
 
     if (debouncedSearchTerm) {
       params.set("search", debouncedSearchTerm);
+      trackEvent("tool_search", {
+        query_length: debouncedSearchTerm.length,
+        page_path: pathname,
+      });
     } else {
       params.delete("search");
     }

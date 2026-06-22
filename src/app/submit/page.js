@@ -4,6 +4,7 @@ import { CheckCircle2, Clock3, SearchCheck } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import SubmitForm from "@/components/SubmitForm";
 import { Button } from "@/components/ui/button";
+import { AnalyticsEvent } from "@/components/AnalyticsEvent";
 
 async function getCategories() {
   const supabase = createClient();
@@ -22,6 +23,7 @@ export default async function SubmitPage({ searchParams }) {
   if (status === "success") {
     return (
       <div className="mx-auto max-w-2xl py-12 text-center sm:py-20">
+        <AnalyticsEvent name="tool_submission_completed" />
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
           <CheckCircle2 aria-hidden="true" className="h-9 w-9 text-emerald-600" />
         </div>
