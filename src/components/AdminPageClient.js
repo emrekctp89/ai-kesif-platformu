@@ -89,6 +89,26 @@ function getToolQualityIssues(tool, duplicateNames, duplicateLinks) {
   return issues
 }
 
+function getCanonicalScore(tool) {
+  const descriptionLength = String(tool.description || '').trim().length
+  let score = Math.min(descriptionLength, 300) / 30
+
+  if (!isLikelyEnglishDescription(tool.description)) score += 5
+  if (tool.pricing_model) score += 2
+  if (Array.isArray(tool.platforms) && tool.platforms.length > 0) score += 2
+  if (tool.tool_tags?.length > 0) score += 1
+  if (tool.is_featured) score += 2
+
+  try {
+    const hostname = new URL(tool.link).hostname.replace(/^www\./, '')
+    if (!hostname.endsWith('topai.tools')) score += 4
+  } catch {
+    score -= 5
+  }
+
+  return score
+}
+
 function PendingToolCard({ tool, categories, allTags, hasDuplicateLink }) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
@@ -280,6 +300,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
     const [searchTerm, setSearchTerm] = React.useState('');
     const [qualityFilter, setQualityFilter] = React.useState('all');
     const [sortMode, setSortMode] = React.useState('issues');
+    const [duplicateView, setDuplicateView] = React.useState('groups');
     const duplicateNames = React.useMemo(() => {
       const counts = new Map()
       approvedTools.forEach((tool) => {
@@ -366,6 +387,64 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
           String(a.tool.name || '').localeCompare(String(b.tool.name || ''), 'tr')
         )
       });
+    const duplicateGroups = React.useMemo(() => {
+      const groups = new Map()
+
+      auditedTools.forEach((entry) => {
+        if (
+          entry.duplicateNameCount <= 1 &&
+          entry.duplicateLinkCount <= 1
+        ) {
+          return
+        }
+
+        const normalizedLink = normalizeToolLink(entry.tool.link)
+        const normalizedName = String(entry.tool.name || '')
+          .trim()
+          .toLocaleLowerCase('tr-TR')
+        const groupKey =
+          entry.duplicateLinkCount > 1
+            ? `link:${normalizedLink}`
+            : `name:${normalizedName}`
+
+        if (!groups.has(groupKey)) groups.set(groupKey, [])
+        groups.get(groupKey).push(entry)
+      })
+
+      return Array.from(groups.entries())
+        .map(([key, entries]) => {
+          const sortedEntries = [...entries].sort(
+            (a, b) =>
+              getCanonicalScore(b.tool) - getCanonicalScore(a.tool) ||
+              new Date(a.tool.created_at || 0) - new Date(b.tool.created_at || 0)
+          )
+          return {
+            key,
+            entries: sortedEntries,
+            recommendedId: sortedEntries[0]?.tool.id,
+          }
+        })
+        .filter(({ entries }) => entries.length > 1)
+        .sort(
+          (a, b) =>
+            b.entries.length - a.entries.length ||
+            String(a.entries[0]?.tool.name || '').localeCompare(
+              String(b.entries[0]?.tool.name || ''),
+              'tr'
+            )
+        )
+    }, [auditedTools])
+    const visibleDuplicateGroups = duplicateGroups.filter(({ entries }) =>
+      entries.some(({ tool }) =>
+        !normalizedSearch ||
+        [tool.name, tool.description, tool.category_name, tool.link].some(
+          (value) =>
+            String(value || '')
+              .toLocaleLowerCase('tr-TR')
+              .includes(normalizedSearch)
+        )
+      )
+    )
 
     return (
         <Card>
@@ -416,11 +495,121 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                   <Badge variant="secondary">{qualityCounts.metadata} eksik metadata</Badge>
                 </div>
 
+                {qualityFilter === 'duplicate' && (
+                  <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">
+                        {visibleDuplicateGroups.length} tekrar kümesi
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Önerilen kayıt, veri doluluğu ve resmî bağlantı olasılığına göre hesaplanır.
+                      </p>
+                    </div>
+                    <select
+                      value={duplicateView}
+                      onChange={(event) => setDuplicateView(event.target.value)}
+                      className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      aria-label="Tekrar görünümü"
+                    >
+                      <option value="groups">Kümeler halinde</option>
+                      <option value="list">Düz liste</option>
+                    </select>
+                  </div>
+                )}
+
                 <p className="text-sm text-muted-foreground" role="status">
-                  {filteredTools.length} araç gösteriliyor.
+                  {qualityFilter === 'duplicate' && duplicateView === 'groups'
+                    ? `${visibleDuplicateGroups.length} tekrar kümesi gösteriliyor.`
+                    : `${filteredTools.length} araç gösteriliyor.`}
                 </p>
                 <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                    {filteredTools.map(({
+                    {qualityFilter === 'duplicate' && duplicateView === 'groups'
+                      ? visibleDuplicateGroups.map((group) => (
+                        <section
+                          key={group.key}
+                          className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3"
+                        >
+                          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <h3 className="font-semibold">
+                                {group.entries[0].tool.name}
+                              </h3>
+                              <p className="text-xs text-muted-foreground">
+                                {group.entries.length} kayıt karşılaştırılıyor
+                              </p>
+                            </div>
+                            <Badge variant="secondary">
+                              {group.key.startsWith('link:')
+                                ? 'Aynı bağlantı'
+                                : 'Aynı ad'}
+                            </Badge>
+                          </div>
+                          <div className="grid gap-3 xl:grid-cols-2">
+                            {group.entries.map(({ tool, issues }) => (
+                              <article
+                                key={tool.id}
+                                className="rounded-lg border bg-background p-3"
+                              >
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Badge variant="outline">
+                                    {tool.category_name || 'Kategorisiz'}
+                                  </Badge>
+                                  {tool.id === group.recommendedId && (
+                                    <Badge className="bg-emerald-600 hover:bg-emerald-600">
+                                      Korunması önerilen
+                                    </Badge>
+                                  )}
+                                  <span className="text-xs text-muted-foreground">
+                                    #{tool.id}
+                                  </span>
+                                </div>
+                                <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">
+                                  {tool.description || 'Açıklama yok.'}
+                                </p>
+                                <p className="mt-2 truncate text-xs text-muted-foreground">
+                                  {normalizeToolLink(tool.link)}
+                                </p>
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                  {issues.map((issue, index) => (
+                                    <Badge
+                                      key={`${issue.key}-${issue.label}-${index}`}
+                                      variant="secondary"
+                                      className="text-amber-700 dark:text-amber-300"
+                                    >
+                                      {issue.label}
+                                    </Badge>
+                                  ))}
+                                </div>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  <Button asChild variant="outline" size="sm">
+                                    <Link
+                                      href={`/tool/${tool.slug}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      Canlı sayfa
+                                      <ExternalLink
+                                        aria-hidden="true"
+                                        className="ml-2 h-4 w-4"
+                                      />
+                                    </Link>
+                                  </Button>
+                                  <EditToolDialog
+                                    tool={tool}
+                                    categories={categories}
+                                    allTags={allTags}
+                                  />
+                                  <DeleteToolButton
+                                    toolId={tool.id}
+                                    toolName={tool.name}
+                                  />
+                                </div>
+                              </article>
+                            ))}
+                          </div>
+                        </section>
+                      ))
+                      : filteredTools.map(({
                       tool,
                       issues,
                       duplicateNameCount,
@@ -480,7 +669,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                             </div>
                         </div>
                     ))}
-                    {filteredTools.length === 0 && (
+                    {((qualityFilter === 'duplicate' &&
+                      duplicateView === 'groups' &&
+                      visibleDuplicateGroups.length === 0) ||
+                      (!(qualityFilter === 'duplicate' &&
+                        duplicateView === 'groups') &&
+                        filteredTools.length === 0)) && (
                       <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
                         Bu arama ve kalite filtresiyle eşleşen araç bulunamadı.
                       </div>
