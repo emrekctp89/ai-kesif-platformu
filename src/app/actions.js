@@ -728,29 +728,87 @@ export async function updateTool(formData) {
     return { error: "Yetkiniz yok." };
   }
 
-  // Formdan güncellenecek verileri alıyoruz
-  const toolId = formData.get("toolId");
-  const name = formData.get("name");
-  const link = formData.get("link");
-  const description = formData.get("description");
-  const category_id = formData.get("category_id");
-  const pricing_model = formData.get("pricing_model");
-  const platforms = formData.getAll("platforms");
-  const tier = formData.get("tier"); // YENİ: Seviye bilgisini formdan alıyoruz
+  const toolId = String(formData.get("toolId") || "").trim();
+  const name = String(formData.get("name") || "").trim();
+  const rawLink = String(formData.get("link") || "").trim();
+  const description = String(formData.get("description") || "").trim();
+  const category_id = String(formData.get("category_id") || "").trim();
+  const pricing_model = String(formData.get("pricing_model") || "").trim();
+  const platforms = formData
+    .getAll("platforms")
+    .map((platform) => String(platform));
+  const tier = String(formData.get("tier") || "").trim();
+  const allowedPricingModels = [
+    "Ücretsiz",
+    "Freemium",
+    "Abonelik",
+    "Tek Seferlik Ödeme",
+  ];
+  const allowedPlatforms = [
+    "Web",
+    "iOS",
+    "Android",
+    "Windows",
+    "macOS",
+    "Linux",
+    "Chrome Uzantısı",
+  ];
+  const allowedTiers = ["Normal", "Pro", "Sponsorlu"];
 
-  if (!toolId || !name || !link || !category_id) {
+  if (!toolId || !name || !rawLink || !category_id) {
     return { error: "Tüm zorunlu alanlar doldurulmalıdır." };
   }
 
-  // Veritabanında güncellenecek obje
+  if (name.length < 2 || name.length > 100) {
+    return { error: "Araç adı 2 ile 100 karakter arasında olmalıdır." };
+  }
+
+  if (description.length > 1200) {
+    return { error: "Açıklama en fazla 1200 karakter olabilir." };
+  }
+
+  let normalizedLink;
+  try {
+    const parsedLink = new URL(rawLink);
+    if (!["http:", "https:"].includes(parsedLink.protocol)) {
+      throw new Error("Invalid protocol");
+    }
+    normalizedLink = parsedLink.toString();
+  } catch {
+    return { error: "Geçerli bir HTTP veya HTTPS bağlantısı girin." };
+  }
+
+  if (pricing_model && !allowedPricingModels.includes(pricing_model)) {
+    return { error: "Geçersiz fiyatlandırma modeli." };
+  }
+
+  if (platforms.some((platform) => !allowedPlatforms.includes(platform))) {
+    return { error: "Geçersiz platform seçimi." };
+  }
+
+  if (!allowedTiers.includes(tier)) {
+    return { error: "Geçersiz araç seviyesi." };
+  }
+
+  const { data: category } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("id", category_id)
+    .maybeSingle();
+
+  if (!category) {
+    return { error: "Geçerli bir kategori seçin." };
+  }
+
   const updatedData = {
     name,
-    link,
+    link: normalizedLink,
     description,
     category_id,
     pricing_model: pricing_model || null,
     platforms,
-    tier, // YENİ: Güncellenecek veriye ekliyoruz
+    tier,
+    updated_at: new Date().toISOString(),
   };
 
   const { error } = await supabase

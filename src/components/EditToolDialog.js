@@ -30,12 +30,20 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox"; // Checkbox'ı import ediyoruz
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import { updateTool, assignTagsToTool } from "@/app/actions";
 import toast from "react-hot-toast";
-import { Check, ChevronsUpDown } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  CheckCircle2,
+  ChevronsUpDown,
+  LoaderCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ToolVariantManager } from "./ToolVariantManager";
+import { useRouter } from "next/navigation";
 
 // Fiyatlandırma ve Platform seçeneklerini tanımlıyoruz
 const pricingModels = [
@@ -127,35 +135,77 @@ function MultiSelectTags({ allTags, initialSelectedTags }) {
 
 // Ana Düzenleme Penceresi
 export function EditToolDialog({ tool, categories, allTags }) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [name, setName] = useState(tool.name || "");
+  const [link, setLink] = useState(tool.link || "");
+  const [description, setDescription] = useState(tool.description || "");
+  const [pricingModel, setPricingModel] = useState(tool.pricing_model || "");
+  const [selectedPlatforms, setSelectedPlatforms] = useState(
+    new Set(tool.platforms || [])
+  );
 
-  // Bu fonksiyon artık sadece ana araç bilgilerini ve etiketleri güncelliyor.
-  // Varyantlar kendi içlerinde yönetilecek.
-  const handleFormAction = async (formData) => {
-    const toolUpdateResult = await updateTool(formData);
-    if (toolUpdateResult?.error) {
-      toast.error(toolUpdateResult.error);
-      return;
+  const parsedLink = React.useMemo(() => {
+    try {
+      const url = new URL(link);
+      return ["http:", "https:"].includes(url.protocol);
+    } catch {
+      return false;
     }
-    const tagAssignResult = await assignTagsToTool(formData);
-    if (tagAssignResult?.error) {
-      toast.error(tagAssignResult.error);
-    } else {
+  }, [link]);
+  const qualityChecks = [
+    { label: "İsim hazır", passed: name.trim().length >= 2 },
+    { label: "Bağlantı geçerli", passed: parsedLink },
+    { label: "Açıklama yeterli", passed: description.trim().length >= 80 },
+    { label: "Fiyat bilgisi var", passed: Boolean(pricingModel) },
+    { label: "Platform seçildi", passed: selectedPlatforms.size > 0 },
+  ];
+  const passedCheckCount = qualityChecks.filter((check) => check.passed).length;
+  const qualityProgress = (passedCheckCount / qualityChecks.length) * 100;
+  const canSave = name.trim().length >= 2 && parsedLink && !isSaving;
+
+  const handleOpenChange = (open) => {
+    setIsOpen(open);
+    if (open) {
+      setName(tool.name || "");
+      setLink(tool.link || "");
+      setDescription(tool.description || "");
+      setPricingModel(tool.pricing_model || "");
+      setSelectedPlatforms(new Set(tool.platforms || []));
+    }
+  };
+
+  const handleFormAction = async (formData) => {
+    setIsSaving(true);
+    try {
+      const toolUpdateResult = await updateTool(formData);
+      if (toolUpdateResult?.error) {
+        toast.error(toolUpdateResult.error);
+        return;
+      }
+      const tagAssignResult = await assignTagsToTool(formData);
+      if (tagAssignResult?.error) {
+        toast.error(tagAssignResult.error);
+        return;
+      }
+
       toast.success("Araç ve etiketleri başarıyla güncellendi.");
-      // Varyantlar ayrı kaydedildiği için pencereyi kapatmıyoruz
+      setIsOpen(false);
+      router.refresh();
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           Düzenle
         </Button>
       </DialogTrigger>
-      {/* DEĞİŞİKLİK: Pencereyi daha geniş yapıyoruz (max-w-3xl) */}
       <DialogContent className="sm:max-w-3xl">
-        {" "}
         <DialogHeader>
           <DialogTitle>{tool.name} Aracını Düzenle</DialogTitle>
           <DialogDescription>
@@ -167,40 +217,101 @@ export function EditToolDialog({ tool, categories, allTags }) {
           className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-4"
         >
           <input type="hidden" name="toolId" value={tool.id} />
+          <section className="rounded-lg border bg-muted/30 p-3" aria-label="Veri kalitesi kontrolü">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold">
+                  Veri kalitesi: {passedCheckCount}/{qualityChecks.length}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Zorunlu alanlar geçerli olduğunda kaydedebilirsin.
+                </p>
+              </div>
+              <Badge variant={passedCheckCount === qualityChecks.length ? "default" : "secondary"}>
+                %{Math.round(qualityProgress)}
+              </Badge>
+            </div>
+            <Progress value={qualityProgress} className="mt-3" />
+            <div className="mt-3 flex flex-wrap gap-2">
+              {qualityChecks.map((check) => (
+                <span
+                  key={check.label}
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs",
+                    check.passed
+                      ? "border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
+                      : "border-amber-500/30 text-amber-700 dark:text-amber-300"
+                  )}
+                >
+                  {check.passed ? (
+                    <CheckCircle2 aria-hidden="true" className="h-3.5 w-3.5" />
+                  ) : (
+                    <AlertTriangle aria-hidden="true" className="h-3.5 w-3.5" />
+                  )}
+                  {check.label}
+                </span>
+              ))}
+            </div>
+          </section>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
+            <Label htmlFor={`name-${tool.id}`} className="text-right">
               İsim
             </Label>
             <Input
-              id="name"
+              id={`name-${tool.id}`}
               name="name"
-              defaultValue={tool.name}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
               className="col-span-3"
+              minLength={2}
+              maxLength={100}
               required
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="link" className="text-right">
+            <Label htmlFor={`link-${tool.id}`} className="text-right">
               Link
             </Label>
-            <Input
-              id="link"
-              name="link"
-              defaultValue={tool.link}
-              className="col-span-3"
-              required
-            />
+            <div className="col-span-3">
+              <Input
+                id={`link-${tool.id}`}
+                name="link"
+                value={link}
+                onChange={(event) => setLink(event.target.value)}
+                className={cn(!parsedLink && link && "border-destructive")}
+                maxLength={2048}
+                aria-invalid={Boolean(link) && !parsedLink}
+                required
+              />
+              {link && !parsedLink && (
+                <p className="mt-1 text-xs text-destructive">
+                  http:// veya https:// ile başlayan geçerli bir adres girin.
+                </p>
+              )}
+            </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className="text-right">
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor={`description-${tool.id}`} className="pt-2 text-right">
               Açıklama
             </Label>
-            <Textarea
-              id="description"
-              name="description"
-              defaultValue={tool.description}
-              className="col-span-3"
-            />
+            <div className="col-span-3">
+              <Textarea
+                id={`description-${tool.id}`}
+                name="description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                className="min-h-28"
+                maxLength={1200}
+              />
+              <div className="mt-1 flex justify-between gap-3 text-xs text-muted-foreground">
+                <span>
+                  {description.trim().length < 80
+                    ? "Kaliteli bir açıklama için en az 80 karakter önerilir."
+                    : "Açıklama uzunluğu uygun."}
+                </span>
+                <span>{description.length}/1200</span>
+              </div>
+            </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="category_id" className="text-right">
@@ -228,7 +339,8 @@ export function EditToolDialog({ tool, categories, allTags }) {
             <select
               name="pricing_model"
               id="pricing_model"
-              defaultValue={tool.pricing_model || ""}
+              value={pricingModel}
+              onChange={(event) => setPricingModel(event.target.value)}
               className="col-span-3 mt-1 block w-full pl-3 pr-10 py-2.5 text-base border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">Seçilmedi</option>
@@ -249,7 +361,15 @@ export function EditToolDialog({ tool, categories, allTags }) {
                     id={`platform-${platform}`}
                     name="platforms"
                     value={platform}
-                    defaultChecked={tool.platforms?.includes(platform)}
+                    checked={selectedPlatforms.has(platform)}
+                    onCheckedChange={(checked) =>
+                      setSelectedPlatforms((current) => {
+                        const next = new Set(current);
+                        if (checked) next.add(platform);
+                        else next.delete(platform);
+                        return next;
+                      })
+                    }
                   />
                   <Label
                     htmlFor={`platform-${platform}`}
@@ -300,7 +420,19 @@ export function EditToolDialog({ tool, categories, allTags }) {
                 İptal
               </Button>
             </DialogClose>
-            <Button type="submit">Değişiklikleri Kaydet</Button>
+            <Button type="submit" disabled={!canSave}>
+              {isSaving ? (
+                <>
+                  <LoaderCircle
+                    aria-hidden="true"
+                    className="mr-2 h-4 w-4 animate-spin"
+                  />
+                  Kaydediliyor…
+                </>
+              ) : (
+                "Değişiklikleri Kaydet"
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
