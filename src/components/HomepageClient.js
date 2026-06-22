@@ -37,6 +37,11 @@ const quickStarts = [
   },
 ];
 
+const sortLabels = {
+  rating: "En yüksek puanlı",
+  popularity: "En çok oylanan",
+};
+
 export function HomepageClient({
   initialData,
   searchParams: serverSearchParams,
@@ -50,14 +55,104 @@ export function HomepageClient({
 
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const activeQueryParams = useMemo(
-    () =>
-      Array.from(searchParams.entries()).filter(
-        ([key, value]) => key !== "page" && value
-      ),
-    [searchParams]
-  );
-  const hasUserFilters = activeQueryParams.length > 0;
+  const searchParamsString = searchParams.toString();
+  const activeFilters = useMemo(() => {
+    const filters = [];
+    const categoryNames = new Map(
+      categories.map((category) => [category.slug, category.name])
+    );
+    const tagNames = new Map(allTags.map((tag) => [String(tag.id), tag.name]));
+    const addFilter = ({ key, value, label, multiValue }) => {
+      const nextParams = new URLSearchParams(searchParamsString);
+
+      if (multiValue) {
+        const remainingValues = (nextParams.get(key) || "")
+          .split(",")
+          .filter((item) => item && item !== value);
+
+        if (remainingValues.length > 0) {
+          nextParams.set(key, remainingValues.join(","));
+        } else {
+          nextParams.delete(key);
+        }
+      } else {
+        nextParams.delete(key);
+      }
+
+      nextParams.delete("page");
+      const query = nextParams.toString();
+      filters.push({
+        id: `${key}-${value}`,
+        label,
+        href: query ? `${pathname}?${query}` : pathname,
+      });
+    };
+
+    const search = searchParams.get("search");
+    if (search) {
+      const shortenedSearch =
+        search.length > 32 ? `${search.slice(0, 32)}…` : search;
+      addFilter({
+        key: "search",
+        value: search,
+        label: `Arama: “${shortenedSearch}”`,
+      });
+    }
+
+    const category = searchParams.get("category");
+    if (category) {
+      addFilter({
+        key: "category",
+        value: category,
+        label: `Kategori: ${categoryNames.get(category) || category}`,
+      });
+    }
+
+    (searchParams.get("tags") || "")
+      .split(",")
+      .filter(Boolean)
+      .forEach((tagId) =>
+        addFilter({
+          key: "tags",
+          value: tagId,
+          label: `Etiket: ${tagNames.get(tagId) || `#${tagId}`}`,
+          multiValue: true,
+        })
+      );
+
+    const pricing = searchParams.get("pricing");
+    if (pricing) {
+      addFilter({
+        key: "pricing",
+        value: pricing,
+        label: `Fiyat: ${pricing}`,
+      });
+    }
+
+    (searchParams.get("platforms") || "")
+      .split(",")
+      .filter(Boolean)
+      .forEach((platform) =>
+        addFilter({
+          key: "platforms",
+          value: platform,
+          label: `Platform: ${platform}`,
+          multiValue: true,
+        })
+      );
+
+    const sort = searchParams.get("sort");
+    if (sort) {
+      addFilter({
+        key: "sort",
+        value: sort,
+        label: `Sıralama: ${sortLabels[sort] || sort}`,
+      });
+    }
+
+    return filters;
+  }, [allTags, categories, pathname, searchParams, searchParamsString]);
+  const hasUserFilters = activeFilters.length > 0;
 
   // Herhangi bir filtrenin aktif olup olmadığını kontrol ediyoruz.
   const hasActiveFilters = useMemo(() => {
@@ -120,25 +215,48 @@ export function HomepageClient({
       </div>
 
       {hasUserFilters && (
-        <div
-          className="flex flex-col gap-3 rounded-xl border bg-muted/35 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-          role="status"
+        <section
+          className="rounded-xl border bg-muted/35 px-4 py-3"
+          aria-labelledby="active-filters-heading"
         >
-          <div>
-            <p className="text-sm font-semibold">
-              {activeQueryParams.length} arama veya filtre etkin
-            </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Sonuçlar seçtiğin ölçütlere göre daraltıldı.
-            </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 id="active-filters-heading" className="text-sm font-semibold">
+                {activeFilters.length} ölçüt etkin
+              </h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Kaldırmak istediğin ölçüte dokunabilirsin.
+              </p>
+            </div>
+            <Button asChild variant="ghost" size="sm" className="self-start sm:self-auto">
+              <Link href={pathname} scroll={false}>
+                Tümünü temizle
+                <X aria-hidden="true" className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
-          <Button asChild variant="ghost" size="sm" className="self-start sm:self-auto">
-            <Link href={pathname} scroll={false}>
-              Tümünü temizle
-              <X aria-hidden="true" className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {activeFilters.map((filter) => (
+              <Link
+                key={filter.id}
+                href={filter.href}
+                scroll={false}
+                aria-label={`${filter.label} ölçütünü kaldır`}
+                onClick={() =>
+                  trackEvent("active_filter_remove", {
+                    filter_type: filter.id.split("-")[0],
+                    remaining_filter_count: activeFilters.length - 1,
+                  })
+                }
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:border-destructive/50 hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <span>{filter.label}</span>
+                <X aria-hidden="true" className="h-3.5 w-3.5" />
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       {!fixedSearchParams && !hasActiveFilters && (
