@@ -8,6 +8,7 @@ import { FilterSheet } from "@/components/FilterSheet";
 import { InfiniteToolsList } from "@/components/InfiniteToolsList";
 import { ToolsGridSkeleton } from "@/components/ToolsGridSkeleton";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/utils/analytics";
 import {
   ArrowRight,
   Code2,
@@ -129,7 +130,15 @@ export function HomepageClient({
             </div>
 
             <Button asChild size="lg" className="min-h-12 shrink-0">
-              <Link href="/tavsiye" prefetch={false}>
+              <Link
+                href="/tavsiye"
+                prefetch={false}
+                onClick={() =>
+                  trackEvent("recommendation_cta_click", {
+                    source: "homepage_quick_start",
+                  })
+                }
+              >
                 AI ile araç bul
                 <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" />
               </Link>
@@ -145,6 +154,12 @@ export function HomepageClient({
                 key={href}
                 href={href}
                 prefetch={false}
+                onClick={() =>
+                  trackEvent("quick_start_click", {
+                    destination: href,
+                    label,
+                  })
+                }
                 className="inline-flex min-h-10 items-center gap-2 rounded-full border bg-background px-3 py-2 text-xs font-semibold transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
               >
                 <Icon aria-hidden="true" className="h-4 w-4" />
