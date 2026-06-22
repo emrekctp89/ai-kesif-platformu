@@ -14,14 +14,17 @@ import {
 import { Button } from "@/components/ui/button"
 import { deleteTool } from "@/app/actions"
 import toast from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 
-export function DeleteToolButton({ toolId }) {
+export function DeleteToolButton({ toolId, toolName = "Bu araç" }) {
+  const router = useRouter()
   const handleFormAction = async (formData) => {
     const result = await deleteTool(formData);
     if (result?.error) {
         toast.error(result.error);
     } else {
-        toast.success("Araç başarıyla silindi.");
+        toast.success(`${toolName} başarıyla silindi.`);
+        router.refresh();
     }
   }
 
@@ -32,10 +35,10 @@ export function DeleteToolButton({ toolId }) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
-          {/* HATA BURADAYDI, DÜZELTİLDİ */}
+          <AlertDialogTitle>{toolName} kalıcı olarak silinsin mi?</AlertDialogTitle>
           <AlertDialogDescription>
-            Bu işlem geri alınamaz. Bu araç kalıcı olarak silinecek ve bu araca ait tüm veriler (puanlar, yorumlar, favoriler) kaybolacaktır.
+            Bu işlem geri alınamaz. <strong>{toolName}</strong> ve bu araca ait
+            puanlar, yorumlar ve favoriler kalıcı olarak kaybolacaktır.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -279,6 +279,7 @@ function ApprovalQueueTab({
 function ToolManagementTab({ approvedTools, categories, allTags }) {
     const [searchTerm, setSearchTerm] = React.useState('');
     const [qualityFilter, setQualityFilter] = React.useState('all');
+    const [sortMode, setSortMode] = React.useState('issues');
     const duplicateNames = React.useMemo(() => {
       const counts = new Map()
       approvedTools.forEach((tool) => {
@@ -300,6 +301,11 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         approvedTools.map((tool) => ({
           tool,
           issues: getToolQualityIssues(tool, duplicateNames, duplicateLinks),
+          duplicateNameCount:
+            duplicateNames.get(
+              String(tool.name || '').trim().toLocaleLowerCase('tr-TR')
+            ) || 0,
+          duplicateLinkCount: duplicateLinks.get(normalizeToolLink(tool.link)) || 0,
         })),
       [approvedTools, duplicateLinks, duplicateNames]
     )
@@ -323,20 +329,43 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
       [auditedTools]
     )
     const normalizedSearch = searchTerm.trim().toLocaleLowerCase('tr-TR')
-    const filteredTools = auditedTools.filter(({ tool, issues }) => {
-      const matchesSearch =
-        !normalizedSearch ||
-        [tool.name, tool.description, tool.category_name, tool.link].some((value) =>
-          String(value || '').toLocaleLowerCase('tr-TR').includes(normalizedSearch)
-        )
-      const matchesQuality =
-        qualityFilter === 'all' ||
-        (qualityFilter === 'ready'
-          ? issues.length === 0
-          : issues.some((issue) => issue.key === qualityFilter))
+    const filteredTools = auditedTools
+      .filter(({ tool, issues }) => {
+        const matchesSearch =
+          !normalizedSearch ||
+          [tool.name, tool.description, tool.category_name, tool.link].some((value) =>
+            String(value || '').toLocaleLowerCase('tr-TR').includes(normalizedSearch)
+          )
+        const matchesQuality =
+          qualityFilter === 'all' ||
+          (qualityFilter === 'ready'
+            ? issues.length === 0
+            : issues.some((issue) => issue.key === qualityFilter))
 
-      return matchesSearch && matchesQuality
-    });
+        return matchesSearch && matchesQuality
+      })
+      .sort((a, b) => {
+        if (sortMode === 'name') {
+          return String(a.tool.name || '').localeCompare(
+            String(b.tool.name || ''),
+            'tr'
+          )
+        }
+        if (sortMode === 'newest') {
+          return new Date(b.tool.created_at || 0) - new Date(a.tool.created_at || 0)
+        }
+        if (sortMode === 'oldest') {
+          return new Date(a.tool.created_at || 0) - new Date(b.tool.created_at || 0)
+        }
+
+        const duplicateWeight = (entry) =>
+          Math.max(entry.duplicateNameCount, entry.duplicateLinkCount) * 2
+        return (
+          b.issues.length + duplicateWeight(b) -
+            (a.issues.length + duplicateWeight(a)) ||
+          String(a.tool.name || '').localeCompare(String(b.tool.name || ''), 'tr')
+        )
+      });
 
     return (
         <Card>
@@ -347,7 +376,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_240px]">
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px_210px]">
                   <Input
                       placeholder="İsim, açıklama, kategori veya bağlantı ara..."
                       value={searchTerm}
@@ -367,6 +396,17 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                     <option value="metadata">Eksik fiyat/platform ({qualityCounts.metadata})</option>
                     <option value="ready">Sorunsuz ({qualityCounts.ready})</option>
                   </select>
+                  <select
+                    value={sortMode}
+                    onChange={(event) => setSortMode(event.target.value)}
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    aria-label="Araç sıralaması"
+                  >
+                    <option value="issues">En çok sorun önce</option>
+                    <option value="name">İsme göre</option>
+                    <option value="newest">En yeni kayıtlar</option>
+                    <option value="oldest">En eski kayıtlar</option>
+                  </select>
                 </div>
 
                 <div className="flex flex-wrap gap-2" aria-label="Veri kalitesi özeti">
@@ -380,7 +420,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                   {filteredTools.length} araç gösteriliyor.
                 </p>
                 <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                    {filteredTools.map(({ tool, issues }) => (
+                    {filteredTools.map(({
+                      tool,
+                      issues,
+                      duplicateNameCount,
+                      duplicateLinkCount,
+                    }) => (
                         <div key={tool.id} className="p-3 rounded-lg border flex flex-wrap justify-between items-start gap-4">
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-2">
@@ -391,6 +436,16 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                                 {tool.description || 'Açıklama yok.'}
                               </p>
                               <div className="mt-2 flex flex-wrap gap-1.5">
+                                {duplicateLinkCount > 1 && (
+                                  <Badge className="bg-red-600 hover:bg-red-600">
+                                    Aynı bağlantıda {duplicateLinkCount} kayıt
+                                  </Badge>
+                                )}
+                                {duplicateNameCount > 1 && (
+                                  <Badge className="bg-orange-600 hover:bg-orange-600">
+                                    Aynı adda {duplicateNameCount} kayıt
+                                  </Badge>
+                                )}
                                 {issues.length > 0 ? (
                                   issues.map((issue, index) => (
                                     <Badge
@@ -408,10 +463,20 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center justify-end gap-2">
                               <FeaturedToggle toolId={tool.id} isFeatured={tool.is_featured} />
+                              <Button asChild variant="outline" size="sm">
+                                <Link
+                                  href={`/tool/${tool.slug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  Canlı sayfa
+                                  <ExternalLink aria-hidden="true" className="ml-2 h-4 w-4" />
+                                </Link>
+                              </Button>
                               <EditToolDialog tool={tool} categories={categories} allTags={allTags} />
-                              <DeleteToolButton toolId={tool.id} />
+                              <DeleteToolButton toolId={tool.id} toolName={tool.name} />
                             </div>
                         </div>
                     ))}
