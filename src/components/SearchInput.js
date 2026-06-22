@@ -45,7 +45,7 @@ export function SearchInput() {
         id="tool-search"
         type="text"
         // DEĞİŞİKLİK: Kullanıcıyı doğal dilde arama yapmaya teşvik ediyoruz
-        placeholder="Bir araç arayın" //"Bir problem veya fikir yazın..."
+        placeholder="Ne yapmak istiyorsunuz? Örn. video oluşturma"
         className="block w-full px-4 py-2 border border-input rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}

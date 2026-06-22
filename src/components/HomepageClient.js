@@ -2,19 +2,46 @@
 
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { SearchInput } from "@/components/SearchInput";
 import { FilterSheet } from "@/components/FilterSheet";
 import { InfiniteToolsList } from "@/components/InfiniteToolsList";
 import { ToolsGridSkeleton } from "@/components/ToolsGridSkeleton";
 import { Button } from "@/components/ui/button";
-import { Sparkles, X } from "lucide-react";
+import {
+  ArrowRight,
+  Code2,
+  ImageIcon,
+  Megaphone,
+  Sparkles,
+  WandSparkles,
+  X,
+} from "lucide-react";
+
+const quickStarts = [
+  {
+    href: "/kategori/gorsel-video",
+    label: "Görsel ve video üret",
+    icon: ImageIcon,
+  },
+  {
+    href: "/kategori/pazarlama",
+    label: "Pazarlama içeriği hazırla",
+    icon: Megaphone,
+  },
+  {
+    href: "/kategori/kod-yazilim",
+    label: "Kodlama aracını bul",
+    icon: Code2,
+  },
+];
 
 export function HomepageClient({
   initialData,
   searchParams: serverSearchParams,
   discoverySections,
-  pageTitle = "Tüm Araçlar",
-  pageDescription = "Yapay zeka dünyasını keşfedin veya aradığınızı anında bulun.",
+  pageTitle = "İhtiyacına Uygun Yapay Zeka Aracını Bul",
+  pageDescription = "Ne yapmak istediğini ara, kategorileri keşfet veya AI tavsiyesiyle doğru araca daha hızlı ulaş.",
   fixedSearchParams,
 }) {
   const { user, favoriteToolIds, initialTools, categories, allTags } =
@@ -77,6 +104,56 @@ export function HomepageClient({
             </div>
         )}
       </div>
+
+      {!fixedSearchParams && !hasActiveFilters && (
+        <section
+          aria-labelledby="quick-start-heading"
+          className="rounded-2xl border bg-gradient-to-br from-primary/5 via-background to-purple-500/5 p-4 shadow-sm sm:p-6"
+        >
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-xl">
+              <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                <WandSparkles aria-hidden="true" className="h-4 w-4" />
+                Hızlı başlangıç
+              </div>
+              <h2
+                id="quick-start-heading"
+                className="mt-2 text-xl font-bold tracking-tight sm:text-2xl"
+              >
+                Nereden başlayacağını bilmiyor musun?
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                İhtiyacını birkaç cümleyle anlat; AI Tavsiye sana uygun araçları
+                kısa bir liste halinde sunsun.
+              </p>
+            </div>
+
+            <Button asChild size="lg" className="min-h-12 shrink-0">
+              <Link href="/tavsiye" prefetch={false}>
+                AI ile araç bul
+                <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
+            <span className="mr-1 self-center text-xs font-medium text-muted-foreground">
+              Popüler amaçlar:
+            </span>
+            {quickStarts.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                prefetch={false}
+                className="inline-flex min-h-10 items-center gap-2 rounded-full border bg-background px-3 py-2 text-xs font-semibold transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                <Icon aria-hidden="true" className="h-4 w-4" />
+                {label}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Keşif Bölümü */}
       {showDiscovery && (
