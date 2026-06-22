@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { fetchMoreTools } from '@/app/actions';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Star, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye } from 'lucide-react';
+import { ArrowRight, Star, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye, SearchX, WandSparkles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolCardSkeleton } from './ToolCardSkeleton';
 import { trackEvent } from '@/utils/analytics';
@@ -169,6 +169,7 @@ export function InfiniteToolsList({
   user,
   favoriteToolIds,
   fixedSearchParams,
+  hasUserFilters,
 }) {
   const [tools, setTools] = useState(initialTools || []);
   const [page, setPage] = useState(1);
@@ -176,6 +177,7 @@ export function InfiniteToolsList({
   const [isLoading, setIsLoading] = useState(false);
   const { ref, inView } = useInView({ threshold: 0.5 });
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const searchParamsString = searchParams.toString();
   const [previewTool, setPreviewTool] = useState(null);
 
@@ -222,17 +224,60 @@ export function InfiniteToolsList({
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-8">
-        {tools.map(tool => (
-          <ToolCard 
-            key={tool.id}
-            tool={tool}
-            user={user}
-            isFavorited={favoriteToolIds?.has(tool.id)}
-            onPreviewClick={setPreviewTool}
-          />
-        ))}
-      </div>
+      {tools.length === 0 ? (
+        <div className="rounded-2xl border border-dashed bg-muted/20 px-5 py-12 text-center sm:px-8 sm:py-16">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+            <SearchX aria-hidden="true" className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <h2 className="mt-5 text-xl font-bold tracking-tight">
+            {hasUserFilters
+              ? "Bu ölçütlerle araç bulunamadı"
+              : "Henüz gösterilecek araç bulunmuyor"}
+          </h2>
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
+            {hasUserFilters
+              ? "Arama ifadesini kısaltmayı veya bazı filtreleri kaldırmayı deneyebilirsin."
+              : "Araç listesi güncelleniyor. Biraz sonra tekrar kontrol edebilirsin."}
+          </p>
+
+          {hasUserFilters && (
+            <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+              <Button asChild>
+                <Link href={pathname} scroll={false}>
+                  <X aria-hidden="true" className="mr-2 h-4 w-4" />
+                  Arama ve filtreleri temizle
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link
+                  href="/tavsiye"
+                  prefetch={false}
+                  onClick={() =>
+                    trackEvent("recommendation_cta_click", {
+                      source: "search_empty_state",
+                    })
+                  }
+                >
+                  <WandSparkles aria-hidden="true" className="mr-2 h-4 w-4" />
+                  AI ile araç bul
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-8">
+          {tools.map(tool => (
+            <ToolCard
+              key={tool.id}
+              tool={tool}
+              user={user}
+              isFavorited={favoriteToolIds?.has(tool.id)}
+              onPreviewClick={setPreviewTool}
+            />
+          ))}
+        </div>
+      )}
 
       {hasMore && (
         <div ref={ref} className="col-span-full mt-8" role="status" aria-live="polite">

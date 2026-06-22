@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { SearchInput } from "@/components/SearchInput";
 import { FilterSheet } from "@/components/FilterSheet";
@@ -49,6 +49,15 @@ export function HomepageClient({
     initialData;
 
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const activeQueryParams = useMemo(
+    () =>
+      Array.from(searchParams.entries()).filter(
+        ([key, value]) => key !== "page" && value
+      ),
+    [searchParams]
+  );
+  const hasUserFilters = activeQueryParams.length > 0;
 
   // Herhangi bir filtrenin aktif olup olmadığını kontrol ediyoruz.
   const hasActiveFilters = useMemo(() => {
@@ -85,7 +94,7 @@ export function HomepageClient({
 
         {showControls && (
             <div className="mt-4 flex flex-col items-stretch justify-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 sm:flex-row sm:items-center sm:gap-3 md:mt-6">
-              <SearchInput />
+              <SearchInput key={searchParams.get("search") || "empty-search"} />
               <FilterSheet categories={categories} allTags={allTags} />
               <Button
   variant="outline"
@@ -105,6 +114,28 @@ export function HomepageClient({
             </div>
         )}
       </div>
+
+      {hasUserFilters && (
+        <div
+          className="flex flex-col gap-3 rounded-xl border bg-muted/35 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+          role="status"
+        >
+          <div>
+            <p className="text-sm font-semibold">
+              {activeQueryParams.length} arama veya filtre etkin
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Sonuçlar seçtiğin ölçütlere göre daraltıldı.
+            </p>
+          </div>
+          <Button asChild variant="ghost" size="sm" className="self-start sm:self-auto">
+            <Link href={pathname} scroll={false}>
+              Tümünü temizle
+              <X aria-hidden="true" className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      )}
 
       {!fixedSearchParams && !hasActiveFilters && (
         <section
@@ -190,6 +221,7 @@ export function HomepageClient({
             fixedSearchParams={fixedSearchParams}
             user={user}
             favoriteToolIds={favoriteToolIds}
+            hasUserFilters={hasUserFilters}
           />
         </Suspense>
       </section>
