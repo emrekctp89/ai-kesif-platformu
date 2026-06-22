@@ -21,6 +21,7 @@ import { MessageSquarePlus } from "lucide-react";
 
 export function FeedbackDialog() {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [startedAt, setStartedAt] = React.useState(() => Date.now());
   const [isPending, startTransition] = useTransition();
   const formRef = React.useRef(null);
 
@@ -37,7 +38,13 @@ export function FeedbackDialog() {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (open) setStartedAt(Date.now());
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" className="text-sm">
           <MessageSquarePlus className="mr-2 h-4 w-4" />
@@ -56,6 +63,17 @@ export function FeedbackDialog() {
           action={handleFormAction}
           className="space-y-4 py-2"
         >
+          <input type="hidden" name="started_at" value={startedAt} />
+          <div className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+            <Label htmlFor="feedback-company-website">Şirket web sitesi</Label>
+            <input
+              id="feedback-company-website"
+              name="company_website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="email">E-posta adresiniz</Label>
             <input
