@@ -958,8 +958,20 @@ async function getAllToolsForAI() {
 export async function getAiRecommendation(userPrompt) {
   "use server";
 
-  if (!userPrompt) {
-    return { success: false, error: "Lütfen bir istek girin." };
+  const normalizedPrompt = String(userPrompt || "").trim();
+
+  if (normalizedPrompt.length < 10) {
+    return {
+      success: false,
+      error: "İhtiyacınızı en az 10 karakterle anlatın.",
+    };
+  }
+
+  if (normalizedPrompt.length > 800) {
+    return {
+      success: false,
+      error: "İsteğiniz en fazla 800 karakter olabilir.",
+    };
   }
 
   try {
@@ -976,7 +988,7 @@ export async function getAiRecommendation(userPrompt) {
     const prompt = `
           Bir "AI Araçları Keşif Platformu" için tavsiye motorusun. Kullanıcının isteğine göre, aşağıdaki listeden en uygun 3 aracı seçmelisin.
           
-          Kullanıcının isteği: "${userPrompt}"
+          Kullanıcının isteği: "${normalizedPrompt}"
 
           Mevcut Araç Listesi:
           ${formattedTools}
@@ -1043,7 +1055,32 @@ export async function getAiRecommendation(userPrompt) {
     ) {
       const textResponse = result.candidates[0].content.parts[0].text;
       const parsedJson = JSON.parse(textResponse);
-      return { success: true, data: parsedJson.recommendations };
+      const toolsBySlug = new Map(allTools.map((tool) => [tool.slug, tool]));
+      const recommendations = Array.isArray(parsedJson.recommendations)
+        ? parsedJson.recommendations
+            .filter(
+              (recommendation) =>
+                recommendation &&
+                typeof recommendation.slug === "string" &&
+                typeof recommendation.reason === "string" &&
+                toolsBySlug.has(recommendation.slug)
+            )
+            .slice(0, 3)
+            .map((recommendation) => ({
+              name: toolsBySlug.get(recommendation.slug).name,
+              slug: recommendation.slug,
+              reason: recommendation.reason.trim().slice(0, 300),
+            }))
+        : [];
+
+      if (recommendations.length === 0) {
+        return {
+          success: false,
+          error: "Bu ihtiyaç için doğrulanmış bir araç önerisi oluşturulamadı.",
+        };
+      }
+
+      return { success: true, data: recommendations };
     } else {
       return {
         success: false,
