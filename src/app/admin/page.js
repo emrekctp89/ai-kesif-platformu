@@ -14,7 +14,11 @@ async function getAdminData() {
         { data: allPosts },
         { data: challenges }
     ] = await Promise.all([
-        supabase.from("tools").select("*").eq("is_approved", false).order("created_at"),
+        supabase
+          .from("tools")
+          .select("*, categories(name), tool_tags(tags(id, name))")
+          .eq("is_approved", false)
+          .order("created_at"),
         supabase.from('showcase_items').select(`*, profiles(email)`).eq('is_approved', false).order('created_at'),
         // DÜZELTME: Onaylanmış araçları çeken RPC'yi çağırıyoruz
         supabase.rpc('get_admin_approved_tools'), 

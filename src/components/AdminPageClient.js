@@ -9,13 +9,25 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import Image from 'next/image'
-import { approveTool, approveShowcaseItem } from '@/app/actions'
+import { approveTool, approveShowcaseItem, rejectTool } from '@/app/actions'
 import { AiToolFactory } from './AiToolFactory'
 import { BlogManager } from './BlogManager'
 import { ChallengeManager } from './ChallengeManager'
@@ -24,16 +36,196 @@ import { CategoryManager } from './CategoryManager'
 import { FeaturedToggle } from './FeaturedToggle'
 import { EditToolDialog } from './EditToolDialog'
 import { DeleteToolButton } from './DeleteToolButton'
+import toast from 'react-hot-toast'
+import {
+  CalendarDays,
+  Check,
+  ExternalLink,
+  Mail,
+  ShieldAlert,
+  Trash2,
+} from 'lucide-react'
+
+function normalizeToolLink(link) {
+  try {
+    const url = new URL(link)
+    return `${url.hostname.replace(/^www\./, '')}${url.pathname.replace(/\/$/, '')}`.toLowerCase()
+  } catch {
+    return String(link || '').trim().toLowerCase()
+  }
+}
+
+function PendingToolCard({ tool, categories, allTags, hasDuplicateLink }) {
+  const router = useRouter()
+  const [isPending, startTransition] = React.useTransition()
+  const qualityWarnings = [
+    !tool.description || tool.description.trim().length < 60 ? 'Açıklama kısa' : null,
+    !tool.category_id ? 'Kategori eksik' : null,
+    !tool.link ? 'Site bağlantısı eksik' : null,
+    !tool.slug ? 'Slug eksik' : null,
+    hasDuplicateLink ? 'Benzer bağlantı yayında' : null,
+  ].filter(Boolean)
+
+  const runAction = (action, successFallback) => {
+    const formData = new FormData()
+    formData.set('toolId', tool.id)
+
+    startTransition(async () => {
+      const result = await action(formData)
+      if (result?.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success(result?.success || successFallback)
+      router.refresh()
+    })
+  }
+
+  return (
+    <article className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-semibold">{tool.name}</h3>
+            <Badge variant="outline">
+              {tool.categories?.name || 'Kategorisiz'}
+            </Badge>
+            {qualityWarnings.length === 0 && (
+              <Badge className="bg-emerald-600 hover:bg-emerald-600">
+                İncelemeye hazır
+              </Badge>
+            )}
+          </div>
+
+          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+            {tool.description || 'Açıklama girilmemiş.'}
+          </p>
+
+          <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Mail aria-hidden="true" className="h-4 w-4 shrink-0" />
+              <dt className="sr-only">Gönderen</dt>
+              <dd className="truncate">{tool.suggester_email || 'Bilinmiyor'}</dd>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <CalendarDays aria-hidden="true" className="h-4 w-4 shrink-0" />
+              <dt className="sr-only">Gönderim tarihi</dt>
+              <dd>
+                {tool.created_at
+                  ? new Intl.DateTimeFormat('tr-TR', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                      timeZone: 'Europe/Istanbul',
+                    }).format(new Date(tool.created_at))
+                  : 'Tarih bilinmiyor'}
+              </dd>
+            </div>
+          </dl>
+
+          {qualityWarnings.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2" aria-label="Veri kalitesi uyarıları">
+              {qualityWarnings.map((warning) => (
+                <Badge
+                  key={warning}
+                  variant="secondary"
+                  className="gap-1 text-amber-700 dark:text-amber-300"
+                >
+                  <ShieldAlert aria-hidden="true" className="h-3.5 w-3.5" />
+                  {warning}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex shrink-0 flex-wrap gap-2 lg:max-w-[260px] lg:justify-end">
+          {tool.link && (
+            <Button asChild variant="outline" size="sm">
+              <a href={tool.link} target="_blank" rel="noopener noreferrer">
+                Siteyi aç
+                <ExternalLink aria-hidden="true" className="ml-2 h-4 w-4" />
+              </a>
+            </Button>
+          )}
+          <EditToolDialog tool={tool} categories={categories} allTags={allTags} />
+          <Button
+            size="sm"
+            disabled={
+              isPending ||
+              qualityWarnings.includes('Site bağlantısı eksik') ||
+              qualityWarnings.includes('Kategori eksik') ||
+              qualityWarnings.includes('Slug eksik')
+            }
+            onClick={() => runAction(approveTool, 'Araç onaylandı.')}
+          >
+            <Check aria-hidden="true" className="mr-2 h-4 w-4" />
+            {isPending ? 'İşleniyor…' : 'Onayla'}
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" disabled={isPending}>
+                <Trash2 aria-hidden="true" className="mr-2 h-4 w-4" />
+                Reddet
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{tool.name} önerisi reddedilsin mi?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Bu işlem bekleyen öneriyi kalıcı olarak siler ve geri alınamaz.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={() => runAction(rejectTool, 'Araç önerisi reddedildi.')}
+                >
+                  Evet, reddet
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+    </article>
+  )
+}
 
 // "İçerik Onayı" Sekmesi
-function ApprovalQueueTab({ unapprovedTools, unapprovedShowcaseItems }) {
+function ApprovalQueueTab({
+  unapprovedTools,
+  unapprovedShowcaseItems,
+  approvedTools,
+  categories,
+  allTags,
+}) {
+    const approvedLinks = new Set(
+      approvedTools.map((tool) => normalizeToolLink(tool.link))
+    )
     return (
         <div className="space-y-6">
             <Card>
-                <CardHeader><CardTitle>Onay Bekleyen Araçlar ({unapprovedTools.length})</CardTitle></CardHeader>
+                <CardHeader>
+                  <CardTitle>Onay Bekleyen Araçlar ({unapprovedTools.length})</CardTitle>
+                  <CardDescription>
+                    Siteyi ve veri kalitesi uyarılarını inceleyin; gerekirse düzenledikten sonra onaylayın.
+                  </CardDescription>
+                </CardHeader>
                 <CardContent>
                   {unapprovedTools.length > 0 ? (
-                      <div className="space-y-4">{unapprovedTools.map((tool) => ( <div key={tool.id} className="bg-muted p-4 rounded-lg flex justify-between items-center"><div><h3 className="font-semibold">{tool.name}</h3><p className="text-sm text-muted-foreground">{tool.suggester_email}</p><a href={tool.link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline">Siteyi Görüntüle</a></div><form action={approveTool}><input type="hidden" name="toolId" value={tool.id} /><Button type="submit">Onayla</Button></form></div>))}</div>
+                      <div className="space-y-4">
+                        {unapprovedTools.map((tool) => (
+                          <PendingToolCard
+                            key={tool.id}
+                            tool={tool}
+                            categories={categories}
+                            allTags={allTags}
+                            hasDuplicateLink={approvedLinks.has(normalizeToolLink(tool.link))}
+                          />
+                        ))}
+                      </div>
                   ) : ( <p className="text-muted-foreground text-center py-4">Onay bekleyen araç bulunmuyor.</p> )}
                 </CardContent>
             </Card>
@@ -114,6 +306,9 @@ export function AdminPageClient({ data }) {
         <ApprovalQueueTab 
             unapprovedTools={unapprovedTools} 
             unapprovedShowcaseItems={unapprovedShowcaseItems} 
+            approvedTools={approvedTools}
+            categories={categories}
+            allTags={allTags}
         />
       </TabsContent>
       

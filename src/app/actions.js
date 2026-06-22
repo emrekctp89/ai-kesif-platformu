@@ -238,19 +238,114 @@ export async function submitTool(formData) {
 // Admin bir aracın önerisini onayladığında, öneren kişiye +25 Puan
 export async function approveTool(formData) {
   "use server";
-  const supabaseAdmin = createAdminClient();
-  const toolId = formData.get("toolId");
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const { error } = await supabaseAdmin
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: "Yetkiniz yok." };
+  }
+
+  const supabaseAdmin = createAdminClient();
+  const toolId = String(formData.get("toolId") || "").trim();
+
+  if (!toolId) {
+    return { error: "Araç ID'si bulunamadı." };
+  }
+
+  const { data: pendingTool, error: pendingToolError } = await supabaseAdmin
+    .from("tools")
+    .select("name, link, category_id, slug")
+    .eq("id", toolId)
+    .eq("is_approved", false)
+    .maybeSingle();
+
+  if (pendingToolError) {
+    console.error("Onay bekleyen araç okunamadı:", pendingToolError);
+    return { error: "Araç bilgileri doğrulanamadı." };
+  }
+
+  if (!pendingTool) {
+    return { error: "Araç bulunamadı veya daha önce işleme alınmış." };
+  }
+
+  if (
+    !pendingTool.name?.trim() ||
+    !pendingTool.category_id ||
+    !pendingTool.slug?.trim()
+  ) {
+    return {
+      error: "Araç onaylanmadan önce isim, kategori ve slug bilgileri tamamlanmalı.",
+    };
+  }
+
+  try {
+    const parsedLink = new URL(pendingTool.link);
+    if (!["http:", "https:"].includes(parsedLink.protocol)) {
+      throw new Error("Invalid protocol");
+    }
+  } catch {
+    return { error: "Araç onaylanmadan önce geçerli bir site bağlantısı girilmeli." };
+  }
+
+  const { data: approvedTool, error } = await supabaseAdmin
     .from("tools")
     .update({ is_approved: true })
-    .eq("id", toolId);
+    .eq("id", toolId)
+    .eq("is_approved", false)
+    .select("slug")
+    .maybeSingle();
 
-  if (error) return { error: "Araç onaylanırken bir hata oluştu." };
+  if (error) {
+    console.error("Araç onaylama hatası:", error);
+    return { error: "Araç onaylanırken bir hata oluştu." };
+  }
+
+  if (!approvedTool) return { error: "Araç daha önce işleme alınmış." };
 
   revalidatePath("/admin");
   revalidatePath("/");
+  revalidatePath(`/tool/${approvedTool.slug}`);
   return { success: "Araç başarıyla onaylandı." };
+}
+
+export async function rejectTool(formData) {
+  "use server";
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: "Yetkiniz yok." };
+  }
+
+  const toolId = String(formData.get("toolId") || "").trim();
+  if (!toolId) {
+    return { error: "Araç ID'si bulunamadı." };
+  }
+
+  const supabaseAdmin = createAdminClient();
+  const { data: rejectedTool, error } = await supabaseAdmin
+    .from("tools")
+    .delete()
+    .eq("id", toolId)
+    .eq("is_approved", false)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Araç reddetme hatası:", error);
+    return { error: "Araç reddedilirken bir hata oluştu." };
+  }
+
+  if (!rejectedTool) {
+    return { error: "Araç bulunamadı veya daha önce işleme alınmış." };
+  }
+
+  revalidatePath("/admin");
+  return { success: "Araç önerisi reddedildi." };
 }
 
 export async function signOut() {

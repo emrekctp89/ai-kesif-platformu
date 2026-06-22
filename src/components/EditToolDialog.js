@@ -267,7 +267,9 @@ export function EditToolDialog({ tool, categories, allTags }) {
             </Label>
             <MultiSelectTags
               allTags={allTags}
-              initialSelectedTags={tool.tool_tags.map((tt) => tt.tags)}
+              initialSelectedTags={(tool.tool_tags || [])
+                .map((tt) => tt.tags)
+                .filter(Boolean)}
             />
           </div>
           {/* YENİ: Araç Seviyesi */}
