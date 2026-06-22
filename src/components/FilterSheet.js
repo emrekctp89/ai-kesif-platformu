@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Sheet,
   SheetContent,
@@ -10,7 +10,6 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetFooter,
-  SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -21,38 +20,68 @@ import { SortSelect } from "./SortSelect";
 import { TagFilter } from "./TagFilter";
 import { AdvancedFilters } from "./AdvancedFilters";
 import { Label } from "@/components/ui/label";
+import { trackEvent } from "@/utils/analytics";
 
-export function FilterSheet({ categories, allTags }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isOpen, setIsOpen] = React.useState(false);
+const filterParamKeys = ["sort", "category", "tags", "pricing", "platforms"];
 
-  // Tüm filtrelerin anlık durumunu burada, tek bir yerde tutuyoruz.
-  const [tempFilters, setTempFilters] = React.useState({
+function filtersFromSearchParams(searchParams) {
+  return {
     sort: searchParams.get("sort") || "newest",
     category: searchParams.get("category") || "all",
-    tags: new Set(searchParams.get("tags")?.split(",").map(Number) || []),
+    tags: new Set(
+      (searchParams.get("tags") || "")
+        .split(",")
+        .filter(Boolean)
+        .map(Number)
+        .filter(Number.isFinite)
+    ),
     pricing: searchParams.get("pricing") || "",
-    platforms: new Set(searchParams.get("platforms")?.split(",") || []),
-  });
+    platforms: new Set(
+      (searchParams.get("platforms") || "").split(",").filter(Boolean)
+    ),
+  };
+}
 
-  // Herhangi bir filtrenin aktif olup olmadığını hesaplıyoruz.
-  const activeFilterCount = Object.values(tempFilters).reduce(
-    (count, value) => {
-      if (value instanceof Set) return count + value.size;
-      if (value && value !== "newest" && value !== "all") return count + 1;
-      return count;
-    },
-    0
+function countActiveFilters(filters) {
+  return Object.values(filters).reduce((count, value) => {
+    if (value instanceof Set) return count + value.size;
+    if (value && value !== "newest" && value !== "all") return count + 1;
+    return count;
+  }, 0);
+}
+
+export function FilterSheet({ categories, allTags, fixedSearchParams }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+  const [isOpen, setIsOpen] = React.useState(false);
+  const hasFixedCategory = Boolean(fixedSearchParams?.category);
+
+  const [tempFilters, setTempFilters] = React.useState(() =>
+    filtersFromSearchParams(searchParams)
   );
 
-  // "Filtreleri Uygula" butonuna basıldığında çalışır
+  const appliedFilterCount = countActiveFilters(
+    filtersFromSearchParams(searchParams)
+  );
+  const pendingFilterCount = countActiveFilters(tempFilters);
+
+  React.useEffect(() => {
+    setTempFilters(filtersFromSearchParams(new URLSearchParams(searchParamsString)));
+  }, [searchParamsString]);
+
   const handleApplyFilters = () => {
-    const newParams = new URLSearchParams();
+    const newParams = new URLSearchParams(searchParamsString);
+    filterParamKeys.forEach((key) => newParams.delete(key));
 
     if (tempFilters.sort && tempFilters.sort !== "newest")
       newParams.set("sort", tempFilters.sort);
-    if (tempFilters.category && tempFilters.category !== "all")
+    if (
+      !hasFixedCategory &&
+      tempFilters.category &&
+      tempFilters.category !== "all"
+    )
       newParams.set("category", tempFilters.category);
     if (tempFilters.tags.size > 0)
       newParams.set("tags", Array.from(tempFilters.tags).join(","));
@@ -60,8 +89,30 @@ export function FilterSheet({ categories, allTags }) {
     if (tempFilters.platforms.size > 0)
       newParams.set("platforms", Array.from(tempFilters.platforms).join(","));
 
-    router.push(`/?${newParams.toString()}`);
-    setIsOpen(false); // Çekmeceyi kapat
+    newParams.delete("page");
+    const query = newParams.toString();
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    trackEvent("filters_apply", {
+      filter_count: pendingFilterCount,
+      page_path: pathname,
+      has_search: Boolean(searchParams.get("search")),
+    });
+    setIsOpen(false);
+  };
+
+  const handleClearFilters = () => {
+    const newParams = new URLSearchParams(searchParamsString);
+    filterParamKeys.forEach((key) => newParams.delete(key));
+    newParams.delete("page");
+
+    const query = newParams.toString();
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    setTempFilters(filtersFromSearchParams(newParams));
+    trackEvent("filters_clear", {
+      page_path: pathname,
+      preserved_search: Boolean(newParams.get("search")),
+    });
+    setIsOpen(false);
   };
 
   return (
@@ -69,10 +120,10 @@ export function FilterSheet({ categories, allTags }) {
       <SheetTrigger asChild>
         <Button variant="outline" className="h-10 w-full sm:w-auto">
           <Filter className="mr-2 h-4 w-4" />
-          Filtrele 
-                    {activeFilterCount > 0 && (
+          Filtrele
+          {appliedFilterCount > 0 && (
             <Badge variant="secondary" className="ml-2">
-              {activeFilterCount}
+              {appliedFilterCount}
             </Badge>
           )}
         </Button>
@@ -86,14 +137,28 @@ export function FilterSheet({ categories, allTags }) {
         </SheetHeader>
         <div className="py-4 space-y-6">
           
+          {!hasFixedCategory && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <Label>Kategori</Label>
+                <CategorySelect
+                  categories={categories}
+                  value={tempFilters.category}
+                  onValueChange={(v) =>
+                    setTempFilters((f) => ({ ...f, category: v }))
+                  }
+                />
+              </div>
+            </>
+          )}
           <Separator />
           <div className="space-y-2">
-            <Label>Kategori</Label>
-            <CategorySelect
-              categories={categories}
-              value={tempFilters.category}
+            <Label>Sıralama</Label>
+            <SortSelect
+              value={tempFilters.sort}
               onValueChange={(v) =>
-                setTempFilters((f) => ({ ...f, category: v }))
+                setTempFilters((f) => ({ ...f, sort: v }))
               }
             />
           </div>
@@ -126,19 +191,17 @@ export function FilterSheet({ categories, allTags }) {
           </div>
         </div>
         <SheetFooter className="gap-2 pb-4">
-          <SheetClose asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                router.push("/");
-                setIsOpen(false);
-              }}
-            >
-              Temizle
-            </Button>
-          </SheetClose>
-          <Button onClick={handleApplyFilters}>Filtreleri Uygula</Button>
+          <Button type="button" variant="ghost" onClick={handleClearFilters}>
+            Filtreleri temizle
+          </Button>
+          <Button onClick={handleApplyFilters}>
+            Filtreleri uygula
+            {pendingFilterCount > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {pendingFilterCount}
+              </Badge>
+            )}
+          </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
