@@ -3,9 +3,9 @@ import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { HomepageClient } from "@/components/HomepageClient";
 
-const siteUrl = (
+const siteUrl = new URL(
   process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com"
-).replace(/\/$/, "");
+).origin;
 
 async function getCategory(slug) {
   const supabase = createClient(await cookies());
@@ -69,14 +69,25 @@ export async function generateMetadata({ params }) {
   return {
     title,
     description,
-    alternates: {
-      canonical: `/kategori/${category.slug}`,
-    },
     openGraph: {
       title,
       description,
       url: `/kategori/${category.slug}`,
       type: "website",
+      images: [
+        {
+          url: "/opengraph-image",
+          width: 1200,
+          height: 630,
+          alt: `${category.name} yapay zeka araçları - AI Keşif`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/opengraph-image"],
     },
   };
 }
@@ -94,27 +105,53 @@ export default async function CategoryPage({ params }) {
 
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: title,
-    description,
-    url: categoryUrl,
-    mainEntity: {
-      "@type": "ItemList",
-      numberOfItems: initialData.initialTools.length,
-      itemListElement: initialData.initialTools.map((tool, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        name: tool.name,
-        url: `${siteUrl}/tool/${tool.slug}`,
-      })),
-    },
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": categoryUrl,
+        name: title,
+        description,
+        url: categoryUrl,
+        inLanguage: "tr-TR",
+        mainEntity: {
+          "@type": "ItemList",
+          numberOfItems: initialData.initialTools.length,
+          itemListElement: initialData.initialTools.map((tool, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            name: tool.name,
+            url: `${siteUrl}/tool/${tool.slug}`,
+          })),
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${categoryUrl}#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Ana Sayfa",
+            item: siteUrl,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: category.name,
+            item: categoryUrl,
+          },
+        ],
+      },
+    ],
   };
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
       />
       <HomepageClient
         initialData={initialData}
