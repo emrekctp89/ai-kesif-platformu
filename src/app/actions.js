@@ -101,19 +101,70 @@ export async function submitTool(formData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const name = formData.get("name");
-  const link = formData.get("link");
-  const description = formData.get("description");
-  const category_id = formData.get("category_id");
+  const name = String(formData.get("name") || "").trim();
+  const rawLink = String(formData.get("link") || "").trim();
+  const description = String(formData.get("description") || "").trim();
+  const category_id = String(formData.get("category_id") || "").trim();
   // Formdan gelen misafir e-postasını alıyoruz.
-  const suggester_email_from_form = formData.get("suggester_email");
+  const suggester_email_from_form = String(
+    formData.get("suggester_email") || ""
+  ).trim();
 
   // DEĞİŞİKLİK: E-posta göndermek için doğru adresi belirliyoruz.
   const final_suggester_email = user ? user.email : suggester_email_from_form;
 
-  if (!name || !link || !category_id || !final_suggester_email) {
-    const errorMessage = "Lütfen tüm zorunlu alanları doldurun.";
+  if (
+    name.length < 2 ||
+    name.length > 80 ||
+    description.length < 20 ||
+    description.length > 600 ||
+    !category_id ||
+    !final_suggester_email
+  ) {
+    const errorMessage =
+      "Lütfen tüm alanları belirtilen kurallara uygun doldurun.";
     return redirect(`/submit?message=${encodeURIComponent(errorMessage)}`);
+  }
+
+  let normalizedLink;
+  try {
+    const parsedLink = new URL(rawLink);
+    if (!["http:", "https:"].includes(parsedLink.protocol)) {
+      throw new Error("Invalid protocol");
+    }
+    normalizedLink = parsedLink.toString();
+  } catch {
+    return redirect(
+      `/submit?message=${encodeURIComponent(
+        "Geçerli bir resmî web sitesi adresi girin."
+      )}`
+    );
+  }
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (
+    !emailPattern.test(final_suggester_email) ||
+    final_suggester_email.length > 254
+  ) {
+    return redirect(
+      `/submit?message=${encodeURIComponent(
+        "Geçerli bir e-posta adresi girin."
+      )}`
+    );
+  }
+
+  const { data: category } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("id", category_id)
+    .maybeSingle();
+
+  if (!category) {
+    return redirect(
+      `/submit?message=${encodeURIComponent(
+        "Lütfen geçerli bir kategori seçin."
+      )}`
+    );
   }
 
   const slug = slugify(name);
@@ -121,7 +172,7 @@ export async function submitTool(formData) {
   const toolData = {
     name,
     slug,
-    link,
+    link: normalizedLink,
     description,
     category_id,
     user_id: user?.id,
@@ -148,7 +199,7 @@ export async function submitTool(formData) {
       // E-posta şablonuna artık hem e-postayı hem de kullanıcının durumunu gönderiyoruz.
       react: NewToolSuggestionEmail({
         toolName: name,
-        toolLink: link,
+        toolLink: normalizedLink,
         toolDescription: description,
         suggesterEmail: final_suggester_email,
         isLoggedInUser: !!user, // user objesi varsa true, yoksa false gönderir.
@@ -158,9 +209,7 @@ export async function submitTool(formData) {
     console.error("E-posta gönderme hatası:", emailError);
   }
 
-  const successMessage =
-    "Öneriniz için teşekkürler! İncelendikten sonra sitemize eklenecektir.";
-  return redirect(`/?message=${encodeURIComponent(successMessage)}`);
+  return redirect("/submit?status=success");
 }
 
 // -- ARAÇ ÖNERİSİ ONAYLANDIĞINDA --
