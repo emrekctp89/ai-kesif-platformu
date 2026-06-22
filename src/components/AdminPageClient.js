@@ -55,6 +55,40 @@ function normalizeToolLink(link) {
   }
 }
 
+function isLikelyEnglishDescription(description) {
+  const text = String(description || '')
+  const englishMatches =
+    text.match(/\b(the|and|with|for|that|this|from|your|using|create|allows|users|tool|platform|powered)\b/gi) || []
+  const turkishMatches =
+    text.match(/[çğıöşü]|\b(ve|ile|için|bir|bu|yapay|zeka|araç|kullanıcı)\b/gi) || []
+
+  return englishMatches.length >= 3 && englishMatches.length > turkishMatches.length * 1.5
+}
+
+function getToolQualityIssues(tool, duplicateNames, duplicateLinks) {
+  const issues = []
+  const description = String(tool.description || '').trim()
+  const normalizedName = String(tool.name || '').trim().toLocaleLowerCase('tr-TR')
+  const normalizedLink = normalizeToolLink(tool.link)
+
+  if (description.length < 80) issues.push({ key: 'short', label: 'Kısa açıklama' })
+  if (isLikelyEnglishDescription(description)) {
+    issues.push({ key: 'english', label: 'İngilizce açıklama' })
+  }
+  if (!tool.pricing_model) issues.push({ key: 'metadata', label: 'Fiyat bilgisi yok' })
+  if (!Array.isArray(tool.platforms) || tool.platforms.length === 0) {
+    issues.push({ key: 'metadata', label: 'Platform bilgisi yok' })
+  }
+  if ((duplicateNames.get(normalizedName) || 0) > 1) {
+    issues.push({ key: 'duplicate', label: 'Tekrarlanan ad' })
+  }
+  if (normalizedLink && (duplicateLinks.get(normalizedLink) || 0) > 1) {
+    issues.push({ key: 'duplicate', label: 'Tekrarlanan bağlantı' })
+  }
+
+  return issues
+}
+
 function PendingToolCard({ tool, categories, allTags, hasDuplicateLink }) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
@@ -244,26 +278,136 @@ function ApprovalQueueTab({
 // YENİ: "Araç Yönetimi" Sekmesi
 function ToolManagementTab({ approvedTools, categories, allTags }) {
     const [searchTerm, setSearchTerm] = React.useState('');
-    const filteredTools = approvedTools.filter(tool => 
-        tool.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const [qualityFilter, setQualityFilter] = React.useState('all');
+    const duplicateNames = React.useMemo(() => {
+      const counts = new Map()
+      approvedTools.forEach((tool) => {
+        const key = String(tool.name || '').trim().toLocaleLowerCase('tr-TR')
+        if (key) counts.set(key, (counts.get(key) || 0) + 1)
+      })
+      return counts
+    }, [approvedTools])
+    const duplicateLinks = React.useMemo(() => {
+      const counts = new Map()
+      approvedTools.forEach((tool) => {
+        const key = normalizeToolLink(tool.link)
+        if (key) counts.set(key, (counts.get(key) || 0) + 1)
+      })
+      return counts
+    }, [approvedTools])
+    const auditedTools = React.useMemo(
+      () =>
+        approvedTools.map((tool) => ({
+          tool,
+          issues: getToolQualityIssues(tool, duplicateNames, duplicateLinks),
+        })),
+      [approvedTools, duplicateLinks, duplicateNames]
+    )
+    const qualityCounts = React.useMemo(
+      () => ({
+        all: auditedTools.length,
+        duplicate: auditedTools.filter(({ issues }) =>
+          issues.some((issue) => issue.key === 'duplicate')
+        ).length,
+        english: auditedTools.filter(({ issues }) =>
+          issues.some((issue) => issue.key === 'english')
+        ).length,
+        short: auditedTools.filter(({ issues }) =>
+          issues.some((issue) => issue.key === 'short')
+        ).length,
+        metadata: auditedTools.filter(({ issues }) =>
+          issues.some((issue) => issue.key === 'metadata')
+        ).length,
+        ready: auditedTools.filter(({ issues }) => issues.length === 0).length,
+      }),
+      [auditedTools]
+    )
+    const normalizedSearch = searchTerm.trim().toLocaleLowerCase('tr-TR')
+    const filteredTools = auditedTools.filter(({ tool, issues }) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        [tool.name, tool.description, tool.category_name, tool.link].some((value) =>
+          String(value || '').toLocaleLowerCase('tr-TR').includes(normalizedSearch)
+        )
+      const matchesQuality =
+        qualityFilter === 'all' ||
+        (qualityFilter === 'ready'
+          ? issues.length === 0
+          : issues.some((issue) => issue.key === qualityFilter))
+
+      return matchesSearch && matchesQuality
+    });
 
     return (
         <Card>
             <CardHeader>
                 <CardTitle>Onaylanmış Araçları Yönet</CardTitle>
-                <CardDescription>Mevcut araçları düzenleyin, silin veya öne çıkarın.</CardDescription>
+                <CardDescription>
+                  Veri kalitesi sorunlarını filtreleyin; araçları düzenleyin, silin veya öne çıkarın.
+                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <Input 
-                    placeholder="Bir aracı isme göre ara..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_240px]">
+                  <Input
+                      placeholder="İsim, açıklama, kategori veya bağlantı ara..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      aria-label="Araçlarda ara"
+                  />
+                  <select
+                    value={qualityFilter}
+                    onChange={(event) => setQualityFilter(event.target.value)}
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    aria-label="Veri kalitesi filtresi"
+                  >
+                    <option value="all">Tüm araçlar ({qualityCounts.all})</option>
+                    <option value="duplicate">Tekrarlar ({qualityCounts.duplicate})</option>
+                    <option value="english">İngilizce açıklama ({qualityCounts.english})</option>
+                    <option value="short">Kısa açıklama ({qualityCounts.short})</option>
+                    <option value="metadata">Eksik fiyat/platform ({qualityCounts.metadata})</option>
+                    <option value="ready">Sorunsuz ({qualityCounts.ready})</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-wrap gap-2" aria-label="Veri kalitesi özeti">
+                  <Badge variant="secondary">{qualityCounts.duplicate} tekrarlı kayıt</Badge>
+                  <Badge variant="secondary">{qualityCounts.english} İngilizce açıklama</Badge>
+                  <Badge variant="secondary">{qualityCounts.short} kısa açıklama</Badge>
+                  <Badge variant="secondary">{qualityCounts.metadata} eksik metadata</Badge>
+                </div>
+
+                <p className="text-sm text-muted-foreground" role="status">
+                  {filteredTools.length} araç gösteriliyor.
+                </p>
                 <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                    {filteredTools.map((tool) => (
-                        <div key={tool.id} className="p-3 rounded-lg border flex flex-wrap justify-between items-center gap-4">
-                            <h3 className="font-semibold">{tool.name}</h3>
+                    {filteredTools.map(({ tool, issues }) => (
+                        <div key={tool.id} className="p-3 rounded-lg border flex flex-wrap justify-between items-start gap-4">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="font-semibold">{tool.name}</h3>
+                                <Badge variant="outline">{tool.category_name || 'Kategorisiz'}</Badge>
+                              </div>
+                              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                                {tool.description || 'Açıklama yok.'}
+                              </p>
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {issues.length > 0 ? (
+                                  issues.map((issue, index) => (
+                                    <Badge
+                                      key={`${issue.key}-${issue.label}-${index}`}
+                                      variant="secondary"
+                                      className="text-amber-700 dark:text-amber-300"
+                                    >
+                                      {issue.label}
+                                    </Badge>
+                                  ))
+                                ) : (
+                                  <Badge className="bg-emerald-600 hover:bg-emerald-600">
+                                    Veri kalitesi iyi
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
                             <div className="flex items-center gap-2">
                               <FeaturedToggle toolId={tool.id} isFeatured={tool.is_featured} />
                               <EditToolDialog tool={tool} categories={categories} allTags={allTags} />
@@ -271,6 +415,11 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                             </div>
                         </div>
                     ))}
+                    {filteredTools.length === 0 && (
+                      <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+                        Bu arama ve kalite filtresiyle eşleşen araç bulunamadı.
+                      </div>
+                    )}
                 </div>
             </CardContent>
         </Card>
