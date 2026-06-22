@@ -29,7 +29,7 @@ export function MobileNav({ user, isProUser }) {
                   <SheetTitle>Ana menü</SheetTitle>
                   <SheetDescription>Site bölümleri arasında gezinin.</SheetDescription>
                 </SheetHeader>
-                <Link href="/" className="mr-6 mb-8 flex items-center space-x-2" onClick={() => setOpen(false)}>
+                <Link href="/" prefetch={false} className="mr-6 mb-8 flex items-center space-x-2" onClick={() => setOpen(false)}>
                   <Bot className="h-6 w-6 text-primary" />
                   <span className="font-bold">AI Keşif</span>
                 </Link>
@@ -44,6 +44,7 @@ export function MobileNav({ user, isProUser }) {
                       <Link
                         key={href}
                         href={href}
+                        prefetch={false}
                         onClick={() => setOpen(false)}
                         className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                       >

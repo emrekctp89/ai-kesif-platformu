@@ -49,7 +49,7 @@ export async function FeaturedTools() {
                     {tool.tier}
                   </Badge>
                 )}
-                <Link href={`/tool/${tool.slug}`}>
+                <Link href={`/tool/${tool.slug}`} prefetch={false}>
                   <h3 className="text-lg font-semibold hover:underline">
                     {tool.name}
                   </h3>
@@ -61,6 +61,7 @@ export async function FeaturedTools() {
               <div className="mt-auto flex items-center justify-between gap-3 pt-5">
                 <Link
                   href={`/kategori/${tool.category_slug}`}
+                  prefetch={false}
                   className="text-xs font-medium text-white/90 hover:underline"
                 >
                   {tool.category_name}
