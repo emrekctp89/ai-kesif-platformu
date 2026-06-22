@@ -7,7 +7,7 @@ import { fetchMoreTools } from '@/app/actions';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye } from 'lucide-react';
+import { ArrowRight, Star, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolCardSkeleton } from './ToolCardSkeleton';
 // import { ToolPreviewDialog } from './ToolPreviewDialog';
@@ -124,25 +124,16 @@ export default function ToolCard({ tool }) {
             )}
           </div>
 
-          {/* Ziyaret Et butonu zaten doğru yapılandırılmış, onClick={(e) => e.stopPropagation()} içeriyor. */}
-          {tool.link && (
-            <Button
-              asChild
-              size="sm"
-              className="hover:bg-primary/80 transition-colors"
-              onClick={(e) => e.stopPropagation()} // Bu zaten vardı ve doğruydu.
+          <Button asChild size="sm" className="transition-colors hover:bg-primary/80">
+            <Link
+              href={`/tool/${tool.slug}`}
+              prefetch={false}
+              className="px-3 py-1 text-sm"
             >
-              <Link
-                href={tool.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                prefetch={false}
-                className="px-3 py-1 text-sm"
-              >
-                Ziyaret Et
-              </Link>
-            </Button>
-          )}
+              Detayları İncele
+              <ArrowRight aria-hidden="true" className="ml-1.5 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </div>
     </article>
