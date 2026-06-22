@@ -32,12 +32,24 @@ function SubmitButton() {
 
 export default function SubmitForm({ categories, user }) {
   const [descriptionLength, setDescriptionLength] = useState(0);
+  const [startedAt] = useState(() => Date.now());
 
   return (
     <form
       action={submitTool}
       className="space-y-6 rounded-xl border bg-card p-5 shadow-sm sm:p-7"
     >
+      <input type="hidden" name="started_at" value={startedAt} />
+      <div className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+        <Label htmlFor="company_website">Şirket web sitesi</Label>
+        <Input
+          id="company_website"
+          name="company_website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="name">Araç adı *</Label>

@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function ContactPage() {
   const formRef = React.useRef(null);
+  const [startedAt] = React.useState(() => Date.now());
   // Sunucudan gelen başarı veya hata mesajını saklamak için bir state oluşturuyoruz.
   const [formMessage, setFormMessage] = React.useState(null);
   
@@ -48,6 +49,11 @@ export default function ContactPage() {
         </CardHeader>
         <CardContent>
           <form ref={formRef} action={handleFormAction} className="space-y-6">
+            <input type="hidden" name="started_at" value={startedAt} />
+            <div className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+              <Label htmlFor="contact-company-website">Şirket web sitesi</Label>
+              <Input id="contact-company-website" name="company_website" tabIndex={-1} autoComplete="off" />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="name">Adınız Soyadınız</Label>

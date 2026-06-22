@@ -22,6 +22,7 @@ import { WeeklyNewsletterEmail } from "@/components/emails/WeeklyNewsletterEmail
 import { render } from "@react-email/render";
 import * as cheerio from "cheerio";
 import { logServerError } from "@/utils/serverLogger";
+import { enforceRateLimit, validateHumanForm } from "@/utils/antiAbuse";
 
 
 
@@ -93,6 +94,27 @@ function slugify(text) {
 
 export async function submitTool(formData) {
   "use server";
+
+  const humanCheck = validateHumanForm(formData);
+  if (!humanCheck.valid) {
+    return redirect(
+      `/submit?message=${encodeURIComponent(humanCheck.error)}`
+    );
+  }
+
+  const rateLimit = await enforceRateLimit("tool-submission", {
+    limit: 3,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return redirect(
+      `/submit?message=${encodeURIComponent(
+        `Çok fazla öneri gönderdiniz. Yaklaşık ${Math.ceil(
+          rateLimit.retryAfterSeconds / 60
+        )} dakika sonra tekrar deneyin.`
+      )}`
+    );
+  }
 
   const supabase = createClient(await cookies());
   const resend = new Resend(process.env.RESEND_API_KEY);
@@ -1007,6 +1029,17 @@ async function getAllToolsForAI() {
 export async function getAiRecommendation(userPrompt) {
   "use server";
 
+  const rateLimit = await enforceRateLimit("ai-recommendation", {
+    limit: 8,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      error: `Çok sık tavsiye istediniz. ${rateLimit.retryAfterSeconds} saniye sonra tekrar deneyin.`,
+    };
+  }
+
   const normalizedPrompt = String(userPrompt || "").trim();
 
   if (normalizedPrompt.length < 10) {
@@ -1147,6 +1180,21 @@ export async function getAiRecommendation(userPrompt) {
 
 export async function sendContactMessage(formData) {
   "use server";
+
+  const humanCheck = validateHumanForm(formData);
+  if (!humanCheck.valid) return { error: humanCheck.error };
+
+  const rateLimit = await enforceRateLimit("contact-message", {
+    limit: 4,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return {
+      error: `Çok fazla mesaj gönderdiniz. Yaklaşık ${Math.ceil(
+        rateLimit.retryAfterSeconds / 60
+      )} dakika sonra tekrar deneyin.`,
+    };
+  }
 
   const name = formData.get("name");
   const senderEmail = formData.get("email");
@@ -3754,6 +3802,21 @@ const FeedbackEmail = ({ feedback, userEmail }) => (
 
 export async function sendFeedback(formData) {
   "use server";
+
+  const humanCheck = validateHumanForm(formData);
+  if (!humanCheck.valid) return { error: humanCheck.error };
+
+  const rateLimit = await enforceRateLimit("feedback", {
+    limit: 5,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return {
+      error: `Çok fazla geri bildirim gönderdiniz. Yaklaşık ${Math.ceil(
+        rateLimit.retryAfterSeconds / 60
+      )} dakika sonra tekrar deneyin.`,
+    };
+  }
 
   const supabase = createClient();
   const {
