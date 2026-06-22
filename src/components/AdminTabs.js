@@ -74,7 +74,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                         <div className="flex items-center gap-2">
                           <FeaturedToggle toolId={tool.id} isFeatured={tool.is_featured} />
                           <EditToolDialog tool={tool} categories={categories} allTags={allTags} />
-                          <DeleteToolButton toolId={tool.id} />
+                          <DeleteToolButton toolId={tool.id} toolName={tool.name} />
                         </div>
                     </div>
                 ))}
