@@ -5,6 +5,10 @@ import { FeaturedTools } from "@/components/FeaturedTools";
 import { ToolOfTheDay } from "@/components/ToolOfTheDay";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
+const siteUrl = new URL(
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com"
+).origin;
+
 // Bu fonksiyon, sayfa için gerekli olan tüm verileri sunucuda tek seferde çeker.
 async function getPageData(searchParams) {
   const supabase = createClient(await cookies());
@@ -49,13 +53,52 @@ export default async function HomePage({ searchParams }) {
     </div>
   );
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${siteUrl}/#organization`,
+        name: "AI Keşif",
+        url: siteUrl,
+        logo: `${siteUrl}/favicon.ico`,
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${siteUrl}/#website`,
+        name: "AI Keşif Platformu",
+        url: siteUrl,
+        inLanguage: "tr-TR",
+        publisher: {
+          "@id": `${siteUrl}/#organization`,
+        },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: `${siteUrl}/?search={search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  };
+
   // Hem verileri HEM DE hazır oluşturulmuş sunucu bileşenlerini
   // interaktif mantığı yönetecek olan Client Component'e aktarıyoruz.
   return (
-    <HomepageClient
-      initialData={initialData}
-      searchParams={resolvedSearchParams}
-      discoverySections={discoverySections}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
+      />
+      <HomepageClient
+        initialData={initialData}
+        searchParams={resolvedSearchParams}
+        discoverySections={discoverySections}
+      />
+    </>
   );
 }

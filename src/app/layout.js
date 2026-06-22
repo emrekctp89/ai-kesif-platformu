@@ -23,7 +23,10 @@ const onest = Onest({
 export const metadata = {
   metadataBase: new URL(siteUrl),
   applicationName: "AI Keşif Platformu",
-  title: "AI Keşif Platformu",
+  title: {
+    default: "AI Keşif | Yapay Zeka Araçları Rehberi",
+    template: "%s | AI Keşif",
+  },
   description:
     "İhtiyacınıza uygun yapay zeka araçlarını keşfedin, karşılaştırın ve doğru aracı daha hızlı bulun.",
   manifest: "/manifest.json",
@@ -32,15 +35,24 @@ export const metadata = {
     locale: "tr_TR",
     url: siteUrl,
     siteName: "AI Keşif Platformu",
-    title: "AI Keşif Platformu",
+    title: "AI Keşif | Yapay Zeka Araçları Rehberi",
     description:
       "İhtiyacınıza uygun yapay zeka araçlarını keşfedin ve doğru aracı daha hızlı bulun.",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "AI Keşif yapay zeka araçları platformu",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Keşif Platformu",
+    title: "AI Keşif | Yapay Zeka Araçları Rehberi",
     description:
       "İhtiyacınıza uygun yapay zeka araçlarını keşfedin ve doğru aracı daha hızlı bulun.",
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,

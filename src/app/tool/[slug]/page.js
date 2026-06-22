@@ -19,9 +19,9 @@ import { SimilarTools } from "@/components/SimilarTools";
 
 export const revalidate = 3600;
 
-const siteUrl = (
+const siteUrl = new URL(
   process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com"
-).replace(/\/$/, "");
+).origin;
 
 function createPublicClient() {
   return createClient(
@@ -81,6 +81,11 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
+function createMetaDescription(description) {
+  if (!description || description.length <= 160) return description;
+  return `${description.slice(0, 157).trimEnd()}...`;
+}
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const tool = await getToolData(slug);
@@ -93,18 +98,30 @@ export async function generateMetadata({ params }) {
   }
 
   const title = `${tool.name} Nedir? Özellikleri ve Kullanımı`;
+  const description = createMetaDescription(tool.description);
 
   return {
     title,
-    description: tool.description,
-    alternates: {
-      canonical: `/tool/${tool.slug}`,
-    },
+    description,
     openGraph: {
       type: "website",
       title,
-      description: tool.description,
+      description,
       url: `/tool/${tool.slug}`,
+      images: [
+        {
+          url: "/opengraph-image",
+          width: 1200,
+          height: 630,
+          alt: `${tool.name} - AI Keşif`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/opengraph-image"],
     },
   };
 }
@@ -126,25 +143,58 @@ export default async function ToolDetailPage({ params }) {
 
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: tool.name,
-    description: tool.description,
-    url: shareUrl,
-    applicationCategory: tool.category_name,
-    operatingSystem: platforms.join(", "),
-    offers: tool.pricing_model
-      ? {
-          "@type": "Offer",
-          category: tool.pricing_model,
-        }
-      : undefined,
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": `${shareUrl}#software`,
+        name: tool.name,
+        description: tool.description,
+        url: shareUrl,
+        sameAs: tool.link,
+        applicationCategory: tool.category_name,
+        operatingSystem: platforms.join(", "),
+        datePublished: tool.created_at || undefined,
+        dateModified: tool.updated_at || tool.created_at || undefined,
+        inLanguage: "tr-TR",
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${shareUrl}#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Ana Sayfa",
+            item: siteUrl,
+          },
+          ...(tool.category_slug
+            ? [
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: tool.category_name,
+                  item: `${siteUrl}/kategori/${tool.category_slug}`,
+                },
+              ]
+            : []),
+          {
+            "@type": "ListItem",
+            position: tool.category_slug ? 3 : 2,
+            name: tool.name,
+            item: shareUrl,
+          },
+        ],
+      },
+    ],
   };
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
       />
 
       <div className="mx-auto max-w-6xl px-1 py-6 sm:px-4 sm:py-10">
