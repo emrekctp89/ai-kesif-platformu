@@ -95,7 +95,11 @@ export function HomepageClient({
         {showControls && (
             <div className="mt-4 flex flex-col items-stretch justify-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 sm:flex-row sm:items-center sm:gap-3 md:mt-6">
               <SearchInput key={searchParams.get("search") || "empty-search"} />
-              <FilterSheet categories={categories} allTags={allTags} />
+              <FilterSheet
+                categories={categories}
+                allTags={allTags}
+                fixedSearchParams={fixedSearchParams}
+              />
               <Button
   variant="outline"
   onClick={() => setShowDiscovery(!showDiscovery)}
