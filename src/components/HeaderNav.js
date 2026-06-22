@@ -89,6 +89,7 @@ export function HeaderNav({
       <nav aria-label="Ana navigasyon" className="hidden md:flex items-center gap-6 text-sm font-medium">
         <Link
           href="/"
+          prefetch={false}
           className="text-muted-foreground transition-colors hover:text-foreground"
         >
           Tüm Araçlar
@@ -113,10 +114,10 @@ export function HeaderNav({
                 asChild
                 className="font-semibold text-white bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 bg-[size:300%_auto] animate-breathing-glow hover:opacity-90"
               >
-                <Link href="/tavsiye">AI Tavsiye</Link>
+                <Link href="/tavsiye" prefetch={false}>AI Tavsiye</Link>
               </Button>
               <Button asChild variant="secondary">
-                <Link href="/submit">Araç Öner</Link>
+                <Link href="/submit" prefetch={false}>Araç Öner</Link>
               </Button>
               
 

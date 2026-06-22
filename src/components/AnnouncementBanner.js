@@ -1,10 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
 import { Megaphone, X } from "lucide-react";
 import { Button } from "./ui/button";
-import { FeedbackDialog } from "./FeedbackDialog"; // Yeni bileşeni import ediyoruz
+
+const FeedbackDialog = dynamic(
+  () =>
+    import("./FeedbackDialog").then((module) => module.FeedbackDialog),
+  { ssr: false }
+);
 
 const ANNOUNCEMENT_ID = "welcome-banner-v1";
 
@@ -24,16 +29,10 @@ export function AnnouncementBanner() {
     localStorage.setItem(ANNOUNCEMENT_ID, "true");
   };
 
+  if (!isVisible) return null;
+
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, y: 100 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 100 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="fixed bottom-0 left-0 right-0 z-50 p-2 sm:p-4"
-        >
+        <div className="fixed bottom-0 left-0 right-0 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300 p-2 sm:p-4">
           <div className="container mx-auto">
             <div
               role="region"
@@ -54,11 +53,8 @@ export function AnnouncementBanner() {
                   ekleniyor. Bir sorunla karşılaşırsanız veya bir fikriniz
                   varsa, bizimle paylaşmaktan çekinmeyin!
                 </p>
-                {/* DEĞİŞİKLİK: Geri bildirim butonu fare üzerine gelince görünüyor */}
                 <div className="hidden sm:block">
-                <AnimatePresence>
                   {isHovered && <FeedbackDialog />}
-                </AnimatePresence>
                 </div>
               </div>
               <Button
@@ -72,8 +68,6 @@ export function AnnouncementBanner() {
               </Button>
             </div>
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </div>
   );
 }

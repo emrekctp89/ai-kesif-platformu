@@ -63,7 +63,7 @@ export default function ToolCard({ tool }) {
 
         {/* Araç Adı */}
         <h2 className="text-xl font-bold">
-          <Link href={`/tool/${tool.slug}`} className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+          <Link href={`/tool/${tool.slug}`} prefetch={false} className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
             {tool.name}
           </Link>
         </h2>
@@ -73,6 +73,7 @@ export default function ToolCard({ tool }) {
           {/* DEĞİŞİKLİK 2: İçteki Link'e tıklamanın dış Link'i tetiklemesini engellemek için stopPropagation ekleyin. */}
           <Link 
             href={`/kategori/${tool.category_slug}`}
+            prefetch={false}
             className="inline-block rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             onClick={(e) => e.stopPropagation()}
           >
@@ -90,6 +91,7 @@ export default function ToolCard({ tool }) {
               <Link 
                 key={tag.id} 
                 href={`/?tags=${tag.id}`}
+                prefetch={false}
                 onClick={(e) => e.stopPropagation()}
               >
                 <Badge
@@ -134,6 +136,7 @@ export default function ToolCard({ tool }) {
                 href={tool.link}
                 target="_blank"
                 rel="noopener noreferrer"
+                prefetch={false}
                 className="px-3 py-1 text-sm"
               >
                 Ziyaret Et
