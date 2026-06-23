@@ -49,7 +49,7 @@ export default async function AdminPage() {
   const adminData = await getAdminData();
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
+    <div className="mx-auto max-w-7xl px-3 py-5 sm:px-4 sm:py-8">
         <h1 className="text-3xl font-bold text-foreground mb-8">Operasyon Merkezi</h1>
         <AdminPageClient data={adminData} />
     </div>
