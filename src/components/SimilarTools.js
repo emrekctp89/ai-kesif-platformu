@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
-import { Lightbulb } from "lucide-react";
+import { ArrowRight, Lightbulb } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Carousel,
   CarouselContent,
@@ -69,11 +70,16 @@ export async function SimilarTools({ currentTool }) {
   }
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-2xl font-bold flex items-center gap-3">
-        <Lightbulb className="w-7 h-7 text-primary" />
-        Bunları da Beğenebilirsiniz
-      </h2>
+    <div className="space-y-4 sm:space-y-6">
+      <div>
+        <h2 className="flex items-center gap-2 text-xl font-bold sm:gap-3 sm:text-2xl">
+          <Lightbulb className="h-5 w-5 text-primary sm:h-7 sm:w-7" />
+          Bunları da Beğenebilirsiniz
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Karar vermeden önce aynı kullanım alanındaki alternatifleri hızlıca karşılaştır.
+        </p>
+      </div>
       <Carousel
         opts={{
           align: "start",
@@ -84,25 +90,34 @@ export async function SimilarTools({ currentTool }) {
         <CarouselContent>
           {similarTools.map((tool) => (
             <CarouselItem key={tool.slug} className="md:basis-1/2 lg:basis-1/3">
-              <div className="p-1 h-full">
-                <Card className="h-full hover:border-primary transition-all">
-                  <CardHeader>
-                    <CardTitle>
+              <div className="h-full p-1">
+                <Card className="flex h-full flex-col transition-all hover:border-primary hover:shadow-sm">
+                  <CardHeader className="p-4 pb-2 sm:p-5 sm:pb-2">
+                    <CardTitle className="text-base leading-tight sm:text-lg">
                       <Link
                         href={`/tool/${tool.slug}`}
-                        className="hover:underline"
+                        className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
                         {tool.name}
                       </Link>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
+                  <CardContent className="flex flex-1 flex-col gap-3 p-4 pt-0 sm:p-5 sm:pt-0">
+                    <p className="line-clamp-2 text-sm text-muted-foreground">
+                      {tool.description || "Bu araç, keşif listeniz için iyi bir alternatif olabilir."}
+                    </p>
+                    <p className="text-xs leading-5 text-muted-foreground">
                       <span className="font-semibold text-foreground">
                         Neden Benzer?
                       </span>{" "}
                       {tool.reason}
                     </p>
+                    <Button asChild variant="outline" size="sm" className="mt-auto w-full">
+                      <Link href={`/tool/${tool.slug}`}>
+                        Detayları gör
+                        <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
                   </CardContent>
                 </Card>
               </div>
