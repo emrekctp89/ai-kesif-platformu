@@ -4021,7 +4021,7 @@ export async function sendFeedback(formData) {
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const htmlContent = render(
+    const htmlContent = await render(
       <FeedbackEmail
         feedback={feedback}
         userEmail={senderEmail}
