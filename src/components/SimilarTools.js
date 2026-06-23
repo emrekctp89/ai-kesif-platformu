@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/carousel";
 
 async function getSimilarTools(currentTool) {
-  const similarToolSelect = "id, name, slug, description, category_id, popularity_score";
+  const similarToolSelect = "id, name, slug, description, category_id";
   const similarToolLimit = 6;
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -30,7 +30,6 @@ async function getSimilarTools(currentTool) {
     .select(similarToolSelect)
     .eq("is_approved", true)
     .neq("id", currentTool.id)
-    .order("popularity_score", { ascending: false })
     .limit(similarToolLimit);
 
   if (currentTool.category_id) {
@@ -45,7 +44,6 @@ async function getSimilarTools(currentTool) {
       .select(similarToolSelect)
       .eq("is_approved", true)
       .neq("id", currentTool.id)
-      .order("popularity_score", { ascending: false })
       .limit(similarToolLimit);
 
     data = fallback.data;
