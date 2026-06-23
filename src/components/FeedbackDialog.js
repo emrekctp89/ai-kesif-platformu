@@ -14,15 +14,17 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import toast from "react-hot-toast";
 import { sendFeedback } from "@/app/actions";
-import { MessageSquarePlus } from "lucide-react";
+import { LoaderCircle, MessageSquarePlus } from "lucide-react";
 
 export function FeedbackDialog() {
   const [isOpen, setIsOpen] = React.useState(false);
   const [startedAt, setStartedAt] = React.useState(() => Date.now());
   const [isPending, startTransition] = useTransition();
+  const [messageLength, setMessageLength] = React.useState(0);
   const formRef = React.useRef(null);
 
   const handleFormAction = (formData) => {
@@ -32,6 +34,8 @@ export function FeedbackDialog() {
         toast.error(result.error);
       } else {
         toast.success("Geri bildiriminiz için teşekkürler!");
+        formRef.current?.reset();
+        setMessageLength(0);
         setIsOpen(false);
       }
     });
@@ -76,15 +80,32 @@ export function FeedbackDialog() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">E-posta adresiniz</Label>
-            <input
+            <Input
               type="email"
               id="email"
               name="email"
               required
               disabled={isPending}
               placeholder="ornek@eposta.com"
-              className="w-full px-3 py-2 border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              maxLength={254}
+              autoComplete="email"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="feedback-type">Geri bildirim türü</Label>
+            <select
+              id="feedback-type"
+              name="feedback_type"
+              defaultValue="Genel"
+              disabled={isPending}
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="Genel">Genel görüş</option>
+              <option value="Hata">Hata bildirimi</option>
+              <option value="Öneri">Özellik önerisi</option>
+              <option value="İçerik">İçerik düzeltmesi</option>
+            </select>
           </div>
 
           <div className="space-y-2">
@@ -94,9 +115,17 @@ export function FeedbackDialog() {
               name="feedback"
               required
               disabled={isPending}
+              minLength={20}
+              maxLength={2000}
+              onChange={(event) => setMessageLength(event.target.value.length)}
               placeholder="Görüşünüzü veya yaşadığınız sorunu yazın..."
               className="min-h-[150px]"
+              aria-describedby="feedback-message-help"
             />
+            <div id="feedback-message-help" className="flex justify-between text-xs text-muted-foreground">
+              <span>En az 20 karakter yazın.</span>
+              <span>{messageLength}/2000</span>
+            </div>
           </div>
 
           <DialogFooter>
@@ -106,7 +135,12 @@ export function FeedbackDialog() {
               </Button>
             </DialogClose>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Gönderiliyor..." : "Gönder"}
+              {isPending ? (
+                <>
+                  <LoaderCircle aria-hidden="true" className="mr-2 h-4 w-4 animate-spin" />
+                  Gönderiliyor…
+                </>
+              ) : "Gönder"}
             </Button>
           </DialogFooter>
         </form>
