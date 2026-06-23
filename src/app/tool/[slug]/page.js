@@ -198,12 +198,12 @@ export default async function ToolDetailPage({ params }) {
         }}
       />
 
-      <div className="mx-auto max-w-6xl px-1 py-6 sm:px-4 sm:py-10">
+      <div className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-10">
         <Link
           href={
             tool.category_slug ? `/kategori/${tool.category_slug}` : "/"
           }
-          className="mb-6 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-4 inline-flex min-h-10 items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:mb-6 sm:min-h-11"
         >
           <ArrowLeft className="h-4 w-4" />
           {tool.category_slug
@@ -211,9 +211,9 @@ export default async function ToolDetailPage({ params }) {
             : "Tüm araçlara dön"}
         </Link>
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="min-w-0 space-y-8">
-            <section className="rounded-2xl border bg-gradient-to-br from-card via-card to-primary/5 p-5 shadow-sm sm:p-8">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
+          <div className="min-w-0 space-y-6 sm:space-y-8">
+            <section className="rounded-2xl border bg-gradient-to-br from-card via-card to-primary/5 p-4 shadow-sm sm:p-8">
               <div className="flex flex-wrap items-center gap-2">
                 {tool.category_slug ? (
                   <Link href={`/kategori/${tool.category_slug}`}>
@@ -226,16 +226,21 @@ export default async function ToolDetailPage({ params }) {
                 {tool.pricing_model && (
                   <Badge variant="outline">{tool.pricing_model}</Badge>
                 )}
+                {platforms.slice(0, 2).map((platform) => (
+                  <Badge key={platform} variant="outline">
+                    {platform}
+                  </Badge>
+                ))}
               </div>
 
-              <h1 className="mt-5 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+              <h1 className="mt-4 text-2xl font-extrabold tracking-tight sm:mt-5 sm:text-4xl lg:text-5xl">
                 {tool.name}
               </h1>
-              <p className="mt-5 max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:mt-5 sm:text-lg sm:leading-8">
                 {tool.description}
               </p>
 
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="mt-5 flex flex-col gap-2 sm:mt-7 sm:flex-row sm:items-center sm:gap-3">
                 <Button asChild size="lg" className="min-h-12 sm:min-w-56">
                   <TrackedExternalLink
                     href={tool.link}
@@ -251,7 +256,7 @@ export default async function ToolDetailPage({ params }) {
                     <ExternalLink className="ml-2 h-4 w-4" />
                   </TrackedExternalLink>
                 </Button>
-                <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                <p className="flex items-center gap-2 text-xs leading-5 text-muted-foreground">
                   <ShieldCheck className="h-4 w-4 text-emerald-500" />
                   {hostname} adresi yeni sekmede açılır.
                 </p>
@@ -265,7 +270,7 @@ export default async function ToolDetailPage({ params }) {
               >
                 Kısa Bakış
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
                 <InfoCard
                   icon={Layers3}
                   label="Kategori"
@@ -310,9 +315,9 @@ export default async function ToolDetailPage({ params }) {
             </section>
           </div>
 
-          <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
             <Card>
-              <CardContent className="space-y-5 p-5">
+              <CardContent className="space-y-4 p-4 sm:space-y-5 sm:p-5">
                 <div>
                   <p className="text-sm font-semibold">Karar vermeye hazır mısın?</p>
                   <p className="mt-1 text-sm text-muted-foreground">
@@ -358,9 +363,9 @@ export default async function ToolDetailPage({ params }) {
 function InfoCard({ icon: Icon, label, value }) {
   return (
     <Card>
-      <CardContent className="flex items-start gap-3 p-5">
+      <CardContent className="flex items-start gap-3 p-4 sm:p-5">
         <div className="rounded-lg bg-primary/10 p-2 text-primary">
-          <Icon className="h-5 w-5" />
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
