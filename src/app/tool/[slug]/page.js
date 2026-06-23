@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   CalendarDays,
+  CheckCircle2,
   ExternalLink,
   Layers3,
   MonitorSmartphone,
@@ -261,6 +262,11 @@ export default async function ToolDetailPage({ params }) {
                   {hostname} adresi yeni sekmede açılır.
                 </p>
               </div>
+              <div className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+                <TrustNote text="Resmî site bağlantısı yeni sekmede açılır" />
+                <TrustNote text="Fiyat ve özellikler sağlayıcıda doğrulanmalı" />
+                <TrustNote text="Benzer araçlarla karşılaştırarak karar verebilirsin" />
+              </div>
             </section>
 
             <section aria-labelledby="tool-overview-heading">
@@ -340,6 +346,13 @@ export default async function ToolDetailPage({ params }) {
                     <ExternalLink className="ml-2 h-4 w-4" />
                   </TrackedExternalLink>
                 </Button>
+                <div className="rounded-lg bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">
+                  <p className="font-semibold text-foreground">Hızlı karar özeti</p>
+                  <p className="mt-1">
+                    {tool.pricing_model || "Fiyat bilgisi belirtilmemiş"} · {platforms.slice(0, 2).join(", ")}
+                    {platforms.length > 2 ? ` +${platforms.length - 2}` : ""}
+                  </p>
+                </div>
                 <div className="border-t pt-4">
                   <ShareButtons
                     url={shareUrl}
@@ -375,5 +388,14 @@ function InfoCard({ icon: Icon, label, value }) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function TrustNote({ text }) {
+  return (
+    <div className="flex items-start gap-2 rounded-lg bg-background/70 px-3 py-2">
+      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+      <span>{text}</span>
+    </div>
   );
 }
