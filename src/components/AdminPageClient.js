@@ -349,6 +349,33 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
       }),
       [auditedTools]
     )
+    const activeIssueCount = qualityCounts.all - qualityCounts.ready
+    const qualityPresets = [
+      {
+        value: 'duplicate',
+        label: 'Tekrarlar',
+        count: qualityCounts.duplicate,
+        tone: 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300',
+      },
+      {
+        value: 'english',
+        label: 'İngilizce açıklama',
+        count: qualityCounts.english,
+        tone: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+      },
+      {
+        value: 'short',
+        label: 'Kısa açıklama',
+        count: qualityCounts.short,
+        tone: 'border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300',
+      },
+      {
+        value: 'metadata',
+        label: 'Eksik metadata',
+        count: qualityCounts.metadata,
+        tone: 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300',
+      },
+    ]
     const normalizedSearch = searchTerm.trim().toLocaleLowerCase('tr-TR')
     const filteredTools = auditedTools
       .filter(({ tool, issues }) => {
@@ -455,6 +482,38 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-[1.2fr_2fr]">
+                  <div className="rounded-xl border bg-muted/30 p-4">
+                    <p className="text-sm font-semibold">Veri kalitesi kuyruğu</p>
+                    <p className="mt-1 text-2xl font-bold">{activeIssueCount}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Düzeltme gerektiren kayıt; sorunsuz kayıt sayısı {qualityCounts.ready}.
+                    </p>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                    {qualityPresets.map((preset) => (
+                      <button
+                        key={preset.value}
+                        type="button"
+                        onClick={() => setQualityFilter(preset.value)}
+                        className={`rounded-xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                          qualityFilter === preset.value
+                            ? preset.tone
+                            : 'bg-background hover:bg-muted/50'
+                        }`}
+                        aria-pressed={qualityFilter === preset.value}
+                      >
+                        <span className="block text-xs font-medium text-muted-foreground">
+                          {preset.label}
+                        </span>
+                        <span className="mt-1 block text-xl font-bold">
+                          {preset.count}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px_210px]">
                   <Input
                       placeholder="İsim, açıklama, kategori veya bağlantı ara..."
@@ -701,8 +760,8 @@ export function AdminPageClient({ data }) {
 
   return (
     <Tabs defaultValue="approval_queue" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger value="approval_queue">
+      <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto p-1">
+        <TabsTrigger value="approval_queue" className="shrink-0 text-xs sm:text-sm">
             Onay Kuyruğu <Badge variant={approvalCount > 0 ? "default" : "secondary"} className="ml-2">{approvalCount}</Badge>
         </TabsTrigger>
         <TabsTrigger value="tool_management">Araç Yönetimi</TabsTrigger>
