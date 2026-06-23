@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/carousel";
 
 async function getSimilarTools(currentTool) {
+  const similarToolSelect = "id, name, slug, description, category_id, popularity_score";
+  const similarToolLimit = 6;
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -25,10 +27,11 @@ async function getSimilarTools(currentTool) {
 
   let query = supabase
     .from("tools")
-    .select("id, name, slug, description, category_id")
+    .select(similarToolSelect)
     .eq("is_approved", true)
     .neq("id", currentTool.id)
-    .limit(3);
+    .order("popularity_score", { ascending: false })
+    .limit(similarToolLimit);
 
   if (currentTool.category_id) {
     query = query.eq("category_id", currentTool.category_id);
@@ -39,10 +42,11 @@ async function getSimilarTools(currentTool) {
   if (!error && (!data || data.length === 0) && currentTool.category_id) {
     const fallback = await supabase
       .from("tools")
-      .select("id, name, slug, description, category_id")
+      .select(similarToolSelect)
       .eq("is_approved", true)
       .neq("id", currentTool.id)
-      .limit(3);
+      .order("popularity_score", { ascending: false })
+      .limit(similarToolLimit);
 
     data = fallback.data;
     error = fallback.error;
@@ -83,7 +87,7 @@ export async function SimilarTools({ currentTool }) {
       <Carousel
         opts={{
           align: "start",
-          loop: similarTools.length > 2,
+          loop: similarTools.length > 3,
         }}
         className="w-full"
       >
