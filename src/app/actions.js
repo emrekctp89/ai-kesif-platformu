@@ -2685,7 +2685,7 @@ export async function sendNewsletter() {
   }
 
   // 2. E-posta gönderiminden hemen önce HTML'i sunucuda render ediyoruz.
-  const htmlContent = render(
+  const htmlContent = await render(
     <WeeklyNewsletterEmail newsletterData={newsletterData} />
   );
 
