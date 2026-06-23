@@ -7,28 +7,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoaderCircle, Send } from "lucide-react";
 
 export default function ContactPage() {
   const formRef = React.useRef(null);
-  const [startedAt] = React.useState(() => Date.now());
-  // Sunucudan gelen başarı veya hata mesajını saklamak için bir state oluşturuyoruz.
+  const [startedAt, setStartedAt] = React.useState(() => Date.now());
+  const [isPending, startTransition] = React.useTransition();
+  const [messageLength, setMessageLength] = React.useState(0);
   const [formMessage, setFormMessage] = React.useState(null);
   
-  const handleFormAction = async (formData) => {
-    // Yeni bir gönderimden önce eski mesajı temizle
+  const handleFormAction = (formData) => {
     setFormMessage(null);
-    
-    // Server action'ı çağırıp sonucunu bekliyoruz
-    const result = await sendContactMessage(formData);
+    startTransition(async () => {
+      const result = await sendContactMessage(formData);
 
-    // Gelen sonuca göre mesaj state'ini güncelliyoruz
-    if (result?.success) {
-      setFormMessage({ type: 'success', text: result.success });
-      // Başarılı olursa formu temizliyoruz
-      formRef.current?.reset();
-    } else if (result?.error) {
-      setFormMessage({ type: 'error', text: result.error });
-    }
+      if (result?.success) {
+        setFormMessage({ type: 'success', text: result.success });
+        formRef.current?.reset();
+        setMessageLength(0);
+        setStartedAt(Date.now());
+      } else if (result?.error) {
+        setFormMessage({ type: 'error', text: result.error });
+      }
+    });
   };
 
   return (
@@ -57,21 +58,38 @@ export default function ContactPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="name">Adınız Soyadınız</Label>
-                <Input id="name" name="name" placeholder="Adınız Soyadınız" required />
+                <Input id="name" name="name" placeholder="Adınız Soyadınız" minLength={2} maxLength={100} disabled={isPending} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">E-posta Adresiniz</Label>
-                <Input id="email" name="email" type="email" placeholder="ornek@mail.com" required />
+                <Input id="email" name="email" type="email" placeholder="ornek@mail.com" maxLength={254} autoComplete="email" disabled={isPending} required />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="message">Mesajınız</Label>
-              <Textarea id="message" name="message" placeholder="Mesajınızı buraya yazın..." required className="min-h-[150px]" />
+              <Textarea
+                id="message"
+                name="message"
+                placeholder="Mesajınızı buraya yazın..."
+                minLength={20}
+                maxLength={2000}
+                disabled={isPending}
+                onChange={(event) => setMessageLength(event.target.value.length)}
+                required
+                className="min-h-[150px]"
+                aria-describedby="contact-message-help"
+              />
+              <div id="contact-message-help" className="flex justify-between text-xs text-muted-foreground">
+                <span>En az 20 karakter yazın.</span>
+                <span>{messageLength}/2000</span>
+              </div>
             </div>
             
             {/* YENİ: Başarı veya Hata Mesajının Gösterileceği Alan */}
             {formMessage && (
-              <div 
+              <div
+                role={formMessage.type === 'error' ? 'alert' : 'status'}
+                aria-live="polite"
                 className={`text-sm p-3 rounded-md text-center ${
                   formMessage.type === 'success' 
                   ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200' 
@@ -82,7 +100,19 @@ export default function ContactPage() {
               </div>
             )}
             
-            <Button type="submit" className="w-full">Mesajı Gönder</Button>
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <LoaderCircle aria-hidden="true" className="mr-2 h-4 w-4 animate-spin" />
+                  Gönderiliyor…
+                </>
+              ) : (
+                <>
+                  <Send aria-hidden="true" className="mr-2 h-4 w-4" />
+                  Mesajı Gönder
+                </>
+              )}
+            </Button>
           </form>
         </CardContent>
       </Card>

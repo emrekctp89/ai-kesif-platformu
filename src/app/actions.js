@@ -1349,26 +1349,41 @@ export async function sendContactMessage(formData) {
     };
   }
 
-  const name = formData.get("name");
-  const senderEmail = formData.get("email");
-  const message = formData.get("message");
+  const name = String(formData.get("name") || "").trim();
+  const senderEmail = String(formData.get("email") || "").trim().toLowerCase();
+  const message = String(formData.get("message") || "").trim();
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   if (!name || !senderEmail || !message) {
     return { error: "Lütfen tüm alanları doldurun." };
   }
 
+  if (name.length < 2 || name.length > 100) {
+    return { error: "Adınız 2 ile 100 karakter arasında olmalıdır." };
+  }
+
+  if (!emailPattern.test(senderEmail) || senderEmail.length > 254) {
+    return { error: "Geçerli bir e-posta adresi girin." };
+  }
+
+  if (message.length < 20 || message.length > 2000) {
+    return { error: "Mesajınız 20 ile 2000 karakter arasında olmalıdır." };
+  }
+
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: process.env.ADMIN_NOTIF_EMAIL_FROM,
       to: process.env.ADMIN_NOTIF_EMAIL_TO,
       subject: `AI Keşif Platformu - Yeni İletişim Formu Mesajı`,
+      replyTo: senderEmail,
       react: ContactFormEmail({
         name,
         senderEmail,
         message,
       }),
     });
+    if (error) throw error;
   } catch (error) {
     console.error("İletişim formu e-postası gönderme hatası:", error);
     return { error: "Mesajınız gönderilirken bir hata oluştu." };
@@ -3941,11 +3956,14 @@ export async function assignToolsToPost(formData) {
 }
 
 // Basit bir e-posta şablonu
-const FeedbackEmail = ({ feedback, userEmail }) => (
+const FeedbackEmail = ({ feedback, userEmail, feedbackType }) => (
   <div>
     <h1>Yeni Geri Bildirim Alındı</h1>
     <p>
       <strong>Gönderen:</strong> {userEmail || "Misafir Kullanıcı"}
+    </p>
+    <p>
+      <strong>Tür:</strong> {feedbackType}
     </p>
     <hr />
     <h2>Mesaj:</h2>
@@ -3976,24 +3994,49 @@ export async function sendFeedback(formData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const feedback = formData.get("feedback");
+  const feedback = String(formData.get("feedback") || "").trim();
+  const submittedEmail = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
+  const feedbackType = String(formData.get("feedback_type") || "Genel").trim();
+  const allowedFeedbackTypes = ["Genel", "Hata", "Öneri", "İçerik"];
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const senderEmail = user?.email || submittedEmail;
 
-  if (!feedback || feedback.trim() === "") {
+  if (!feedback) {
     return { error: "Geri bildirim mesajı boş olamaz." };
+  }
+
+  if (feedback.length < 20 || feedback.length > 2000) {
+    return { error: "Geri bildiriminiz 20 ile 2000 karakter arasında olmalıdır." };
+  }
+
+  if (!senderEmail || !emailPattern.test(senderEmail) || senderEmail.length > 254) {
+    return { error: "Geçerli bir e-posta adresi girin." };
+  }
+
+  if (!allowedFeedbackTypes.includes(feedbackType)) {
+    return { error: "Geçerli bir geri bildirim türü seçin." };
   }
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const htmlContent = render(
-      <FeedbackEmail feedback={feedback} userEmail={user?.email} />
+      <FeedbackEmail
+        feedback={feedback}
+        userEmail={senderEmail}
+        feedbackType={feedbackType}
+      />
     );
 
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: process.env.ADMIN_NOTIF_EMAIL_FROM,
       to: process.env.ADMIN_NOTIF_EMAIL_TO,
-      subject: "AI Keşif Platformu - Yeni Geri Bildirim",
+      replyTo: senderEmail,
+      subject: `AI Keşif Platformu - ${feedbackType} Geri Bildirimi`,
       html: htmlContent,
     });
+    if (error) throw error;
   } catch (emailError) {
     console.error("Geri bildirim gönderme hatası:", emailError);
     return { error: "Geri bildirim gönderilirken bir hata oluştu." };
