@@ -89,6 +89,58 @@ function getToolQualityIssues(tool, duplicateNames, duplicateLinks) {
   return issues
 }
 
+function getQualityPriority(issues, duplicateNameCount, duplicateLinkCount) {
+  if (duplicateLinkCount > 1) return 'high'
+  if (issues.some((issue) => issue.key === 'english')) return 'high'
+  if (duplicateNameCount > 1) return 'medium'
+  if (issues.length >= 2) return 'medium'
+  if (issues.length === 1) return 'low'
+  return 'clean'
+}
+
+function getQualityPriorityMeta(priority) {
+  const meta = {
+    high: {
+      label: 'Yüksek öncelik',
+      className: 'bg-red-600 hover:bg-red-600',
+    },
+    medium: {
+      label: 'Orta öncelik',
+      className: 'bg-orange-600 hover:bg-orange-600',
+    },
+    low: {
+      label: 'Düşük öncelik',
+      className: 'bg-sky-600 hover:bg-sky-600',
+    },
+    clean: {
+      label: 'Temiz',
+      className: 'bg-emerald-600 hover:bg-emerald-600',
+    },
+  }
+
+  return meta[priority] || meta.clean
+}
+
+function getQualityActionHint(issues, duplicateNameCount, duplicateLinkCount) {
+  if (duplicateLinkCount > 1) {
+    return 'Önce aynı bağlantıdaki kayıtları karşılaştır; en dolu kaydı koruyup diğerini sil veya birleştir.'
+  }
+  if (issues.some((issue) => issue.key === 'english')) {
+    return 'Açıklamayı Türkçeleştir ve kullanıcı faydasını ilk cümlede netleştir.'
+  }
+  if (duplicateNameCount > 1) {
+    return 'Aynı adlı kayıtları kontrol et; gerçekten farklı ürün değilse tek kayda indir.'
+  }
+  if (issues.some((issue) => issue.key === 'metadata')) {
+    return 'Fiyat modeli ve platform bilgisini tamamla; filtre sonuçları daha isabetli olur.'
+  }
+  if (issues.some((issue) => issue.key === 'short')) {
+    return 'Açıklamayı kullanım amacı, öne çıkan özellik ve hedef kullanıcıyla genişlet.'
+  }
+
+  return 'Kayıt iyi görünüyor; istersen öne çıkarma veya kategori doğruluğunu kontrol et.'
+}
+
 function getCanonicalScore(tool) {
   const descriptionLength = String(tool.description || '').trim().length
   let score = Math.min(descriptionLength, 300) / 30
@@ -319,15 +371,33 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
     }, [approvedTools])
     const auditedTools = React.useMemo(
       () =>
-        approvedTools.map((tool) => ({
-          tool,
-          issues: getToolQualityIssues(tool, duplicateNames, duplicateLinks),
-          duplicateNameCount:
+        approvedTools.map((tool) => {
+          const issues = getToolQualityIssues(tool, duplicateNames, duplicateLinks)
+          const duplicateNameCount =
             duplicateNames.get(
               String(tool.name || '').trim().toLocaleLowerCase('tr-TR')
-            ) || 0,
-          duplicateLinkCount: duplicateLinks.get(normalizeToolLink(tool.link)) || 0,
-        })),
+            ) || 0
+          const duplicateLinkCount =
+            duplicateLinks.get(normalizeToolLink(tool.link)) || 0
+          const priority = getQualityPriority(
+            issues,
+            duplicateNameCount,
+            duplicateLinkCount
+          )
+
+          return {
+            tool,
+            issues,
+            duplicateNameCount,
+            duplicateLinkCount,
+            priority,
+            actionHint: getQualityActionHint(
+              issues,
+              duplicateNameCount,
+              duplicateLinkCount
+            ),
+          }
+        }),
       [approvedTools, duplicateLinks, duplicateNames]
     )
     const qualityCounts = React.useMemo(
@@ -345,6 +415,9 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         metadata: auditedTools.filter(({ issues }) =>
           issues.some((issue) => issue.key === 'metadata')
         ).length,
+        high: auditedTools.filter(({ priority }) => priority === 'high').length,
+        medium: auditedTools.filter(({ priority }) => priority === 'medium').length,
+        low: auditedTools.filter(({ priority }) => priority === 'low').length,
         ready: auditedTools.filter(({ issues }) => issues.length === 0).length,
       }),
       [auditedTools]
@@ -408,9 +481,10 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
 
         const duplicateWeight = (entry) =>
           Math.max(entry.duplicateNameCount, entry.duplicateLinkCount) * 2
+        const priorityWeight = { high: 30, medium: 20, low: 10, clean: 0 }
         return (
-          b.issues.length + duplicateWeight(b) -
-            (a.issues.length + duplicateWeight(a)) ||
+          (priorityWeight[b.priority] || 0) + b.issues.length + duplicateWeight(b) -
+            ((priorityWeight[a.priority] || 0) + a.issues.length + duplicateWeight(a)) ||
           String(a.tool.name || '').localeCompare(String(b.tool.name || ''), 'tr')
         )
       });
@@ -489,6 +563,17 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                     <p className="mt-1 text-xs text-muted-foreground">
                       Düzeltme gerektiren kayıt; sorunsuz kayıt sayısı {qualityCounts.ready}.
                     </p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      <Badge className="bg-red-600 hover:bg-red-600">
+                        {qualityCounts.high} yüksek
+                      </Badge>
+                      <Badge className="bg-orange-600 hover:bg-orange-600">
+                        {qualityCounts.medium} orta
+                      </Badge>
+                      <Badge className="bg-sky-600 hover:bg-sky-600">
+                        {qualityCounts.low} düşük
+                      </Badge>
+                    </div>
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                     {qualityPresets.map((preset) => (
@@ -673,16 +758,26 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                       issues,
                       duplicateNameCount,
                       duplicateLinkCount,
+                      priority,
+                      actionHint,
                     }) => (
                         <div key={tool.id} className="p-3 rounded-lg border flex flex-wrap justify-between items-start gap-4">
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-2">
                                 <h3 className="font-semibold">{tool.name}</h3>
                                 <Badge variant="outline">{tool.category_name || 'Kategorisiz'}</Badge>
+                                <Badge className={getQualityPriorityMeta(priority).className}>
+                                  {getQualityPriorityMeta(priority).label}
+                                </Badge>
                               </div>
                               <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
                                 {tool.description || 'Açıklama yok.'}
                               </p>
+                              {actionHint && (
+                                <p className="mt-2 rounded-md bg-muted/60 px-3 py-2 text-xs leading-5 text-muted-foreground">
+                                  {actionHint}
+                                </p>
+                              )}
                               <div className="mt-2 flex flex-wrap gap-1.5">
                                 {duplicateLinkCount > 1 && (
                                   <Badge className="bg-red-600 hover:bg-red-600">
