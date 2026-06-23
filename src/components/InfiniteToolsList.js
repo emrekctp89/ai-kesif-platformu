@@ -46,7 +46,7 @@ export default function ToolCard({ tool }) {
   return (
     <article
       className={cn(
-        "relative block overflow-hidden rounded-xl border p-5 shadow-md transition-all duration-300 sm:p-6 md:hover:-translate-y-2 md:hover:shadow-xl",
+        "relative block overflow-hidden rounded-xl border p-4 shadow-md transition-all duration-300 sm:p-6 md:hover:-translate-y-2 md:hover:shadow-xl",
         {
           "border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card": tool.tier === "Pro",
           "border-amber-400/40 shadow-amber-400/20 hover:shadow-amber-500/40 bg-card": tool.tier === "Sponsorlu",
@@ -63,7 +63,7 @@ export default function ToolCard({ tool }) {
         )}
 
         {/* Araç Adı */}
-        <h2 className="text-xl font-bold">
+        <h2 className="text-lg font-bold leading-tight sm:text-xl">
           <Link
             href={`/tool/${tool.slug}`}
             prefetch={false}
@@ -97,8 +97,8 @@ export default function ToolCard({ tool }) {
 
         {/* Etiketler */}
         {tool.tags && tool.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 my-3">
-            {tool.tags.map((tag) => ( 
+          <div className="my-2 flex flex-wrap gap-1 sm:my-3">
+            {tool.tags.slice(0, 3).map((tag) => (
               // DEĞİŞİKLİK 3: Etiket Link'lerine de stopPropagation ekleyin.
               <Link 
                 key={tag.id} 
@@ -114,16 +114,21 @@ export default function ToolCard({ tool }) {
                 </Badge>
               </Link>
             ))}
+            {tool.tags.length > 3 && (
+              <Badge variant="outline" className="text-xs text-muted-foreground">
+                +{tool.tags.length - 3}
+              </Badge>
+            )}
           </div>
         )}
 
         {/* Açıklama */}
-        <p className="text-muted-foreground text-sm mt-4 line-clamp-3 min-h-[72px]">
+        <p className="mt-3 line-clamp-2 min-h-10 text-sm text-muted-foreground sm:mt-4 sm:line-clamp-3 sm:min-h-[72px]">
           {tool.description}
         </p>
 
         {/* Footer */}
-        <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3 sm:pt-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             {/* platform ikonları */}
             {tool.platforms && tool.platforms.slice(0, 3).map((platform) => (
@@ -136,7 +141,7 @@ export default function ToolCard({ tool }) {
             )}
           </div>
 
-          <Button asChild size="sm" className="transition-colors hover:bg-primary/80">
+          <Button asChild size="sm" className="h-8 shrink-0 px-3 text-xs transition-colors hover:bg-primary/80 sm:h-9 sm:text-sm">
             <Link
               href={`/tool/${tool.slug}`}
               prefetch={false}
@@ -147,7 +152,7 @@ export default function ToolCard({ tool }) {
                   category: tool.category_slug,
                 })
               }
-              className="px-3 py-1 text-sm"
+              className="px-2 py-1 sm:px-3"
             >
               Detayları İncele
               <ArrowRight aria-hidden="true" className="ml-1.5 h-4 w-4" />
