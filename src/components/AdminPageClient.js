@@ -351,6 +351,7 @@ function ApprovalQueueTab({
 function ToolManagementTab({ approvedTools, categories, allTags }) {
     const [searchTerm, setSearchTerm] = React.useState('');
     const [qualityFilter, setQualityFilter] = React.useState('all');
+    const [priorityFilter, setPriorityFilter] = React.useState('all');
     const [sortMode, setSortMode] = React.useState('issues');
     const [duplicateView, setDuplicateView] = React.useState('groups');
     const duplicateNames = React.useMemo(() => {
@@ -449,9 +450,16 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         tone: 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300',
       },
     ]
+    const priorityLabels = {
+      all: 'tüm öncelikler',
+      high: 'yüksek öncelik',
+      medium: 'orta öncelik',
+      low: 'düşük öncelik',
+      clean: 'temiz kayıtlar',
+    }
     const normalizedSearch = searchTerm.trim().toLocaleLowerCase('tr-TR')
     const filteredTools = auditedTools
-      .filter(({ tool, issues }) => {
+      .filter(({ tool, issues, priority }) => {
         const matchesSearch =
           !normalizedSearch ||
           [tool.name, tool.description, tool.category_name, tool.link].some((value) =>
@@ -462,8 +470,10 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
           (qualityFilter === 'ready'
             ? issues.length === 0
             : issues.some((issue) => issue.key === qualityFilter))
+        const matchesPriority =
+          priorityFilter === 'all' || priority === priorityFilter
 
-        return matchesSearch && matchesQuality
+        return matchesSearch && matchesQuality && matchesPriority
       })
       .sort((a, b) => {
         if (sortMode === 'name') {
@@ -536,14 +546,15 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         )
     }, [auditedTools])
     const visibleDuplicateGroups = duplicateGroups.filter(({ entries }) =>
-      entries.some(({ tool }) =>
-        !normalizedSearch ||
-        [tool.name, tool.description, tool.category_name, tool.link].some(
-          (value) =>
-            String(value || '')
-              .toLocaleLowerCase('tr-TR')
-              .includes(normalizedSearch)
-        )
+      entries.some(({ tool, priority }) =>
+        (priorityFilter === 'all' || priority === priorityFilter) &&
+        (!normalizedSearch ||
+          [tool.name, tool.description, tool.category_name, tool.link].some(
+            (value) =>
+              String(value || '')
+                .toLocaleLowerCase('tr-TR')
+                .includes(normalizedSearch)
+          ))
       )
     )
 
@@ -599,7 +610,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                   </div>
                 </div>
 
-                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px_210px]">
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_190px_190px]">
                   <Input
                       placeholder="İsim, açıklama, kategori veya bağlantı ara..."
                       value={searchTerm}
@@ -618,6 +629,18 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                     <option value="short">Kısa açıklama ({qualityCounts.short})</option>
                     <option value="metadata">Eksik fiyat/platform ({qualityCounts.metadata})</option>
                     <option value="ready">Sorunsuz ({qualityCounts.ready})</option>
+                  </select>
+                  <select
+                    value={priorityFilter}
+                    onChange={(event) => setPriorityFilter(event.target.value)}
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    aria-label="Öncelik filtresi"
+                  >
+                    <option value="all">Tüm öncelikler</option>
+                    <option value="high">Yüksek ({qualityCounts.high})</option>
+                    <option value="medium">Orta ({qualityCounts.medium})</option>
+                    <option value="low">Düşük ({qualityCounts.low})</option>
+                    <option value="clean">Temiz ({qualityCounts.ready})</option>
                   </select>
                   <select
                     value={sortMode}
@@ -663,8 +686,8 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
 
                 <p className="text-sm text-muted-foreground" role="status">
                   {qualityFilter === 'duplicate' && duplicateView === 'groups'
-                    ? `${visibleDuplicateGroups.length} tekrar kümesi gösteriliyor.`
-                    : `${filteredTools.length} araç gösteriliyor.`}
+                    ? `${visibleDuplicateGroups.length} tekrar kümesi gösteriliyor · ${priorityLabels[priorityFilter]}.`
+                    : `${filteredTools.length} araç gösteriliyor · ${priorityLabels[priorityFilter]}.`}
                 </p>
                 <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                     {qualityFilter === 'duplicate' && duplicateView === 'groups'
