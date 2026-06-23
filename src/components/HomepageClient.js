@@ -174,22 +174,24 @@ export function HomepageClient({
   }, [hasActiveFilters]);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8 sm:space-y-12">
       {/* Üst Başlık ve Arama/Filtre Kontrolleri */}
       <div
-        className="sticky top-16 z-40 border-b py-4 text-center sm:py-6 md:py-8
+        className="sticky top-16 z-40 border-b px-3 py-2 text-center sm:px-4 sm:py-5 md:py-7
              bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
-        <h1 id="tools-page-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl">
+        <h1 id="tools-page-title" className="text-xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl">
           {pageTitle}
         </h1>
-        <p className="mx-auto mt-1 max-w-xl text-sm text-muted-foreground sm:mt-2 sm:text-base">
+        <p className="mx-auto mt-1 hidden max-w-xl text-sm text-muted-foreground sm:block sm:mt-2 sm:text-base">
           {pageDescription}
         </p>
 
         {showControls && (
-            <div className="mt-4 flex flex-col items-stretch justify-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 sm:flex-row sm:items-center sm:gap-3 md:mt-6">
+            <div className="mt-2 grid grid-cols-2 items-stretch justify-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 sm:mt-4 sm:flex sm:items-center sm:gap-3 md:mt-6">
+              <div className="col-span-2 sm:col-span-1 sm:min-w-80 sm:flex-1">
               <SearchInput key={searchParams.get("search") || "empty-search"} />
+              </div>
               <FilterSheet
                 categories={categories}
                 allTags={allTags}
@@ -198,7 +200,7 @@ export function HomepageClient({
               <Button
   variant="outline"
   onClick={() => setShowDiscovery(!showDiscovery)}
-  className="h-10 w-full group text-white border-none shadow-xl bg-gradient-to-r from-[#7F00FF] via-[#00BFFF] to-[#FF1493] bg-[length:200%_200%] animate-[gradientShift_6s_ease_infinite] sm:w-auto"
+  className="h-9 w-full group text-white border-none shadow-xl bg-gradient-to-r from-[#7F00FF] via-[#00BFFF] to-[#FF1493] bg-[length:200%_200%] animate-[gradientShift_6s_ease_infinite] sm:h-10 sm:w-auto"
 >
   {showDiscovery ? (
     <X className="mr-2 h-4 w-4" />

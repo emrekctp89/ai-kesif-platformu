@@ -69,7 +69,7 @@ export function SearchInput() {
 
   return (
     <search
-      className="w-full max-w-md md:w-auto md:flex-grow"
+      className="w-full"
       aria-label="Araçlarda ara"
     >
       <label htmlFor="tool-search" className="sr-only">
@@ -86,7 +86,7 @@ export function SearchInput() {
           autoComplete="off"
           enterKeyHint="search"
           placeholder="Ne yapmak istiyorsunuz? Örn. video oluşturma"
-          className="block h-10 w-full rounded-lg border border-input py-2 pl-9 pr-10 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="block h-9 w-full rounded-lg border border-input py-1.5 pl-9 pr-10 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring sm:h-10 sm:py-2"
           value={searchTerm}
           onChange={handleChange}
           onKeyDown={(event) => {
