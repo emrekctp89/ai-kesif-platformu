@@ -10,6 +10,13 @@ import { NewToolSuggestionEmail } from "@/components/emails/NewToolSuggestionEma
 import { cookies } from "next/headers";
 import { logServerError } from "@/utils/serverLogger";
 import { enforceRateLimit, validateHumanForm } from "@/utils/antiAbuse";
+import {
+  inferPlatformsFromLink,
+  inferPricingModel,
+  normalizeTextField,
+  normalizeToolLink,
+  normalizeToolUrl,
+} from "@/lib/toolQuality";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -507,6 +514,163 @@ export async function updateTool(formData) {
   }
 
   return { success: "Araç başarıyla güncellendi." };
+}
+
+export async function runToolQualityAutomation() {
+  "use server";
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: "Yetkiniz yok." };
+  }
+
+  const supabaseAdmin = createAdminClient();
+  const { data: tools, error: toolsError } = await supabaseAdmin
+    .from("tools")
+    .select(
+      "id, name, slug, link, description, pricing_model, platforms, is_approved, updated_at"
+    );
+
+  if (toolsError) {
+    console.error("Kalite otomasyonu için araçlar okunamadı:", toolsError);
+    return { error: "Araçlar okunamadı. Lütfen tekrar deneyin." };
+  }
+
+  if (!tools || tools.length === 0) {
+    return {
+      success: true,
+      scannedCount: 0,
+      updatedCount: 0,
+      failedCount: 0,
+      inferredPricingCount: 0,
+      defaultedPlatformCount: 0,
+      duplicateNameCount: 0,
+      duplicateLinkCount: 0,
+    };
+  }
+
+  const duplicateNames = new Map();
+  const duplicateLinks = new Map();
+
+  for (const tool of tools) {
+    const normalizedName = String(tool.name || "").trim().toLocaleLowerCase("tr-TR");
+    if (normalizedName) {
+      duplicateNames.set(normalizedName, (duplicateNames.get(normalizedName) || 0) + 1);
+    }
+
+    const normalizedLink = normalizeToolLink(tool.link);
+    if (normalizedLink) {
+      duplicateLinks.set(normalizedLink, (duplicateLinks.get(normalizedLink) || 0) + 1);
+    }
+  }
+
+  const duplicateNameCount = tools.filter((tool) => {
+    const normalizedName = String(tool.name || "").trim().toLocaleLowerCase("tr-TR");
+    return normalizedName && (duplicateNames.get(normalizedName) || 0) > 1;
+  }).length;
+
+  const duplicateLinkCount = tools.filter((tool) => {
+    const normalizedLink = normalizeToolLink(tool.link);
+    return normalizedLink && (duplicateLinks.get(normalizedLink) || 0) > 1;
+  }).length;
+
+  let updatedCount = 0;
+  let failedCount = 0;
+  let inferredPricingCount = 0;
+  let defaultedPlatformCount = 0;
+  const touchedSlugs = new Set();
+
+  for (const tool of tools) {
+    const updates = {};
+    const normalizedName = normalizeTextField(tool.name);
+    const normalizedDescription = normalizeTextField(tool.description, {
+      preserveNewLines: true,
+    });
+    const normalizedLink = normalizeToolUrl(tool.link);
+
+    if (normalizedName && normalizedName !== String(tool.name || "").trim()) {
+      updates.name = normalizedName;
+      if (!String(tool.slug || "").trim()) {
+        updates.slug = slugify(normalizedName);
+      }
+    }
+
+    if (
+      normalizedDescription &&
+      normalizedDescription !== String(tool.description || "").trim()
+    ) {
+      updates.description = normalizedDescription;
+    }
+
+    if (normalizedLink && normalizedLink !== String(tool.link || "").trim()) {
+      updates.link = normalizedLink;
+    }
+
+    const hasPlatforms =
+      Array.isArray(tool.platforms) && tool.platforms.filter(Boolean).length > 0;
+    if (!hasPlatforms) {
+      const inferredPlatforms = inferPlatformsFromLink(
+        normalizedLink || String(tool.link || "").trim()
+      );
+      if (inferredPlatforms) {
+        updates.platforms = inferredPlatforms;
+        defaultedPlatformCount += 1;
+      }
+    }
+
+    if (!tool.pricing_model) {
+      const inferredPricing = inferPricingModel(
+        normalizedDescription || tool.description,
+        normalizedLink || tool.link
+      );
+      if (inferredPricing) {
+        updates.pricing_model = inferredPricing;
+        inferredPricingCount += 1;
+      }
+    }
+
+    if (Object.keys(updates).length === 0) continue;
+
+    updates.updated_at = new Date().toISOString();
+    const { error: updateError } = await supabaseAdmin
+      .from("tools")
+      .update(updates)
+      .eq("id", tool.id);
+
+    if (updateError) {
+      failedCount += 1;
+      console.error(`Kalite otomasyonu güncelleme hatası (tool:${tool.id}):`, updateError);
+      if (updates.pricing_model) inferredPricingCount -= 1;
+      if (updates.platforms) defaultedPlatformCount -= 1;
+      continue;
+    }
+
+    updatedCount += 1;
+    if (tool.slug) touchedSlugs.add(tool.slug);
+    if (updates.slug) touchedSlugs.add(updates.slug);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+  for (const slug of touchedSlugs) {
+    revalidatePath(`/tool/${slug}`);
+  }
+
+  return {
+    success: true,
+    scannedCount: tools.length,
+    updatedCount,
+    failedCount,
+    inferredPricingCount,
+    defaultedPlatformCount,
+    duplicateNameCount,
+    duplicateLinkCount,
+    ranAt: new Date().toISOString(),
+  };
 }
 
 export async function deleteTool(formData) {

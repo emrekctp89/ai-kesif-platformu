@@ -5,6 +5,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+export const metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 // Kullanıcının sohbetlerini, okunmamış mesaj sayılarıyla birlikte çeken fonksiyon
 async function getConversations(userId) {
   const supabase = createClient();

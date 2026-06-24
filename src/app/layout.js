@@ -9,7 +9,6 @@ import { TopLoader } from "@/components/TopLoader";
 import { Analytics } from "@vercel/analytics/react";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
-import Canonical from "@/components/Canonical";
 
 const siteUrl = new URL(
   process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com"
@@ -22,6 +21,9 @@ const onest = Onest({
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
+  alternates: {
+    canonical: "/",
+  },
   applicationName: "AI Keşif Platformu",
   title: {
     default: "AI Keşif | Yapay Zeka Araçları Rehberi",
@@ -69,9 +71,6 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="tr" suppressHydrationWarning>
-      <head>
-        <Canonical />
-      </head>
       <body className={`${onest.className} bg-background text-foreground`}>
         <ThemeProvider
           attribute="class"

@@ -27,7 +27,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Image from 'next/image'
-import { approveTool, approveShowcaseItem, rejectTool } from '@/app/actions'
+import {
+  approveTool,
+  approveShowcaseItem,
+  rejectTool,
+  runToolQualityAutomation,
+} from '@/app/actions'
 import { AiToolFactory } from './AiToolFactory'
 import { BlogManager } from './BlogManager'
 import { ChallengeManager } from './ChallengeManager'
@@ -45,49 +50,11 @@ import {
   ShieldAlert,
   Trash2,
 } from 'lucide-react'
-
-function normalizeToolLink(link) {
-  try {
-    const url = new URL(link)
-    return `${url.hostname.replace(/^www\./, '')}${url.pathname.replace(/\/$/, '')}`.toLowerCase()
-  } catch {
-    return String(link || '').trim().toLowerCase()
-  }
-}
-
-function isLikelyEnglishDescription(description) {
-  const text = String(description || '')
-  const englishMatches =
-    text.match(/\b(the|and|with|for|that|this|from|your|using|create|allows|users|tool|platform|powered)\b/gi) || []
-  const turkishMatches =
-    text.match(/[çğıöşü]|\b(ve|ile|için|bir|bu|yapay|zeka|araç|kullanıcı)\b/gi) || []
-
-  return englishMatches.length >= 3 && englishMatches.length > turkishMatches.length * 1.5
-}
-
-function getToolQualityIssues(tool, duplicateNames, duplicateLinks) {
-  const issues = []
-  const description = String(tool.description || '').trim()
-  const normalizedName = String(tool.name || '').trim().toLocaleLowerCase('tr-TR')
-  const normalizedLink = normalizeToolLink(tool.link)
-
-  if (description.length < 80) issues.push({ key: 'short', label: 'Kısa açıklama' })
-  if (isLikelyEnglishDescription(description)) {
-    issues.push({ key: 'english', label: 'İngilizce açıklama' })
-  }
-  if (!tool.pricing_model) issues.push({ key: 'metadata', label: 'Fiyat bilgisi yok' })
-  if (!Array.isArray(tool.platforms) || tool.platforms.length === 0) {
-    issues.push({ key: 'metadata', label: 'Platform bilgisi yok' })
-  }
-  if ((duplicateNames.get(normalizedName) || 0) > 1) {
-    issues.push({ key: 'duplicate', label: 'Tekrarlanan ad' })
-  }
-  if (normalizedLink && (duplicateLinks.get(normalizedLink) || 0) > 1) {
-    issues.push({ key: 'duplicate', label: 'Tekrarlanan bağlantı' })
-  }
-
-  return issues
-}
+import {
+  getToolQualityIssues,
+  isLikelyEnglishDescription,
+  normalizeToolLink,
+} from '@/lib/toolQuality'
 
 function getQualityPriority(issues, duplicateNameCount, duplicateLinkCount) {
   if (duplicateLinkCount > 1) return 'high'
@@ -349,11 +316,14 @@ function ApprovalQueueTab({
 
 // YENİ: "Araç Yönetimi" Sekmesi
 function ToolManagementTab({ approvedTools, categories, allTags }) {
+    const router = useRouter()
     const [searchTerm, setSearchTerm] = React.useState('');
     const [qualityFilter, setQualityFilter] = React.useState('all');
     const [priorityFilter, setPriorityFilter] = React.useState('all');
     const [sortMode, setSortMode] = React.useState('issues');
     const [duplicateView, setDuplicateView] = React.useState('groups');
+    const [isAutomationPending, startAutomationTransition] = React.useTransition()
+    const [automationReport, setAutomationReport] = React.useState(null)
     const duplicateNames = React.useMemo(() => {
       const counts = new Map()
       approvedTools.forEach((tool) => {
@@ -557,6 +527,23 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
           ))
       )
     )
+    const runAutomation = () => {
+      startAutomationTransition(async () => {
+        const result = await runToolQualityAutomation()
+        if (result?.error) {
+          toast.error(result.error)
+          return
+        }
+
+        setAutomationReport(result)
+        toast.success(
+          `${result.updatedCount} kayıt otomatik güncellendi${
+            result.failedCount > 0 ? `, ${result.failedCount} kayıt atlandı` : ""
+          }.`
+        )
+        router.refresh()
+      })
+    }
 
     return (
         <Card>
@@ -574,6 +561,23 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                     <p className="mt-1 text-xs text-muted-foreground">
                       Düzeltme gerektiren kayıt; sorunsuz kayıt sayısı {qualityCounts.ready}.
                     </p>
+                    <Button
+                      className="mt-3"
+                      size="sm"
+                      onClick={runAutomation}
+                      disabled={isAutomationPending}
+                    >
+                      {isAutomationPending
+                        ? "Otomasyon çalışıyor..."
+                        : "Akıllı düzeltmeyi çalıştır"}
+                    </Button>
+                    {automationReport && (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Son çalışma: {automationReport.updatedCount} güncellendi,{" "}
+                        {automationReport.inferredPricingCount} fiyat modeli ve{" "}
+                        {automationReport.defaultedPlatformCount} platform alanı otomatik dolduruldu.
+                      </p>
+                    )}
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       <Badge className="bg-red-600 hover:bg-red-600">
                         {qualityCounts.high} yüksek

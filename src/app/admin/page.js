@@ -2,6 +2,14 @@ import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import { AdminPageClient } from '@/components/AdminPageClient';
 
+export const metadata = {
+  title: "Operasyon Merkezi | AI Keşif Platformu",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 // Tüm verileri tek bir yerden çeken fonksiyon
 async function getAdminData() {
     const supabase = createClient();

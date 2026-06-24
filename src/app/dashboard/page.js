@@ -40,6 +40,10 @@ async function getLatestBriefing() {
 
 export const metadata = {
     title: 'Admin Dashboard | AI Keşif Platformu',
+    robots: {
+        index: false,
+        follow: false,
+    },
 };
 
 export default async function DashboardPage() {
