@@ -135,6 +135,12 @@ export function FilterSheet({ categories, allTags, fixedSearchParams }) {
             Sonuçları daraltmak için aşağıdaki filtreleri kullanın.
           </SheetDescription>
         </SheetHeader>
+        {hasFixedCategory && (
+          <div className="mt-4 rounded-lg border bg-muted/40 px-3 py-2 text-xs leading-5 text-muted-foreground">
+            Bu kategori sayfasındasın; temizleme işlemi kategori bağlamını korur,
+            yalnızca arama, sıralama ve ek filtreleri kaldırır.
+          </div>
+        )}
         <div className="py-4 space-y-6">
           
           {!hasFixedCategory && (
@@ -192,7 +198,7 @@ export function FilterSheet({ categories, allTags, fixedSearchParams }) {
         </div>
         <SheetFooter className="gap-2 pb-4">
           <Button type="button" variant="ghost" onClick={handleClearFilters}>
-            Filtreleri temizle
+            {hasFixedCategory ? "Ek filtreleri temizle" : "Filtreleri temizle"}
           </Button>
           <Button onClick={handleApplyFilters}>
             Filtreleri uygula
