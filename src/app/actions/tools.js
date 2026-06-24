@@ -13,6 +13,7 @@ import { enforceRateLimit, validateHumanForm } from "@/utils/antiAbuse";
 import {
   inferPlatformsFromLink,
   inferPricingModel,
+  isLikelyEnglishDescription,
   normalizeTextField,
   normalizeToolLink,
   normalizeToolUrl,
@@ -34,6 +35,50 @@ async function getOtherToolsForAI(currentToolId) {
     return [];
   }
   return data;
+}
+
+async function rewriteToolDescriptionWithGemini({ name, description, link, apiKey }) {
+  const prompt = `
+Bir yapay zeka araç kataloğu için Türkçe ürün açıklaması editörüsün.
+
+Araç adı: "${name || ""}"
+Mevcut açıklama: "${description || ""}"
+Araç bağlantısı: "${link || ""}"
+
+Görev:
+1) Açıklamayı Türkçe, anlaşılır ve kullanıcı odaklı hale getir.
+2) 90-220 karakter aralığında yaz.
+3) Sadece ürünün amacı ve temel faydasını anlat.
+4) Abartılı/yanıltıcı ifade kullanma.
+5) Sadece düz metin döndür, JSON/markdown kullanma.
+`;
+
+  const payload = {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.3,
+      maxOutputTokens: 220,
+    },
+  };
+
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const result = await response.json();
+  const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) return null;
+
+  const normalized = normalizeTextField(text);
+  if (normalized.length < 60 || normalized.length > 1200) return null;
+  return normalized;
 }
 
 export async function submitTool(formData) {
@@ -529,11 +574,14 @@ export async function runToolQualityAutomation() {
   }
 
   const supabaseAdmin = createAdminClient();
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const maxAiFixCount = 30;
   const { data: tools, error: toolsError } = await supabaseAdmin
     .from("tools")
     .select(
       "id, name, slug, link, description, pricing_model, platforms, is_approved, updated_at"
-    );
+    )
+    .eq("is_approved", true);
 
   if (toolsError) {
     console.error("Kalite otomasyonu için araçlar okunamadı:", toolsError);
@@ -582,6 +630,12 @@ export async function runToolQualityAutomation() {
   let failedCount = 0;
   let inferredPricingCount = 0;
   let defaultedPlatformCount = 0;
+  let aiDescriptionFixCount = 0;
+  let aiAttemptedCount = 0;
+  let aiSkippedDueToLimitCount = 0;
+  let aiSkippedDueToMissingKeyCount = 0;
+  let shortDescriptionCount = 0;
+  let englishDescriptionCount = 0;
   const touchedSlugs = new Set();
 
   for (const tool of tools) {
@@ -599,6 +653,11 @@ export async function runToolQualityAutomation() {
       }
     }
 
+    const isShortDescription = normalizedDescription.length > 0 && normalizedDescription.length < 80;
+    const isEnglishDescription = isLikelyEnglishDescription(normalizedDescription);
+    if (isShortDescription) shortDescriptionCount += 1;
+    if (isEnglishDescription) englishDescriptionCount += 1;
+
     if (
       normalizedDescription &&
       normalizedDescription !== String(tool.description || "").trim()
@@ -608,6 +667,36 @@ export async function runToolQualityAutomation() {
 
     if (normalizedLink && normalizedLink !== String(tool.link || "").trim()) {
       updates.link = normalizedLink;
+    }
+
+    if (
+      geminiApiKey &&
+      aiAttemptedCount < maxAiFixCount &&
+      (isShortDescription || isEnglishDescription)
+    ) {
+      aiAttemptedCount += 1;
+      const aiDescription = await rewriteToolDescriptionWithGemini({
+        name: normalizedName || tool.name,
+        description: normalizedDescription || tool.description,
+        link: normalizedLink || tool.link,
+        apiKey: geminiApiKey,
+      });
+
+      if (
+        aiDescription &&
+        aiDescription !== (updates.description || normalizedDescription || "")
+      ) {
+        updates.description = aiDescription;
+        aiDescriptionFixCount += 1;
+      }
+    } else if (!geminiApiKey && (isShortDescription || isEnglishDescription)) {
+      aiSkippedDueToMissingKeyCount += 1;
+    } else if (
+      geminiApiKey &&
+      aiAttemptedCount >= maxAiFixCount &&
+      (isShortDescription || isEnglishDescription)
+    ) {
+      aiSkippedDueToLimitCount += 1;
     }
 
     const hasPlatforms =
@@ -669,6 +758,13 @@ export async function runToolQualityAutomation() {
     defaultedPlatformCount,
     duplicateNameCount,
     duplicateLinkCount,
+    shortDescriptionCount,
+    englishDescriptionCount,
+    aiDescriptionFixCount,
+    aiAttemptedCount,
+    aiSkippedDueToLimitCount,
+    aiSkippedDueToMissingKeyCount,
+    aiEnabled: Boolean(geminiApiKey),
     ranAt: new Date().toISOString(),
   };
 }

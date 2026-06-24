@@ -536,11 +536,19 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         }
 
         setAutomationReport(result)
-        toast.success(
-          `${result.updatedCount} kayıt otomatik güncellendi${
-            result.failedCount > 0 ? `, ${result.failedCount} kayıt atlandı` : ""
-          }.`
-        )
+        if (result.updatedCount > 0) {
+          toast.success(
+            `${result.updatedCount} kayıt güncellendi${
+              result.aiDescriptionFixCount > 0
+                ? `, ${result.aiDescriptionFixCount} açıklama AI ile iyileştirildi`
+                : ""
+            }.`
+          )
+        } else {
+          toast(
+            `Güncelleme yapılmadı. Taranan: ${result.scannedCount}, kısa açıklama: ${result.shortDescriptionCount}, İngilizce açıklama: ${result.englishDescriptionCount}.`
+          )
+        }
         router.refresh()
       })
     }
@@ -575,7 +583,8 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                       <p className="mt-2 text-xs text-muted-foreground">
                         Son çalışma: {automationReport.updatedCount} güncellendi,{" "}
                         {automationReport.inferredPricingCount} fiyat modeli ve{" "}
-                        {automationReport.defaultedPlatformCount} platform alanı otomatik dolduruldu.
+                        {automationReport.defaultedPlatformCount} platform alanı otomatik dolduruldu,{" "}
+                        {automationReport.aiDescriptionFixCount} açıklama AI ile iyileştirildi.
                       </p>
                     )}
                     <div className="mt-3 flex flex-wrap gap-1.5">
