@@ -253,7 +253,7 @@ export default async function ToolDetailPage({ params }) {
                       placement: "hero",
                     }}
                   >
-                    Aracı Ücretsiz İncele
+                    Resmî Siteyi İncele
                     <ExternalLink className="ml-2 h-4 w-4" />
                   </TrackedExternalLink>
                 </Button>
@@ -262,8 +262,7 @@ export default async function ToolDetailPage({ params }) {
                   {hostname} adresi yeni sekmede açılır.
                 </p>
               </div>
-              <div className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
-                <TrustNote text="Resmî site bağlantısı yeni sekmede açılır" />
+              <div className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
                 <TrustNote text="Fiyat ve özellikler sağlayıcıda doğrulanmalı" />
                 <TrustNote text="Benzer araçlarla karşılaştırarak karar verebilirsin" />
               </div>
