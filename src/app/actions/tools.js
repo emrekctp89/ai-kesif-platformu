@@ -6,7 +6,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { slugify } from "@/utils/slugify";
 import { Resend } from "resend";
-import { createAdminClient as createAdminClientAlias } from "@/utils/supabase/admin";
 import { NewToolSuggestionEmail } from "@/components/emails/NewToolSuggestionEmail";
 import { cookies } from "next/headers";
 import { logServerError } from "@/utils/serverLogger";
