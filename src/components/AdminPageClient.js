@@ -542,11 +542,19 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
               result.aiDescriptionFixCount > 0
                 ? `, ${result.aiDescriptionFixCount} açıklama AI ile iyileştirildi`
                 : ""
+            }${
+              result.fallbackDescriptionFixCount > 0
+                ? `, ${result.fallbackDescriptionFixCount} kısa açıklama otomatik genişletildi`
+                : ""
             }.`
           )
         } else {
           toast(
-            `Güncelleme yapılmadı. Taranan: ${result.scannedCount}, kısa açıklama: ${result.shortDescriptionCount}, İngilizce açıklama: ${result.englishDescriptionCount}.`
+            `Güncelleme yapılmadı. Taranan: ${result.scannedCount}, kısa açıklama: ${result.shortDescriptionCount}, İngilizce açıklama: ${result.englishDescriptionCount}${
+              result.aiRateLimitHitCount > 0
+                ? `, AI limit hatası: ${result.aiRateLimitHitCount}`
+                : ""
+            }.`
           )
         }
         router.refresh()
@@ -584,7 +592,11 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                         Son çalışma: {automationReport.updatedCount} güncellendi,{" "}
                         {automationReport.inferredPricingCount} fiyat modeli ve{" "}
                         {automationReport.defaultedPlatformCount} platform alanı otomatik dolduruldu,{" "}
-                        {automationReport.aiDescriptionFixCount} açıklama AI ile iyileştirildi.
+                        {automationReport.aiDescriptionFixCount} açıklama AI ile iyileştirildi,{" "}
+                        {automationReport.fallbackDescriptionFixCount} kısa açıklama fallback ile düzeltildi
+                        {automationReport.aiRateLimitHitCount > 0
+                          ? `, ${automationReport.aiRateLimitHitCount} kayıt AI limitine takıldı.`
+                          : "."}
                       </p>
                     )}
                     <div className="mt-3 flex flex-wrap gap-1.5">

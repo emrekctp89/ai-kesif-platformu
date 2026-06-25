@@ -20,6 +20,41 @@ import {
 } from "@/lib/toolQuality";
 
 const ITEMS_PER_PAGE = 12;
+const GEMINI_RETRY_BASE_DELAY_MS = 2500;
+const GEMINI_MAX_RETRY_PER_MODEL = 2;
+const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"];
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function buildFallbackToolDescription({ name, description, link }) {
+  const normalizedName = normalizeTextField(name);
+  const baseDescription = normalizeTextField(description);
+  if (!normalizedName || !baseDescription) return null;
+
+  const normalizedLink = normalizeToolUrl(link);
+  let hostPart = "web üzerinde";
+  if (normalizedLink) {
+    try {
+      hostPart = new URL(normalizedLink).hostname.replace(/^www\./, "");
+    } catch {
+      hostPart = "web üzerinde";
+    }
+  }
+
+  const seedText = baseDescription
+    .replace(/[.!?]+$/g, "")
+    .replace(/\s+/g, " ");
+
+  const fallback = normalizeTextField(
+    `${normalizedName}, ${hostPart} üzerinden erişilebilen bir yapay zeka aracıdır. ${seedText}. Günlük iş akışlarında daha hızlı ve verimli sonuç üretmeye yardımcı olur.`
+  );
+
+  if (fallback.length < 90) return null;
+  if (fallback.length <= 220) return fallback;
+  return `${fallback.slice(0, 217).trimEnd()}...`;
+}
 
 // Araçları çeken yardımcı (getSimilarTools için)
 async function getOtherToolsForAI(currentToolId) {
@@ -61,24 +96,47 @@ Görev:
     },
   };
 
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-  const response = await fetch(apiUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  let rateLimited = false;
 
-  if (!response.ok) {
-    return null;
+  for (const modelName of GEMINI_MODELS) {
+    let retryDelay = GEMINI_RETRY_BASE_DELAY_MS;
+
+    for (let attempt = 0; attempt <= GEMINI_MAX_RETRY_PER_MODEL; attempt += 1) {
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          rateLimited = true;
+          if (attempt < GEMINI_MAX_RETRY_PER_MODEL) {
+            await sleep(retryDelay);
+            retryDelay *= 2;
+            continue;
+          }
+          break;
+        }
+
+        return { text: null, rateLimited };
+      }
+
+      const result = await response.json();
+      const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) return { text: null, rateLimited };
+
+      const normalized = normalizeTextField(text);
+      if (normalized.length < 60 || normalized.length > 1200) {
+        return { text: null, rateLimited };
+      }
+
+      return { text: normalized, rateLimited };
+    }
   }
 
-  const result = await response.json();
-  const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) return null;
-
-  const normalized = normalizeTextField(text);
-  if (normalized.length < 60 || normalized.length > 1200) return null;
-  return normalized;
+  return { text: null, rateLimited };
 }
 
 export async function submitTool(formData) {
@@ -631,8 +689,10 @@ export async function runToolQualityAutomation() {
   let inferredPricingCount = 0;
   let defaultedPlatformCount = 0;
   let aiDescriptionFixCount = 0;
+  let fallbackDescriptionFixCount = 0;
   let aiAttemptedCount = 0;
   let aiSkippedDueToLimitCount = 0;
+  let aiRateLimitHitCount = 0;
   let aiSkippedDueToMissingKeyCount = 0;
   let shortDescriptionCount = 0;
   let englishDescriptionCount = 0;
@@ -675,18 +735,22 @@ export async function runToolQualityAutomation() {
       (isShortDescription || isEnglishDescription)
     ) {
       aiAttemptedCount += 1;
-      const aiDescription = await rewriteToolDescriptionWithGemini({
+      const aiResult = await rewriteToolDescriptionWithGemini({
         name: normalizedName || tool.name,
         description: normalizedDescription || tool.description,
         link: normalizedLink || tool.link,
         apiKey: geminiApiKey,
       });
 
+      if (aiResult.rateLimited) {
+        aiRateLimitHitCount += 1;
+      }
+
       if (
-        aiDescription &&
-        aiDescription !== (updates.description || normalizedDescription || "")
+        aiResult.text &&
+        aiResult.text !== (updates.description || normalizedDescription || "")
       ) {
-        updates.description = aiDescription;
+        updates.description = aiResult.text;
         aiDescriptionFixCount += 1;
       }
     } else if (!geminiApiKey && (isShortDescription || isEnglishDescription)) {
@@ -697,6 +761,22 @@ export async function runToolQualityAutomation() {
       (isShortDescription || isEnglishDescription)
     ) {
       aiSkippedDueToLimitCount += 1;
+    }
+
+    if (!updates.description && isShortDescription) {
+      const fallbackDescription = buildFallbackToolDescription({
+        name: normalizedName || tool.name,
+        description: normalizedDescription || tool.description,
+        link: normalizedLink || tool.link,
+      });
+
+      if (
+        fallbackDescription &&
+        fallbackDescription !== (normalizedDescription || String(tool.description || "").trim())
+      ) {
+        updates.description = fallbackDescription;
+        fallbackDescriptionFixCount += 1;
+      }
     }
 
     const hasPlatforms =
@@ -761,8 +841,10 @@ export async function runToolQualityAutomation() {
     shortDescriptionCount,
     englishDescriptionCount,
     aiDescriptionFixCount,
+    fallbackDescriptionFixCount,
     aiAttemptedCount,
     aiSkippedDueToLimitCount,
+    aiRateLimitHitCount,
     aiSkippedDueToMissingKeyCount,
     aiEnabled: Boolean(geminiApiKey),
     ranAt: new Date().toISOString(),
