@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { AdminMenu } from './AdminMenu';
 import { getNotifications } from '@/app/actions';
 import { HeaderNav } from './HeaderNav';
-import { Bot } from 'lucide-react';
+import { FutureAiGlyph } from './FutureAiGlyph';
 
 // Toplam okunmamış mesaj sayısını çeken fonksiyon
 async function getTotalUnreadMessages(supabase, userId) {
@@ -40,7 +40,7 @@ export default async function Header() {
         {isAdmin && <AdminMenu />}
         
         <Link href="/" aria-label="AI Keşif ana sayfa" className="mr-3 flex shrink-0 items-center space-x-2 md:mr-6">
-          <Bot aria-hidden="true" className="h-6 w-6 text-primary" />
+          <FutureAiGlyph className="h-7 w-7" />
           <span className="text-lg font-bold tracking-tight sm:text-xl">
             AI Keşif
           </span>
