@@ -31,6 +31,10 @@ export const metadata = {
   },
   description:
     "İhtiyacınıza uygun yapay zeka araçlarını keşfedin, karşılaştırın ve doğru aracı daha hızlı bulun.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+  },
   manifest: "/manifest.json",
   openGraph: {
     type: "website",
