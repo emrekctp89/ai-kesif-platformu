@@ -1,3 +1,5 @@
+import { TOOL_ICON_OVERRIDES } from "@/lib/toolIconOverrides";
+
 const ICON_LINK_REGEX =
   /<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
 
@@ -24,6 +26,15 @@ function isDisallowedHost(hostname) {
   return false;
 }
 
+function getRegistrableDomain(hostname) {
+  const parts = String(hostname || "")
+    .toLowerCase()
+    .split(".")
+    .filter(Boolean);
+  if (parts.length <= 2) return parts.join(".");
+  return parts.slice(-2).join(".");
+}
+
 function normalizeLink(link) {
   if (!link) return null;
   const raw = String(link).trim();
@@ -48,8 +59,13 @@ function normalizeLink(link) {
 function makeCandidates(url) {
   const host = url.hostname;
   const origin = url.origin;
+  const rootHost = getRegistrableDomain(host);
+  const overrideIconUrl = TOOL_ICON_OVERRIDES[host] || TOOL_ICON_OVERRIDES[rootHost] || null;
 
   const candidates = [
+    ...(overrideIconUrl
+      ? [{ url: overrideIconUrl, source: "manual-override" }]
+      : []),
     { url: `${origin}/favicon.ico`, source: "site-favicon-ico" },
     { url: `${origin}/favicon.png`, source: "site-favicon-png" },
     { url: `${origin}/apple-touch-icon.png`, source: "site-apple-touch-icon" },
