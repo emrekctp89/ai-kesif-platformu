@@ -41,10 +41,14 @@ export function getToolQualityIssues(tool, duplicateNames, duplicateLinks) {
   const description = String(tool.description || "").trim();
   const normalizedName = String(tool.name || "").trim().toLocaleLowerCase("tr-TR");
   const normalizedLink = normalizeToolLink(tool.link);
+  const normalizedUrl = normalizeToolUrl(tool.link);
 
   if (description.length < 80) issues.push({ key: "short", label: "Kısa açıklama" });
   if (isLikelyEnglishDescription(description)) {
     issues.push({ key: "english", label: "İngilizce açıklama" });
+  }
+  if (!normalizedUrl) {
+    issues.push({ key: "icon", label: "İkon alınamıyor (bağlantı hatalı)" });
   }
   if (!tool.pricing_model) issues.push({ key: "metadata", label: "Fiyat bilgisi yok" });
   if (!Array.isArray(tool.platforms) || tool.platforms.length === 0) {

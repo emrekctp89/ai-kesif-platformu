@@ -59,6 +59,7 @@ import {
 function getQualityPriority(issues, duplicateNameCount, duplicateLinkCount) {
   if (duplicateLinkCount > 1) return 'high'
   if (issues.some((issue) => issue.key === 'english')) return 'high'
+  if (issues.some((issue) => issue.key === 'icon')) return 'medium'
   if (duplicateNameCount > 1) return 'medium'
   if (issues.length >= 2) return 'medium'
   if (issues.length === 1) return 'low'
@@ -100,6 +101,9 @@ function getQualityActionHint(issues, duplicateNameCount, duplicateLinkCount) {
   }
   if (issues.some((issue) => issue.key === 'metadata')) {
     return 'Fiyat modeli ve platform bilgisini tamamla; filtre sonuçları daha isabetli olur.'
+  }
+  if (issues.some((issue) => issue.key === 'icon')) {
+    return 'Bağlantıyı doğrula; URL geçersizse araç ikonu alınamaz ve kartta fallback görünür.'
   }
   if (issues.some((issue) => issue.key === 'short')) {
     return 'Açıklamayı kullanım amacı, öne çıkan özellik ve hedef kullanıcıyla genişlet.'
@@ -386,6 +390,9 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         metadata: auditedTools.filter(({ issues }) =>
           issues.some((issue) => issue.key === 'metadata')
         ).length,
+        icon: auditedTools.filter(({ issues }) =>
+          issues.some((issue) => issue.key === 'icon')
+        ).length,
         high: auditedTools.filter(({ priority }) => priority === 'high').length,
         medium: auditedTools.filter(({ priority }) => priority === 'medium').length,
         low: auditedTools.filter(({ priority }) => priority === 'low').length,
@@ -418,6 +425,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         label: 'Eksik metadata',
         count: qualityCounts.metadata,
         tone: 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300',
+      },
+      {
+        value: 'icon',
+        label: 'İkon sorunu',
+        count: qualityCounts.icon,
+        tone: 'border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300',
       },
     ]
     const priorityLabels = {
@@ -653,6 +666,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                     <option value="english">İngilizce açıklama ({qualityCounts.english})</option>
                     <option value="short">Kısa açıklama ({qualityCounts.short})</option>
                     <option value="metadata">Eksik fiyat/platform ({qualityCounts.metadata})</option>
+                    <option value="icon">İkon sorunu ({qualityCounts.icon})</option>
                     <option value="ready">Sorunsuz ({qualityCounts.ready})</option>
                   </select>
                   <select
@@ -685,6 +699,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                   <Badge variant="secondary">{qualityCounts.english} İngilizce açıklama</Badge>
                   <Badge variant="secondary">{qualityCounts.short} kısa açıklama</Badge>
                   <Badge variant="secondary">{qualityCounts.metadata} eksik metadata</Badge>
+                  <Badge variant="secondary">{qualityCounts.icon} ikon sorunu</Badge>
                 </div>
 
                 {qualityFilter === 'duplicate' && (
