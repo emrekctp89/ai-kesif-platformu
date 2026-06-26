@@ -2,6 +2,15 @@ import { TOOL_ICON_OVERRIDES } from "@/lib/toolIconOverrides";
 
 const ICON_LINK_REGEX =
   /<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
+const COMMON_SECOND_LEVEL_LABELS = new Set([
+  "ac",
+  "co",
+  "com",
+  "edu",
+  "gov",
+  "net",
+  "org",
+]);
 
 function isPrivateIpv4(hostname) {
   if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return false;
@@ -32,6 +41,12 @@ function getRegistrableDomain(hostname) {
     .split(".")
     .filter(Boolean);
   if (parts.length <= 2) return parts.join(".");
+
+  const secondLevel = parts[parts.length - 2];
+  if (COMMON_SECOND_LEVEL_LABELS.has(secondLevel) && parts.length >= 3) {
+    return parts.slice(-3).join(".");
+  }
+
   return parts.slice(-2).join(".");
 }
 
@@ -61,6 +76,20 @@ function makeCandidates(url) {
   const origin = url.origin;
   const rootHost = getRegistrableDomain(host);
   const overrideIconUrl = TOOL_ICON_OVERRIDES[host] || TOOL_ICON_OVERRIDES[rootHost] || null;
+  const providerHosts = [...new Set([host, rootHost].filter(Boolean))];
+  const providerCandidates = providerHosts.flatMap((providerHost) => [
+    { url: `https://logo.clearbit.com/${providerHost}`, source: "clearbit-logo" },
+    { url: `https://icon.horse/icon/${providerHost}`, source: "icon-horse" },
+    { url: `https://icons.duckduckgo.com/ip3/${providerHost}.ico`, source: "duckduckgo" },
+    {
+      url: `https://www.google.com/s2/favicons?domain=${providerHost}&sz=64`,
+      source: "google-s2-domain",
+    },
+    {
+      url: `https://www.google.com/s2/favicons?domain_url=https://${providerHost}&sz=64`,
+      source: "google-s2-domain-url",
+    },
+  ]);
 
   const candidates = [
     ...(overrideIconUrl
@@ -71,8 +100,7 @@ function makeCandidates(url) {
     { url: `${origin}/apple-touch-icon.png`, source: "site-apple-touch-icon" },
     { url: `${origin}/favicon-32x32.png`, source: "site-favicon-32" },
     { url: `${origin}/favicon-16x16.png`, source: "site-favicon-16" },
-    { url: `https://icons.duckduckgo.com/ip3/${host}.ico`, source: "duckduckgo" },
-    { url: `https://www.google.com/s2/favicons?domain=${host}&sz=64`, source: "google-s2" },
+    ...providerCandidates,
   ];
 
   const deduped = new Map();
