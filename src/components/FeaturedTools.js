@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import ToolIcon from "@/components/ToolIcon";
+import { TrackedExternalLink } from "@/components/TrackedExternalLink";
 
 async function getFeaturedTools() {
   const supabase = createClient(await cookies());
@@ -74,9 +75,19 @@ export async function FeaturedTools() {
                 </Link>
                 {tool.link && (
                   <Button asChild size="sm" variant="secondary">
-                    <a href={tool.link} target="_blank" rel="noopener noreferrer">
+                    <TrackedExternalLink
+                      href={tool.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      eventName="official_site_click"
+                      eventParameters={{
+                        source: "featured_tools",
+                        tool_slug: tool.slug,
+                        category: tool.category_slug,
+                      }}
+                    >
                       Ziyaret Et
-                    </a>
+                    </TrackedExternalLink>
                   </Button>
                 )}
               </div>

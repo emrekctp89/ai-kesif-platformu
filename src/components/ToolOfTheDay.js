@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Zap } from "lucide-react"; // Zap ikonu "Günün Aracı" temasını güçlendirir
 import ToolIcon from "@/components/ToolIcon";
+import { TrackedExternalLink } from "@/components/TrackedExternalLink";
 
 // Veritabanındaki RPC fonksiyonunu çağıran fonksiyon
 async function getToolOfTheDayData() {
@@ -45,10 +46,20 @@ export async function ToolOfTheDay() {
             <p className="text-sm leading-6 text-muted-foreground sm:text-base md:text-lg">{tool.description}</p>
             <div className="flex items-center gap-4 pt-2">
               <Button asChild className="w-full bg-green-600 hover:bg-green-700 sm:w-auto" size="lg">
-  <a href={tool.link} target="_blank" rel="noopener noreferrer">
-    İncele & Keşfet
-  </a>
-</Button>
+                <TrackedExternalLink
+                  href={tool.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  eventName="official_site_click"
+                  eventParameters={{
+                    source: "tool_of_the_day",
+                    tool_slug: tool.slug,
+                    category: tool.category_slug,
+                  }}
+                >
+                  İncele & Keşfet
+                </TrackedExternalLink>
+              </Button>
               
             </div>
           </div>

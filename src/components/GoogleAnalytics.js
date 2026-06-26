@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import Script from "next/script";
 
@@ -15,14 +16,17 @@ const pageview = (GA_MEASUREMENT_ID, url) => {
 
 export const GoogleAnalytics = () => {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID;
+  const queryString = searchParams.toString();
+  const pageUrl = queryString ? `${pathname}?${queryString}` : pathname;
 
   useEffect(() => {
     if (!GA_MEASUREMENT_ID) return;
 
     // Sayfa her değiştiğinde bu fonksiyonu çağır
-    pageview(GA_MEASUREMENT_ID, pathname);
-  }, [pathname, GA_MEASUREMENT_ID]);
+    pageview(GA_MEASUREMENT_ID, pageUrl);
+  }, [pageUrl, GA_MEASUREMENT_ID]);
 
   return (
     <>
@@ -40,7 +44,7 @@ export const GoogleAnalytics = () => {
             gtag('js', new Date());
 
             gtag('config', '${GA_MEASUREMENT_ID}', {
-                page_path: window.location.pathname,
+                send_page_view: false,
             });
           `,
         }}

@@ -9,6 +9,7 @@ import { Star, Heart, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart,
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import ToolIcon from "@/components/ToolIcon";
+import { TrackedExternalLink } from "@/components/TrackedExternalLink";
 
 // Bu sabitleri de bileşenin kendi dosyasına taşıyoruz
 const tierStyles = {
@@ -128,14 +129,20 @@ export default function ToolCard({ tool }) {
               className="hover:bg-primary/80 transition-colors"
               onClick={(e) => e.stopPropagation()} // Bu zaten vardı ve doğruydu.
             >
-              <Link
+              <TrackedExternalLink
                 href={tool.link}
                 target="_blank"
                 rel="noopener noreferrer"
+                eventName="official_site_click"
+                eventParameters={{
+                  source: "legacy_tool_card",
+                  tool_slug: tool.slug,
+                  category: tool.category_slug,
+                }}
                 className="px-3 py-1 text-sm"
               >
                 Ziyaret Et
-              </Link>
+              </TrackedExternalLink>
             </Button>
           )}
         </div>

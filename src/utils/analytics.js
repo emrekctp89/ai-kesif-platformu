@@ -22,5 +22,5 @@ export function trackEvent(name, parameters = {}) {
   }
 
   window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push(["event", name, cleanedParameters]);
+  window.dataLayer.push({ event: name, ...cleanedParameters });
 }

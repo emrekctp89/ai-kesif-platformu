@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getToolDetailsForPreview } from '@/app/actions';
 import { ExternalLink, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { TrackedExternalLink } from "@/components/TrackedExternalLink";
 
 export function ToolPreviewDialog({ tool, isOpen, onClose }) {
   const [details, setDetails] = React.useState(null);
@@ -118,10 +119,20 @@ export function ToolPreviewDialog({ tool, isOpen, onClose }) {
         Paylaş
       </Button>
       <Button asChild size="lg" className="bg-green-600 hover:bg-green-700">
-        <a href={toolData.link} target="_blank" rel="noopener noreferrer">
+        <TrackedExternalLink
+          href={toolData.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          eventName="official_site_click"
+          eventParameters={{
+            source: "tool_preview_dialog",
+            tool_slug: toolData.slug,
+            category: toolData.category_slug,
+          }}
+        >
           <ExternalLink className="w-4 h-4 mr-2" />
           Hemen Dene
-        </a>
+        </TrackedExternalLink>
       </Button>
     </div>
   </div>

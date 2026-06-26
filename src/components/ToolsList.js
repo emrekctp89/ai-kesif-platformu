@@ -10,6 +10,7 @@ import { Star, Crown, Gem } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { recordVariantImpression, recordVariantClick } from "@/app/actions";
 import ToolIcon from "@/components/ToolIcon";
+import { TrackedExternalLink } from "@/components/TrackedExternalLink";
 
 // Seviyelere göre stiller
 const tierStyles = {
@@ -140,9 +141,19 @@ function ToolCard({ tool, user, isFavorited }) {
           <span>({tool.total_ratings} oy)</span>
         </div>
         <Button asChild size="sm">
-          <a href={tool.link} target="_blank" rel="noopener noreferrer">
+          <TrackedExternalLink
+            href={tool.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            eventName="official_site_click"
+            eventParameters={{
+              source: "tools_list_ab_card",
+              tool_slug: tool.slug,
+              category: tool.category_slug,
+            }}
+          >
             Ziyaret Et
-          </a>
+          </TrackedExternalLink>
         </Button>
       </div>
     </div>
