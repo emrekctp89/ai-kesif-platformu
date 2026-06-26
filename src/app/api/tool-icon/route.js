@@ -50,16 +50,22 @@ function makeCandidates(url) {
   const origin = url.origin;
 
   const candidates = [
-    `${origin}/favicon.ico`,
-    `${origin}/favicon.png`,
-    `${origin}/apple-touch-icon.png`,
-    `${origin}/favicon-32x32.png`,
-    `${origin}/favicon-16x16.png`,
-    `https://icons.duckduckgo.com/ip3/${host}.ico`,
-    `https://www.google.com/s2/favicons?domain=${host}&sz=64`,
+    { url: `${origin}/favicon.ico`, source: "site-favicon-ico" },
+    { url: `${origin}/favicon.png`, source: "site-favicon-png" },
+    { url: `${origin}/apple-touch-icon.png`, source: "site-apple-touch-icon" },
+    { url: `${origin}/favicon-32x32.png`, source: "site-favicon-32" },
+    { url: `${origin}/favicon-16x16.png`, source: "site-favicon-16" },
+    { url: `https://icons.duckduckgo.com/ip3/${host}.ico`, source: "duckduckgo" },
+    { url: `https://www.google.com/s2/favicons?domain=${host}&sz=64`, source: "google-s2" },
   ];
 
-  return [...new Set(candidates)];
+  const deduped = new Map();
+  for (const candidate of candidates) {
+    if (!deduped.has(candidate.url)) {
+      deduped.set(candidate.url, candidate);
+    }
+  }
+  return [...deduped.values()];
 }
 
 function extractIconLinksFromHtml(html, baseUrl) {
@@ -71,15 +77,18 @@ function extractIconLinksFromHtml(html, baseUrl) {
       const absolute = new URL(href, baseUrl);
       if (!["http:", "https:"].includes(absolute.protocol)) continue;
       if (isDisallowedHost(absolute.hostname)) continue;
-      results.push(absolute.toString());
+      results.push({
+        url: absolute.toString(),
+        source: "html-link-icon",
+      });
     } catch {}
   }
   return results;
 }
 
-async function fetchAsImage(url) {
+async function fetchAsImage(candidate) {
   try {
-    const response = await fetch(url, {
+    const response = await fetch(candidate.url, {
       headers: {
         Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (compatible; AIKesifIconBot/1.0)",
@@ -100,6 +109,7 @@ async function fetchAsImage(url) {
       headers: {
         "Content-Type": type,
         "Cache-Control": "public, max-age=86400, s-maxage=86400",
+        "X-Tool-Icon-Source": candidate.source,
       },
     });
   } catch {
@@ -119,7 +129,10 @@ export async function GET(request) {
   const directCandidates = makeCandidates(normalizedUrl);
   for (const candidate of directCandidates) {
     const imageResponse = await fetchAsImage(candidate);
-    if (imageResponse) return imageResponse;
+    if (imageResponse) {
+      console.info(`[tool-icon] hit host=${normalizedUrl.hostname} source=${candidate.source}`);
+      return imageResponse;
+    }
   }
 
   try {
@@ -138,10 +151,17 @@ export async function GET(request) {
       const htmlCandidates = extractIconLinksFromHtml(html, normalizedUrl);
       for (const candidate of htmlCandidates) {
         const imageResponse = await fetchAsImage(candidate);
-        if (imageResponse) return imageResponse;
+        if (imageResponse) {
+          console.info(
+            `[tool-icon] hit host=${normalizedUrl.hostname} source=${candidate.source}`
+          );
+          return imageResponse;
+        }
       }
     }
   } catch {}
+
+  console.warn(`[tool-icon] miss host=${normalizedUrl.hostname}`);
 
   return new Response("Not found", {
     status: 404,
