@@ -2,6 +2,8 @@ import { TOOL_ICON_OVERRIDES } from "@/lib/toolIconOverrides";
 
 const ICON_LINK_REGEX =
   /<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
+const META_IMAGE_REGEX =
+  /<meta[^>]+(?:property|name)=["'](?:og:image|twitter:image)["'][^>]+content=["']([^"']+)["'][^>]*>/gi;
 const COMMON_SECOND_LEVEL_LABELS = new Set([
   "ac",
   "co",
@@ -130,6 +132,24 @@ function extractIconLinksFromHtml(html, baseUrl) {
   return results;
 }
 
+function extractMetaImageLinksFromHtml(html, baseUrl) {
+  const results = [];
+  for (const match of html.matchAll(META_IMAGE_REGEX)) {
+    const href = match[1];
+    if (!href) continue;
+    try {
+      const absolute = new URL(href, baseUrl);
+      if (!["http:", "https:"].includes(absolute.protocol)) continue;
+      if (isDisallowedHost(absolute.hostname)) continue;
+      results.push({
+        url: absolute.toString(),
+        source: "html-meta-image",
+      });
+    } catch {}
+  }
+  return results;
+}
+
 async function fetchAsImage(candidate) {
   try {
     const response = await fetch(candidate.url, {
@@ -194,6 +214,17 @@ export async function GET(request) {
       const html = await htmlResponse.text();
       const htmlCandidates = extractIconLinksFromHtml(html, normalizedUrl);
       for (const candidate of htmlCandidates) {
+        const imageResponse = await fetchAsImage(candidate);
+        if (imageResponse) {
+          console.info(
+            `[tool-icon] hit host=${normalizedUrl.hostname} source=${candidate.source}`
+          );
+          return imageResponse;
+        }
+      }
+
+      const metaImageCandidates = extractMetaImageLinksFromHtml(html, normalizedUrl);
+      for (const candidate of metaImageCandidates) {
         const imageResponse = await fetchAsImage(candidate);
         if (imageResponse) {
           console.info(
