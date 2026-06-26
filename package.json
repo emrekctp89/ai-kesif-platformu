@@ -6,7 +6,8 @@
     "dev": "next dev -p 3005 --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "tools:audit-links": "node ./scripts/tool-link-audit.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.11",
