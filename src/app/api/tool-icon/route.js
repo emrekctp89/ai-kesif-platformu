@@ -2,6 +2,8 @@ import { TOOL_ICON_OVERRIDES } from "@/lib/toolIconOverrides";
 
 const ICON_LINK_REGEX =
   /<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
+const MANIFEST_LINK_REGEX =
+  /<link[^>]+rel=["'][^"']*manifest[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
 const META_IMAGE_REGEX =
   /<meta[^>]+(?:property|name)=["'](?:og:image|twitter:image)["'][^>]+content=["']([^"']+)["'][^>]*>/gi;
 const COMMON_SECOND_LEVEL_LABELS = new Set([
@@ -150,6 +152,48 @@ function extractMetaImageLinksFromHtml(html, baseUrl) {
   return results;
 }
 
+function extractManifestLinksFromHtml(html, baseUrl) {
+  const results = [];
+  for (const match of html.matchAll(MANIFEST_LINK_REGEX)) {
+    const href = match[1];
+    if (!href) continue;
+    try {
+      const absolute = new URL(href, baseUrl);
+      if (!["http:", "https:"].includes(absolute.protocol)) continue;
+      if (isDisallowedHost(absolute.hostname)) continue;
+      results.push(absolute.toString());
+    } catch {}
+  }
+
+  return [...new Set(results)];
+}
+
+function extractIconLinksFromManifest(manifest, manifestUrl) {
+  const icons = Array.isArray(manifest?.icons) ? manifest.icons : [];
+  const candidates = [];
+
+  for (const icon of icons) {
+    if (!icon?.src) continue;
+    try {
+      const absolute = new URL(icon.src, manifestUrl);
+      if (!["http:", "https:"].includes(absolute.protocol)) continue;
+      if (isDisallowedHost(absolute.hostname)) continue;
+      candidates.push({
+        url: absolute.toString(),
+        source: "web-manifest-icon",
+      });
+    } catch {}
+  }
+
+  const deduped = new Map();
+  for (const candidate of candidates) {
+    if (!deduped.has(candidate.url)) {
+      deduped.set(candidate.url, candidate);
+    }
+  }
+  return [...deduped.values()];
+}
+
 async function fetchAsImage(candidate) {
   try {
     const response = await fetch(candidate.url, {
@@ -221,6 +265,38 @@ export async function GET(request) {
           );
           return imageResponse;
         }
+      }
+
+      const manifestLinks = extractManifestLinksFromHtml(html, normalizedUrl);
+      for (const manifestLink of manifestLinks) {
+        try {
+          const manifestResponse = await fetch(manifestLink, {
+            headers: {
+              Accept: "application/manifest+json,application/json,text/plain,*/*",
+              "User-Agent": "Mozilla/5.0 (compatible; AIKesifIconBot/1.0)",
+            },
+            redirect: "follow",
+            cache: "force-cache",
+            next: { revalidate: 86400 },
+          });
+
+          if (!manifestResponse.ok) continue;
+          const manifestJson = await manifestResponse.json();
+          const manifestCandidates = extractIconLinksFromManifest(
+            manifestJson,
+            manifestLink
+          );
+
+          for (const candidate of manifestCandidates) {
+            const imageResponse = await fetchAsImage(candidate);
+            if (imageResponse) {
+              console.info(
+                `[tool-icon] hit host=${normalizedUrl.hostname} source=${candidate.source}`
+              );
+              return imageResponse;
+            }
+          }
+        } catch {}
       }
 
       const metaImageCandidates = extractMetaImageLinksFromHtml(html, normalizedUrl);
