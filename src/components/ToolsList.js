@@ -9,6 +9,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import { Star, Crown, Gem } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { recordVariantImpression, recordVariantClick } from "@/app/actions";
+import ToolIcon from "@/components/ToolIcon";
 
 // Seviyelere göre stiller
 const tierStyles = {
@@ -106,7 +107,8 @@ function ToolCard({ tool, user, isFavorited }) {
 
         {/* Kartın tıklanabilir ana alanı */}
         <div onClick={handleCardClick} className="cursor-pointer group">
-          <h2 className="text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">
+          <h2 className="flex items-center gap-2 text-xl font-bold text-card-foreground group-hover:text-primary transition-colors">
+            <ToolIcon name={tool.name} link={tool.link} />
             {displayedVariant.title}
           </h2>
           <p className="text-muted-foreground text-sm my-4 line-clamp-2">

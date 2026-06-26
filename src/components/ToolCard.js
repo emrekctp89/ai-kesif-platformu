@@ -8,6 +8,7 @@ import FavoriteButton from '@/components/FavoriteButton'; // Bu dosya yolunun do
 import { Star, Heart, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import ToolIcon from "@/components/ToolIcon";
 
 // Bu sabitleri de bileşenin kendi dosyasına taşıyoruz
 const tierStyles = {
@@ -60,7 +61,10 @@ export default function ToolCard({ tool }) {
         )}
 
         {/* Araç Adı */}
-        <h2 className="text-xl font-bold">{tool.name}</h2>
+        <h2 className="flex items-center gap-2 text-xl font-bold">
+          <ToolIcon name={tool.name} link={tool.link} />
+          {tool.name}
+        </h2>
 
         {/* Kategori */}
         <div className="my-2">
