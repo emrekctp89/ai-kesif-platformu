@@ -36,7 +36,12 @@ export function isLikelyEnglishDescription(description) {
   return englishMatches.length >= 3 && englishMatches.length > turkishMatches.length * 1.5;
 }
 
-export function getToolQualityIssues(tool, duplicateNames, duplicateLinks) {
+export function getToolQualityIssues(
+  tool,
+  duplicateNames,
+  duplicateLinks,
+  { iconFetchIssue = false } = {}
+) {
   const issues = [];
   const description = String(tool.description || "").trim();
   const normalizedName = String(tool.name || "").trim().toLocaleLowerCase("tr-TR");
@@ -49,6 +54,8 @@ export function getToolQualityIssues(tool, duplicateNames, duplicateLinks) {
   }
   if (!normalizedUrl) {
     issues.push({ key: "icon", label: "İkon alınamıyor (bağlantı hatalı)" });
+  } else if (iconFetchIssue) {
+    issues.push({ key: "icon", label: "İkon alınamıyor (erişim hatası)" });
   }
   if (!tool.pricing_model) issues.push({ key: "metadata", label: "Fiyat bilgisi yok" });
   if (!Array.isArray(tool.platforms) || tool.platforms.length === 0) {

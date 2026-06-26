@@ -326,6 +326,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
     const [priorityFilter, setPriorityFilter] = React.useState('all');
     const [sortMode, setSortMode] = React.useState('issues');
     const [duplicateView, setDuplicateView] = React.useState('groups');
+    const [iconAuditByToolId, setIconAuditByToolId] = React.useState({})
+    const [iconAuditMeta, setIconAuditMeta] = React.useState({
+      running: false,
+      processed: 0,
+      total: 0,
+    })
     const [isAutomationPending, startAutomationTransition] = React.useTransition()
     const [automationReport, setAutomationReport] = React.useState(null)
     const duplicateNames = React.useMemo(() => {
@@ -344,10 +350,74 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
       })
       return counts
     }, [approvedTools])
+
+    React.useEffect(() => {
+      let cancelled = false
+      const auditableTools = approvedTools.filter((tool) =>
+        String(tool.link || '').trim().length > 0
+      )
+
+      setIconAuditByToolId({})
+      setIconAuditMeta({
+        running: auditableTools.length > 0,
+        processed: 0,
+        total: auditableTools.length,
+      })
+
+      if (auditableTools.length === 0) return () => {}
+
+      const queue = [...auditableTools]
+      const concurrency = 6
+
+      const runWorker = async () => {
+        while (queue.length > 0 && !cancelled) {
+          const tool = queue.shift()
+          if (!tool) break
+
+          let status = 'fail'
+          try {
+            const response = await fetch(
+              `/api/tool-icon?link=${encodeURIComponent(tool.link)}`,
+              { cache: 'no-store' }
+            )
+            status = response.ok ? 'ok' : 'fail'
+          } catch {
+            status = 'fail'
+          }
+
+          if (cancelled) return
+
+          setIconAuditByToolId((prev) => ({
+            ...prev,
+            [tool.id]: status,
+          }))
+          setIconAuditMeta((prev) => ({
+            ...prev,
+            processed: prev.processed + 1,
+          }))
+        }
+      }
+
+      Promise.all(Array.from({ length: concurrency }, runWorker)).then(() => {
+        if (cancelled) return
+        setIconAuditMeta((prev) => ({
+          ...prev,
+          running: false,
+        }))
+      })
+
+      return () => {
+        cancelled = true
+      }
+    }, [approvedTools])
+
     const auditedTools = React.useMemo(
       () =>
         approvedTools.map((tool) => {
-          const issues = getToolQualityIssues(tool, duplicateNames, duplicateLinks)
+          const hasIconFetchIssue = iconAuditByToolId[tool.id] === 'fail'
+          const issues = getToolQualityIssues(tool, duplicateNames, duplicateLinks, {
+            iconFetchIssue: hasIconFetchIssue,
+          })
           const duplicateNameCount =
             duplicateNames.get(
               String(tool.name || '').trim().toLocaleLowerCase('tr-TR')
@@ -373,7 +443,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
             ),
           }
         }),
-      [approvedTools, duplicateLinks, duplicateNames]
+      [approvedTools, duplicateLinks, duplicateNames, iconAuditByToolId]
     )
     const qualityCounts = React.useMemo(
       () => ({
@@ -701,6 +771,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                   <Badge variant="secondary">{qualityCounts.metadata} eksik metadata</Badge>
                   <Badge variant="secondary">{qualityCounts.icon} ikon sorunu</Badge>
                 </div>
+
+                <p className="text-xs text-muted-foreground" role="status">
+                  {iconAuditMeta.running
+                    ? `İkon denetimi sürüyor: ${iconAuditMeta.processed}/${iconAuditMeta.total}`
+                    : `İkon denetimi tamamlandı: ${iconAuditMeta.processed}/${iconAuditMeta.total}`}
+                </p>
 
                 {qualityFilter === 'duplicate' && (
                   <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
