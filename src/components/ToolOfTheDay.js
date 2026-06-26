@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Zap } from "lucide-react"; // Zap ikonu "Günün Aracı" temasını güçlendirir
+import ToolIcon from "@/components/ToolIcon";
 
 // Veritabanındaki RPC fonksiyonunu çağıran fonksiyon
 async function getToolOfTheDayData() {
@@ -37,7 +38,8 @@ export async function ToolOfTheDay() {
               <Zap className="h-5 w-5 sm:h-6 sm:w-6" />
               <span>GÜNÜN ARACI</span>
             </div>
-            <h2 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl md:text-4xl">
+            <h2 className="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl md:text-4xl">
+              <ToolIcon name={tool.name} link={tool.link} className="h-8 w-8 sm:h-9 sm:w-9" />
               {tool.name}
             </h2>
             <p className="text-sm leading-6 text-muted-foreground sm:text-base md:text-lg">{tool.description}</p>

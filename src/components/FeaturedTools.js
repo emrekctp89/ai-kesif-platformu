@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import ToolIcon from "@/components/ToolIcon";
 
 async function getFeaturedTools() {
   const supabase = createClient(await cookies());
@@ -50,7 +51,12 @@ export async function FeaturedTools() {
                   </Badge>
                 )}
                 <Link href={`/tool/${tool.slug}`} prefetch={false}>
-                  <h3 className="text-lg font-semibold hover:underline">
+                  <h3 className="flex items-center gap-2 text-lg font-semibold hover:underline">
+                    <ToolIcon
+                      name={tool.name}
+                      link={tool.link}
+                      className="h-6 w-6 border-white/30 bg-white/15"
+                    />
                     {tool.name}
                   </h3>
                 </Link>

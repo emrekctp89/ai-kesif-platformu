@@ -7,7 +7,7 @@ import { fetchMoreTools } from '@/app/actions';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ToolIcon from "@/components/ToolIcon";
 import { ArrowRight, Star, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye, SearchX, WandSparkles, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolCardSkeleton } from './ToolCardSkeleton';
@@ -33,22 +33,6 @@ const platformIcons = {
   'Chrome Uzantısı': <ShoppingCart className="w-4 h-4" />
 };
 
-function getToolIconUrl(link) {
-  if (!link) return null;
-
-  try {
-    const parsed = new URL(link);
-    return `https://www.google.com/s2/favicons?domain=${parsed.hostname}&sz=64`;
-  } catch {
-    try {
-      const parsed = new URL(`https://${link}`);
-      return `https://www.google.com/s2/favicons?domain=${parsed.hostname}&sz=64`;
-    } catch {
-      return null;
-    }
-  }
-}
-
 // -----------------------------
 // Tek bir araç kartı (DÜZELTİLMİŞ HALİ)
 // -----------------------------
@@ -58,8 +42,6 @@ export default function ToolCard({ tool }) {
   if (!tool || !tool.name) return null;
 
   const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
-  const iconUrl = getToolIconUrl(tool.link);
-  const nameFallback = String(tool.name || "?").trim().slice(0, 1).toUpperCase();
 
   // DEĞİŞİKLİK 1: Ana sarmalayıcıyı <div onClick> yerine <Link> yapın.
   return (
@@ -95,12 +77,7 @@ export default function ToolCard({ tool }) {
             }
             className="flex items-center gap-2 rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <Avatar className="h-7 w-7 rounded-md border bg-background">
-              <AvatarImage src={iconUrl || undefined} alt={`${tool.name} ikonu`} />
-              <AvatarFallback className="rounded-md text-[10px] font-semibold">
-                {nameFallback}
-              </AvatarFallback>
-            </Avatar>
+            <ToolIcon name={tool.name} link={tool.link} />
             {tool.name}
           </Link>
         </h2>
