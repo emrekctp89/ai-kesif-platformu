@@ -9,7 +9,7 @@ const DEFAULT_CONCURRENCY = 5;
 const MIN_TIMEOUT_MS = 5000;
 const MAX_TIMEOUT_MS = 10000;
 const DEACTIVATE_CONFIRMATION = "DEACTIVATE_INVALID_TOOLS";
-const REPORT_DIRECTORY = path.join(os.tmpdir(), "ai-kesif-platformu-tool-link-audits");
+const REPORT_DIRECTORY = path.join(os.tmpdir(), "tool-link-audits");
 const DEFINITELY_INVALID_STATUSES = new Set([404, 410, 451]);
 const REVIEW_ONLY_STATUSES = new Set([401, 403, 408, 425, 429, 500, 502, 503, 504]);
 
@@ -230,7 +230,7 @@ async function fetchForAudit(url, method, timeoutMs) {
     redirect: "follow",
     signal: AbortSignal.timeout(timeoutMs),
     headers: {
-      "user-agent": "AI Kesif Platformu Link Audit/1.0",
+      "user-agent": "AI Tool Platform Link Audit/1.0",
       accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       "cache-control": "no-cache",
     },
