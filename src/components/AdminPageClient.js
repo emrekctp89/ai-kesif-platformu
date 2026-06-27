@@ -58,6 +58,7 @@ import {
 
 function getQualityPriority(issues, duplicateNameCount, duplicateLinkCount) {
   if (duplicateLinkCount > 1) return 'high'
+  if (issues.some((issue) => issue.key === 'source')) return 'high'
   if (issues.some((issue) => issue.key === 'english')) return 'high'
   if (issues.some((issue) => issue.key === 'icon')) return 'medium'
   if (duplicateNameCount > 1) return 'medium'
@@ -95,6 +96,9 @@ function getQualityActionHint(issues, duplicateNameCount, duplicateLinkCount) {
   }
   if (issues.some((issue) => issue.key === 'english')) {
     return 'Açıklamayı Türkçeleştir ve kullanıcı faydasını ilk cümlede netleştir.'
+  }
+  if (issues.some((issue) => issue.key === 'source')) {
+    return 'Bu kayıt dizin/ara toplayıcı siteye gidiyor; resmi ürün URL\'sini bulup linki değiştir.'
   }
   if (duplicateNameCount > 1) {
     return 'Aynı adlı kayıtları kontrol et; gerçekten farklı ürün değilse tek kayda indir.'
@@ -454,6 +458,9 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         english: auditedTools.filter(({ issues }) =>
           issues.some((issue) => issue.key === 'english')
         ).length,
+        source: auditedTools.filter(({ issues }) =>
+          issues.some((issue) => issue.key === 'source')
+        ).length,
         short: auditedTools.filter(({ issues }) =>
           issues.some((issue) => issue.key === 'short')
         ).length,
@@ -483,6 +490,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         label: 'İngilizce açıklama',
         count: qualityCounts.english,
         tone: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+      },
+      {
+        value: 'source',
+        label: 'Dizin linki',
+        count: qualityCounts.source,
+        tone: 'border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-300',
       },
       {
         value: 'short',
@@ -734,6 +747,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                     <option value="all">Tüm araçlar ({qualityCounts.all})</option>
                     <option value="duplicate">Tekrarlar ({qualityCounts.duplicate})</option>
                     <option value="english">İngilizce açıklama ({qualityCounts.english})</option>
+                    <option value="source">Dizin linki ({qualityCounts.source})</option>
                     <option value="short">Kısa açıklama ({qualityCounts.short})</option>
                     <option value="metadata">Eksik fiyat/platform ({qualityCounts.metadata})</option>
                     <option value="icon">İkon sorunu ({qualityCounts.icon})</option>
@@ -767,6 +781,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                 <div className="flex flex-wrap gap-2" aria-label="Veri kalitesi özeti">
                   <Badge variant="secondary">{qualityCounts.duplicate} tekrarlı kayıt</Badge>
                   <Badge variant="secondary">{qualityCounts.english} İngilizce açıklama</Badge>
+                  <Badge variant="secondary">{qualityCounts.source} dizin linki</Badge>
                   <Badge variant="secondary">{qualityCounts.short} kısa açıklama</Badge>
                   <Badge variant="secondary">{qualityCounts.metadata} eksik metadata</Badge>
                   <Badge variant="secondary">{qualityCounts.icon} ikon sorunu</Badge>

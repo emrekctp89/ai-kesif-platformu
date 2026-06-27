@@ -18,6 +18,7 @@ import {
   normalizeToolLink,
   normalizeToolUrl,
 } from "@/lib/toolQuality";
+import { getBlockedToolHost } from "@/lib/toolLinkPolicy";
 
 const ITEMS_PER_PAGE = 12;
 const GEMINI_RETRY_BASE_DELAY_MS = 2500;
@@ -208,6 +209,14 @@ export async function submitTool(formData) {
     );
   }
 
+  if (getBlockedToolHost(normalizedLink)) {
+    return redirect(
+      `/submit?message=${encodeURIComponent(
+        "Dizin/aggregator bağlantıları kabul edilmiyor. Lütfen aracın resmî web sitesini girin."
+      )}`
+    );
+  }
+
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (
     !emailPattern.test(final_suggester_email) ||
@@ -328,6 +337,13 @@ export async function approveTool(formData) {
     }
   } catch {
     return { error: "Araç onaylanmadan önce geçerli bir site bağlantısı girilmeli." };
+  }
+
+  if (getBlockedToolHost(pendingTool.link)) {
+    return {
+      error:
+        "Bu kayıt dizin bağlantısına yönleniyor. Onaylamadan önce aracın resmî web sitesi ile güncelleyin.",
+    };
   }
 
   const { data: approvedTool, error } = await supabaseAdmin
@@ -559,6 +575,13 @@ export async function updateTool(formData) {
     normalizedLink = parsedLink.toString();
   } catch {
     return { error: "Geçerli bir HTTP veya HTTPS bağlantısı girin." };
+  }
+
+  if (getBlockedToolHost(normalizedLink)) {
+    return {
+      error:
+        "Dizin/aggregator bağlantısı kaydedilemez. Lütfen aracın resmî web sitesi bağlantısını kullanın.",
+    };
   }
 
   if (pricing_model && !allowedPricingModels.includes(pricing_model)) {

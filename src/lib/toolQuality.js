@@ -1,3 +1,5 @@
+import { getBlockedToolHost } from "@/lib/toolLinkPolicy";
+
 const ENGLISH_HINT_REGEX =
   /\b(the|and|with|for|that|this|from|your|using|create|allows|users|tool|platform|powered)\b/gi;
 const TURKISH_HINT_REGEX =
@@ -47,10 +49,14 @@ export function getToolQualityIssues(
   const normalizedName = String(tool.name || "").trim().toLocaleLowerCase("tr-TR");
   const normalizedLink = normalizeToolLink(tool.link);
   const normalizedUrl = normalizeToolUrl(tool.link);
+  const blockedHost = getBlockedToolHost(tool.link);
 
   if (description.length < 80) issues.push({ key: "short", label: "Kısa açıklama" });
   if (isLikelyEnglishDescription(description)) {
     issues.push({ key: "english", label: "İngilizce açıklama" });
+  }
+  if (blockedHost) {
+    issues.push({ key: "source", label: `Dizin linki (${blockedHost})` });
   }
   if (!normalizedUrl) {
     issues.push({ key: "icon", label: "İkon alınamıyor (bağlantı hatalı)" });
