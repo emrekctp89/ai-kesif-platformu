@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { pathToFileURL } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
@@ -60,7 +61,8 @@ function escapeHtml(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replace(/'/g, "&#39;")
+    .replace(/`/g, "&#96;");
 }
 
 export function parseArgs(argv) {
@@ -201,7 +203,9 @@ async function requestUrl(url, { method, timeoutMs, redirect = "follow" }) {
         "user-agent": "ai-kesif-platform-link-validator/1.0",
       },
     });
-    await response.body?.cancel?.();
+    if (response.body) {
+      await response.body.cancel();
+    }
     return { response };
   } catch (error) {
     return { error };
@@ -407,7 +411,7 @@ function buildCsv(rows) {
 
 async function writeReports(report, outputDir) {
   await fs.mkdir(outputDir, { recursive: true });
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const timestamp = new Date().toISOString().replace(/:/g, "-").replace(/\.\d{3}Z$/, "");
   const csvPath = path.join(outputDir, `tool-link-validation-${timestamp}.csv`);
   const jsonPath = path.join(outputDir, `tool-link-validation-${timestamp}.json`);
 
@@ -491,10 +495,7 @@ async function applyCleanup(supabase, brokenRows, cleanupMode) {
   if (cleanupMode === "soft") {
     const { error } = await supabase
       .from("tools")
-      .update({
-        is_approved: false,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ is_approved: false })
       .in("id", ids);
 
     if (error) throw error;
@@ -641,7 +642,7 @@ async function main() {
   printConsoleSummary(report, attachments, emailResult);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((error) => {
     console.error("Tool link validation failed:", error);
     process.exitCode = 1;
