@@ -5,6 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
 const DEFAULT_TIMEOUT_MS = 7000;
+const MIN_TIMEOUT_MS = 1000;
+const MAX_EMAIL_PREVIEW_ITEMS = 15;
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const SKIPPED_HOST_PATTERNS = [
   /^localhost$/i,
@@ -50,6 +52,15 @@ function getArgValue(arg) {
   if (separatorIndex === -1) return null;
   const value = arg.slice(separatorIndex + 1).trim();
   return value || null;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 export function parseArgs(argv) {
@@ -112,8 +123,8 @@ export function parseArgs(argv) {
   if (!["none", "soft", "hard"].includes(options.cleanup)) {
     throw new Error(`Unsupported cleanup mode: ${options.cleanup}`);
   }
-  if (!Number.isFinite(options.timeoutMs) || options.timeoutMs < 1000) {
-    throw new Error("Timeout must be a number greater than or equal to 1000 ms.");
+  if (!Number.isFinite(options.timeoutMs) || options.timeoutMs < MIN_TIMEOUT_MS) {
+    throw new Error(`Timeout must be a number greater than or equal to ${MIN_TIMEOUT_MS} ms.`);
   }
   if (options.limit !== null && (!Number.isInteger(options.limit) || options.limit <= 0)) {
     throw new Error("Limit must be a positive integer.");
@@ -417,8 +428,13 @@ async function sendSummaryEmail(report, options, attachments) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const from = process.env.RESEND_FROM_EMAIL;
   const brokenPreview = report.brokenTools
-    .slice(0, 15)
-    .map((tool) => `<li><strong>${tool.name}</strong> — ${tool.link} (${tool.validation.reason})</li>`)
+    .slice(0, MAX_EMAIL_PREVIEW_ITEMS)
+    .map(
+      (tool) =>
+        `<li><strong>${escapeHtml(tool.name)}</strong> — ${escapeHtml(tool.link)} (${escapeHtml(
+          tool.validation.reason
+        )})</li>`
+    )
     .join("");
 
   const html = `
