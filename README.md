@@ -29,6 +29,38 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Tool link validation utility
+
+Approved tool links can be checked and cleaned up with:
+
+```bash
+npm run validate:tool-links
+```
+
+The utility:
+
+- fetches all approved tools from Supabase
+- validates each tool link with timeout-safe HEAD/GET requests
+- categorizes links as valid, redirect, broken, or skipped
+- writes CSV + JSON reports into `scripts/reports`
+- supports safe cleanup with confirmation:
+
+```bash
+npm run validate:tool-links -- --cleanup=soft --confirm
+npm run validate:tool-links -- --cleanup=hard --confirm
+```
+
+Required environment variables:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_KEY`
+- `ADMIN_EMAIL`
+
+Optional:
+
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
