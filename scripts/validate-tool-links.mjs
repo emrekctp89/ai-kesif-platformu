@@ -45,6 +45,13 @@ Examples:
 `.trim());
 }
 
+function getArgValue(arg) {
+  const separatorIndex = arg.indexOf("=");
+  if (separatorIndex === -1) return null;
+  const value = arg.slice(separatorIndex + 1).trim();
+  return value || null;
+}
+
 export function parseArgs(argv) {
   const options = {
     cleanup: "none",
@@ -71,23 +78,33 @@ export function parseArgs(argv) {
       continue;
     }
     if (arg.startsWith("--cleanup=")) {
-      options.cleanup = arg.split("=")[1] || "none";
+      const value = getArgValue(arg);
+      if (!value) throw new Error("Cleanup mode cannot be empty.");
+      options.cleanup = value;
       continue;
     }
     if (arg.startsWith("--timeout=")) {
-      options.timeoutMs = Number(arg.split("=")[1]);
+      const value = getArgValue(arg);
+      if (!value) throw new Error("Timeout value cannot be empty.");
+      options.timeoutMs = Number(value);
       continue;
     }
     if (arg.startsWith("--limit=")) {
-      options.limit = Number(arg.split("=")[1]);
+      const value = getArgValue(arg);
+      if (!value) throw new Error("Limit value cannot be empty.");
+      options.limit = Number(value);
       continue;
     }
     if (arg.startsWith("--output-dir=")) {
-      options.outputDir = path.resolve(arg.split("=")[1]);
+      const value = getArgValue(arg);
+      if (!value) throw new Error("Output directory cannot be empty.");
+      options.outputDir = path.resolve(value);
       continue;
     }
     if (arg.startsWith("--admin-email=")) {
-      options.adminEmail = arg.split("=")[1] || "";
+      const value = getArgValue(arg);
+      if (!value) throw new Error("Admin email cannot be empty.");
+      options.adminEmail = value;
       continue;
     }
   }
@@ -170,7 +187,7 @@ async function requestUrl(url, { method, timeoutMs, redirect = "follow" }) {
       redirect,
       signal: controller.signal,
       headers: {
-        "user-agent": "ai-kesif-platformu-link-validator/1.0",
+        "user-agent": "ai-kesif-platform-link-validator/1.0",
       },
     });
     await response.body?.cancel?.();
@@ -393,9 +410,12 @@ async function sendSummaryEmail(report, options, attachments) {
   if (!options.sendEmail) return { skipped: "Email sending disabled with --no-email." };
   if (!options.adminEmail) return { skipped: "ADMIN_EMAIL is not configured." };
   if (!process.env.RESEND_API_KEY) return { skipped: "RESEND_API_KEY is not configured." };
+  if (!process.env.RESEND_FROM_EMAIL) {
+    return { skipped: "RESEND_FROM_EMAIL is not configured." };
+  }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const from = process.env.RESEND_FROM_EMAIL || "AI Keşif Platformu <onboarding@resend.dev>";
+  const from = process.env.RESEND_FROM_EMAIL;
   const brokenPreview = report.brokenTools
     .slice(0, 15)
     .map((tool) => `<li><strong>${tool.name}</strong> — ${tool.link} (${tool.validation.reason})</li>`)
