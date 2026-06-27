@@ -139,7 +139,9 @@ export function parseArgs(argv) {
 function getRequiredEnv(name) {
   const value = String(process.env[name] || "").trim();
   if (!value) {
-    throw new Error(`${name} environment variable is required.`);
+    throw new Error(
+      `Missing required environment variable: ${name}. Please set it in your .env file or deployment environment.`
+    );
   }
   return value;
 }
@@ -411,9 +413,12 @@ function buildCsv(rows) {
 
 async function writeReports(report, outputDir) {
   await fs.mkdir(outputDir, { recursive: true });
-  const timestamp = new Date().toISOString().replace(/:/g, "-").replace(/\.\d{3}Z$/, "");
-  const csvPath = path.join(outputDir, `tool-link-validation-${timestamp}.csv`);
-  const jsonPath = path.join(outputDir, `tool-link-validation-${timestamp}.json`);
+  const dateTimeString = new Date()
+    .toISOString()
+    .replace(/:/g, "-")
+    .replace(/\.\d{3}Z$/, "");
+  const csvPath = path.join(outputDir, `tool-link-validation-${dateTimeString}.csv`);
+  const jsonPath = path.join(outputDir, `tool-link-validation-${dateTimeString}.json`);
 
   await fs.writeFile(csvPath, buildCsv(report.rows), "utf8");
   await fs.writeFile(jsonPath, JSON.stringify(report, null, 2), "utf8");
@@ -486,7 +491,7 @@ async function fetchApprovedTools(supabase, limit) {
 }
 
 async function applyCleanup(supabase, brokenRows, cleanupMode) {
-  if (cleanupMode === "none" || brokenRows.length === 0) {
+  if (brokenRows.length === 0) {
     return { changedCount: 0, changedIds: [] };
   }
 
