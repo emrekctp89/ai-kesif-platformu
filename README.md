@@ -194,14 +194,21 @@ public/                   # Static assets
 ## 🧪 **Testing**
 
 ```bash
-# Unit tests çalıştır
-npm run test
+# Kod kalitesi + production build doğrulaması
+npm run verify
 
-# E2E tests çalıştır
-npm run test:e2e
+# Alternatif: adım adım çalıştır
+npm run lint
+npm run build
 
-# Coverage raporu oluştur
-npm run test:coverage
+# Link doğrulama dry-run (DB'ye yazmaz)
+npm run tools:audit-links:dry-run
+
+# Link doğrulama + metadata yazımı
+npm run tools:audit-links
+
+# Kesin kırık linkleri pasife alma (soft cleanup)
+npm run tools:audit-links:deactivate
 ```
 
 ---
