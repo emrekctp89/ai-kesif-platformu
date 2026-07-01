@@ -18,6 +18,7 @@ function parseArgs(argv) {
     timeoutMs: DEFAULT_TIMEOUT_MS,
     concurrency: DEFAULT_CONCURRENCY,
     limit: null,
+    dryRun: false,
     deactivate: false,
     confirm: "",
   };
@@ -25,6 +26,11 @@ function parseArgs(argv) {
   for (const arg of argv) {
     if (arg === "--deactivate") {
       options.deactivate = true;
+      continue;
+    }
+
+    if (arg === "--dry-run") {
+      options.dryRun = true;
       continue;
     }
 
@@ -74,13 +80,17 @@ function parseArgs(argv) {
     );
   }
 
+  if (options.dryRun && options.deactivate) {
+    throw new Error("--dry-run ve --deactivate birlikte kullanılamaz.");
+  }
+
   return options;
 }
 
 function printHelp() {
   console.log(`
 Kullanım:
-  npm run tools:audit-links
+  npm run tools:audit-links -- --dry-run
   npm run tools:audit-links -- --limit=25
   npm run tools:audit-links -- --deactivate --confirm=${DEACTIVATE_CONFIRMATION}
 
@@ -90,6 +100,7 @@ Varsayılan davranış:
   - Ayrıntılı JSON raporunu geçici klasöre kaydeder
 
 Opsiyonlar:
+  --dry-run            Yalnızca rapor üretir, veritabanına yazmaz
   --timeout=7000        Her link için zaman aşımı (5000-10000 ms)
   --concurrency=5       Aynı anda kontrol edilecek link sayısı
   --limit=50            İlk N aracı test etmek için sınır
@@ -105,6 +116,10 @@ function getEnv(name) {
     throw new Error(`${name} ortam değişkeni eksik.`);
   }
   return value;
+}
+
+function getServiceKey() {
+  return process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 }
 
 function normalizeUrl(rawLink) {
@@ -390,6 +405,8 @@ async function writeReport(report) {
 }
 
 async function updateAuditMetadata(supabase, results, checkedAt) {
+  let warnedMissingColumn = false;
+
   for (const result of results) {
     const payload = {
       link_check_status: result.status,
@@ -402,25 +419,55 @@ async function updateAuditMetadata(supabase, results, checkedAt) {
 
     const { error } = await supabase.from("tools").update(payload).eq("id", result.toolId);
     if (error) {
+      if (error.message.includes("Could not find the 'link_check_") && error.message.includes("column")) {
+        if (!warnedMissingColumn) {
+          console.warn("Uyarı: link_check_* kolonları bulunamadı, audit metadata yazımı atlandı.");
+          warnedMissingColumn = true;
+        }
+        return false;
+      }
       throw new Error(`Tool ${result.toolId} audit metadata update başarısız: ${error.message}`);
     }
   }
+
+  return true;
 }
 
-async function deactivateInvalidTools(supabase, invalidLinks, checkedAt) {
+async function deactivateInvalidTools(supabase, invalidLinks, checkedAt, includeAuditColumns) {
   for (const result of invalidLinks) {
-    const payload = {
-      is_approved: false,
-      link_check_status: result.status,
-      link_check_error: result.errorDetail,
-      link_check_http_status: result.httpStatus,
-      link_checked_at: checkedAt,
-      link_deactivated_at: checkedAt,
-      link_deactivation_reason: result.reason,
-    };
+    const payload = includeAuditColumns
+      ? {
+          is_approved: false,
+          link_check_status: result.status,
+          link_check_error: result.errorDetail,
+          link_check_http_status: result.httpStatus,
+          link_checked_at: checkedAt,
+          link_deactivated_at: checkedAt,
+          link_deactivation_reason: result.reason,
+        }
+      : {
+          is_approved: false,
+        };
 
     const { error } = await supabase.from("tools").update(payload).eq("id", result.toolId);
     if (error) {
+      if (
+        includeAuditColumns &&
+        error.message.includes("Could not find the 'link_check_") &&
+        error.message.includes("column")
+      ) {
+        const { error: fallbackError } = await supabase
+          .from("tools")
+          .update({ is_approved: false })
+          .eq("id", result.toolId);
+
+        if (!fallbackError) {
+          continue;
+        }
+
+        throw new Error(`Tool ${result.toolId} pasife alınamadı: ${fallbackError.message}`);
+      }
+
       throw new Error(`Tool ${result.toolId} pasife alınamadı: ${error.message}`);
     }
   }
@@ -454,7 +501,10 @@ function logList(title, items) {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const supabaseUrl = getEnv("NEXT_PUBLIC_SUPABASE_URL");
-  const serviceKey = getEnv("SUPABASE_SERVICE_KEY");
+  const serviceKey = getServiceKey();
+  if (!serviceKey) {
+    throw new Error("SUPABASE_SERVICE_KEY veya SUPABASE_SERVICE_ROLE_KEY ortam değişkeni eksik.");
+  }
   const supabase = createClient(supabaseUrl, serviceKey, {
     auth: {
       autoRefreshToken: false,
@@ -491,18 +541,22 @@ async function main() {
   );
 
   const checkedAt = new Date().toISOString();
-  await updateAuditMetadata(supabase, results, checkedAt);
+  let metadataWritten = false;
+  if (!options.dryRun) {
+    metadataWritten = await updateAuditMetadata(supabase, results, checkedAt);
+  }
 
   const grouped = groupResults(results);
   let deactivatedCount = 0;
 
   if (options.deactivate && grouped.invalidLinks.length > 0) {
-    await deactivateInvalidTools(supabase, grouped.invalidLinks, checkedAt);
+    await deactivateInvalidTools(supabase, grouped.invalidLinks, checkedAt, metadataWritten);
     deactivatedCount = grouped.invalidLinks.length;
   }
 
   const report = {
     generatedAt: checkedAt,
+    dryRun: options.dryRun,
     timeoutMs: options.timeoutMs,
     concurrency: options.concurrency,
     deactivateApplied: options.deactivate,
@@ -529,7 +583,14 @@ async function main() {
 
   console.log("");
   console.log(`JSON raporu: ${reportPath}`);
-  console.log("Araç kayıtlarındaki audit alanları güncellendi.");
+  if (options.dryRun) {
+    console.log("Dry-run tamamlandı: veritabanına yazılmadı.");
+  } else if (!metadataWritten) {
+    console.log("Audit metadata yazımı atlandı (link_check_* kolonları bulunamadı).");
+    console.log("Araçlar soft cleanup ile pasife alınabildi.");
+  } else {
+    console.log("Araç kayıtlarındaki audit alanları güncellendi.");
+  }
 
   if (!options.deactivate && grouped.invalidLinks.length > 0) {
     console.log(
