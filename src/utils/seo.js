@@ -95,12 +95,6 @@ export function generatePageMetadata({
       creator: siteConfig.twitterHandle,
       site: siteConfig.twitterHandle,
     },
-    viewport: {
-      width: 'device-width',
-      initialScale: 1,
-      maximumScale: 5,
-      userScalable: true,
-    },
   };
 }
 
@@ -273,7 +267,7 @@ export function generateSitemapEntry({
   };
 }
 
-export default {
+const seoUtils = {
   siteConfig,
   generatePageMetadata,
   generateToolMetadata,
@@ -282,3 +276,5 @@ export default {
   generateStructuredData,
   generateSitemapEntry,
 };
+
+export default seoUtils;

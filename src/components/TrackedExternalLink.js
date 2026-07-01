@@ -8,12 +8,28 @@ export function TrackedExternalLink({
   children,
   ...props
 }) {
+  const hrefValue = typeof props.href === "string" ? props.href : "";
+
   return (
     <a
       {...props}
       onClick={(event) => {
         props.onClick?.(event);
-        trackEvent(eventName, eventParameters);
+
+        if (event.defaultPrevented) return;
+
+        let destinationHost;
+        try {
+          destinationHost = hrefValue ? new URL(hrefValue).hostname : undefined;
+        } catch {
+          destinationHost = undefined;
+        }
+
+        trackEvent(eventName, {
+          destination_url: hrefValue || undefined,
+          destination_host: destinationHost,
+          ...eventParameters,
+        });
       }}
     >
       {children}
