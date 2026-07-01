@@ -338,12 +338,6 @@ async function validateToolLink(tool, timeoutMs) {
       await closeResponse(headResponse);
       return buildResult(tool, headClassification);
     }
-
-    if (DEFINITELY_INVALID_STATUSES.has(headResponse.status)) {
-      await closeResponse(headResponse);
-      return buildResult(tool, headClassification);
-    }
-
     await closeResponse(headResponse);
   } catch (error) {
     const classifiedError = classifyFetchError(error);
