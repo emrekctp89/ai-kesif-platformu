@@ -2,6 +2,9 @@
 
 import { createClient } from "@/utils/supabase/actions";
 import { revalidatePath } from "next/cache";
+import { enforceRateLimit } from "@/utils/antiAbuse";
+
+const MAX_COMMENT_LENGTH = 1000;
 
 export async function addComment(formData) {
   "use server";
@@ -12,10 +15,27 @@ export async function addComment(formData) {
 
   if (!user) return { error: "Yorum yapmak için giriş yapmalısınız." };
 
-  const content = formData.get("content");
+  const content = String(formData.get("content") || "").trim();
   const toolId = formData.get("toolId");
 
-  if (!content || content.trim() === "") return { error: "Yorum boş olamaz." };
+  if (!content) return { error: "Yorum boş olamaz." };
+  if (content.length > MAX_COMMENT_LENGTH) {
+    return {
+      error: `Yorum en fazla ${MAX_COMMENT_LENGTH} karakter olabilir.`,
+    };
+  }
+
+  const rateLimit = await enforceRateLimit("add-comment", {
+    limit: 10,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return {
+      error: `Çok fazla yorum gönderdiniz. Yaklaşık ${Math.ceil(
+        rateLimit.retryAfterSeconds / 60
+      )} dakika sonra tekrar deneyin.`,
+    };
+  }
 
   const { error } = await supabase
     .from("comments")
@@ -70,13 +90,29 @@ export async function submitPrompt(formData) {
 
   if (!user) return { error: "Prompt göndermek için giriş yapmalısınız." };
 
-  const title = formData.get("title");
-  const prompt_text = formData.get("prompt_text");
-  const notes = formData.get("notes");
+  const title = String(formData.get("title") || "").trim();
+  const prompt_text = String(formData.get("prompt_text") || "").trim();
+  const notes = String(formData.get("notes") || "").trim();
   const tool_id = formData.get("toolId");
 
   if (!title || !prompt_text || !tool_id)
     return { error: "Başlık, prompt ve araç seçimi zorunludur." };
+
+  if (title.length > 150 || prompt_text.length > 4000 || notes.length > 1000) {
+    return { error: "Girilen metinler izin verilen uzunluğu aşıyor." };
+  }
+
+  const rateLimit = await enforceRateLimit("submit-prompt", {
+    limit: 5,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return {
+      error: `Çok fazla prompt gönderdiniz. Yaklaşık ${Math.ceil(
+        rateLimit.retryAfterSeconds / 60
+      )} dakika sonra tekrar deneyin.`,
+    };
+  }
 
   const { data: newPrompt, error: insertError } = await supabase
     .from("prompts")
