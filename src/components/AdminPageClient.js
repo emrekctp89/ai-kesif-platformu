@@ -57,9 +57,11 @@ import {
 } from '@/lib/toolQuality'
 
 function getQualityPriority(issues, duplicateNameCount, duplicateLinkCount) {
+  if (issues.some((issue) => issue.key === 'link-invalid')) return 'high'
   if (duplicateLinkCount > 1) return 'high'
   if (issues.some((issue) => issue.key === 'source')) return 'high'
   if (issues.some((issue) => issue.key === 'english')) return 'high'
+  if (issues.some((issue) => issue.key === 'link-review')) return 'medium'
   if (issues.some((issue) => issue.key === 'icon')) return 'medium'
   if (duplicateNameCount > 1) return 'medium'
   if (issues.length >= 2) return 'medium'
@@ -91,6 +93,12 @@ function getQualityPriorityMeta(priority) {
 }
 
 function getQualityActionHint(issues, duplicateNameCount, duplicateLinkCount) {
+  if (issues.some((issue) => issue.key === 'link-invalid')) {
+    return 'Link audit bu kaydı kesin kırık işaretlemiş; resmi siteyi tarayıcıda aç, alternatif URL bul veya aracı pasife al.'
+  }
+  if (issues.some((issue) => issue.key === 'link-review')) {
+    return 'Link audit manuel inceleme istiyor; 403/429 çoğu zaman bot korumasıdır, silmeden önce canlı sitede elle kontrol et.'
+  }
   if (duplicateLinkCount > 1) {
     return 'Önce aynı bağlantıdaki kayıtları karşılaştır; en dolu kaydı koruyup diğerini sil veya birleştir.'
   }
@@ -114,6 +122,39 @@ function getQualityActionHint(issues, duplicateNameCount, duplicateLinkCount) {
   }
 
   return 'Kayıt iyi görünüyor; istersen öne çıkarma veya kategori doğruluğunu kontrol et.'
+}
+
+function getLinkAuditIssue(tool) {
+  const status = String(tool.link_check_status || '').trim().toLowerCase()
+  if (!status || status === 'valid' || status === 'skipped') return null
+
+  const checkedAt = tool.link_checked_at
+    ? new Intl.DateTimeFormat('tr-TR', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+        timeZone: 'Europe/Istanbul',
+      }).format(new Date(tool.link_checked_at))
+    : null
+  const suffix = checkedAt ? ` · ${checkedAt}` : ''
+
+  if (status === 'invalid') {
+    return {
+      key: 'link-invalid',
+      label: `Kırık link${suffix}`,
+    }
+  }
+
+  if (status === 'review') {
+    return {
+      key: 'link-review',
+      label: `Link inceleme${suffix}`,
+    }
+  }
+
+  return {
+    key: 'link-review',
+    label: `Link durumu: ${status}${suffix}`,
+  }
 }
 
 function getCanonicalScore(tool) {
@@ -422,6 +463,8 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
           const issues = getToolQualityIssues(tool, duplicateNames, duplicateLinks, {
             iconFetchIssue: hasIconFetchIssue,
           })
+          const linkAuditIssue = getLinkAuditIssue(tool)
+          if (linkAuditIssue) issues.unshift(linkAuditIssue)
           const duplicateNameCount =
             duplicateNames.get(
               String(tool.name || '').trim().toLocaleLowerCase('tr-TR')
@@ -470,6 +513,15 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         icon: auditedTools.filter(({ issues }) =>
           issues.some((issue) => issue.key === 'icon')
         ).length,
+        linkReview: auditedTools.filter(({ issues }) =>
+          issues.some((issue) => issue.key === 'link-review')
+        ).length,
+        linkInvalid: auditedTools.filter(({ issues }) =>
+          issues.some((issue) => issue.key === 'link-invalid')
+        ).length,
+        linkAudit: auditedTools.filter(({ issues }) =>
+          issues.some((issue) => issue.key === 'link-review' || issue.key === 'link-invalid')
+        ).length,
         high: auditedTools.filter(({ priority }) => priority === 'high').length,
         medium: auditedTools.filter(({ priority }) => priority === 'medium').length,
         low: auditedTools.filter(({ priority }) => priority === 'low').length,
@@ -496,6 +548,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         label: 'Dizin linki',
         count: qualityCounts.source,
         tone: 'border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-300',
+      },
+      {
+        value: 'link-audit',
+        label: 'Link inceleme',
+        count: qualityCounts.linkAudit,
+        tone: 'border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300',
       },
       {
         value: 'short',
@@ -533,6 +591,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
           )
         const matchesQuality =
           qualityFilter === 'all' ||
+          (qualityFilter === 'link-audit'
+            ? issues.some(
+                (issue) =>
+                  issue.key === 'link-review' || issue.key === 'link-invalid'
+              )
+            : false) ||
           (qualityFilter === 'ready'
             ? issues.length === 0
             : issues.some((issue) => issue.key === qualityFilter))
@@ -748,6 +812,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                     <option value="duplicate">Tekrarlar ({qualityCounts.duplicate})</option>
                     <option value="english">İngilizce açıklama ({qualityCounts.english})</option>
                     <option value="source">Dizin linki ({qualityCounts.source})</option>
+                    <option value="link-audit">Link inceleme ({qualityCounts.linkAudit})</option>
                     <option value="short">Kısa açıklama ({qualityCounts.short})</option>
                     <option value="metadata">Eksik fiyat/platform ({qualityCounts.metadata})</option>
                     <option value="icon">İkon sorunu ({qualityCounts.icon})</option>
@@ -782,6 +847,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                   <Badge variant="secondary">{qualityCounts.duplicate} tekrarlı kayıt</Badge>
                   <Badge variant="secondary">{qualityCounts.english} İngilizce açıklama</Badge>
                   <Badge variant="secondary">{qualityCounts.source} dizin linki</Badge>
+                  <Badge variant="secondary">
+                    {qualityCounts.linkAudit} link inceleme
+                    {qualityCounts.linkInvalid > 0
+                      ? ` (${qualityCounts.linkInvalid} kırık)`
+                      : ""}
+                  </Badge>
                   <Badge variant="secondary">{qualityCounts.short} kısa açıklama</Badge>
                   <Badge variant="secondary">{qualityCounts.metadata} eksik metadata</Badge>
                   <Badge variant="secondary">{qualityCounts.icon} ikon sorunu</Badge>

@@ -28,18 +28,31 @@ async function getAdminData() {
           .eq("is_approved", false)
           .order("created_at"),
         supabase.from('showcase_items').select(`*, profiles(email)`).eq('is_approved', false).order('created_at'),
-        // DÜZELTME: Onaylanmış araçları çeken RPC'yi çağırıyoruz
-        supabase.rpc('get_admin_approved_tools'), 
+        supabase
+          .from("tools")
+          .select(`
+            *,
+            categories(name, slug),
+            tool_tags(tags(id, name))
+          `)
+          .eq("is_approved", true)
+          .order("created_at", { ascending: false }),
         supabase.from("categories").select("*").order("name"),
         supabase.from("tags").select("*").order("name"),
         supabase.from("posts").select("id, title, slug, status, type").order("created_at", { ascending: false }),
         supabase.from('challenges').select('*').order('created_at', { ascending: false })
     ]);
 
+    const normalizedApprovedTools = (approvedTools || []).map((tool) => ({
+        ...tool,
+        category_name: tool.category_name || tool.categories?.name || null,
+        category_slug: tool.category_slug || tool.categories?.slug || null,
+    }));
+
     return { 
         unapprovedTools: unapprovedTools || [],
         unapprovedShowcaseItems: unapprovedShowcaseItems || [],
-        approvedTools: approvedTools || [],
+        approvedTools: normalizedApprovedTools,
         categories: categories || [],
         allTags: allTags || [],
         allPosts: allPosts || [],
