@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -110,6 +110,36 @@ Opsiyonlar:
 `.trim());
 }
 
+async function loadLocalEnvFiles() {
+  const envFiles = [".env.local", ".env"];
+
+  for (const envFile of envFiles) {
+    try {
+      const content = await readFile(path.join(process.cwd(), envFile), "utf8");
+
+      for (const line of content.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+
+        const separatorIndex = trimmed.indexOf("=");
+        if (separatorIndex < 1) continue;
+
+        const key = trimmed.slice(0, separatorIndex).trim();
+        const rawValue = trimmed.slice(separatorIndex + 1).trim();
+        const value = rawValue.replace(/^(['"])(.*)\1$/, "$2");
+
+        if (key && process.env[key] === undefined) {
+          process.env[key] = value;
+        }
+      }
+    } catch (error) {
+      if (error?.code !== "ENOENT") {
+        throw error;
+      }
+    }
+  }
+}
+
 function getEnv(name) {
   const value = process.env[name];
   if (!value) {
@@ -196,7 +226,15 @@ function classifyFetchError(error) {
     };
   }
 
-  if (code === "ECONNREFUSED" || code === "ECONNRESET" || code === "EHOSTUNREACH" || code === "ENETUNREACH") {
+  if (code === "ECONNRESET") {
+    return {
+      status: "review",
+      reason: "Bağlantı sıfırlandı",
+      errorDetail: `${code}: ${message}`,
+    };
+  }
+
+  if (code === "ECONNREFUSED" || code === "EHOSTUNREACH" || code === "ENETUNREACH") {
     return {
       status: "invalid",
       reason: "Bağlantı hatası",
@@ -493,6 +531,8 @@ function logList(title, items) {
 }
 
 async function main() {
+  await loadLocalEnvFiles();
+
   const options = parseArgs(process.argv.slice(2));
   const supabaseUrl = getEnv("NEXT_PUBLIC_SUPABASE_URL");
   const serviceKey = getServiceKey();
