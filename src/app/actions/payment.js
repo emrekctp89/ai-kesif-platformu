@@ -6,9 +6,15 @@ import { cookies } from "next/headers";
 import Stripe from "stripe";
 import { logServerError } from "@/utils/serverLogger";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-04-10",
-});
+function getStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY ortam değişkeni tanımlı değil.");
+  }
+
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2024-04-10",
+  });
+}
 
 export async function createCheckoutSession(formData) {
   "use server";
@@ -48,6 +54,7 @@ export async function createCheckoutSession(formData) {
       throw new Error("Geçersiz veya aktif olmayan Stripe fiyatı.");
     }
 
+    const stripe = getStripe();
     let customerId = profile?.stripe_customer_id;
 
     if (!customerId) {

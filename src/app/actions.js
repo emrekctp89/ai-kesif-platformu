@@ -19,4 +19,5 @@ export * from "./actions/payment";
 export * from "./actions/bounty";
 export * from "./actions/launch";
 export * from "./actions/feedback";
+export * from "./actions/reports";
 export * from "./actions/admin";

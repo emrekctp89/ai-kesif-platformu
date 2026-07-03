@@ -9,7 +9,14 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator"; // Yeni bileşeni import ediyoruz
-import { Bell, Star, MessageSquare, Trophy, ImageIcon } from "lucide-react";
+import {
+  AlertTriangle,
+  Bell,
+  Star,
+  MessageSquare,
+  Trophy,
+  ImageIcon,
+} from "lucide-react";
 import { getNotifications, markNotificationsAsRead } from "@/app/actions";
 
 // Hangi bildirim türünün hangi ikonu kullanacağını belirleyen yardımcı obje
@@ -19,6 +26,7 @@ const eventIcons = {
   eserin_onaylandi: <ImageIcon className="w-4 h-4 text-green-500" />,
   eser_oyu_aldi: <Heart className="w-4 h-4 text-pink-500" />,
   eser_yorumu_aldi: <MessageSquare className="w-4 h-4 text-purple-500" />,
+  tool_link_report: <AlertTriangle className="w-4 h-4 text-red-500" />,
 };
 
 export function NotificationCenter({

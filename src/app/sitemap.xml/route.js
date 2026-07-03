@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const SITE_URL = new URL(
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com",
 ).origin;
 
 export const revalidate = 3600;
@@ -20,6 +20,24 @@ function escapeXml(value) {
 }
 
 export async function GET() {
+  const generatedAt = new Date().toISOString();
+  const urls = [
+    { url: withBase("/"), lastModified: generatedAt },
+    { url: withBase("/tavsiye"), lastModified: generatedAt },
+    { url: withBase("/hakkimizda"), lastModified: generatedAt },
+    { url: withBase("/iletisim"), lastModified: generatedAt },
+    { url: withBase("/gizlilik"), lastModified: generatedAt },
+    { url: withBase("/kullanim-kosullari"), lastModified: generatedAt },
+    { url: withBase("/submit"), lastModified: generatedAt },
+  ];
+
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    return createSitemapResponse(urls);
+  }
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -28,7 +46,7 @@ export async function GET() {
         persistSession: false,
         autoRefreshToken: false,
       },
-    }
+    },
   );
 
   const [toolsResult, categoriesResult] = await Promise.all([
@@ -48,17 +66,6 @@ export async function GET() {
     console.error("Kategoriler alınamadı:", categoriesResult.error);
   }
 
-  const generatedAt = new Date().toISOString();
-  const urls = [
-    { url: withBase("/"), lastModified: generatedAt },
-    { url: withBase("/tavsiye"), lastModified: generatedAt },
-    { url: withBase("/hakkimizda"), lastModified: generatedAt },
-    { url: withBase("/iletisim"), lastModified: generatedAt },
-    { url: withBase("/gizlilik"), lastModified: generatedAt },
-    { url: withBase("/kullanim-kosullari"), lastModified: generatedAt },
-    { url: withBase("/submit"), lastModified: generatedAt },
-  ];
-
   categoriesResult.data?.forEach((category) => {
     urls.push({
       url: withBase(`/kategori/${category.slug}`),
@@ -73,24 +80,27 @@ export async function GET() {
     });
   });
 
+  return createSitemapResponse(urls);
+}
+
+function createSitemapResponse(urls) {
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls
-    .map(
-      ({ url, lastModified }) => `
+  .map(
+    ({ url, lastModified }) => `
   <url>
     <loc>${escapeXml(url)}</loc>
     <lastmod>${escapeXml(lastModified)}</lastmod>
-  </url>`
-    )
-    .join("")}
+  </url>`,
+  )
+  .join("")}
 </urlset>`;
 
   return new Response(sitemap, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control":
-        "public, s-maxage=3600, stale-while-revalidate=86400",
+      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
     },
   });
 }

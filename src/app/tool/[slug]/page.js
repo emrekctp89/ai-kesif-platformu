@@ -18,11 +18,12 @@ import { Badge } from "@/components/ui/badge";
 import { ShareButtons } from "@/components/ShareButtons";
 import { SimilarTools } from "@/components/SimilarTools";
 import { TrackedExternalLink } from "@/components/TrackedExternalLink";
+import { ToolLinkReportDialog } from "@/components/ToolLinkReportDialog";
 
 export const revalidate = 3600;
 
 const siteUrl = new URL(
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com",
 ).origin;
 
 function createPublicClient() {
@@ -34,7 +35,7 @@ function createPublicClient() {
         persistSession: false,
         autoRefreshToken: false,
       },
-    }
+    },
   );
 }
 
@@ -43,7 +44,7 @@ async function getToolData(slug) {
   const { data: tool, error } = await supabase
     .from("tools")
     .select(
-      "id, name, description, link, category_id, slug, pricing_model, platforms, tier, created_at, updated_at, technical_details"
+      "id, name, description, link, category_id, slug, pricing_model, platforms, tier, created_at, updated_at, technical_details",
     )
     .eq("slug", slug)
     .eq("is_approved", true)
@@ -204,9 +205,7 @@ export default async function ToolDetailPage({ params }) {
 
       <div className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-10">
         <Link
-          href={
-            tool.category_slug ? `/kategori/${tool.category_slug}` : "/"
-          }
+          href={tool.category_slug ? `/kategori/${tool.category_slug}` : "/"}
           className="mb-4 inline-flex min-h-10 items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:mb-6 sm:min-h-11"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -327,7 +326,9 @@ export default async function ToolDetailPage({ params }) {
             <Card>
               <CardContent className="space-y-4 p-4 sm:space-y-5 sm:p-5">
                 <div>
-                  <p className="text-sm font-semibold">Karar vermeye hazır mısın?</p>
+                  <p className="text-sm font-semibold">
+                    Karar vermeye hazır mısın?
+                  </p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Resmî siteyi açarak güncel özellikleri ve fiyatları
                     inceleyebilirsin.
@@ -349,11 +350,17 @@ export default async function ToolDetailPage({ params }) {
                   </TrackedExternalLink>
                 </Button>
                 <div className="rounded-lg bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">
-                  <p className="font-semibold text-foreground">Hızlı karar özeti</p>
+                  <p className="font-semibold text-foreground">
+                    Hızlı karar özeti
+                  </p>
                   <p className="mt-1">
-                    {tool.pricing_model || "Fiyat bilgisi belirtilmemiş"} · {platforms.slice(0, 2).join(", ")}
+                    {tool.pricing_model || "Fiyat bilgisi belirtilmemiş"} ·{" "}
+                    {platforms.slice(0, 2).join(", ")}
                     {platforms.length > 2 ? ` +${platforms.length - 2}` : ""}
                   </p>
+                </div>
+                <div className="border-t pt-4">
+                  <ToolLinkReportDialog tool={tool} />
                 </div>
                 <div className="border-t pt-4">
                   <ShareButtons
