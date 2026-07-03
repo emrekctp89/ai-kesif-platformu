@@ -182,18 +182,14 @@ export async function submitToolLinkReport(formData) {
   }
 
   const finalReporterEmail = reporterEmail || user?.email || null;
-  const { data: report, error } = await supabase
-    .from("tool_link_reports")
-    .insert({
-      tool_id: tool.id,
-      reporter_user_id: user?.id || null,
-      reporter_email: finalReporterEmail,
-      reported_url: reportedUrl,
-      reason,
-      details: details || null,
-    })
-    .select("id")
-    .single();
+  const { error } = await supabase.from("tool_link_reports").insert({
+    tool_id: tool.id,
+    reporter_user_id: user?.id || null,
+    reporter_email: finalReporterEmail,
+    reported_url: reportedUrl,
+    reason,
+    details: details || null,
+  });
 
   if (error) {
     console.error("Link raporu kaydedilirken hata:", error);
@@ -202,7 +198,7 @@ export async function submitToolLinkReport(formData) {
 
   try {
     await notifyAdminAboutLinkReport({
-      reportId: report?.id,
+      reportId: null,
       tool,
       reason,
       reporterEmail: finalReporterEmail,
