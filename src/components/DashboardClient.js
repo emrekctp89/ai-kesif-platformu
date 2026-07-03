@@ -26,8 +26,65 @@ const StatCard = ({ title, value, icon }) => (
   </Card>
 );
 
+function LinkHealthWidget({ stats }) {
+  if (!stats) return null;
+
+  const activeIssueCount = stats.invalid + stats.review;
+  const freshnessIssueCount = stats.unchecked + stats.stale;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Link Health Monitoring</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="rounded-lg border bg-muted/30 p-3">
+            <p className="text-xs text-muted-foreground">Toplam</p>
+            <p className="text-2xl font-bold">{stats.total}</p>
+          </div>
+          <div className="rounded-lg border bg-emerald-500/10 p-3">
+            <p className="text-xs text-muted-foreground">Geçerli</p>
+            <p className="text-2xl font-bold text-emerald-600">{stats.valid}</p>
+          </div>
+          <div className="rounded-lg border bg-red-500/10 p-3">
+            <p className="text-xs text-muted-foreground">Kırık</p>
+            <p className="text-2xl font-bold text-red-600">{stats.invalid}</p>
+          </div>
+          <div className="rounded-lg border bg-orange-500/10 p-3">
+            <p className="text-xs text-muted-foreground">İnceleme</p>
+            <p className="text-2xl font-bold text-orange-600">{stats.review}</p>
+          </div>
+          <div className="rounded-lg border bg-sky-500/10 p-3">
+            <p className="text-xs text-muted-foreground">Eksik/Eski</p>
+            <p className="text-2xl font-bold text-sky-600">
+              {freshnessIssueCount}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2 rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            {activeIssueCount > 0
+              ? `${activeIssueCount} aktif link problemi admin incelemesi bekliyor.`
+              : "Aktif kırık link veya manuel inceleme kaydı yok."}
+            {freshnessIssueCount > 0
+              ? ` ${stats.unchecked} hiç taranmamış, ${stats.stale} eski kayıt var.`
+              : " Tüm kayıtlar güncel görünüyor."}
+          </p>
+          <Link
+            href="/admin"
+            className="font-medium text-primary hover:underline"
+          >
+            Admin kuyruğuna git
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // Ana Dashboard arayüz bileşeni
-export function DashboardClient({ stats }) {
+export function DashboardClient({ stats, linkHealthStats }) {
   if (!stats) {
     return (
       <p className="text-center text-muted-foreground">
@@ -51,6 +108,8 @@ export function DashboardClient({ stats }) {
         <StatCard title="Toplam Yorum" value={stats.total_comments} />
         <StatCard title="Toplam Favori" value={stats.total_favorites} />
       </div>
+
+      <LinkHealthWidget stats={linkHealthStats} />
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-7">
         {/* Sol Taraf: Kategori Dağılım Grafiği */}
