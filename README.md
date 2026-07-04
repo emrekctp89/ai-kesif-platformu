@@ -69,6 +69,16 @@ Yapay zeka araçlarını keşfet, karşılaştır, test et ve toplulukla paylaş
 
 ---
 
+## 📖 **Dokümantasyon (Documentation)**
+
+Projeye katkıda bulunmak veya mimariyi anlamak için aşağıdaki belgeleri inceleyin:
+- [Geliştirici Kılavuzu (Developer Guide)](./DEVELOPER_GUIDE.md) - Mimari, UI ve Test stratejileri
+- [API Dokümantasyonu](./API_DOCS.md) - Server Actions ve API yapılandırmaları
+- [Bileşen (Component) Kılavuzu](./COMPONENTS_GUIDE.md) - İstemci/Sunucu bileşeni kuralları ve Tailwind UI rehberi
+- [Veritabanı Şeması](./DATABASE_SCHEMA.md) - Supabase tablo yapıları ve ilişkileri
+
+---
+
 ## 🚀 **Hızlı Başlangıç**
 
 ### Gereksinimler

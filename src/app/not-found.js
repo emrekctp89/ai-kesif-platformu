@@ -75,15 +75,7 @@ export default function NotFound() {
           </Button>
         </div>
 
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          className="w-full gap-2"
-          onClick={() => typeof window !== 'undefined' && window.history.back()}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Geri Dön
-        </Button>
+
 
         {/* Footer */}
         <p className="text-xs text-muted-foreground pt-4 border-t">
