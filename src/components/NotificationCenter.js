@@ -5,7 +5,16 @@ import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator'; // Yeni bileşeni import ediyoruz
-import { AlertTriangle, Bell, Star, MessageSquare, Trophy, ImageIcon } from 'lucide-react';
+import {
+  AlertTriangle,
+  Bell,
+  Star,
+  MessageSquare,
+  Trophy,
+  ImageIcon,
+  Heart,
+  UserPlus,
+} from 'lucide-react';
 import { getNotifications, markNotificationsAsRead } from '@/app/actions';
 
 // Hangi bildirim türünün hangi ikonu kullanacağını belirleyen yardımcı obje
@@ -16,6 +25,7 @@ const eventIcons = {
   eser_oyu_aldi: <Heart className="w-4 h-4 text-pink-500" />,
   eser_yorumu_aldi: <MessageSquare className="w-4 h-4 text-purple-500" />,
   tool_link_report: <AlertTriangle className="w-4 h-4 text-red-500" />,
+  yeni_takipci: <UserPlus className="w-4 h-4 text-blue-500" />,
 };
 
 export function NotificationCenter({ initialNotifications, unreadCount, user }) {
@@ -81,6 +91,3 @@ export function NotificationCenter({ initialNotifications, unreadCount, user }) 
     </Popover>
   );
 }
-
-// Heart ikonunu da lucide-react'tan import edelim
-import { Heart } from 'lucide-react';

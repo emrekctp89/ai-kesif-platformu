@@ -1255,6 +1255,68 @@ function ReportedLinksTab({ reports }) {
   );
 }
 
+// YENİ: Sistem Uyarıları & Şikayetler Sekmesi
+function AdminAlertsTab({ alerts }) {
+  const [statusFilter, setStatusFilter] = React.useState('Açık');
+
+  const filteredAlerts = alerts.filter((alert) => alert.status === statusFilter);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Sistem Uyarıları & Şikayetler</CardTitle>
+        <CardDescription>
+          Kullanıcılar tarafından raporlanan yorumları ve diğer sistem uyarılarını yönetin.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          {['Açık', 'İnceleniyor', 'Çözüldü', 'Kapatıldı'].map((status) => (
+            <Button
+              key={status}
+              variant={statusFilter === status ? 'default' : 'outline'}
+              onClick={() => setStatusFilter(status)}
+              size="sm"
+            >
+              {status}
+            </Button>
+          ))}
+        </div>
+
+        <div className="space-y-3 mt-4">
+          {filteredAlerts.length > 0 ? (
+            filteredAlerts.map((alert) => (
+              <div key={alert.id} className="border p-4 rounded-lg flex flex-col gap-2 bg-card">
+                <div className="flex items-center justify-between">
+                  <Badge
+                    variant={alert.alert_type === 'reported_comment' ? 'destructive' : 'default'}
+                  >
+                    {alert.alert_type}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(alert.created_at).toLocaleString('tr-TR')}
+                  </span>
+                </div>
+                <p className="text-sm font-medium whitespace-pre-wrap">{alert.description}</p>
+                {alert.metadata?.comment_id && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Yorum ID: {alert.metadata.comment_id}
+                  </p>
+                )}
+                {/* Note: Gerçek bir sistemde burada "Yorumu Sil", "Kapat" vb. actionlar olmalı */}
+              </div>
+            ))
+          ) : (
+            <div className="text-center p-8 text-sm text-muted-foreground border border-dashed rounded-lg">
+              Bu filtrede uyarı bulunmuyor.
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // Ana Admin Paneli Bileşeni
 export function AdminPageClient({ data }) {
   const {
@@ -1266,6 +1328,7 @@ export function AdminPageClient({ data }) {
     allPosts,
     challenges,
     reportedLinks = [],
+    adminAlerts = [],
   } = data;
 
   const approvalCount = unapprovedTools.length + unapprovedShowcaseItems.length;
@@ -1287,6 +1350,19 @@ export function AdminPageClient({ data }) {
           Reported Links
           <Badge variant={activeReportCount > 0 ? 'default' : 'secondary'} className="ml-2">
             {activeReportCount}
+          </Badge>
+        </TabsTrigger>
+        <TabsTrigger value="admin_alerts">
+          Uyarılar
+          <Badge
+            variant={
+              adminAlerts.filter((a) => a.status === 'Açık').length > 0
+                ? 'destructive'
+                : 'secondary'
+            }
+            className="ml-2"
+          >
+            {adminAlerts.filter((a) => a.status === 'Açık').length}
           </Badge>
         </TabsTrigger>
         <TabsTrigger value="content_management">İçerik Yönetimi</TabsTrigger>
@@ -1313,6 +1389,10 @@ export function AdminPageClient({ data }) {
 
       <TabsContent value="reported_links" className="mt-6">
         <ReportedLinksTab reports={reportedLinks} />
+      </TabsContent>
+
+      <TabsContent value="admin_alerts" className="mt-6">
+        <AdminAlertsTab alerts={adminAlerts} />
       </TabsContent>
 
       <TabsContent value="content_management" className="mt-6 space-y-6">

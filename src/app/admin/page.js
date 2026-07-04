@@ -26,6 +26,7 @@ async function getAdminData() {
     { data: allPosts },
     { data: challenges },
     { data: reportedLinks },
+    { data: adminAlerts },
   ] = await Promise.all([
     supabase
       .from('tools')
@@ -60,6 +61,11 @@ async function getAdminData() {
       .select('*, tools(id, name, slug, link)')
       .order('created_at', { ascending: false })
       .limit(100),
+    supabaseAdmin
+      .from('admin_alerts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100),
   ]);
 
   const normalizedApprovedTools = (approvedTools || []).map((tool) => ({
@@ -77,6 +83,7 @@ async function getAdminData() {
     allPosts: allPosts || [],
     challenges: challenges || [],
     reportedLinks: reportedLinks || [],
+    adminAlerts: adminAlerts || [],
   };
 }
 

@@ -253,6 +253,22 @@ export async function toggleFollowUser(formData) {
       console.error('Takip etme hatası:', followError);
       return { error: 'Takip edilirken bir hata oluştu.' };
     }
+
+    // Bildirim oluştur
+    const { data: currentUserProfile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', currentUser.id)
+      .single();
+
+    if (currentUserProfile) {
+      await supabase.from('notifications').insert({
+        user_id: targetUserId,
+        event_type: 'yeni_takipci',
+        message: `@${currentUserProfile.username} seni takip etmeye başladı.`,
+        link: `/u/${currentUserProfile.username}`,
+      });
+    }
   }
 
   if (targetUsername) {
@@ -260,4 +276,52 @@ export async function toggleFollowUser(formData) {
   }
 
   return { success: true };
+}
+
+export async function reportComment(formData) {
+  'use server';
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: 'Bu işlem için giriş yapmalısınız.' };
+  }
+
+  const commentId = formData.get('commentId');
+  const reason = String(formData.get('reason') || '').trim();
+
+  if (!commentId || !reason) {
+    return { error: "Yorum ID'si ve şikayet sebebi zorunludur." };
+  }
+
+  const rateLimit = await enforceRateLimit('report-comment', {
+    limit: 5,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return {
+      error: `Çok fazla şikayet gönderdiniz. Lütfen daha sonra tekrar deneyin.`,
+    };
+  }
+
+  const { error } = await supabase.from('admin_alerts').insert({
+    alert_type: 'reported_comment',
+    description: `Kullanıcı (ID: ${user.id}) bir yorumu şikayet etti.\n\nSebep: ${reason}`,
+    status: 'Açık',
+    metadata: {
+      comment_id: commentId,
+      reporter_id: user.id,
+      reason: reason,
+    },
+  });
+
+  if (error) {
+    console.error('Yorum şikayet hatası:', error);
+    return { error: 'Şikayet gönderilirken bir hata oluştu.' };
+  }
+
+  return { success: 'Şikayetiniz başarıyla iletildi ve yöneticiler tarafından incelenecek.' };
 }
