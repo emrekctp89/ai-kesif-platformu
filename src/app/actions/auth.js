@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { Resend } from 'resend';
 import { WelcomeEmail } from '@/components/emails/WelcomeEmail';
 import { GoodbyeEmail } from '@/components/emails/GoodbyeEmail';
+import { enforceRateLimit } from '@/utils/antiAbuse';
 
 export async function signOut() {
   const supabase = createClient();
@@ -20,6 +21,14 @@ export async function signIn(formData) {
 
   const email = formData.get('email');
   const password = formData.get('password');
+
+  // Rate Limiting: 5 deneme / 1 dakika
+  const rateLimit = await enforceRateLimit('auth-login', { limit: 5, windowMs: 60 * 1000 });
+  if (!rateLimit.allowed) {
+    const errorMessage = `Çok fazla deneme yaptınız. Lütfen ${rateLimit.retryAfterSeconds} saniye sonra tekrar deneyin.`;
+    return redirect(`/login?message=${encodeURIComponent(errorMessage)}`);
+  }
+
   const supabase = createClient();
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -62,6 +71,14 @@ export async function signUp(formData) {
   'use server';
   const email = formData.get('email');
   const password = formData.get('password');
+
+  // Rate Limiting: 3 hesap / 1 saat
+  const rateLimit = await enforceRateLimit('auth-signup', { limit: 3, windowMs: 60 * 60 * 1000 });
+  if (!rateLimit.allowed) {
+    const errorMessage = `Çok fazla hesap oluşturma denemesi. Lütfen ${rateLimit.retryAfterSeconds} saniye sonra tekrar deneyin.`;
+    return redirect(`/signup?message=${encodeURIComponent(errorMessage)}`);
+  }
+
   const supabase = createClient();
 
   const { data, error } = await supabase.auth.signUp({
@@ -98,6 +115,17 @@ export async function requestPasswordReset(formData) {
   'use server';
 
   const email = formData.get('email');
+
+  // Rate Limiting: 3 sıfırlama isteği / 1 saat
+  const rateLimit = await enforceRateLimit('auth-reset-password', {
+    limit: 3,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    const errorMessage = `Çok fazla şifre sıfırlama isteği. Lütfen ${rateLimit.retryAfterSeconds} saniye sonra tekrar deneyin.`;
+    return redirect(`/forgot-password?message=${encodeURIComponent(errorMessage)}`);
+  }
+
   const supabase = createClient();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
