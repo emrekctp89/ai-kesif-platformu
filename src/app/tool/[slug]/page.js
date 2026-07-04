@@ -2,9 +2,11 @@ import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import {
+  AlertTriangle,
   ArrowLeft,
   CalendarDays,
   CheckCircle2,
+  Clock3,
   ExternalLink,
   Layers3,
   MonitorSmartphone,
@@ -44,7 +46,7 @@ async function getToolData(slug) {
   const { data: tool, error } = await supabase
     .from("tools")
     .select(
-      "id, name, description, link, category_id, slug, pricing_model, platforms, tier, created_at, updated_at, technical_details",
+      "id, name, description, link, category_id, slug, pricing_model, platforms, tier, created_at, updated_at, technical_details, link_check_status, link_check_error, link_check_http_status, link_checked_at",
     )
     .eq("slug", slug)
     .eq("is_approved", true)
@@ -82,6 +84,73 @@ function formatDate(value) {
     month: "long",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function formatDateTime(value) {
+  if (!value) return null;
+
+  return new Intl.DateTimeFormat("tr-TR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/Istanbul",
+  }).format(new Date(value));
+}
+
+function getLinkHealthMeta(tool) {
+  const status = String(tool.link_check_status || "").toLowerCase();
+  const checkedAt = formatDateTime(tool.link_checked_at);
+
+  if (status === "valid") {
+    return {
+      icon: ShieldCheck,
+      title: "Link son kontrolde çalışıyor",
+      description: checkedAt
+        ? `Son kontrol: ${checkedAt}`
+        : "Otomatik kontrolde bağlantı erişilebilir görünüyor.",
+      badge: "Çalışıyor",
+      className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+      iconClassName: "text-emerald-600 dark:text-emerald-300",
+    };
+  }
+
+  if (status === "review") {
+    return {
+      icon: Clock3,
+      title: "Link manuel inceleme bekliyor",
+      description:
+        tool.link_check_error ||
+        (checkedAt
+          ? `Son kontrol: ${checkedAt}`
+          : "Bazı siteler bot koruması nedeniyle otomatik kontrolde uyarı verebilir."),
+      badge: "İncelenecek",
+      className: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+      iconClassName: "text-amber-600 dark:text-amber-300",
+    };
+  }
+
+  if (status === "invalid") {
+    return {
+      icon: AlertTriangle,
+      title: "Link sorunlu görünüyor",
+      description:
+        tool.link_check_error ||
+        (checkedAt
+          ? `Son kontrol: ${checkedAt}`
+          : "Otomatik kontrol bağlantıda sorun buldu."),
+      badge: "Sorunlu",
+      className: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
+      iconClassName: "text-red-600 dark:text-red-300",
+    };
+  }
+
+  return {
+    icon: Clock3,
+    title: "Link henüz otomatik kontrol edilmedi",
+    description: "Bir sorun fark ederseniz link raporu gönderebilirsiniz.",
+    badge: "Kontrol bekliyor",
+    className: "border-muted bg-muted/40 text-muted-foreground",
+    iconClassName: "text-muted-foreground",
+  };
 }
 
 function createMetaDescription(description) {
@@ -140,6 +209,8 @@ export default async function ToolDetailPage({ params }) {
 
   const shareUrl = `${siteUrl}/tool/${tool.slug}`;
   const hostname = getHostname(tool.link);
+  const linkHealth = getLinkHealthMeta(tool);
+  const LinkHealthIcon = linkHealth.icon;
   const addedDate = formatDate(tool.created_at);
   const updatedDate = formatDate(tool.updated_at);
   const platforms =
@@ -358,6 +429,26 @@ export default async function ToolDetailPage({ params }) {
                     {platforms.slice(0, 2).join(", ")}
                     {platforms.length > 2 ? ` +${platforms.length - 2}` : ""}
                   </p>
+                </div>
+                <div
+                  className={`rounded-lg border p-3 text-xs leading-5 ${linkHealth.className}`}
+                  role={tool.link_check_status === "invalid" ? "alert" : "status"}
+                >
+                  <div className="flex items-start gap-2">
+                    <LinkHealthIcon
+                      aria-hidden="true"
+                      className={`mt-0.5 h-4 w-4 shrink-0 ${linkHealth.iconClassName}`}
+                    />
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-foreground">
+                          {linkHealth.title}
+                        </p>
+                        <Badge variant="secondary">{linkHealth.badge}</Badge>
+                      </div>
+                      <p className="mt-1 break-words">{linkHealth.description}</p>
+                    </div>
+                  </div>
                 </div>
                 <div className="border-t pt-4">
                   <ToolLinkReportDialog tool={tool} />
