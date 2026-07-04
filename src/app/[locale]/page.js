@@ -4,6 +4,7 @@ import { HomepageClient } from '@/components/HomepageClient';
 import { FeaturedTools } from '@/components/FeaturedTools';
 import { ToolOfTheDay } from '@/components/ToolOfTheDay';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { getTranslations } from 'next-intl/server';
 
 const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
 
@@ -35,8 +36,12 @@ async function getPageData(searchParams) {
   };
 }
 
-export default async function HomePage({ searchParams }) {
+export default async function HomePage(props) {
+  const { searchParams, params } = props;
+  const { locale } = await params;
   const resolvedSearchParams = await searchParams;
+
+  const t = await getTranslations({ locale, namespace: 'Hero' });
 
   // Tüm verileri sunucuda çekiyoruz
   const initialData = await getPageData(resolvedSearchParams);
@@ -95,6 +100,8 @@ export default async function HomePage({ searchParams }) {
         initialData={initialData}
         searchParams={resolvedSearchParams}
         discoverySections={discoverySections}
+        pageTitle={t('title')}
+        pageDescription={t('subtitle')}
       />
     </>
   );

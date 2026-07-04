@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { AdminMenu } from './AdminMenu';

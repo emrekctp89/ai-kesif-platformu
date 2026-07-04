@@ -1,0 +1,19 @@
+{
+  "Navigation": {
+    "home": "Ana Sayfa",
+    "discover": "Keşfet",
+    "categories": "Kategoriler",
+    "community": "Topluluk",
+    "about": "Hakkımızda"
+  },
+  "Hero": {
+    "title": "AI Araçlarını Keşfet",
+    "subtitle": "Yapay zeka ekosistemindeki en iyi araçları bulun, inceleyin ve karşılaştırın."
+  },
+  "Common": {
+    "search": "Ara...",
+    "login": "Giriş Yap",
+    "signup": "Kayıt Ol",
+    "logout": "Çıkış Yap"
+  }
+}

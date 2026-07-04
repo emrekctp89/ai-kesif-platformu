@@ -1,8 +1,10 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 import { Button } from './ui/button';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { NotificationCenter } from './NotificationCenter';
 import { UserNav } from './UserNav';
 import { RandomToolButton } from './RandomToolButton';
@@ -62,6 +64,8 @@ export function HeaderNav({
   totalUnreadMessages,
   profile,
 }) {
+  const t = useTranslations('Navigation');
+
   return (
     <>
       <MobileNav user={user} isProUser={isProUser} />
@@ -71,12 +75,8 @@ export function HeaderNav({
         aria-label="Ana navigasyon"
         className="hidden md:flex items-center gap-6 text-sm font-medium"
       >
-        <Link
-          href="/"
-          prefetch={false}
-          className="text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Tüm Araçlar
+        <Link href="/" className="text-muted-foreground transition-colors hover:text-foreground">
+          {t('discover')}
         </Link>
         {/* DEĞİŞİKLİK: Yeni "Launchpad" linki eklendi */}
 
@@ -111,6 +111,7 @@ export function HeaderNav({
             user={user}
           />
         )}
+        <LanguageSwitcher />
         <ThemeToggle />
         {user && <UserNav user={user} profile={profile} isProUser={isProUser} isAdmin={isAdmin} />}
       </div>

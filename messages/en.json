@@ -1,0 +1,19 @@
+{
+  "Navigation": {
+    "home": "Home",
+    "discover": "Discover",
+    "categories": "Categories",
+    "community": "Community",
+    "about": "About Us"
+  },
+  "Hero": {
+    "title": "Discover AI Tools",
+    "subtitle": "Find, review, and compare the best tools in the AI ecosystem."
+  },
+  "Common": {
+    "search": "Search...",
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout"
+  }
+}

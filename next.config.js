@@ -3,6 +3,8 @@ const { withSentryConfig } = require('@sentry/nextjs');
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
+const createNextIntlPlugin = require('next-intl/plugin');
+const withNextIntl = createNextIntlPlugin('./src/i18n.js');
 
 const disabledRoutes = [
   '/register',
@@ -85,7 +87,7 @@ const nextConfig = {
 
 module.exports = withBundleAnalyzer(
   withSentryConfig(
-    nextConfig,
+    withNextIntl(nextConfig),
     {
       silent: true,
       org: 'ai-kesif-platformu',

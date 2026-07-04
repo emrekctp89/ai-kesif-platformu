@@ -1,4 +1,4 @@
-import './globals.css';
+import '../globals.css';
 import { Onest } from 'next/font/google';
 import { cookies } from 'next/headers';
 import Header from '@/components/Header';
@@ -10,6 +10,8 @@ import { Analytics } from '@vercel/analytics/react';
 import { GoogleAnalytics } from '@/components/GoogleAnalytics';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { generatePageMetadata, generateStructuredData, siteConfig } from '@/utils/seo';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 
 const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
 
@@ -63,15 +65,19 @@ export const viewport = {
   viewportFit: 'cover',
 };
 
-export default async function RootLayout({ children }) {
+export default async function RootLayout(props) {
+  const { children, params } = props;
+  const { locale } = await params;
+
   await cookies();
+  const messages = await getMessages();
 
   // Generate structured data for the organization
   const organizationSchema = generateStructuredData('Organization', {});
   const websiteSchema = generateStructuredData('WebSite', {});
 
   return (
-    <html lang="tr" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         {/* Structured Data (JSON-LD) */}
         <script
@@ -125,13 +131,15 @@ export default async function RootLayout({ children }) {
               İçeriğe geç
             </a>
 
-            <Header />
+            <NextIntlClientProvider messages={messages}>
+              <Header />
 
-            <main id="main-content" tabIndex={-1} className="flex-1">
-              <div className="container mx-auto p-4 md:p-6">{children}</div>
-            </main>
+              <main id="main-content" tabIndex={-1} className="flex-1">
+                <div className="container mx-auto p-4 md:p-6">{children}</div>
+              </main>
 
-            <Footer />
+              <Footer />
+            </NextIntlClientProvider>
           </div>
 
           <AnnouncementBanner />
