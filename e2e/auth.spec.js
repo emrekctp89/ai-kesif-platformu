@@ -9,7 +9,9 @@ test.describe('Authentication Flows', () => {
     await expect(emailInput).toBeVisible();
 
     // Check if password input exists
-    const passwordInput = page.getByPlaceholder(/şifre/i).or(page.locator('input[type="password"]'));
+    const passwordInput = page
+      .getByPlaceholder(/şifre/i)
+      .or(page.locator('input[type="password"]'));
     await expect(passwordInput).toBeVisible();
 
     // Check if login button exists

@@ -1,16 +1,16 @@
 // src/app/signup/page.js
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { signUp } from '@/app/actions'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useSearchParams } from 'next/navigation'
+import Link from 'next/link';
+import { signUp } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useSearchParams } from 'next/navigation';
 
 export default function SignupPage() {
-  const searchParams = useSearchParams()
-  const message = searchParams.get('message')
+  const searchParams = useSearchParams();
+  const message = searchParams.get('message');
 
   return (
     <div className="flex items-center justify-center py-12 h-screen">
@@ -24,13 +24,7 @@ export default function SignupPage() {
         <form action={signUp} className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="ornek@mail.com"
-              required
-            />
+            <Input id="email" type="email" name="email" placeholder="ornek@mail.com" required />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">Şifre</Label>
@@ -46,12 +40,12 @@ export default function SignupPage() {
           )}
         </form>
         <div className="mt-4 text-center text-sm">
-          Zaten bir hesabınız var mı?{" "}
+          Zaten bir hesabınız var mı?{' '}
           <Link href="/login" className="underline">
             Giriş Yap
           </Link>
         </div>
       </div>
     </div>
-  )
+  );
 }

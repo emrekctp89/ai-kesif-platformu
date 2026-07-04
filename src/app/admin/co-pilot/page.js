@@ -1,9 +1,9 @@
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
-import { CoPilotClient } from "@/components/CoPilotClient";
+import { createClient } from '@/utils/supabase/server';
+import { redirect } from 'next/navigation';
+import { CoPilotClient } from '@/components/CoPilotClient';
 
 export const metadata = {
-  title: "Admin Co-Pilot | AI Keşif Platformu",
+  title: 'Admin Co-Pilot | AI Keşif Platformu',
   robots: {
     index: false,
     follow: false,
@@ -18,7 +18,7 @@ export default async function CoPilotPage() {
 
   // Bu sayfayı sadece admin görebilir
   if (!user || user.email !== process.env.ADMIN_EMAIL) {
-    redirect("/login");
+    redirect('/login');
   }
 
   return (

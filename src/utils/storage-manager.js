@@ -67,7 +67,7 @@ export class StorageManager {
    */
   async uploadLocal(filepath, key) {
     try {
-      const fs = await import('fs').then(m => m.promises);
+      const fs = await import('fs').then((m) => m.promises);
       const path = await import('path');
 
       const data = await fs.readFile(filepath);
@@ -99,7 +99,7 @@ export class StorageManager {
    */
   async uploadS3(filepath, key, metadata = {}) {
     try {
-      const fs = await import('fs').then(m => m.promises);
+      const fs = await import('fs').then((m) => m.promises);
 
       const data = await fs.readFile(filepath);
 
@@ -114,9 +114,11 @@ export class StorageManager {
         this.s3.upload(params, (err, data) => {
           if (err) {
             this.stats.errors++;
-            reject(new FileError('S3 upload failed', {
-              originalError: err.message,
-            }));
+            reject(
+              new FileError('S3 upload failed', {
+                originalError: err.message,
+              })
+            );
           } else {
             this.stats.uploaded++;
             logger.info('File uploaded to S3', { key, location: data.Location });
@@ -157,7 +159,7 @@ export class StorageManager {
    */
   async downloadLocal(key) {
     try {
-      const fs = await import('fs').then(m => m.promises);
+      const fs = await import('fs').then((m) => m.promises);
       const data = await fs.readFile(key);
 
       this.stats.downloaded++;
@@ -191,9 +193,11 @@ export class StorageManager {
         this.s3.getObject(params, (err, data) => {
           if (err) {
             this.stats.errors++;
-            reject(new FileError('S3 download failed', {
-              originalError: err.message,
-            }));
+            reject(
+              new FileError('S3 download failed', {
+                originalError: err.message,
+              })
+            );
           } else {
             this.stats.downloaded++;
             logger.info('File downloaded from S3', { key });
@@ -233,7 +237,7 @@ export class StorageManager {
    */
   async deleteLocal(key) {
     try {
-      const fs = await import('fs').then(m => m.promises);
+      const fs = await import('fs').then((m) => m.promises);
       await fs.unlink(key);
 
       this.stats.deleted++;
@@ -262,9 +266,11 @@ export class StorageManager {
         this.s3.deleteObject(params, (err) => {
           if (err) {
             this.stats.errors++;
-            reject(new FileError('S3 delete failed', {
-              originalError: err.message,
-            }));
+            reject(
+              new FileError('S3 delete failed', {
+                originalError: err.message,
+              })
+            );
           } else {
             this.stats.deleted++;
             logger.info('File deleted from S3', { key });
@@ -299,7 +305,7 @@ export class StorageManager {
    */
   async listLocal(prefix = '') {
     try {
-      const fs = await import('fs').then(m => m.promises);
+      const fs = await import('fs').then((m) => m.promises);
       const files = await fs.readdir(prefix);
       return { type: 'local', files, prefix };
     } catch (error) {
@@ -322,9 +328,11 @@ export class StorageManager {
       return new Promise((resolve, reject) => {
         this.s3.listObjectsV2(params, (err, data) => {
           if (err) {
-            reject(new FileError('S3 list failed', {
-              originalError: err.message,
-            }));
+            reject(
+              new FileError('S3 list failed', {
+                originalError: err.message,
+              })
+            );
           } else {
             resolve({
               type: 's3',

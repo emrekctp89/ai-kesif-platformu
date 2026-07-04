@@ -4,33 +4,33 @@
  * Bu sayfa, veriyi çeker ve sekmeli yapıyı oluşturur.
  * ---------------------------------------------------
  */
-import { createClient } from "@/utils/supabase/server";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LaunchCard } from "@/components/LaunchCard"; // Yeni bileşeni import ediyoruz
-import { Rocket } from "lucide-react";
-import { Button } from "@/components/ui/button"; // Button'ı import ediyoruz
-import Link from "next/link"; // Link'i import ediyoruz
+import { createClient } from '@/utils/supabase/server';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LaunchCard } from '@/components/LaunchCard'; // Yeni bileşeni import ediyoruz
+import { Rocket } from 'lucide-react';
+import { Button } from '@/components/ui/button'; // Button'ı import ediyoruz
+import Link from 'next/link'; // Link'i import ediyoruz
 
 // Veritabanındaki RPC fonksiyonunu çağıran fonksiyon
 async function getLaunches(startDate, endDate, userId) {
   const supabase = createClient();
-  const { data, error } = await supabase.rpc("get_launches", {
+  const { data, error } = await supabase.rpc('get_launches', {
     p_start_date: startDate,
     p_end_date: endDate,
     p_user_id: userId,
   });
 
   if (error) {
-    console.error("Lansmanlar çekilirken hata:", error);
+    console.error('Lansmanlar çekilirken hata:', error);
     return [];
   }
   return data;
 }
 
 export const metadata = {
-  title: "AI Launchpad | AI Keşif Platformu",
+  title: 'AI Launchpad | AI Keşif Platformu',
   description:
-    "Yapay zeka dünyasındaki en yeni ve en heyecan verici araç lansmanlarını keşfedin, oylayın ve ilk deneyenlerden olun.",
+    'Yapay zeka dünyasındaki en yeni ve en heyecan verici araç lansmanlarını keşfedin, oylayın ve ilk deneyenlerden olun.',
 };
 
 export default async function LaunchpadPage() {
@@ -39,10 +39,8 @@ export default async function LaunchpadPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const today = new Date().toISOString().split("T")[0];
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
+  const today = new Date().toISOString().split('T')[0];
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   // Hem bugünün hem de bu haftanın lansmanlarını paralel olarak çekiyoruz
   const [todayLaunches, weekLaunches] = await Promise.all([
@@ -58,8 +56,7 @@ export default async function LaunchpadPage() {
           AI Launchpad
         </h1>
         <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-          Yapay zeka dünyasındaki en yeni ürünleri keşfedin. Her gün yeni bir
-          lansman.
+          Yapay zeka dünyasındaki en yeni ürünleri keşfedin. Her gün yeni bir lansman.
         </p>
       </div>
       {/* YENİ: "Lansman Yap" butonu */}
@@ -82,12 +79,7 @@ export default async function LaunchpadPage() {
           <div className="space-y-4 pt-6">
             {todayLaunches.length > 0 ? (
               todayLaunches.map((launch) => (
-                <LaunchCard
-                  key={launch.id}
-                  launch={launch}
-                  user={user}
-                  isVoted={launch.is_voted}
-                />
+                <LaunchCard key={launch.id} launch={launch} user={user} isVoted={launch.is_voted} />
               ))
             ) : (
               <p className="text-center text-muted-foreground py-8">
@@ -100,12 +92,7 @@ export default async function LaunchpadPage() {
           <div className="space-y-4 pt-6">
             {weekLaunches.length > 0 ? (
               weekLaunches.map((launch) => (
-                <LaunchCard
-                  key={launch.id}
-                  launch={launch}
-                  user={user}
-                  isVoted={launch.is_voted}
-                />
+                <LaunchCard key={launch.id} launch={launch} user={user} isVoted={launch.is_voted} />
               ))
             ) : (
               <p className="text-center text-muted-foreground py-8">

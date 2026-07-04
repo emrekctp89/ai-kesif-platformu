@@ -1,18 +1,14 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
-import {
-  generateToolVariants,
-  updateToolVariants,
-  applyWinningVariant,
-} from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles } from "lucide-react";
-import toast from "react-hot-toast";
+import * as React from 'react';
+import { useTransition } from 'react';
+import { generateToolVariants, updateToolVariants, applyWinningVariant } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sparkles } from 'lucide-react';
+import toast from 'react-hot-toast';
 import {
   Table,
   TableBody,
@@ -20,13 +16,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { CheckCircle } from "lucide-react";
+} from '@/components/ui/table';
+import { CheckCircle } from 'lucide-react';
 
 export function ToolVariantManager({ tool }) {
-  const [variants, setVariants] = React.useState(
-    tool.tool_variants.filter((v) => !v.is_original)
-  );
+  const [variants, setVariants] = React.useState(tool.tool_variants.filter((v) => !v.is_original));
   const [isGenerating, startGeneratingTransition] = useTransition();
   const [isSaving, startSavingTransition] = useTransition();
 
@@ -43,11 +37,8 @@ export function ToolVariantManager({ tool }) {
         toast.error(result.error);
       } else {
         // Mevcut varyantların üzerine yazmak yerine, yenilerini ekliyoruz.
-        setVariants((prev) => [
-          ...prev,
-          ...result.data.map((v) => ({ ...v, is_active: false })),
-        ]);
-        toast.success("3 yeni varyant üretildi!");
+        setVariants((prev) => [...prev, ...result.data.map((v) => ({ ...v, is_active: false }))]);
+        toast.success('3 yeni varyant üretildi!');
       }
     });
   };
@@ -63,8 +54,8 @@ export function ToolVariantManager({ tool }) {
   const handleSaveChanges = async () => {
     startSavingTransition(async () => {
       const formData = new FormData();
-      formData.append("toolId", tool.id);
-      formData.append("variants", JSON.stringify(variants));
+      formData.append('toolId', tool.id);
+      formData.append('variants', JSON.stringify(variants));
       const result = await updateToolVariants(formData);
       if (result.error) {
         toast.error(result.error);
@@ -84,9 +75,9 @@ export function ToolVariantManager({ tool }) {
     }
     startSavingTransition(async () => {
       const formData = new FormData();
-      formData.append("toolId", tool.id);
-      formData.append("newTitle", variant.title);
-      formData.append("newDescription", variant.description);
+      formData.append('toolId', tool.id);
+      formData.append('newTitle', variant.title);
+      formData.append('newDescription', variant.description);
       const result = await applyWinningVariant(formData);
       if (result.error) {
         toast.error(result.error);
@@ -118,11 +109,9 @@ export function ToolVariantManager({ tool }) {
           <TableBody>
             {originalVariant && (
               <TableRow>
-                <TableCell className="font-medium">
-                  {originalVariant.title} (Orijinal)
-                </TableCell>
-                <TableCell>{originalVariant.impressions || "-"}</TableCell>
-                <TableCell>{originalVariant.clicks || "-"}</TableCell>
+                <TableCell className="font-medium">{originalVariant.title} (Orijinal)</TableCell>
+                <TableCell>{originalVariant.impressions || '-'}</TableCell>
+                <TableCell>{originalVariant.clicks || '-'}</TableCell>
                 <TableCell>-</TableCell>
                 <TableCell>-</TableCell>
                 <TableCell className="text-right">-</TableCell>
@@ -167,16 +156,12 @@ export function ToolVariantManager({ tool }) {
 
       {/* Eylem Butonları */}
       <div className="flex justify-between pt-4">
-        <Button
-          variant="outline"
-          onClick={handleGenerateVariants}
-          disabled={isGenerating}
-        >
+        <Button variant="outline" onClick={handleGenerateVariants} disabled={isGenerating}>
           <Sparkles className="w-4 h-4 mr-2" />
-          {isGenerating ? "Üretiliyor..." : "AI ile Varyant Üret"}
+          {isGenerating ? 'Üretiliyor...' : 'AI ile Varyant Üret'}
         </Button>
         <Button onClick={handleSaveChanges} disabled={isSaving}>
-          {isSaving ? "Kaydediliyor..." : "Aktif/Pasif Durumunu Kaydet"}
+          {isSaving ? 'Kaydediliyor...' : 'Aktif/Pasif Durumunu Kaydet'}
         </Button>
       </div>
     </div>

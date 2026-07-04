@@ -1,17 +1,13 @@
-import { createClient } from "@/utils/supabase/server";
-import { notFound, redirect } from "next/navigation";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import Image from "next/image";
+import { createClient } from '@/utils/supabase/server';
+import { notFound, redirect } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import Image from 'next/image';
 
 // Bu fonksiyon, durumu ne olursa olsun bir yazıyı ID'sine göre çeker.
 async function getPostForPreview(id) {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("posts")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const { data, error } = await supabase.from('posts').select('*').eq('id', id).single();
   if (error || !data) notFound();
   return data;
 }
@@ -24,7 +20,7 @@ export default async function PreviewPostPage({ params }) {
 
   // Sadece admin bu sayfayı görebilir.
   if (!user || user.email !== process.env.ADMIN_EMAIL) {
-    redirect("/login");
+    redirect('/login');
   }
 
   const post = await getPostForPreview(params.id);
@@ -54,9 +50,7 @@ export default async function PreviewPostPage({ params }) {
       )}
 
       <div className="prose prose-lg dark:prose-invert max-w-none">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-          {post.content}
-        </ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
       </div>
     </article>
   );

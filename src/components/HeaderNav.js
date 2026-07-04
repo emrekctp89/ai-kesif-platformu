@@ -1,50 +1,31 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { Button } from "./ui/button";
-import { ThemeToggle } from "./ThemeToggle";
-import { NotificationCenter } from "./NotificationCenter";
-import { UserNav } from "./UserNav";
-import { RandomToolButton } from "./RandomToolButton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Badge } from "./ui/badge";
+import Link from 'next/link';
+import { Button } from './ui/button';
+import { ThemeToggle } from './ThemeToggle';
+import { NotificationCenter } from './NotificationCenter';
+import { UserNav } from './UserNav';
+import { RandomToolButton } from './RandomToolButton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from './ui/badge';
 // İkonları import ediyoruz
-import {
-  Bot,
-  GitCompareArrows,
-  Sparkles,
-  Crown,
-  Mail,
-  Users,
-  Trophy,
-  Rocket,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { MobileNav } from "./MobileNav";
+import { Bot, GitCompareArrows, Sparkles, Crown, Mail, Users, Trophy, Rocket } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { MobileNav } from './MobileNav';
 
 // Korumalı buton için özel bir versiyon oluşturuyoruz
 const ProProtectedButton = ({ children, className }) => (
   <Tooltip>
     <TooltipTrigger asChild>
       <span tabIndex={0}>
-        <Button
-          variant="ghost"
-          disabled
-          style={{ pointerEvents: "none" }}
-          className={className}
-        >
+        <Button variant="ghost" disabled style={{ pointerEvents: 'none' }} className={className}>
           {children}
         </Button>
       </span>
     </TooltipTrigger>
     <TooltipContent>
       <p>
-        Bu özellik Pro üyelere özeldir.{" "}
+        Bu özellik Pro üyelere özeldir.{' '}
         <Link
           href="/uyelik"
           className="font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent hover:underline"
@@ -56,16 +37,11 @@ const ProProtectedButton = ({ children, className }) => (
   </Tooltip>
 );
 // Misafir kullanıcılar için ipucu gösteren korumalı bir buton bileşeni
-const ProtectedButton = ({ children, className, variant = "ghost" }) => (
+const ProtectedButton = ({ children, className, variant = 'ghost' }) => (
   <Tooltip>
     <TooltipTrigger asChild>
       <span tabIndex={0}>
-        <Button
-          variant={variant}
-          disabled
-          style={{ pointerEvents: "none" }}
-          className={className}
-        >
+        <Button variant={variant} disabled style={{ pointerEvents: 'none' }} className={className}>
           {children}
         </Button>
       </span>
@@ -136,14 +112,7 @@ export function HeaderNav({
           />
         )}
         <ThemeToggle />
-        {user && (
-          <UserNav
-            user={user}
-            profile={profile}
-            isProUser={isProUser}
-            isAdmin={isAdmin}
-          />
-        )}
+        {user && <UserNav user={user} profile={profile} isProUser={isProUser} isAdmin={isAdmin} />}
       </div>
     </>
   );

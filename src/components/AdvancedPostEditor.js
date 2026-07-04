@@ -1,45 +1,43 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useState, useMemo } from "react";
-import { updatePost, assignToolsToPost, assignTagsToPost } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import * as React from 'react';
+import { useState, useMemo } from 'react';
+import { updatePost, assignToolsToPost, assignTagsToPost } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 // DÜZELTME: Eksik olan Card import'larını ekliyoruz
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MultiSelectTools } from "./MultiSelectTools"; // Yardımcı bileşen
-import { MultiSelectTags } from "./MultiSelectTags"; // Yardımcı bileşen
-import toast from "react-hot-toast";
-import dynamic from "next/dynamic";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MultiSelectTools } from './MultiSelectTools'; // Yardımcı bileşen
+import { MultiSelectTags } from './MultiSelectTags'; // Yardımcı bileşen
+import toast from 'react-hot-toast';
+import dynamic from 'next/dynamic';
 
-const SimpleMDE = dynamic(() => import("react-simplemde-editor"), {
+const SimpleMDE = dynamic(() => import('react-simplemde-editor'), {
   ssr: false,
 });
-import "easymde/dist/easymde.min.css";
+import 'easymde/dist/easymde.min.css';
 
 export function AdvancedPostEditor({ post, allTools, allTags, categories }) {
-  const [content, setContent] = useState(post.content || "");
+  const [content, setContent] = useState(post.content || '');
   const [selectedTools, setSelectedTools] = useState(
     new Set(post.post_tools.map((pt) => pt.tools.id))
   );
-  const [selectedTags, setSelectedTags] = useState(
-    new Set(post.post_tags.map((pt) => pt.tags.id))
-  );
+  const [selectedTags, setSelectedTags] = useState(new Set(post.post_tags.map((pt) => pt.tags.id)));
 
   const editorOptions = useMemo(() => ({ spellChecker: false }), []);
 
   const handleFormSubmit = async (formData) => {
-    formData.set("content", content);
+    formData.set('content', content);
 
     const toolsFormData = new FormData();
-    toolsFormData.append("postId", post.id);
-    selectedTools.forEach((id) => toolsFormData.append("toolId", id));
+    toolsFormData.append('postId', post.id);
+    selectedTools.forEach((id) => toolsFormData.append('toolId', id));
 
     const tagsFormData = new FormData();
-    tagsFormData.append("postId", post.id);
-    selectedTags.forEach((id) => tagsFormData.append("tagId", id));
+    tagsFormData.append('postId', post.id);
+    selectedTags.forEach((id) => tagsFormData.append('tagId', id));
 
     const [postResult, toolsResult, tagsResult] = await Promise.all([
       updatePost(formData),
@@ -48,16 +46,9 @@ export function AdvancedPostEditor({ post, allTools, allTags, categories }) {
     ]);
 
     if (postResult.error || toolsResult.error || tagsResult.error) {
-      toast.error(
-        postResult.error ||
-          toolsResult.error ||
-          tagsResult.error ||
-          "Bir hata oluştu."
-      );
+      toast.error(postResult.error || toolsResult.error || tagsResult.error || 'Bir hata oluştu.');
     } else {
-      toast.success(
-        "Yazı, ilişkili araçlar ve etiketler başarıyla güncellendi."
-      );
+      toast.success('Yazı, ilişkili araçlar ve etiketler başarıyla güncellendi.');
     }
   };
 
@@ -83,11 +74,7 @@ export function AdvancedPostEditor({ post, allTools, allTags, categories }) {
           </div>
           <div className="space-y-2">
             <Label>İçerik (Markdown)</Label>
-            <SimpleMDE
-              options={editorOptions}
-              value={content}
-              onChange={setContent}
-            />
+            <SimpleMDE options={editorOptions} value={content} onChange={setContent} />
           </div>
         </div>
 

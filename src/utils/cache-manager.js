@@ -150,9 +150,10 @@ export class MemoryCache {
    * Get cache statistics
    */
   getStats() {
-    const hitRate = this.stats.hits + this.stats.misses > 0
-      ? (this.stats.hits / (this.stats.hits + this.stats.misses) * 100).toFixed(2)
-      : 0;
+    const hitRate =
+      this.stats.hits + this.stats.misses > 0
+        ? ((this.stats.hits / (this.stats.hits + this.stats.misses)) * 100).toFixed(2)
+        : 0;
 
     return {
       size: this.cache.size,
@@ -372,7 +373,7 @@ export class CacheManager {
 
     if (this.cacheLayers.includes('redis') && this.redisClient) {
       try {
-        stats.redis = await this.redisClient.cleanup?.() || 0;
+        stats.redis = (await this.redisClient.cleanup?.()) || 0;
       } catch (error) {
         logger.warn('Redis cleanup error', { error: error.message });
       }
@@ -406,10 +407,10 @@ export class CacheKeyBuilder {
  * Cache decorators
  */
 export function withCache(key, ttl = 3600000) {
-  return function(target, propertyKey, descriptor) {
+  return function (target, propertyKey, descriptor) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = async function(...args) {
+    descriptor.value = async function (...args) {
       const cacheKey = typeof key === 'function' ? key(...args) : key;
 
       // Try cache

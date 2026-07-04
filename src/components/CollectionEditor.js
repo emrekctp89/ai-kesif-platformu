@@ -1,25 +1,15 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useState } from "react";
-import { updateCollection, updateCollectionTools } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import * as React from 'react';
+import { useState } from 'react';
+import { updateCollection, updateCollectionTools } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -27,18 +17,13 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Check, ChevronsUpDown, GripVertical, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import toast from "react-hot-toast";
+} from '@/components/ui/command';
+import { Check, ChevronsUpDown, GripVertical, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import toast from 'react-hot-toast';
 
 // Koleksiyona Araç Ekleme/Seçme Bileşeni
-function AddToolsToCollection({
-  allTools,
-  selectedTools,
-  onToolToggle,
-  onNoteChange,
-}) {
+function AddToolsToCollection({ allTools, selectedTools, onToolToggle, onNoteChange }) {
   const [open, setOpen] = useState(false);
   const selectedToolIds = new Set(selectedTools.map((t) => t.tool_id));
 
@@ -56,15 +41,11 @@ function AddToolsToCollection({
             <CommandEmpty>Araç bulunamadı.</CommandEmpty>
             <CommandGroup>
               {allTools.map((tool) => (
-                <CommandItem
-                  key={tool.id}
-                  value={tool.name}
-                  onSelect={() => onToolToggle(tool.id)}
-                >
+                <CommandItem key={tool.id} value={tool.name} onSelect={() => onToolToggle(tool.id)}>
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedToolIds.has(tool.id) ? "opacity-100" : "opacity-0"
+                      'mr-2 h-4 w-4',
+                      selectedToolIds.has(tool.id) ? 'opacity-100' : 'opacity-0'
                     )}
                   />
                   {tool.name}
@@ -80,9 +61,7 @@ function AddToolsToCollection({
 
 // Ana Koleksiyon Editör Bileşeni
 export function CollectionEditor({ collection, allTools }) {
-  const [selectedTools, setSelectedTools] = useState(
-    collection.collection_tools || []
-  );
+  const [selectedTools, setSelectedTools] = useState(collection.collection_tools || []);
 
   const handleToolToggle = (toolId) => {
     setSelectedTools((prev) => {
@@ -90,15 +69,13 @@ export function CollectionEditor({ collection, allTools }) {
       if (isSelected) {
         return prev.filter((t) => t.tool_id !== toolId);
       } else {
-        return [...prev, { tool_id: toolId, notes: "" }];
+        return [...prev, { tool_id: toolId, notes: '' }];
       }
     });
   };
 
   const handleNoteChange = (toolId, notes) => {
-    setSelectedTools((prev) =>
-      prev.map((t) => (t.tool_id === toolId ? { ...t, notes } : t))
-    );
+    setSelectedTools((prev) => prev.map((t) => (t.tool_id === toolId ? { ...t, notes } : t)));
   };
 
   const handleFormSubmit = async (formData) => {
@@ -111,21 +88,21 @@ export function CollectionEditor({ collection, allTools }) {
 
     // 2. Koleksiyondaki araçları ve notları güncelle
     const toolData = new FormData();
-    toolData.append("collectionId", collection.id);
-    toolData.append("slug", collection.slug);
+    toolData.append('collectionId', collection.id);
+    toolData.append('slug', collection.slug);
     // Seçilen araçları ve notlarını JSON olarak gönder
-    toolData.append("tools", JSON.stringify(selectedTools));
+    toolData.append('tools', JSON.stringify(selectedTools));
 
     const toolsUpdateResult = await updateCollectionTools(toolData);
     if (toolsUpdateResult?.error) {
       toast.error(toolsUpdateResult.error);
     } else {
-      toast.success("Koleksiyon başarıyla güncellendi.");
+      toast.success('Koleksiyon başarıyla güncellendi.');
     }
   };
 
   const getToolName = (toolId) => {
-    return allTools.find((t) => t.id === toolId)?.name || "Bilinmeyen Araç";
+    return allTools.find((t) => t.id === toolId)?.name || 'Bilinmeyen Araç';
   };
 
   return (
@@ -143,17 +120,13 @@ export function CollectionEditor({ collection, allTools }) {
                 <CardContent className="p-4 flex items-start gap-4">
                   <GripVertical className="h-5 w-5 text-muted-foreground mt-2 cursor-grab" />
                   <div className="flex-1 space-y-2">
-                    <h3 className="font-semibold">
-                      {getToolName(item.tool_id)}
-                    </h3>
+                    <h3 className="font-semibold">{getToolName(item.tool_id)}</h3>
                     <Textarea
                       name={`notes-for-${item.tool_id}`}
                       placeholder="Bu araç hakkında özel notlarınız..."
                       className="text-sm"
-                      value={item.notes || ""}
-                      onChange={(e) =>
-                        handleNoteChange(item.tool_id, e.target.value)
-                      }
+                      value={item.notes || ''}
+                      onChange={(e) => handleNoteChange(item.tool_id, e.target.value)}
                     />
                   </div>
                   <Button
@@ -184,12 +157,7 @@ export function CollectionEditor({ collection, allTools }) {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="title">Başlık</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  defaultValue={collection.title}
-                  required
-                />
+                <Input id="title" name="title" defaultValue={collection.title} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Açıklama</Label>

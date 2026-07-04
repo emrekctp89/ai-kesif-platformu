@@ -103,26 +103,19 @@ export const ERROR_MESSAGES = {
  * Validation error response
  */
 export function validationErrorResponse(errors = []) {
-  return errorResponse(
-    ERROR_MESSAGES.VALIDATION_ERROR,
-    HTTP_STATUS.UNPROCESSABLE_ENTITY,
-    {
-      errors: errors.map(error => ({
-        field: error.field,
-        message: error.message,
-      })),
-    }
-  );
+  return errorResponse(ERROR_MESSAGES.VALIDATION_ERROR, HTTP_STATUS.UNPROCESSABLE_ENTITY, {
+    errors: errors.map((error) => ({
+      field: error.field,
+      message: error.message,
+    })),
+  });
 }
 
 /**
  * Not found response
  */
 export function notFoundResponse(resource = 'Kaynak') {
-  return errorResponse(
-    `${resource} bulunamadı`,
-    HTTP_STATUS.NOT_FOUND
-  );
+  return errorResponse(`${resource} bulunamadı`, HTTP_STATUS.NOT_FOUND);
 }
 
 /**
@@ -151,10 +144,7 @@ export function conflictResponse(message = ERROR_MESSAGES.DUPLICATE_ENTRY) {
  */
 export function rateLimitResponse(retryAfter = 60) {
   return {
-    ...errorResponse(
-      ERROR_MESSAGES.RATE_LIMIT,
-      HTTP_STATUS.TOO_MANY_REQUESTS
-    ),
+    ...errorResponse(ERROR_MESSAGES.RATE_LIMIT, HTTP_STATUS.TOO_MANY_REQUESTS),
     retryAfter,
   };
 }
@@ -184,7 +174,12 @@ export function serverErrorResponse(error = null, details = null) {
  * API response wrapper for Server Actions
  * Usage: return apiResponse(data, true, 'Success message')
  */
-export function apiResponse(data = null, success = true, message = '', statusCode = success ? 200 : 400) {
+export function apiResponse(
+  data = null,
+  success = true,
+  message = '',
+  statusCode = success ? 200 : 400
+) {
   if (success) {
     return successResponse(data, message, statusCode);
   }

@@ -1,4 +1,4 @@
-import { ToolsGridSkeleton } from "@/components/ToolsGridSkeleton";
+import { ToolsGridSkeleton } from '@/components/ToolsGridSkeleton';
 
 export default function KesfetLoading() {
   return (

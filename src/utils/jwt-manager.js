@@ -41,14 +41,10 @@ export class JWTManager {
         iat: Math.floor(Date.now() / 1000),
       };
 
-      const token = jwt.sign(
-        tokenPayload,
-        this.secret,
-        {
-          expiresIn: options.expiresIn || this.expiresIn,
-          algorithm: this.algorithm,
-        }
-      );
+      const token = jwt.sign(tokenPayload, this.secret, {
+        expiresIn: options.expiresIn || this.expiresIn,
+        algorithm: this.algorithm,
+      });
 
       this.stats.created++;
 
@@ -79,14 +75,10 @@ export class JWTManager {
         iat: Math.floor(Date.now() / 1000),
       };
 
-      const token = jwt.sign(
-        tokenPayload,
-        this.refreshSecret,
-        {
-          expiresIn: options.expiresIn || this.refreshExpiresIn,
-          algorithm: this.algorithm,
-        }
-      );
+      const token = jwt.sign(tokenPayload, this.refreshSecret, {
+        expiresIn: options.expiresIn || this.refreshExpiresIn,
+        algorithm: this.algorithm,
+      });
 
       logger.debug('Refresh token created', {
         userId: payload.userId,

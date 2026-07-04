@@ -1,30 +1,48 @@
 // src/components/ToolCard.js
 
-"use client";
+'use client';
 
 import Link from 'next/link';
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/components/ui/badge';
 import FavoriteButton from '@/components/FavoriteButton'; // Bu dosya yolunun doğru olduğunu varsayıyoruz
-import { Star, Heart, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye } from 'lucide-react';
+import {
+  Star,
+  Heart,
+  Crown,
+  Gem,
+  Globe,
+  Apple,
+  Bot,
+  Monitor,
+  Pen,
+  ShoppingCart,
+  Eye,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import ToolIcon from "@/components/ToolIcon";
-import { TrackedExternalLink } from "@/components/TrackedExternalLink";
+import ToolIcon from '@/components/ToolIcon';
+import { TrackedExternalLink } from '@/components/TrackedExternalLink';
 
 // Bu sabitleri de bileşenin kendi dosyasına taşıyoruz
 const tierStyles = {
-  'Pro': { badge: "bg-purple-600 text-white hover:bg-purple-700", icon: <Crown className="w-4 h-4 mr-1.5" /> },
-  'Sponsorlu': { badge: "bg-amber-500 text-white hover:bg-amber-600", icon: <Gem className="w-4 h-4 mr-1.5" /> }
+  Pro: {
+    badge: 'bg-purple-600 text-white hover:bg-purple-700',
+    icon: <Crown className="w-4 h-4 mr-1.5" />,
+  },
+  Sponsorlu: {
+    badge: 'bg-amber-500 text-white hover:bg-amber-600',
+    icon: <Gem className="w-4 h-4 mr-1.5" />,
+  },
 };
 
 const platformIcons = {
-    Web: <Globe className="w-4 h-4" />,
-    iOS: <Apple className="w-4 h-4" />,
-    Android: <Bot className="w-4 h-4" />,
-    Windows: <Monitor className="w-4 h-4" />,
-    macOS: <Monitor className="w-4 h-4" />,
-    Linux: <Pen className="w-4 h-4" />,
-    'Chrome Uzantısı': <ShoppingCart className="w-4 h-4" />
+  Web: <Globe className="w-4 h-4" />,
+  iOS: <Apple className="w-4 h-4" />,
+  Android: <Bot className="w-4 h-4" />,
+  Windows: <Monitor className="w-4 h-4" />,
+  macOS: <Monitor className="w-4 h-4" />,
+  Linux: <Pen className="w-4 h-4" />,
+  'Chrome Uzantısı': <ShoppingCart className="w-4 h-4" />,
 };
 
 const ratingCache = new Map();
@@ -35,28 +53,32 @@ const favoritesCache = new Map();
 // -----------------------------
 export default function ToolCard({ tool }) {
   // router'a artık burada ihtiyacımız yok.
-  // const router = useRouter(); 
+  // const router = useRouter();
   if (!tool || !tool.name) return null;
 
-  const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
+  const isPremium = tool.tier === 'Pro' || tool.tier === 'Sponsorlu';
 
   // DEĞİŞİKLİK 1: Ana sarmalayıcıyı <div onClick> yerine <Link> yapın.
   return (
     <Link
       href={`/tool/${tool.slug}`}
       className={cn(
-        "relative block p-6 rounded-xl border shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden",
+        'relative block p-6 rounded-xl border shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden',
         {
-          "border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card": tool.tier === "Pro",
-          "border-amber-400/40 shadow-amber-400/20 hover:shadow-amber-500/40 bg-card": tool.tier === "Sponsorlu",
-          "border-blue-800/50 shadow-blue-900/30 hover:shadow-blue-700/50 bg-blue-950": !tool.tier
+          'border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card':
+            tool.tier === 'Pro',
+          'border-amber-400/40 shadow-amber-400/20 hover:shadow-amber-500/40 bg-card':
+            tool.tier === 'Sponsorlu',
+          'border-blue-800/50 shadow-blue-900/30 hover:shadow-blue-700/50 bg-blue-950': !tool.tier,
         }
       )}
     >
       <div className="flex flex-col h-full">
         {/* Premium Badge */}
         {isPremium && (
-         <Badge className={`mb-2 flex w-fit items-center px-3 py-1 rounded-full ${tierStyles[tool.tier]?.badge || "bg-gradient-to-r from-yellow-400 to-orange-500 text-white"}`}>
+          <Badge
+            className={`mb-2 flex w-fit items-center px-3 py-1 rounded-full ${tierStyles[tool.tier]?.badge || 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white'}`}
+          >
             {tierStyles[tool.tier]?.icon || <Star className="w-4 h-4 mr-1.5" />} {tool.tier}
           </Badge>
         )}
@@ -70,12 +92,12 @@ export default function ToolCard({ tool }) {
         {/* Kategori */}
         <div className="my-2">
           {/* DEĞİŞİKLİK 2: İçteki Link'e tıklamanın dış Link'i tetiklemesini engellemek için stopPropagation ekleyin. */}
-          <Link 
+          <Link
             href={`/kategori/${tool.category_slug}`}
             className="inline-block"
             onClick={(e) => e.stopPropagation()}
           >
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground w-fit hover:bg-primary hover:text-primary-foreground transition-colors"> 
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground w-fit hover:bg-primary hover:text-primary-foreground transition-colors">
               {tool.category_name}
             </span>
           </Link>
@@ -84,18 +106,14 @@ export default function ToolCard({ tool }) {
         {/* Etiketler */}
         {tool.tags && tool.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 my-3">
-            {tool.tags.map((tag) => ( 
+            {tool.tags.map((tag) => (
               // DEĞİŞİKLİK 3: Etiket Link'lerine de stopPropagation ekleyin.
-              <Link 
-                key={tag.id} 
-                href={`/?tags=${tag.id}`}
-                onClick={(e) => e.stopPropagation()}
-              >
+              <Link key={tag.id} href={`/?tags=${tag.id}`} onClick={(e) => e.stopPropagation()}>
                 <Badge
                   variant="outline"
                   className="hover:bg-accent hover:border-primary transition-colors"
                 >
-                  {tag.name}  
+                  {tag.name}
                 </Badge>
               </Link>
             ))}
@@ -111,11 +129,12 @@ export default function ToolCard({ tool }) {
         <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
           <div className="flex items-center gap-2 text-muted-foreground">
             {/* platform ikonları */}
-            {tool.platforms && tool.platforms.slice(0, 3).map((platform) => (
-              <span key={platform} title={platform}>
-                {platformIcons[platform] || <Eye className="w-4 h-4" />}
-              </span>
-            ))}
+            {tool.platforms &&
+              tool.platforms.slice(0, 3).map((platform) => (
+                <span key={platform} title={platform}>
+                  {platformIcons[platform] || <Eye className="w-4 h-4" />}
+                </span>
+              ))}
             {tool.platforms && tool.platforms.length > 3 && (
               <span className="text-xs">+{tool.platforms.length - 3}</span>
             )}
@@ -135,7 +154,7 @@ export default function ToolCard({ tool }) {
                 rel="noopener noreferrer"
                 eventName="official_site_click"
                 eventParameters={{
-                  source: "legacy_tool_card",
+                  source: 'legacy_tool_card',
                   tool_slug: tool.slug,
                   category: tool.category_slug,
                 }}

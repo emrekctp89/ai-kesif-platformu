@@ -1,7 +1,7 @@
-const BLOCKED_TOOL_HOSTS = ["topai.tools"];
+const BLOCKED_TOOL_HOSTS = ['topai.tools'];
 
 function parseHostname(link) {
-  const raw = String(link || "").trim();
+  const raw = String(link || '').trim();
   if (!raw) return null;
 
   try {

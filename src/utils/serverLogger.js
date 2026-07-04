@@ -5,14 +5,14 @@ function sanitizeDetails(details = {}) {
   return Object.fromEntries(
     Object.entries(details).map(([key, value]) => [
       key,
-      SENSITIVE_KEY_PATTERN.test(key) ? "[redacted]" : value,
+      SENSITIVE_KEY_PATTERN.test(key) ? '[redacted]' : value,
     ])
   );
 }
 
 export function logServerError(context, error, details) {
   const payload = {
-    level: "error",
+    level: 'error',
     context,
     message: error instanceof Error ? error.message : String(error),
     digest: error?.digest,
@@ -20,5 +20,5 @@ export function logServerError(context, error, details) {
     timestamp: new Date().toISOString(),
   };
 
-  console.error("[app-error]", JSON.stringify(payload));
+  console.error('[app-error]', JSON.stringify(payload));
 }

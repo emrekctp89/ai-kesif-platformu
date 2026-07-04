@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { ArrowDown } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { ArrowDown } from 'lucide-react';
 
 export function ScrollHint() {
   const [isVisible, setIsVisible] = useState(false);
@@ -27,7 +27,7 @@ export function ScrollHint() {
   return (
     <div
       className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
       }`}
     >
       <div className="bg-secondary text-secondary-foreground rounded-full p-2 px-4 shadow-lg flex items-center gap-2">

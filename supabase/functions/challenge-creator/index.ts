@@ -2,16 +2,19 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 // Bu ana fonksiyon, Edge Function çağrıldığında çalışır
-serve(async (req)=>{
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
-      headers: corsHeaders
+      headers: corsHeaders,
     });
   }
   try {
-    const supabaseAdmin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
     const apiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!apiKey) throw new Error("GEMINI_API_KEY bulunamadı.");
+    if (!apiKey) throw new Error('GEMINI_API_KEY bulunamadı.');
     // 1. ADIM: Gemini için özel prompt'u oluştur
     const prompt = `
         Sen, 'AI Keşif Platformu' adlı bir topluluk sitesi için içerik üreten bir yapay zekasın. Görevin, yapay zeka ile görsel veya metin üreten kullanıcılar için, bir hafta sürecek, son derece yaratıcı, eğlenceli ve ilham verici bir YARIŞMA TEMASI oluşturmaktır.
@@ -23,44 +26,41 @@ serve(async (req)=>{
     // 2. ADIM: Gemini API'sine isteği hazırla ve gönder
     const chatHistory = [
       {
-        role: "user",
+        role: 'user',
         parts: [
           {
-            text: prompt
-          }
-        ]
-      }
+            text: prompt,
+          },
+        ],
+      },
     ];
     const payload = {
       contents: chatHistory,
       generationConfig: {
-        responseMimeType: "application/json",
+        responseMimeType: 'application/json',
         responseSchema: {
-          type: "OBJECT",
+          type: 'OBJECT',
           properties: {
-            "title": {
-              "type": "STRING",
-              "description": "Yarışma için kısa ve dikkat çekici bir başlık."
+            title: {
+              type: 'STRING',
+              description: 'Yarışma için kısa ve dikkat çekici bir başlık.',
             },
-            "description": {
-              "type": "STRING",
-              "description": "Kullanıcılara ilham verecek, temayı açıklayan 1-2 cümlelik bir metin."
-            }
+            description: {
+              type: 'STRING',
+              description: 'Kullanıcılara ilham verecek, temayı açıklayan 1-2 cümlelik bir metin.',
+            },
           },
-          required: [
-            "title",
-            "description"
-          ]
-        }
-      }
+          required: ['title', 'description'],
+        },
+      },
     };
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
     if (!response.ok) {
       const errorBody = await response.text();
@@ -77,27 +77,33 @@ serve(async (req)=>{
       description: challengeData.description,
       status: 'Aktif',
       start_date: today.toISOString().split('T')[0],
-      end_date: nextWeek.toISOString().split('T')[0]
+      end_date: nextWeek.toISOString().split('T')[0],
     });
     if (insertError) throw insertError;
-    return new Response(JSON.stringify({
-      message: `Yeni yarışma başarıyla oluşturuldu: "${challengeData.title}"`
-    }), {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      },
-      status: 200
-    });
+    return new Response(
+      JSON.stringify({
+        message: `Yeni yarışma başarıyla oluşturuldu: "${challengeData.title}"`,
+      }),
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+        status: 200,
+      }
+    );
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: error instanceof Error ? error.message : String(error)
-    }), {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json'
-      },
-      status: 400
-    });
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : String(error),
+      }),
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+        status: 400,
+      }
+    );
   }
 });

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
+import * as React from 'react';
+import { useTransition } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,13 +11,13 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { createProject } from "@/app/actions";
-import toast from "react-hot-toast";
-import { PlusCircle } from "lucide-react";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { createProject } from '@/app/actions';
+import toast from 'react-hot-toast';
+import { PlusCircle } from 'lucide-react';
 
 export function CreateProjectButton() {
   const formRef = React.useRef(null);
@@ -30,9 +30,7 @@ export function CreateProjectButton() {
       if (result?.error) {
         toast.error(result.error);
       } else {
-        toast.success(
-          "Proje oluşturuldu, düzenleme sayfasına yönlendiriliyorsunuz..."
-        );
+        toast.success('Proje oluşturuldu, düzenleme sayfasına yönlendiriliyorsunuz...');
         setIsOpen(false);
       }
     });
@@ -49,15 +47,9 @@ export function CreateProjectButton() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Yeni Proje Oluştur</DialogTitle>
-          <DialogDescription>
-            Projenize akılda kalıcı bir başlık verin.
-          </DialogDescription>
+          <DialogDescription>Projenize akılda kalıcı bir başlık verin.</DialogDescription>
         </DialogHeader>
-        <form
-          ref={formRef}
-          action={handleCreateProject}
-          className="space-y-4 py-2"
-        >
+        <form ref={formRef} action={handleCreateProject} className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="new-project-title">Proje Başlığı</Label>
             <Input
@@ -75,7 +67,7 @@ export function CreateProjectButton() {
               </Button>
             </DialogClose>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Oluşturuluyor..." : "Oluştur & Düzenle"}
+              {isPending ? 'Oluşturuluyor...' : 'Oluştur & Düzenle'}
             </Button>
           </DialogFooter>
         </form>

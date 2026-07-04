@@ -1,50 +1,33 @@
-import { createClient } from "@/utils/supabase/server";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Award,
-  MessageSquare,
-  Heart,
-  Image as ImageIcon,
-  Mail,
-  UserPlus,
-} from "lucide-react";
-import { startConversation } from "@/app/actions";
-import { FollowButton } from "@/components/FollowButton"; // Yeni bileşeni import ediyoruz
-import { BadgesShowcase } from "@/components/BadgesShowcase"; // Yeni bileşeni import ediyoruz
-import { cn } from "@/lib/utils";
-
+import { createClient } from '@/utils/supabase/server';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Award, MessageSquare, Heart, Image as ImageIcon, Mail, UserPlus } from 'lucide-react';
+import { startConversation } from '@/app/actions';
+import { FollowButton } from '@/components/FollowButton'; // Yeni bileşeni import ediyoruz
+import { BadgesShowcase } from '@/components/BadgesShowcase'; // Yeni bileşeni import ediyoruz
+import { cn } from '@/lib/utils';
 
 // Seviyelere göre özel renkler
 const tierColors = {
-  Newcomer: "bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
-  Contributor:
-    "bg-blue-200 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
-  Expert:
-    "bg-purple-200 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300",
-  Mentor:
-    "bg-amber-200 text-amber-800 dark:bg-amber-700/50 dark:text-amber-300",
+  Newcomer: 'bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
+  Contributor: 'bg-blue-200 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+  Expert: 'bg-purple-200 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
+  Mentor: 'bg-amber-200 text-amber-800 dark:bg-amber-700/50 dark:text-amber-300',
 };
 // Veri çeken fonksiyonu, takipçi sayılarını da alacak şekilde güncelliyoruz
 async function getProfileData(username, currentUserId) {
   const supabase = createClient();
 
   const { data: profile, error: profileError } = await supabase
-    .from("profiles")
+    .from('profiles')
     // DEĞİŞİKLİK: follower_count ve following_count'u da çekiyoruz
-    .select("*, follower_count, following_count")
-    .eq("username", username)
+    .select('*, follower_count, following_count')
+    .eq('username', username)
     .single();
 
   if (profileError || !profile) notFound();
@@ -52,15 +35,15 @@ async function getProfileData(username, currentUserId) {
   let isFollowing = false;
   if (currentUserId && currentUserId !== profile.id) {
     const { data: followRecord } = await supabase
-      .from("followers")
-      .select("*")
-      .eq("follower_id", currentUserId)
-      .eq("following_id", profile.id)
+      .from('followers')
+      .select('*')
+      .eq('follower_id', currentUserId)
+      .eq('following_id', profile.id)
       .maybeSingle();
     isFollowing = !!followRecord;
   }
 
-  const { data: activityData } = await supabase.rpc("get_public_profile_data", {
+  const { data: activityData } = await supabase.rpc('get_public_profile_data', {
     p_username: username,
   });
 
@@ -77,8 +60,7 @@ export async function generateMetadata({ params }) {
   return {
     title: `${profile.username}'in Profili | AI Keşif Platformu`,
     description:
-      profile.bio ||
-      `${profile.username} kullanıcısının AI Keşif Platformu'ndaki katkıları.`,
+      profile.bio || `${profile.username} kullanıcısının AI Keşif Platformu'ndaki katkıları.`,
   };
 }
 
@@ -90,11 +72,10 @@ export default async function UserProfilePage({ params }) {
 
   const profile = await getProfileData(params.username, currentUser?.id);
 
-  const memberSince = new Date(profile.created_at).toLocaleDateString("tr-TR", {
-  year: "numeric",
-  month: "long",
-});
-
+  const memberSince = new Date(profile.created_at).toLocaleDateString('tr-TR', {
+    year: 'numeric',
+    month: 'long',
+  });
 
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4">
@@ -110,42 +91,23 @@ export default async function UserProfilePage({ params }) {
           <h1 className="text-4xl font-bold">{profile.username}</h1>
           {/* YENİ: Kullanıcı Seviyesi Rozeti */}
           {profile.tier && (
-            <Badge
-              className={cn(
-                "text-sm",
-                tierColors[profile.tier] || "bg-secondary"
-              )}
-            >
+            <Badge className={cn('text-sm', tierColors[profile.tier] || 'bg-secondary')}>
               {profile.tier}
             </Badge>
           )}
           <p className="text-muted-foreground mt-2">{profile.bio}</p>
           <div className="flex items-center justify-center sm:justify-start gap-4 mt-4 text-sm text-muted-foreground">
             {/* YENİ: Tıklanabilir Takipçi/Takip edilen sayaçları */}
-            <Link
-              href={`/u/${profile.username}/followers`}
-              className="hover:text-primary"
-            >
-              <span className="font-bold text-foreground">
-                {profile.follower_count}
-              </span>{" "}
-              Takipçi
+            <Link href={`/u/${profile.username}/followers`} className="hover:text-primary">
+              <span className="font-bold text-foreground">{profile.follower_count}</span> Takipçi
             </Link>
-            <Link
-              href={`/u/${profile.username}/following`}
-              className="hover:text-primary"
-            >
-              <span className="font-bold text-foreground">
-                {profile.following_count}
-              </span>{" "}
-              Takip
+            <Link href={`/u/${profile.username}/following`} className="hover:text-primary">
+              <span className="font-bold text-foreground">{profile.following_count}</span> Takip
             </Link>
             <div className="flex items-center gap-1.5">
               <Award className="w-4 h-4 text-primary" />
-              <span className="font-bold text-foreground">
-                {profile.reputation_points}
-              </span>{" "}
-              itibar puanı
+              <span className="font-bold text-foreground">{profile.reputation_points}</span> itibar
+              puanı
             </div>
             <span>•</span>
             <span>{memberSince} tarihinden beri üye</span>
@@ -163,7 +125,7 @@ export default async function UserProfilePage({ params }) {
             />
             <form
               action={async () => {
-                "use server";
+                'use server';
                 await startConversation(profile.id);
               }}
             >
@@ -204,8 +166,7 @@ export default async function UserProfilePage({ params }) {
                     href={`/tool/${comment.tool_slug}`}
                     className="text-xs text-muted-foreground hover:text-primary"
                   >
-                    <span className="font-semibold">{comment.tool_name}</span>{" "}
-                    için yazdı.
+                    <span className="font-semibold">{comment.tool_name}</span> için yazdı.
                   </Link>
                 </div>
               ))}

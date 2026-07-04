@@ -1,18 +1,18 @@
-import { createClient } from "@supabase/supabase-js";
-import Link from "next/link";
-import { ArrowRight, Lightbulb } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { createClient } from '@supabase/supabase-js';
+import Link from 'next/link';
+import { ArrowRight, Lightbulb } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel";
+} from '@/components/ui/carousel';
 
 async function getSimilarTools(currentTool) {
-  const similarToolSelect = "id, name, slug, description, category_id";
+  const similarToolSelect = 'id, name, slug, description, category_id';
   const similarToolLimit = 6;
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -26,24 +26,24 @@ async function getSimilarTools(currentTool) {
   );
 
   let query = supabase
-    .from("tools")
+    .from('tools')
     .select(similarToolSelect)
-    .eq("is_approved", true)
-    .neq("id", currentTool.id)
+    .eq('is_approved', true)
+    .neq('id', currentTool.id)
     .limit(similarToolLimit);
 
   if (currentTool.category_id) {
-    query = query.eq("category_id", currentTool.category_id);
+    query = query.eq('category_id', currentTool.category_id);
   }
 
   let { data, error } = await query;
 
   if (!error && (!data || data.length === 0) && currentTool.category_id) {
     const fallback = await supabase
-      .from("tools")
+      .from('tools')
       .select(similarToolSelect)
-      .eq("is_approved", true)
-      .neq("id", currentTool.id)
+      .eq('is_approved', true)
+      .neq('id', currentTool.id)
       .limit(similarToolLimit);
 
     data = fallback.data;
@@ -51,7 +51,7 @@ async function getSimilarTools(currentTool) {
   }
 
   if (error) {
-    console.error("Benzer araçlar çekilirken hata:", error);
+    console.error('Benzer araçlar çekilirken hata:', error);
     return [];
   }
 
@@ -59,8 +59,8 @@ async function getSimilarTools(currentTool) {
     ...tool,
     reason:
       tool.category_id === currentTool.category_id
-        ? "Aynı kategoride benzer bir kullanım alanı sunuyor."
-        : "Keşif listenizi tamamlayabilecek alternatif bir yapay zeka aracı.",
+        ? 'Aynı kategoride benzer bir kullanım alanı sunuyor.'
+        : 'Keşif listenizi tamamlayabilecek alternatif bir yapay zeka aracı.',
   }));
 }
 
@@ -84,7 +84,7 @@ export async function SimilarTools({ currentTool }) {
       </div>
       <Carousel
         opts={{
-          align: "start",
+          align: 'start',
           loop: similarTools.length > 3,
         }}
         className="w-full"
@@ -106,12 +106,11 @@ export async function SimilarTools({ currentTool }) {
                   </CardHeader>
                   <CardContent className="flex flex-1 flex-col gap-3 p-4 pt-0 sm:p-5 sm:pt-0">
                     <p className="line-clamp-2 text-sm text-muted-foreground">
-                      {tool.description || "Bu araç, keşif listeniz için iyi bir alternatif olabilir."}
+                      {tool.description ||
+                        'Bu araç, keşif listeniz için iyi bir alternatif olabilir.'}
                     </p>
                     <p className="text-xs leading-5 text-muted-foreground">
-                      <span className="font-semibold text-foreground">
-                        Neden Benzer?
-                      </span>{" "}
+                      <span className="font-semibold text-foreground">Neden Benzer?</span>{' '}
                       {tool.reason}
                     </p>
                     <Button asChild variant="outline" size="sm" className="mt-auto w-full">

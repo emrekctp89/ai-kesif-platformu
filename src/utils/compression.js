@@ -30,9 +30,7 @@ export class CompressionManager {
     }
 
     try {
-      const serialized = typeof data === 'string'
-        ? data
-        : JSON.stringify(data);
+      const serialized = typeof data === 'string' ? data : JSON.stringify(data);
 
       const buffer = Buffer.from(serialized, 'utf-8');
 
@@ -124,9 +122,10 @@ export class CompressionManager {
    * Get compression statistics
    */
   getStats() {
-    const compressionRatio = this.stats.compressedSize > 0
-      ? ((this.stats.compressedSize / this.stats.originalSize) * 100).toFixed(2)
-      : 0;
+    const compressionRatio =
+      this.stats.compressedSize > 0
+        ? ((this.stats.compressedSize / this.stats.originalSize) * 100).toFixed(2)
+        : 0;
 
     const saved = this.stats.originalSize - this.stats.compressedSize;
 
@@ -188,14 +187,9 @@ export class Deduplicator {
    */
   hash(data) {
     const crypto = require('crypto');
-    const serialized = typeof data === 'string'
-      ? data
-      : JSON.stringify(data);
+    const serialized = typeof data === 'string' ? data : JSON.stringify(data);
 
-    return crypto
-      .createHash('md5')
-      .update(serialized)
-      .digest('hex');
+    return crypto.createHash('md5').update(serialized).digest('hex');
   }
 
   /**
@@ -239,11 +233,11 @@ export class JSONCompressor {
       return array;
     }
 
-    const unique = [...new Set(array.map(item =>
-      typeof item === 'object' ? JSON.stringify(item) : item
-    ))];
+    const unique = [
+      ...new Set(array.map((item) => (typeof item === 'object' ? JSON.stringify(item) : item))),
+    ];
 
-    return unique.map(item => {
+    return unique.map((item) => {
       try {
         return JSON.parse(item);
       } catch {

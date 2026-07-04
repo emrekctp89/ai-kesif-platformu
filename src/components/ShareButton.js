@@ -1,6 +1,6 @@
-import { ShareDialog } from "./ShareDialog";
-import { Button } from "./ui/button";
-import { Send } from "lucide-react";
+import { ShareDialog } from './ShareDialog';
+import { Button } from './ui/button';
+import { Send } from 'lucide-react';
 
 export function ShareButton({ content }) {
   return (

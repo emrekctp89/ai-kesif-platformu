@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function CommandHint() {
   const [isVisible, setIsVisible] = useState(false);
@@ -22,7 +22,7 @@ export function CommandHint() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
           className="fixed bottom-4 right-4 z-50"
         >
           <div className="flex items-center gap-2 rounded-lg border bg-card p-2 px-3 text-xs font-medium text-muted-foreground shadow-md">

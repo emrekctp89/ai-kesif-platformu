@@ -67,12 +67,7 @@ export const corsConfig = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 
   // Allowed headers
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-API-Key',
-    'X-Request-ID',
-  ],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Request-ID'],
 
   // Credentials
   credentials: true,
@@ -107,11 +102,9 @@ export function isOriginAllowed(origin) {
   }
 
   // Check wildcard patterns
-  return allowedOrigins.some(allowed => {
+  return allowedOrigins.some((allowed) => {
     if (allowed.includes('*')) {
-      const pattern = allowed
-        .replace(/\./g, '\\.')
-        .replace(/\*/g, '.*');
+      const pattern = allowed.replace(/\./g, '\\.').replace(/\*/g, '.*');
       return new RegExp(`^${pattern}$`).test(origin);
     }
     return false;

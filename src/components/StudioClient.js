@@ -1,35 +1,28 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Image as ImageIcon, Download, Share2 } from "lucide-react"; // Yeni ikonları import ediyoruz
-import Image from "next/image";
-import toast from "react-hot-toast";
-import { generateTextWithGemini, generateImageWithImagen } from "@/app/actions";
+import * as React from 'react';
+import { useTransition } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Sparkles, Image as ImageIcon, Download, Share2 } from 'lucide-react'; // Yeni ikonları import ediyoruz
+import Image from 'next/image';
+import toast from 'react-hot-toast';
+import { generateTextWithGemini, generateImageWithImagen } from '@/app/actions';
 import { AiMentorTab } from './AiMentorTab'; // Yeni bileşeni import ediyoruz
-
 
 // Metin Üretici Sekmesi (Değişiklik yok)
 function TextGeneratorTab() {
   const [isPending, startTransition] = useTransition();
-  const [result, setResult] = React.useState("");
+  const [result, setResult] = React.useState('');
   const formRef = React.useRef(null);
 
   const handleSubmit = (formData) => {
-    const userPrompt = formData.get("prompt");
+    const userPrompt = formData.get('prompt');
     if (!userPrompt) {
-      toast.error("Lütfen bir istek girin.");
+      toast.error('Lütfen bir istek girin.');
       return;
     }
     startTransition(async () => {
@@ -37,7 +30,7 @@ function TextGeneratorTab() {
       if (result.success) {
         setResult(result.text);
       } else {
-        toast.error(result.error || "Metin üretilirken bir hata oluştu.");
+        toast.error(result.error || 'Metin üretilirken bir hata oluştu.');
       }
     });
   };
@@ -47,8 +40,8 @@ function TextGeneratorTab() {
       <CardHeader>
         <CardTitle>Metin Üretici (Gemini)</CardTitle>
         <CardDescription>
-          Bir fikir verin, yapay zeka sizin için blog yazısı, sosyal medya
-          gönderisi veya bir şiir yazsın.
+          Bir fikir verin, yapay zeka sizin için blog yazısı, sosyal medya gönderisi veya bir şiir
+          yazsın.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -65,7 +58,7 @@ function TextGeneratorTab() {
           </div>
           <Button type="submit" className="w-full" disabled={isPending}>
             <Sparkles className="mr-2 h-4 w-4" />
-            {isPending ? "Üretiyorum..." : "Metni Üret"}
+            {isPending ? 'Üretiyorum...' : 'Metni Üret'}
           </Button>
         </form>
         {result && (
@@ -81,15 +74,15 @@ function TextGeneratorTab() {
 // Görsel Üretici Sekmesi
 function ImageGeneratorTab() {
   const [isPending, startTransition] = useTransition();
-  const [resultUrl, setResultUrl] = React.useState("");
-  const [prompt, setPrompt] = React.useState("");
+  const [resultUrl, setResultUrl] = React.useState('');
+  const [prompt, setPrompt] = React.useState('');
 
   const handleSubmit = (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
-    const userPrompt = formData.get("prompt");
+    const userPrompt = formData.get('prompt');
     if (!userPrompt) {
-      toast.error("Lütfen bir görsel tarifi girin.");
+      toast.error('Lütfen bir görsel tarifi girin.');
       return;
     }
     setPrompt(userPrompt);
@@ -98,7 +91,7 @@ function ImageGeneratorTab() {
       if (result.success) {
         setResultUrl(result.url);
       } else {
-        toast.error(result.error || "Görsel üretilirken bir hata oluştu.");
+        toast.error(result.error || 'Görsel üretilirken bir hata oluştu.');
       }
     });
   };
@@ -110,7 +103,7 @@ function ImageGeneratorTab() {
         // data: URL'ini bir dosyaya dönüştürüyoruz
         const response = await fetch(resultUrl);
         const blob = await response.blob();
-        const file = new File([blob], "ai-eser.png", { type: blob.type });
+        const file = new File([blob], 'ai-eser.png', { type: blob.type });
 
         await navigator.share({
           title: `AI Keşif Platformu ile Yaratıldı`,
@@ -118,11 +111,11 @@ function ImageGeneratorTab() {
           files: [file],
         });
       } catch (error) {
-        console.error("Paylaşma hatası:", error);
-        toast.error("Görsel paylaşılamadı.");
+        console.error('Paylaşma hatası:', error);
+        toast.error('Görsel paylaşılamadı.');
       }
     } else {
-      toast.error("Tarayıcınız bu paylaşma özelliğini desteklemiyor.");
+      toast.error('Tarayıcınız bu paylaşma özelliğini desteklemiyor.');
     }
   };
 
@@ -131,8 +124,7 @@ function ImageGeneratorTab() {
       <CardHeader>
         <CardTitle>Görsel Üretici (Imagen)</CardTitle>
         <CardDescription>
-          Hayalinizdeki sahneyi veya konsepti tarif edin, yapay zeka sizin için
-          bir görsel yaratsın.
+          Hayalinizdeki sahneyi veya konsepti tarif edin, yapay zeka sizin için bir görsel yaratsın.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -149,33 +141,18 @@ function ImageGeneratorTab() {
           </div>
           <Button type="submit" className="w-full" disabled={isPending}>
             <ImageIcon className="mr-2 h-4 w-4" />
-            {isPending ? "Yaratıyorum..." : "Görseli Yarat"}
+            {isPending ? 'Yaratıyorum...' : 'Görseli Yarat'}
           </Button>
         </form>
         <div className="aspect-square relative mt-4 rounded-lg overflow-hidden border bg-muted flex items-center justify-center">
-          {isPending && !resultUrl && (
-            <p className="text-muted-foreground">Yükleniyor...</p>
-          )}
+          {isPending && !resultUrl && <p className="text-muted-foreground">Yükleniyor...</p>}
           {resultUrl && (
             <>
-              <Image
-                src={resultUrl}
-                alt="Üretilen görsel"
-                fill
-                className="object-cover"
-              />
+              <Image src={resultUrl} alt="Üretilen görsel" fill className="object-cover" />
               {/* DEĞİŞİKLİK: İndirme ve Paylaşma Butonları */}
               <div className="absolute top-2 right-2 flex items-center gap-2">
-                <Button
-                  asChild
-                  variant="secondary"
-                  size="icon"
-                  title="Görseli İndir"
-                >
-                  <a
-                    href={resultUrl}
-                    download={`ai-eser-${prompt.slice(0, 10)}.png`}
-                  >
+                <Button asChild variant="secondary" size="icon" title="Görseli İndir">
+                  <a href={resultUrl} download={`ai-eser-${prompt.slice(0, 10)}.png`}>
                     <Download className="h-4 w-4" />
                   </a>
                 </Button>
@@ -215,5 +192,5 @@ export function StudioClient() {
         <ImageGeneratorTab />
       </TabsContent>
     </Tabs>
-  )
+  );
 }

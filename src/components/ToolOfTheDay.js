@@ -1,21 +1,21 @@
-import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
-import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Star, Zap } from "lucide-react"; // Zap ikonu "Günün Aracı" temasını güçlendirir
-import ToolIcon from "@/components/ToolIcon";
-import { TrackedExternalLink } from "@/components/TrackedExternalLink";
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
+import Link from 'next/link';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Star, Zap } from 'lucide-react'; // Zap ikonu "Günün Aracı" temasını güçlendirir
+import ToolIcon from '@/components/ToolIcon';
+import { TrackedExternalLink } from '@/components/TrackedExternalLink';
 
 // Veritabanındaki RPC fonksiyonunu çağıran fonksiyon
 async function getToolOfTheDayData() {
   const supabase = createClient(await cookies());
   // RPC ile özel fonksiyonumuzu çağırıyoruz ve tek bir sonuç bekliyoruz.
-  const { data, error } = await supabase.rpc("get_tool_of_the_day").single();
+  const { data, error } = await supabase.rpc('get_tool_of_the_day').single();
 
   if (error) {
-    console.error("Günün aracı çekilirken hata:", error);
+    console.error('Günün aracı çekilirken hata:', error);
     return null;
   }
   return data;
@@ -43,16 +43,22 @@ export async function ToolOfTheDay() {
               <ToolIcon name={tool.name} link={tool.link} className="h-8 w-8 sm:h-9 sm:w-9" />
               {tool.name}
             </h2>
-            <p className="text-sm leading-6 text-muted-foreground sm:text-base md:text-lg">{tool.description}</p>
+            <p className="text-sm leading-6 text-muted-foreground sm:text-base md:text-lg">
+              {tool.description}
+            </p>
             <div className="flex items-center gap-4 pt-2">
-              <Button asChild className="w-full bg-green-600 hover:bg-green-700 sm:w-auto" size="lg">
+              <Button
+                asChild
+                className="w-full bg-green-600 hover:bg-green-700 sm:w-auto"
+                size="lg"
+              >
                 <TrackedExternalLink
                   href={tool.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   eventName="official_site_click"
                   eventParameters={{
-                    source: "tool_of_the_day",
+                    source: 'tool_of_the_day',
                     tool_slug: tool.slug,
                     category: tool.category_slug,
                   }}
@@ -60,7 +66,6 @@ export async function ToolOfTheDay() {
                   İncele & Keşfet
                 </TrackedExternalLink>
               </Button>
-              
             </div>
           </div>
           {/* Sağ Taraf: Etiketler ve Kategori */}
@@ -73,9 +78,7 @@ export async function ToolOfTheDay() {
 
               {tool.tags && tool.tags.length > 0 && (
                 <>
-                  <p className="font-semibold mt-6 mb-3 text-foreground">
-                    Etiketler:
-                  </p>
+                  <p className="font-semibold mt-6 mb-3 text-foreground">Etiketler:</p>
                   <div className="flex flex-wrap gap-2 justify-end">
                     {tool.tags.map((tag) => (
                       <Badge key={tag.id} variant="outline">

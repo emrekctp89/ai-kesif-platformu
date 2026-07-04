@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import { addComment } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import * as React from 'react';
+import Link from 'next/link';
+import { addComment } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function CommentsUI({ user, comments, toolId, toolSlug }) {
   const formRef = React.useRef(null);
@@ -22,19 +22,13 @@ export function CommentsUI({ user, comments, toolId, toolSlug }) {
       <h2 className="text-2xl font-bold">Yorumlar ({comments?.length || 0})</h2>
 
       {user && (
-        <form
-          ref={formRef}
-          action={handleFormSubmit}
-          className="flex flex-col gap-4"
-        >
+        <form ref={formRef} action={handleFormSubmit} className="flex flex-col gap-4">
           <input type="hidden" name="toolId" value={toolId} />
           <input type="hidden" name="toolSlug" value={toolSlug} />
           <div className="flex items-start gap-4">
             <Avatar>
               <AvatarImage src={user.user_metadata?.avatar_url} />
-              <AvatarFallback>
-                {user.email.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
+              <AvatarFallback>{user.email.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <Textarea
               name="content"
@@ -62,8 +56,7 @@ export function CommentsUI({ user, comments, toolId, toolSlug }) {
             const userProfile = comment.profiles;
             if (!userProfile) return null;
 
-            const fallback =
-              userProfile.email?.substring(0, 2).toUpperCase() || "??";
+            const fallback = userProfile.email?.substring(0, 2).toUpperCase() || '??';
             const profileLink = `/u/${userProfile.username}`;
 
             return (
@@ -83,12 +76,10 @@ export function CommentsUI({ user, comments, toolId, toolSlug }) {
                       {userProfile.username || userProfile.email}
                     </Link>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(comment.created_at).toLocaleDateString("tr-TR")}
+                      {new Date(comment.created_at).toLocaleDateString('tr-TR')}
                     </p>
                   </div>
-                  <p className="text-foreground mt-1 whitespace-pre-wrap">
-                    {comment.content}
-                  </p>
+                  <p className="text-foreground mt-1 whitespace-pre-wrap">{comment.content}</p>
                 </div>
               </div>
             );

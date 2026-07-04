@@ -1,15 +1,9 @@
-import { createClient } from "@/utils/supabase/server";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Users, Star } from "lucide-react";
+import { createClient } from '@/utils/supabase/server';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Users, Star } from 'lucide-react';
 
 // DEĞİŞİKLİK: Veri çekme mantığını daha sağlam hale getiriyoruz.
 async function getCollectionDetails(slug) {
@@ -17,7 +11,7 @@ async function getCollectionDetails(slug) {
 
   // 1. ADIM: Koleksiyonun ana bilgilerini ve içindeki araç-not ilişkilerini çek.
   const { data: collection, error: collectionError } = await supabase
-    .from("collections")
+    .from('collections')
     .select(
       `
             title,
@@ -26,8 +20,8 @@ async function getCollectionDetails(slug) {
             collection_tools ( tool_id, notes )
         `
     )
-    .eq("slug", slug)
-    .eq("is_public", true)
+    .eq('slug', slug)
+    .eq('is_public', true)
     .single();
 
   if (collectionError || !collection) {
@@ -44,23 +38,21 @@ async function getCollectionDetails(slug) {
 
   // 2. ADIM: Topladığımız ID'leri kullanarak, o araçların tüm detaylarını çek.
   const { data: tools, error: toolsError } = await supabase
-    .from("tools_with_ratings")
-    .select("*")
-    .in("id", toolIds);
+    .from('tools_with_ratings')
+    .select('*')
+    .in('id', toolIds);
 
   if (toolsError) {
-    console.error("Koleksiyon araçları çekilirken hata:", toolsError);
+    console.error('Koleksiyon araçları çekilirken hata:', toolsError);
     return { collection, tools: [] };
   }
 
   // Her araca, kullanıcı notunu da ekleyerek veriyi birleştiriyoruz.
   const toolsWithNotes = tools.map((tool) => {
-    const collectionInfo = collection.collection_tools.find(
-      (item) => item.tool_id === tool.id
-    );
+    const collectionInfo = collection.collection_tools.find((item) => item.tool_id === tool.id);
     return {
       ...tool,
-      user_notes: collectionInfo?.notes || "",
+      user_notes: collectionInfo?.notes || '',
     };
   });
 
@@ -102,11 +94,9 @@ export default async function CollectionDetailPage({ params }) {
           <Card key={tool.id} className="overflow-hidden">
             <div className="grid md:grid-cols-3">
               <div className="md:col-span-1 bg-muted/50 p-6">
-                <h3 className="font-semibold text-lg mb-2">
-                  Küratörün Notu #{index + 1}
-                </h3>
+                <h3 className="font-semibold text-lg mb-2">Küratörün Notu #{index + 1}</h3>
                 <p className="text-sm text-muted-foreground italic">
-                  {tool.user_notes || "Bu araç için özel bir not eklenmemiş."}
+                  {tool.user_notes || 'Bu araç için özel bir not eklenmemiş.'}
                 </p>
               </div>
 
@@ -133,9 +123,7 @@ export default async function CollectionDetailPage({ params }) {
                     ))}
                   </div>
                 )}
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {tool.description}
-                </p>
+                <p className="text-sm text-muted-foreground line-clamp-2">{tool.description}</p>
               </div>
             </div>
           </Card>

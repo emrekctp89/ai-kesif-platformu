@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React from "react";
-import Link from "next/link";
-import { ArrowLeft, Users, Wrench, AlertTriangle, TrendingUp } from "lucide-react";
+import React from 'react';
+import Link from 'next/link';
+import { ArrowLeft, Users, Wrench, AlertTriangle, TrendingUp } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -11,9 +11,9 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export function AnalyticsDashboardClient({ data }) {
   const { totalUsers, totalTools, totalReports, chartData } = data;
@@ -60,7 +60,9 @@ export function AnalyticsDashboardClient({ data }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalReports}</div>
-            <p className="text-xs text-muted-foreground">Kullanıcılar tarafından bildirilen linkler</p>
+            <p className="text-xs text-muted-foreground">
+              Kullanıcılar tarafından bildirilen linkler
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -70,7 +72,9 @@ export function AnalyticsDashboardClient({ data }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">Vercel</div>
-            <p className="text-xs text-muted-foreground">Trafik Vercel Analytics üzerinden takip ediliyor</p>
+            <p className="text-xs text-muted-foreground">
+              Trafik Vercel Analytics üzerinden takip ediliyor
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -84,7 +88,11 @@ export function AnalyticsDashboardClient({ data }) {
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground)/0.2)" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="hsl(var(--muted-foreground)/0.2)"
+                  />
                   <XAxis
                     dataKey="date"
                     stroke="hsl(var(--muted-foreground))"
@@ -101,9 +109,9 @@ export function AnalyticsDashboardClient({ data }) {
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "var(--radius)",
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: 'var(--radius)',
                     }}
                   />
                   <Line
@@ -112,7 +120,7 @@ export function AnalyticsDashboardClient({ data }) {
                     name="Eklenen Araç"
                     stroke="hsl(var(--primary))"
                     strokeWidth={2}
-                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 2 }}
+                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2 }}
                     activeDot={{ r: 6 }}
                   />
                 </LineChart>

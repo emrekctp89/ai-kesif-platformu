@@ -1,56 +1,56 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useState, useMemo, useTransition } from "react";
-import { updatePost } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import toast from "react-hot-toast";
-import dynamic from "next/dynamic";
+import * as React from 'react';
+import { useState, useMemo, useTransition } from 'react';
+import { updatePost } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import toast from 'react-hot-toast';
+import dynamic from 'next/dynamic';
 
 // Editörü sadece istemci tarafında yüklüyoruz
-const SimpleMDE = dynamic(() => import("react-simplemde-editor"), {
+const SimpleMDE = dynamic(() => import('react-simplemde-editor'), {
   ssr: false,
 });
-import "easymde/dist/easymde.min.css";
+import 'easymde/dist/easymde.min.css';
 
 export function BlogEditor({ post }) {
-  const [content, setContent] = useState(post.content || "");
+  const [content, setContent] = useState(post.content || '');
   const [isPending, startTransition] = useTransition();
 
   const editorOptions = useMemo(
     () => ({
       spellChecker: false,
-      placeholder: "Yazınızı buraya yazmaya başlayın...",
+      placeholder: 'Yazınızı buraya yazmaya başlayın...',
       toolbar: [
-        "bold",
-        "italic",
-        "heading",
-        "|",
-        "quote",
-        "unordered-list",
-        "ordered-list",
-        "|",
-        "link",
-        "image",
-        "|",
-        "preview",
-        "guide",
+        'bold',
+        'italic',
+        'heading',
+        '|',
+        'quote',
+        'unordered-list',
+        'ordered-list',
+        '|',
+        'link',
+        'image',
+        '|',
+        'preview',
+        'guide',
       ],
     }),
     []
   );
 
   const handleFormSubmit = (formData) => {
-    formData.set("content", content);
+    formData.set('content', content);
     startTransition(async () => {
       const result = await updatePost(formData);
       if (result?.error) {
         toast.error(result.error);
       } else {
-        toast.success("Blog yazısı başarıyla güncellendi.");
+        toast.success('Blog yazısı başarıyla güncellendi.');
       }
     });
   };
@@ -84,11 +84,7 @@ export function BlogEditor({ post }) {
       </div>
       <div className="space-y-2">
         <Label>İçerik</Label>
-        <SimpleMDE
-          options={editorOptions}
-          value={content}
-          onChange={setContent}
-        />
+        <SimpleMDE options={editorOptions} value={content} onChange={setContent} />
       </div>
 
       <div className="flex justify-end gap-2 pt-6 border-t">
@@ -98,7 +94,7 @@ export function BlogEditor({ post }) {
           </a>
         </Button>
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
+          {isPending ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
         </Button>
       </div>
     </form>

@@ -5,22 +5,18 @@
  * istemci bileşenidir.
  * ---------------------------------------------------
  */
-"use client";
+'use client';
 
-import * as React from "react";
-import Image from "next/image";
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { submitLaunch } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import * as React from 'react';
+import Image from 'next/image';
+import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { submitLaunch } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -28,10 +24,10 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Check, ChevronsUpDown, Rocket } from "lucide-react";
-import { cn } from "@/lib/utils";
-import toast from "react-hot-toast";
+} from '@/components/ui/command';
+import { Check, ChevronsUpDown, Rocket } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import toast from 'react-hot-toast';
 
 export function LaunchForm({ userTools }) {
   const router = useRouter();
@@ -48,10 +44,10 @@ export function LaunchForm({ userTools }) {
 
   const handleFormAction = (formData) => {
     if (!selectedToolId) {
-      toast.error("Lütfen lansmanını yapacağınız aracı seçin.");
+      toast.error('Lütfen lansmanını yapacağınız aracı seçin.');
       return;
     }
-    formData.append("toolId", selectedToolId);
+    formData.append('toolId', selectedToolId);
 
     startTransition(async () => {
       const result = await submitLaunch(formData);
@@ -59,7 +55,7 @@ export function LaunchForm({ userTools }) {
         toast.error(result.error);
       } else {
         toast.success(result.success);
-        router.push("/launchpad");
+        router.push('/launchpad');
       }
     });
   };
@@ -79,7 +75,7 @@ export function LaunchForm({ userTools }) {
             >
               {selectedToolId
                 ? userTools.find((t) => t.id === selectedToolId)?.name
-                : "Bir araç seçin..."}
+                : 'Bir araç seçin...'}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -87,9 +83,7 @@ export function LaunchForm({ userTools }) {
             <Command>
               <CommandInput placeholder="Araç ara..." />
               <CommandList>
-                <CommandEmpty>
-                  Lansmanı yapılabilecek aracınız bulunmuyor.
-                </CommandEmpty>
+                <CommandEmpty>Lansmanı yapılabilecek aracınız bulunmuyor.</CommandEmpty>
                 <CommandGroup>
                   {userTools.map((tool) => (
                     <CommandItem
@@ -99,10 +93,8 @@ export function LaunchForm({ userTools }) {
                     >
                       <Check
                         className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedToolId === tool.id
-                            ? "opacity-100"
-                            : "opacity-0"
+                          'mr-2 h-4 w-4',
+                          selectedToolId === tool.id ? 'opacity-100' : 'opacity-0'
                         )}
                       />
                       {tool.name}
@@ -184,7 +176,7 @@ export function LaunchForm({ userTools }) {
       <div className="flex justify-end pt-6 border-t">
         <Button type="submit" size="lg" disabled={isPending}>
           <Rocket className="mr-2 h-5 w-5" />
-          {isPending ? "Gönderiliyor..." : "Lansmanı Onaya Gönder"}
+          {isPending ? 'Gönderiliyor...' : 'Lansmanı Onaya Gönder'}
         </Button>
       </div>
     </form>

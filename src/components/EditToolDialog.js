@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useState } from "react";
+import * as React from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,12 +11,8 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+} from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -24,51 +20,30 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
-import { updateTool, assignTagsToTool } from "@/app/actions";
-import toast from "react-hot-toast";
-import {
-  AlertTriangle,
-  Check,
-  CheckCircle2,
-  ChevronsUpDown,
-  LoaderCircle,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { ToolVariantManager } from "./ToolVariantManager";
-import { useRouter } from "next/navigation";
+} from '@/components/ui/command';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
+import { updateTool, assignTagsToTool } from '@/app/actions';
+import toast from 'react-hot-toast';
+import { AlertTriangle, Check, CheckCircle2, ChevronsUpDown, LoaderCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ToolVariantManager } from './ToolVariantManager';
+import { useRouter } from 'next/navigation';
 
 // Fiyatlandırma ve Platform seçeneklerini tanımlıyoruz
-const pricingModels = [
-  "Ücretsiz",
-  "Freemium",
-  "Abonelik",
-  "Tek Seferlik Ödeme",
-];
-const platformOptions = [
-  "Web",
-  "iOS",
-  "Android",
-  "Windows",
-  "macOS",
-  "Linux",
-  "Chrome Uzantısı",
-];
-const tierOptions = ["Normal", "Pro", "Sponsorlu"]; // YENİ: Seviye seçenekleri
+const pricingModels = ['Ücretsiz', 'Freemium', 'Abonelik', 'Tek Seferlik Ödeme'];
+const platformOptions = ['Web', 'iOS', 'Android', 'Windows', 'macOS', 'Linux', 'Chrome Uzantısı'];
+const tierOptions = ['Normal', 'Pro', 'Sponsorlu']; // YENİ: Seviye seçenekleri
 
 // Çoklu Etiket Seçim Bileşeni (Değişiklik yok)
 function MultiSelectTags({ allTags, initialSelectedTags }) {
   const [open, setOpen] = useState(false);
-  const [selectedTags, setSelectedTags] = useState(
-    new Set(initialSelectedTags.map((t) => t.id))
-  );
+  const [selectedTags, setSelectedTags] = useState(new Set(initialSelectedTags.map((t) => t.id)));
   const selectedTagObjects = allTags.filter((tag) => selectedTags.has(tag.id));
   return (
     <div className="col-span-3">
@@ -90,7 +65,7 @@ function MultiSelectTags({ allTags, initialSelectedTags }) {
                       {tag.name}
                     </Badge>
                   ))
-                : "Etiket seç..."}
+                : 'Etiket seç...'}
             </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -117,8 +92,8 @@ function MultiSelectTags({ allTags, initialSelectedTags }) {
                   >
                     <Check
                       className={cn(
-                        "mr-2 h-4 w-4",
-                        selectedTags.has(tag.id) ? "opacity-100" : "opacity-0"
+                        'mr-2 h-4 w-4',
+                        selectedTags.has(tag.id) ? 'opacity-100' : 'opacity-0'
                       )}
                     />
                     {tag.name}
@@ -138,28 +113,26 @@ export function EditToolDialog({ tool, categories, allTags }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [name, setName] = useState(tool.name || "");
-  const [link, setLink] = useState(tool.link || "");
-  const [description, setDescription] = useState(tool.description || "");
-  const [pricingModel, setPricingModel] = useState(tool.pricing_model || "");
-  const [selectedPlatforms, setSelectedPlatforms] = useState(
-    new Set(tool.platforms || [])
-  );
+  const [name, setName] = useState(tool.name || '');
+  const [link, setLink] = useState(tool.link || '');
+  const [description, setDescription] = useState(tool.description || '');
+  const [pricingModel, setPricingModel] = useState(tool.pricing_model || '');
+  const [selectedPlatforms, setSelectedPlatforms] = useState(new Set(tool.platforms || []));
 
   const parsedLink = React.useMemo(() => {
     try {
       const url = new URL(link);
-      return ["http:", "https:"].includes(url.protocol);
+      return ['http:', 'https:'].includes(url.protocol);
     } catch {
       return false;
     }
   }, [link]);
   const qualityChecks = [
-    { label: "İsim hazır", passed: name.trim().length >= 2 },
-    { label: "Bağlantı geçerli", passed: parsedLink },
-    { label: "Açıklama yeterli", passed: description.trim().length >= 80 },
-    { label: "Fiyat bilgisi var", passed: Boolean(pricingModel) },
-    { label: "Platform seçildi", passed: selectedPlatforms.size > 0 },
+    { label: 'İsim hazır', passed: name.trim().length >= 2 },
+    { label: 'Bağlantı geçerli', passed: parsedLink },
+    { label: 'Açıklama yeterli', passed: description.trim().length >= 80 },
+    { label: 'Fiyat bilgisi var', passed: Boolean(pricingModel) },
+    { label: 'Platform seçildi', passed: selectedPlatforms.size > 0 },
   ];
   const passedCheckCount = qualityChecks.filter((check) => check.passed).length;
   const qualityProgress = (passedCheckCount / qualityChecks.length) * 100;
@@ -168,10 +141,10 @@ export function EditToolDialog({ tool, categories, allTags }) {
   const handleOpenChange = (open) => {
     setIsOpen(open);
     if (open) {
-      setName(tool.name || "");
-      setLink(tool.link || "");
-      setDescription(tool.description || "");
-      setPricingModel(tool.pricing_model || "");
+      setName(tool.name || '');
+      setLink(tool.link || '');
+      setDescription(tool.description || '');
+      setPricingModel(tool.pricing_model || '');
       setSelectedPlatforms(new Set(tool.platforms || []));
     }
   };
@@ -190,7 +163,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
         return;
       }
 
-      toast.success("Araç ve etiketleri başarıyla güncellendi.");
+      toast.success('Araç ve etiketleri başarıyla güncellendi.');
       setIsOpen(false);
       router.refresh();
     } finally {
@@ -217,7 +190,10 @@ export function EditToolDialog({ tool, categories, allTags }) {
           className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-4"
         >
           <input type="hidden" name="toolId" value={tool.id} />
-          <section className="rounded-lg border bg-muted/30 p-3" aria-label="Veri kalitesi kontrolü">
+          <section
+            className="rounded-lg border bg-muted/30 p-3"
+            aria-label="Veri kalitesi kontrolü"
+          >
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold">
@@ -227,7 +203,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
                   Zorunlu alanlar geçerli olduğunda kaydedebilirsin.
                 </p>
               </div>
-              <Badge variant={passedCheckCount === qualityChecks.length ? "default" : "secondary"}>
+              <Badge variant={passedCheckCount === qualityChecks.length ? 'default' : 'secondary'}>
                 %{Math.round(qualityProgress)}
               </Badge>
             </div>
@@ -237,10 +213,10 @@ export function EditToolDialog({ tool, categories, allTags }) {
                 <span
                   key={check.label}
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs",
+                    'inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs',
                     check.passed
-                      ? "border-emerald-500/30 text-emerald-700 dark:text-emerald-300"
-                      : "border-amber-500/30 text-amber-700 dark:text-amber-300"
+                      ? 'border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                      : 'border-amber-500/30 text-amber-700 dark:text-amber-300'
                   )}
                 >
                   {check.passed ? (
@@ -278,7 +254,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
                 name="link"
                 value={link}
                 onChange={(event) => setLink(event.target.value)}
-                className={cn(!parsedLink && link && "border-destructive")}
+                className={cn(!parsedLink && link && 'border-destructive')}
                 maxLength={2048}
                 aria-invalid={Boolean(link) && !parsedLink}
                 required
@@ -306,8 +282,8 @@ export function EditToolDialog({ tool, categories, allTags }) {
               <div className="mt-1 flex justify-between gap-3 text-xs text-muted-foreground">
                 <span>
                   {description.trim().length < 80
-                    ? "Kaliteli bir açıklama için en az 80 karakter önerilir."
-                    : "Açıklama uzunluğu uygun."}
+                    ? 'Kaliteli bir açıklama için en az 80 karakter önerilir.'
+                    : 'Açıklama uzunluğu uygun.'}
                 </span>
                 <span>{description.length}/1200</span>
               </div>
@@ -371,10 +347,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
                       })
                     }
                   />
-                  <Label
-                    htmlFor={`platform-${platform}`}
-                    className="text-sm font-normal"
-                  >
+                  <Label htmlFor={`platform-${platform}`} className="text-sm font-normal">
                     {platform}
                   </Label>
                 </div>
@@ -387,9 +360,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
             </Label>
             <MultiSelectTags
               allTags={allTags}
-              initialSelectedTags={(tool.tool_tags || [])
-                .map((tt) => tt.tags)
-                .filter(Boolean)}
+              initialSelectedTags={(tool.tool_tags || []).map((tt) => tt.tags).filter(Boolean)}
             />
           </div>
           {/* YENİ: Araç Seviyesi */}
@@ -400,7 +371,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
             <select
               name="tier"
               id="tier"
-              defaultValue={tool.tier || "Normal"}
+              defaultValue={tool.tier || 'Normal'}
               required
               className="col-span-3 mt-1 block w-full pl-3 pr-10 py-2.5 text-base border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
             >
@@ -423,14 +394,11 @@ export function EditToolDialog({ tool, categories, allTags }) {
             <Button type="submit" disabled={!canSave}>
               {isSaving ? (
                 <>
-                  <LoaderCircle
-                    aria-hidden="true"
-                    className="mr-2 h-4 w-4 animate-spin"
-                  />
+                  <LoaderCircle aria-hidden="true" className="mr-2 h-4 w-4 animate-spin" />
                   Kaydediliyor…
                 </>
               ) : (
-                "Değişiklikleri Kaydet"
+                'Değişiklikleri Kaydet'
               )}
             </Button>
           </DialogFooter>

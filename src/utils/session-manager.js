@@ -145,7 +145,7 @@ export class SessionManager {
     const userSessions = this.getUserSessions(userId);
     const count = userSessions.length;
 
-    userSessions.forEach(session => {
+    userSessions.forEach((session) => {
       this.destroySession(session.id);
     });
 
@@ -162,7 +162,7 @@ export class SessionManager {
    */
   getUserSessions(userId) {
     return Array.from(this.sessions.values()).filter(
-      session => session.userId === userId && session.active
+      (session) => session.userId === userId && session.active
     );
   }
 

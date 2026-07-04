@@ -1,19 +1,13 @@
-import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Users } from "lucide-react";
+import { createClient } from '@/utils/supabase/server';
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users } from 'lucide-react';
 
 // Veritabanından herkese açık tüm koleksiyonları çeken fonksiyon
 async function getPublicCollections() {
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("collections")
+    .from('collections')
     .select(
       `
             title,
@@ -22,20 +16,20 @@ async function getPublicCollections() {
             profiles ( email )
         `
     )
-    .eq("is_public", true)
-    .order("created_at", { ascending: false });
+    .eq('is_public', true)
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error("Herkese açık koleksiyonlar çekilirken hata:", error);
+    console.error('Herkese açık koleksiyonlar çekilirken hata:', error);
     return [];
   }
   return data;
 }
 
 export const metadata = {
-  title: "Koleksiyonlar | AI Keşif Platformu",
+  title: 'Koleksiyonlar | AI Keşif Platformu',
   description:
-    "Topluluk tarafından oluşturulmuş, belirli ihtiyaçlara yönelik en iyi yapay zeka araçları koleksiyonlarını ve rehberlerini keşfedin.",
+    'Topluluk tarafından oluşturulmuş, belirli ihtiyaçlara yönelik en iyi yapay zeka araçları koleksiyonlarını ve rehberlerini keşfedin.',
 };
 
 export default async function CollectionsPage() {
@@ -48,8 +42,8 @@ export default async function CollectionsPage() {
           Topluluk Koleksiyonları
         </h1>
         <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-          Kullanıcılarımızın belirli ihtiyaçlar için özenle hazırladığı araç
-          listelerini ve rehberlerini keşfedin.
+          Kullanıcılarımızın belirli ihtiyaçlar için özenle hazırladığı araç listelerini ve
+          rehberlerini keşfedin.
         </p>
       </div>
 
@@ -75,7 +69,7 @@ export default async function CollectionsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground line-clamp-3">
-                    {collection.description || "Açıklama bulunmuyor."}
+                    {collection.description || 'Açıklama bulunmuyor.'}
                   </p>
                 </CardContent>
               </Card>

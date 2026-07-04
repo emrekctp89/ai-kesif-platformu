@@ -14,7 +14,7 @@ test.describe('Navigation and User Paths', () => {
     // Check if navigation links are present in the header
     const nav = page.locator('header'); // Assuming standard HTML5 header
     await expect(nav).toBeVisible();
-    
+
     // Check for 'Tüm Araçlar' link
     const kesfetLink = page.getByRole('link', { name: /Tüm Araçlar/i }).first();
     await expect(kesfetLink).toBeVisible();
@@ -28,7 +28,7 @@ test.describe('Navigation and User Paths', () => {
 
     // The URL should change to /
     await expect(page).toHaveURL(/\//);
-    
+
     // Verify a heading or element on page exists
     await expect(page.getByRole('heading', { name: /Yapay Zeka/i }).first()).toBeVisible();
   });

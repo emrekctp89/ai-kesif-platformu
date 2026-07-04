@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { trackEvent } from "@/utils/analytics";
-import { LoaderCircle, Search, X } from "lucide-react";
+import * as React from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { trackEvent } from '@/utils/analytics';
+import { LoaderCircle, Search, X } from 'lucide-react';
 
 export function SearchInput() {
   const searchParams = useSearchParams();
@@ -12,32 +12,33 @@ export function SearchInput() {
   const pathname = usePathname();
   const timeoutRef = React.useRef(null);
 
-  const [searchTerm, setSearchTerm] = React.useState(
-    searchParams.get("search") || ""
-  );
-  const currentSearchInUrl = searchParams.get("search") || "";
+  const [searchTerm, setSearchTerm] = React.useState(searchParams.get('search') || '');
+  const currentSearchInUrl = searchParams.get('search') || '';
   const isUpdating = searchTerm !== currentSearchInUrl;
 
-  const applySearch = React.useCallback((value) => {
-    const params = new URLSearchParams(searchParams.toString());
-    const normalizedValue = value.trim();
+  const applySearch = React.useCallback(
+    (value) => {
+      const params = new URLSearchParams(searchParams.toString());
+      const normalizedValue = value.trim();
 
-    if (normalizedValue) {
-      params.set("search", normalizedValue);
-      trackEvent("tool_search", {
-        query_length: normalizedValue.length,
-        page_path: pathname,
+      if (normalizedValue) {
+        params.set('search', normalizedValue);
+        trackEvent('tool_search', {
+          query_length: normalizedValue.length,
+          page_path: pathname,
+        });
+      } else {
+        params.delete('search');
+      }
+
+      params.delete('page');
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
       });
-    } else {
-      params.delete("search");
-    }
-
-    params.delete("page");
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, {
-      scroll: false,
-    });
-  }, [pathname, router, searchParams]);
+    },
+    [pathname, router, searchParams]
+  );
 
   const scheduleSearch = (value) => {
     window.clearTimeout(timeoutRef.current);
@@ -52,26 +53,20 @@ export function SearchInput() {
 
   const handleClear = () => {
     window.clearTimeout(timeoutRef.current);
-    setSearchTerm("");
-    applySearch("");
-    trackEvent("tool_search_clear", {
+    setSearchTerm('');
+    applySearch('');
+    trackEvent('tool_search_clear', {
       page_path: pathname,
       preserved_filter_count: Array.from(searchParams.keys()).filter(
-        (key) => key !== "search" && key !== "page"
+        (key) => key !== 'search' && key !== 'page'
       ).length,
     });
   };
 
-  React.useEffect(
-    () => () => window.clearTimeout(timeoutRef.current),
-    []
-  );
+  React.useEffect(() => () => window.clearTimeout(timeoutRef.current), []);
 
   return (
-    <search
-      className="w-full"
-      aria-label="Araçlarda ara"
-    >
+    <search className="w-full" aria-label="Araçlarda ara">
       <label htmlFor="tool-search" className="sr-only">
         Yapay zeka aracı ara
       </label>
@@ -90,7 +85,7 @@ export function SearchInput() {
           value={searchTerm}
           onChange={handleChange}
           onKeyDown={(event) => {
-            if (event.key === "Escape" && searchTerm) {
+            if (event.key === 'Escape' && searchTerm) {
               event.preventDefault();
               handleClear();
             }
@@ -114,7 +109,7 @@ export function SearchInput() {
         ) : null}
       </div>
       <span id="tool-search-status" className="sr-only" aria-live="polite">
-        {isUpdating ? "Arama sonuçları güncelleniyor" : "Arama sonuçları güncel"}
+        {isUpdating ? 'Arama sonuçları güncelleniyor' : 'Arama sonuçları güncel'}
       </span>
     </search>
   );

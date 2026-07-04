@@ -1,51 +1,50 @@
-import "./globals.css";
-import { Onest } from "next/font/google";
-import { cookies } from "next/headers";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { Toaster } from "react-hot-toast";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { TopLoader } from "@/components/TopLoader";
-import { Analytics } from "@vercel/analytics/react";
-import { GoogleAnalytics } from "@/components/GoogleAnalytics";
-import { AnnouncementBanner } from "@/components/AnnouncementBanner";
-import { generatePageMetadata, generateStructuredData, siteConfig } from "@/utils/seo";
+import './globals.css';
+import { Onest } from 'next/font/google';
+import { cookies } from 'next/headers';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import { Toaster } from 'react-hot-toast';
+import { ThemeProvider } from '@/components/ThemeProvider';
+import { TopLoader } from '@/components/TopLoader';
+import { Analytics } from '@vercel/analytics/react';
+import { GoogleAnalytics } from '@/components/GoogleAnalytics';
+import { AnnouncementBanner } from '@/components/AnnouncementBanner';
+import { generatePageMetadata, generateStructuredData, siteConfig } from '@/utils/seo';
 
-const siteUrl = new URL(
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com"
-).origin;
+const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
 
 const onest = Onest({
-  subsets: ["latin"],
-  weight: ["400", "500", "700", "900"],
+  subsets: ['latin'],
+  weight: ['400', '500', '700', '900'],
 });
 
 // Generate metadata using SEO utilities
 const seoMetadata = generatePageMetadata({
   title: null, // Will use default
-  description: "İhtiyacınıza uygun yapay zeka araçlarını keşfedin, karşılaştırın ve doğru aracı daha hızlı bulun.",
-  path: "/",
-  type: "website",
+  description:
+    'İhtiyacınıza uygun yapay zeka araçlarını keşfedin, karşılaştırın ve doğru aracı daha hızlı bulun.',
+  path: '/',
+  type: 'website',
 });
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
   ...seoMetadata,
-  applicationName: "AI Keşif Platformu",
+  applicationName: 'AI Keşif Platformu',
   title: {
-    default: "AI Keşif | Yapay Zeka Araçları Rehberi",
-    template: "%s | AI Keşif",
+    default: 'AI Keşif | Yapay Zeka Araçları Rehberi',
+    template: '%s | AI Keşif',
   },
   icons: {
-    icon: "/icon.svg",
-    shortcut: "/icon.svg",
-    apple: "/apple-icon.png",
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/apple-icon.png',
   },
-  manifest: "/manifest.json",
+  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
-    title: "AI Keşif Platformu",
+    statusBarStyle: 'default',
+    title: 'AI Keşif Platformu',
   },
   formatDetection: {
     telephone: false,
@@ -54,22 +53,22 @@ export const metadata = {
 
 export const viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
-    { media: "(prefers-color-scheme: dark)", color: "#020817" },
+    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)', color: '#020817' },
   ],
-  width: "device-width",
+  width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  viewportFit: "cover",
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({ children }) {
   await cookies();
 
   // Generate structured data for the organization
-  const organizationSchema = generateStructuredData("Organization", {});
-  const websiteSchema = generateStructuredData("WebSite", {});
+  const organizationSchema = generateStructuredData('Organization', {});
+  const websiteSchema = generateStructuredData('WebSite', {});
 
   return (
     <html lang="tr" suppressHydrationWarning>
@@ -85,7 +84,10 @@ export default async function RootLayout({ children }) {
         />
 
         {/* Search Engine Verification Tags */}
-        <meta name="google-site-verification" content={process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION} />
+        <meta
+          name="google-site-verification"
+          content={process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION}
+        />
         <meta name="msvalidate.01" content={process.env.NEXT_PUBLIC_MSVALIDATE} />
 
         {/* Additional SEO Tags */}
@@ -122,13 +124,13 @@ export default async function RootLayout({ children }) {
             >
               İçeriğe geç
             </a>
-            
+
             <Header />
-            
+
             <main id="main-content" tabIndex={-1} className="flex-1">
               <div className="container mx-auto p-4 md:p-6">{children}</div>
             </main>
-            
+
             <Footer />
           </div>
 

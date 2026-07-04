@@ -86,16 +86,19 @@ export class ImageOptimizer {
     try {
       const sharp = await import('sharp');
       const path = await import('path');
-      const fs = await import('fs').then(m => m.promises);
+      const fs = await import('fs').then((m) => m.promises);
 
       // Create output directory
       await fs.mkdir(outputDir, { recursive: true });
 
-      const defaultSizes = sizes.length > 0 ? sizes : [
-        { name: 'thumb-sm', width: 100, height: 100 },
-        { name: 'thumb-md', width: 250, height: 250 },
-        { name: 'thumb-lg', width: 500, height: 500 },
-      ];
+      const defaultSizes =
+        sizes.length > 0
+          ? sizes
+          : [
+              { name: 'thumb-sm', width: 100, height: 100 },
+              { name: 'thumb-md', width: 250, height: 250 },
+              { name: 'thumb-lg', width: 500, height: 500 },
+            ];
 
       const thumbnails = [];
 
@@ -159,20 +162,13 @@ export class ImageOptimizer {
     try {
       const sharp = await import('sharp');
 
-      const {
-        left = 0,
-        top = 0,
-        width,
-        height,
-      } = options;
+      const { left = 0, top = 0, width, height } = options;
 
       if (!width || !height) {
         throw new FileError('Width and height are required for crop');
       }
 
-      await sharp(inputPath)
-        .extract({ left, top, width, height })
-        .toFile(outputPath);
+      await sharp(inputPath).extract({ left, top, width, height }).toFile(outputPath);
 
       logger.info('Image cropped', {
         inputPath,

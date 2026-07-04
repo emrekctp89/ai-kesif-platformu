@@ -1,72 +1,76 @@
 /** @type {import('next').NextConfig} */
-const { withSentryConfig } = require("@sentry/nextjs");
+const { withSentryConfig } = require('@sentry/nextjs');
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const disabledRoutes = [
-  "/register",
-  "/profile/:path*",
-  "/blog/:path*",
-  "/yarisma",
-  "/uyelik",
-  "/u/:path*",
-  "/topluluk",
-  "/studyo",
-  "/signup",
-  "/reset-password",
-  "/random-tools",
-  "/ogren",
-  "/odul-avciligi/:path*",
-  "/mesajlar/:path*",
-  "/leaderboard",
-  "/leaderbord",
-  "/launchpad/:path*",
-  "/koleksiyonlar/:path*",
-  "/kesfet",
-  "/karsilastir",
-  "/forgot-password",
-  "/eserler/:path*",
-  "/arastirma",
-  "/akis",
+  '/register',
+  '/profile/:path*',
+  '/blog/:path*',
+  '/yarisma',
+  '/uyelik',
+  '/u/:path*',
+  '/topluluk',
+  '/studyo',
+  '/signup',
+  '/reset-password',
+  '/random-tools',
+  '/ogren',
+  '/odul-avciligi/:path*',
+  '/mesajlar/:path*',
+  '/leaderboard',
+  '/leaderbord',
+  '/launchpad/:path*',
+  '/koleksiyonlar/:path*',
+  '/kesfet',
+  '/karsilastir',
+  '/forgot-password',
+  '/eserler/:path*',
+  '/arastirma',
+  '/akis',
 ];
 
 const nextConfig = {
   outputFileTracingRoot: __dirname,
-  serverExternalPackages: ["@supabase/supabase-js"],
+  serverExternalPackages: ['@supabase/supabase-js'],
   experimental: {
     serverActions: {
-      bodySizeLimit: "4mb",
+      bodySizeLimit: '4mb',
     },
   },
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "hhopgeupizlfkmvtsvkf.supabase.co",
-        port: "",
-        pathname: "/storage/v1/object/public/**",
+        protocol: 'https',
+        hostname: 'hhopgeupizlfkmvtsvkf.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
       },
     ],
   },
   async redirects() {
     return disabledRoutes.map((source) => ({
       source,
-      destination: "/",
+      destination: '/',
       permanent: false,
     }));
   },
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: '/:path*',
         headers: [
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
           },
           {
-            key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains; preload",
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
         ],
       },
@@ -74,18 +78,20 @@ const nextConfig = {
   },
 };
 
-module.exports = withSentryConfig(
-  nextConfig,
-  {
-    silent: true,
-    org: "ai-kesif-platformu",
-    project: "ai-kesif-platformu",
-  },
-  {
-    widenClientFileUpload: true,
-    transpileClientSDK: true,
-    tunnelRoute: "/monitoring",
-    hideSourceMaps: true,
-    disableLogger: true,
-  }
+module.exports = withBundleAnalyzer(
+  withSentryConfig(
+    nextConfig,
+    {
+      silent: true,
+      org: 'ai-kesif-platformu',
+      project: 'ai-kesif-platformu',
+    },
+    {
+      widenClientFileUpload: true,
+      transpileClientSDK: true,
+      tunnelRoute: '/monitoring',
+      hideSourceMaps: true,
+      disableLogger: true,
+    }
+  )
 );

@@ -1,20 +1,20 @@
-import { createClient } from "@/utils/supabase/server";
-import { notFound, redirect } from "next/navigation";
-import { CollectionEditor } from "@/components/CollectionEditor";
+import { createClient } from '@/utils/supabase/server';
+import { notFound, redirect } from 'next/navigation';
+import { CollectionEditor } from '@/components/CollectionEditor';
 
 // Koleksiyonu, içindeki araçlar ve notlarla birlikte çeken fonksiyon
 async function getCollection(id, userId) {
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("collections")
+    .from('collections')
     .select(
       `
             *,
             collection_tools ( tool_id, notes )
         `
     )
-    .eq("id", id)
-    .eq("user_id", userId) // Sadece kullanıcının kendi koleksiyonunu getirmesini sağlar
+    .eq('id', id)
+    .eq('user_id', userId) // Sadece kullanıcının kendi koleksiyonunu getirmesini sağlar
     .single();
 
   if (error || !data) {
@@ -27,10 +27,10 @@ async function getCollection(id, userId) {
 async function getAllTools() {
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("tools")
-    .select("id, name")
-    .eq("is_approved", true)
-    .order("name", { ascending: true });
+    .from('tools')
+    .select('id, name')
+    .eq('is_approved', true)
+    .order('name', { ascending: true });
 
   if (error) {
     return [];
@@ -45,7 +45,7 @@ export default async function EditCollectionPage({ params }) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect('/login');
   }
 
   const [collection, allTools] = await Promise.all([

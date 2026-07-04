@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
-import { submitPrompt } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import * as React from 'react';
+import { useTransition } from 'react';
+import { submitPrompt } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -16,9 +16,9 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
-import { PlusCircle } from "lucide-react";
-import toast from "react-hot-toast";
+} from '@/components/ui/dialog';
+import { PlusCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export function AddPromptDialog({ toolId, toolSlug }) {
   const formRef = React.useRef(null);
@@ -53,11 +53,7 @@ export function AddPromptDialog({ toolId, toolSlug }) {
             Bu araç için kullandığınız harika bir prompt'u toplulukla paylaşın.
           </DialogDescription>
         </DialogHeader>
-        <form
-          ref={formRef}
-          action={handleFormSubmit}
-          className="space-y-4 py-4"
-        >
+        <form ref={formRef} action={handleFormSubmit} className="space-y-4 py-4">
           <input type="hidden" name="toolId" value={toolId} />
           <input type="hidden" name="toolSlug" value={toolSlug} />
           <div className="space-y-2">
@@ -96,7 +92,7 @@ export function AddPromptDialog({ toolId, toolSlug }) {
               </Button>
             </DialogClose>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Gönderiliyor..." : "Gönder"}
+              {isPending ? 'Gönderiliyor...' : 'Gönder'}
             </Button>
           </DialogFooter>
         </form>

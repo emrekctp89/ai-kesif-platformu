@@ -1,15 +1,9 @@
-"use client";
+'use client';
 
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { Menu, LayoutDashboard, Settings, Bot } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { Menu, LayoutDashboard, Settings, Bot } from 'lucide-react';
 
 export function AdminMenu() {
   return (

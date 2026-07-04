@@ -1,25 +1,25 @@
-"use server";
+'use server';
 
-import { createClient } from "@/utils/supabase/actions";
-import { createAdminClient } from "@/utils/supabase/admin";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { Resend } from "resend";
-import { WelcomeEmail } from "@/components/emails/WelcomeEmail";
-import { GoodbyeEmail } from "@/components/emails/GoodbyeEmail";
+import { createClient } from '@/utils/supabase/actions';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { Resend } from 'resend';
+import { WelcomeEmail } from '@/components/emails/WelcomeEmail';
+import { GoodbyeEmail } from '@/components/emails/GoodbyeEmail';
 
 export async function signOut() {
   const supabase = createClient();
   await supabase.auth.signOut();
-  revalidatePath("/", "layout");
-  redirect("/login");
+  revalidatePath('/', 'layout');
+  redirect('/login');
 }
 
 export async function signIn(formData) {
-  "use server";
+  'use server';
 
-  const email = formData.get("email");
-  const password = formData.get("password");
+  const email = formData.get('email');
+  const password = formData.get('password');
   const supabase = createClient();
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -28,21 +28,21 @@ export async function signIn(formData) {
   });
 
   if (error || !data.user) {
-    const errorMessage = "Giriş bilgileri hatalı veya kullanıcı bulunamadı.";
+    const errorMessage = 'Giriş bilgileri hatalı veya kullanıcı bulunamadı.';
     return redirect(`/login?message=${encodeURIComponent(errorMessage)}`);
   }
 
-  revalidatePath("/", "layout");
+  revalidatePath('/', 'layout');
 
   if (data.user.email === process.env.ADMIN_EMAIL) {
-    return redirect("/admin");
+    return redirect('/admin');
   }
 
-  return redirect("/");
+  return redirect('/');
 }
 
 export async function oAuthSignIn(provider) {
-  "use server";
+  'use server';
   const supabase = createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: provider,
@@ -52,16 +52,16 @@ export async function oAuthSignIn(provider) {
   });
 
   if (error) {
-    return redirect("/login?message=Could not authenticate with provider");
+    return redirect('/login?message=Could not authenticate with provider');
   }
 
   return redirect(data.url);
 }
 
 export async function signUp(formData) {
-  "use server";
-  const email = formData.get("email");
-  const password = formData.get("password");
+  'use server';
+  const email = formData.get('email');
+  const password = formData.get('password');
   const supabase = createClient();
 
   const { data, error } = await supabase.auth.signUp({
@@ -74,7 +74,7 @@ export async function signUp(formData) {
 
   if (error || !data.user) {
     const errorMessage =
-      "Kullanıcı oluşturulamadı. Şifre en az 6 karakter olmalı veya e-posta zaten kullanımda olabilir.";
+      'Kullanıcı oluşturulamadı. Şifre en az 6 karakter olmalı veya e-posta zaten kullanımda olabilir.';
     return redirect(`/signup?message=${encodeURIComponent(errorMessage)}`);
   }
 
@@ -87,17 +87,17 @@ export async function signUp(formData) {
       react: WelcomeEmail({ userEmail: email }),
     });
   } catch (emailError) {
-    console.error("Hoş geldiniz e-postası gönderme hatası:", emailError);
+    console.error('Hoş geldiniz e-postası gönderme hatası:', emailError);
   }
 
-  const successMessage = "Hesabınızı doğrulamak için e-postanızı kontrol edin.";
+  const successMessage = 'Hesabınızı doğrulamak için e-postanızı kontrol edin.';
   return redirect(`/login?message=${encodeURIComponent(successMessage)}`);
 }
 
 export async function requestPasswordReset(formData) {
-  "use server";
+  'use server';
 
-  const email = formData.get("email");
+  const email = formData.get('email');
   const supabase = createClient();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -105,22 +105,18 @@ export async function requestPasswordReset(formData) {
   });
 
   if (error) {
-    const errorMessage =
-      "Şifre sıfırlama maili gönderilemedi. Lütfen tekrar deneyin.";
-    return redirect(
-      `/forgot-password?message=${encodeURIComponent(errorMessage)}`
-    );
+    const errorMessage = 'Şifre sıfırlama maili gönderilemedi. Lütfen tekrar deneyin.';
+    return redirect(`/forgot-password?message=${encodeURIComponent(errorMessage)}`);
   }
 
-  const successMessage =
-    "Eğer e-posta adresiniz kayıtlıysa, şifre sıfırlama linki gönderildi.";
+  const successMessage = 'Eğer e-posta adresiniz kayıtlıysa, şifre sıfırlama linki gönderildi.';
   return redirect(`/login?message=${encodeURIComponent(successMessage)}`);
 }
 
 export async function updatePassword(formData) {
-  "use server";
+  'use server';
 
-  const password = formData.get("password");
+  const password = formData.get('password');
   const supabase = createClient();
 
   const { error } = await supabase.auth.updateUser({
@@ -128,40 +124,32 @@ export async function updatePassword(formData) {
   });
 
   if (error) {
-    const errorMessage =
-      "Şifre güncellenemedi. Linkin süresi dolmuş veya geçersiz olabilir.";
-    return redirect(
-      `/reset-password?message=${encodeURIComponent(errorMessage)}`
-    );
+    const errorMessage = 'Şifre güncellenemedi. Linkin süresi dolmuş veya geçersiz olabilir.';
+    return redirect(`/reset-password?message=${encodeURIComponent(errorMessage)}`);
   }
 
-  const successMessage =
-    "Şifreniz başarıyla güncellendi. Şimdi giriş yapabilirsiniz.";
+  const successMessage = 'Şifreniz başarıyla güncellendi. Şimdi giriş yapabilirsiniz.';
   return redirect(`/login?message=${encodeURIComponent(successMessage)}`);
 }
 
 export async function deleteUser() {
-  "use server";
+  'use server';
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return redirect(
-      `/login?message=${encodeURIComponent("Bu işlem için giriş yapmalısınız.")}`
-    );
+    return redirect(`/login?message=${encodeURIComponent('Bu işlem için giriş yapmalısınız.')}`);
   }
 
   const userEmail = user.email;
   const supabaseAdmin = createAdminClient();
-  const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
-    user.id
-  );
+  const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
 
   if (deleteError) {
-    console.error("Hesap silme hatası:", deleteError);
-    const errorMessage = "Hesabınız silinirken bir hata oluştu.";
+    console.error('Hesap silme hatası:', deleteError);
+    const errorMessage = 'Hesabınız silinirken bir hata oluştu.';
     return redirect(`/profile?message=${encodeURIComponent(errorMessage)}`);
   }
 
@@ -170,13 +158,13 @@ export async function deleteUser() {
     await resend.emails.send({
       from: process.env.ADMIN_NOTIF_EMAIL_FROM,
       to: userEmail,
-      subject: "Hesabınız Silindi | AI Keşif Platformu",
+      subject: 'Hesabınız Silindi | AI Keşif Platformu',
       react: GoodbyeEmail({ userEmail: userEmail }),
     });
   } catch (emailError) {
-    console.error("Veda e-postası gönderme hatası:", emailError);
+    console.error('Veda e-postası gönderme hatası:', emailError);
   }
 
-  const successMessage = "Hesabınız başarıyla silindi. Gidişinize üzüldük.";
+  const successMessage = 'Hesabınız başarıyla silindi. Gidişinize üzüldük.';
   return redirect(`/?message=${encodeURIComponent(successMessage)}`);
 }

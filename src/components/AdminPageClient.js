@@ -5,22 +5,16 @@
  * nihai istemci bileşenidir.
  * ---------------------------------------------------
  */
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import * as React from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,68 +25,61 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import Image from "next/image";
+} from '@/components/ui/alert-dialog';
+import Image from 'next/image';
 import {
   approveTool,
   approveShowcaseItem,
   rejectTool,
   runToolQualityAutomation,
   updateToolLinkReportStatus,
-} from "@/app/actions";
-import { AiToolFactory } from "./AiToolFactory";
-import { BlogManager } from "./BlogManager";
-import { ChallengeManager } from "./ChallengeManager";
-import { TagManager } from "./TagManager";
-import { CategoryManager } from "./CategoryManager";
-import { FeaturedToggle } from "./FeaturedToggle";
-import { EditToolDialog } from "./EditToolDialog";
-import { DeleteToolButton } from "./DeleteToolButton";
-import toast from "react-hot-toast";
-import {
-  CalendarDays,
-  Check,
-  ExternalLink,
-  Mail,
-  ShieldAlert,
-  Trash2,
-} from "lucide-react";
+} from '@/app/actions';
+import { AiToolFactory } from './AiToolFactory';
+import { BlogManager } from './BlogManager';
+import { ChallengeManager } from './ChallengeManager';
+import { TagManager } from './TagManager';
+import { CategoryManager } from './CategoryManager';
+import { FeaturedToggle } from './FeaturedToggle';
+import { EditToolDialog } from './EditToolDialog';
+import { DeleteToolButton } from './DeleteToolButton';
+import toast from 'react-hot-toast';
+import { CalendarDays, Check, ExternalLink, Mail, ShieldAlert, Trash2 } from 'lucide-react';
 import {
   getToolQualityIssues,
   isLikelyEnglishDescription,
   normalizeToolLink,
-} from "@/lib/toolQuality";
+} from '@/lib/toolQuality';
 
 function getQualityPriority(issues, duplicateNameCount, duplicateLinkCount) {
-  if (issues.some((issue) => issue.key === "link-invalid")) return "high";
-  if (duplicateLinkCount > 1) return "high";
-  if (issues.some((issue) => issue.key === "source")) return "high";
-  if (issues.some((issue) => issue.key === "english")) return "high";
-  if (issues.some((issue) => issue.key === "link-review")) return "medium";
-  if (issues.some((issue) => issue.key === "icon")) return "medium";
-  if (duplicateNameCount > 1) return "medium";
-  if (issues.length >= 2) return "medium";
-  if (issues.length === 1) return "low";
-  return "clean";
+  if (issues.some((issue) => issue.key === 'link-invalid')) return 'high';
+  if (duplicateLinkCount > 1) return 'high';
+  if (issues.some((issue) => issue.key === 'source')) return 'high';
+  if (issues.some((issue) => issue.key === 'english')) return 'high';
+  if (issues.some((issue) => issue.key === 'link-review')) return 'medium';
+  if (issues.some((issue) => issue.key === 'icon')) return 'medium';
+  if (duplicateNameCount > 1) return 'medium';
+  if (issues.length >= 2) return 'medium';
+  if (issues.length === 1) return 'low';
+  return 'clean';
 }
 
 function getQualityPriorityMeta(priority) {
   const meta = {
     high: {
-      label: "Yüksek öncelik",
-      className: "bg-red-600 hover:bg-red-600",
+      label: 'Yüksek öncelik',
+      className: 'bg-red-600 hover:bg-red-600',
     },
     medium: {
-      label: "Orta öncelik",
-      className: "bg-orange-600 hover:bg-orange-600",
+      label: 'Orta öncelik',
+      className: 'bg-orange-600 hover:bg-orange-600',
     },
     low: {
-      label: "Düşük öncelik",
-      className: "bg-sky-600 hover:bg-sky-600",
+      label: 'Düşük öncelik',
+      className: 'bg-sky-600 hover:bg-sky-600',
     },
     clean: {
-      label: "Temiz",
-      className: "bg-emerald-600 hover:bg-emerald-600",
+      label: 'Temiz',
+      className: 'bg-emerald-600 hover:bg-emerald-600',
     },
   };
 
@@ -100,105 +87,105 @@ function getQualityPriorityMeta(priority) {
 }
 
 function getQualityActionHint(issues, duplicateNameCount, duplicateLinkCount) {
-  if (issues.some((issue) => issue.key === "link-invalid")) {
-    return "Link audit bu kaydı kesin kırık işaretlemiş; resmi siteyi tarayıcıda aç, alternatif URL bul veya aracı pasife al.";
+  if (issues.some((issue) => issue.key === 'link-invalid')) {
+    return 'Link audit bu kaydı kesin kırık işaretlemiş; resmi siteyi tarayıcıda aç, alternatif URL bul veya aracı pasife al.';
   }
-  if (issues.some((issue) => issue.key === "link-review")) {
-    return "Link audit manuel inceleme istiyor; 403/429 çoğu zaman bot korumasıdır, silmeden önce canlı sitede elle kontrol et.";
+  if (issues.some((issue) => issue.key === 'link-review')) {
+    return 'Link audit manuel inceleme istiyor; 403/429 çoğu zaman bot korumasıdır, silmeden önce canlı sitede elle kontrol et.';
   }
   if (duplicateLinkCount > 1) {
-    return "Önce aynı bağlantıdaki kayıtları karşılaştır; en dolu kaydı koruyup diğerini sil veya birleştir.";
+    return 'Önce aynı bağlantıdaki kayıtları karşılaştır; en dolu kaydı koruyup diğerini sil veya birleştir.';
   }
-  if (issues.some((issue) => issue.key === "english")) {
-    return "Açıklamayı Türkçeleştir ve kullanıcı faydasını ilk cümlede netleştir.";
+  if (issues.some((issue) => issue.key === 'english')) {
+    return 'Açıklamayı Türkçeleştir ve kullanıcı faydasını ilk cümlede netleştir.';
   }
-  if (issues.some((issue) => issue.key === "source")) {
+  if (issues.some((issue) => issue.key === 'source')) {
     return "Bu kayıt dizin/ara toplayıcı siteye gidiyor; resmi ürün URL'sini bulup linki değiştir.";
   }
   if (duplicateNameCount > 1) {
-    return "Aynı adlı kayıtları kontrol et; gerçekten farklı ürün değilse tek kayda indir.";
+    return 'Aynı adlı kayıtları kontrol et; gerçekten farklı ürün değilse tek kayda indir.';
   }
-  if (issues.some((issue) => issue.key === "metadata")) {
-    return "Fiyat modeli ve platform bilgisini tamamla; filtre sonuçları daha isabetli olur.";
+  if (issues.some((issue) => issue.key === 'metadata')) {
+    return 'Fiyat modeli ve platform bilgisini tamamla; filtre sonuçları daha isabetli olur.';
   }
-  if (issues.some((issue) => issue.key === "icon")) {
-    return "Bağlantıyı doğrula; URL geçersizse araç ikonu alınamaz ve kartta fallback görünür.";
+  if (issues.some((issue) => issue.key === 'icon')) {
+    return 'Bağlantıyı doğrula; URL geçersizse araç ikonu alınamaz ve kartta fallback görünür.';
   }
-  if (issues.some((issue) => issue.key === "short")) {
-    return "Açıklamayı kullanım amacı, öne çıkan özellik ve hedef kullanıcıyla genişlet.";
+  if (issues.some((issue) => issue.key === 'short')) {
+    return 'Açıklamayı kullanım amacı, öne çıkan özellik ve hedef kullanıcıyla genişlet.';
   }
 
-  return "Kayıt iyi görünüyor; istersen öne çıkarma veya kategori doğruluğunu kontrol et.";
+  return 'Kayıt iyi görünüyor; istersen öne çıkarma veya kategori doğruluğunu kontrol et.';
 }
 
 function getLinkAuditIssue(tool) {
-  const status = String(tool.link_check_status || "")
+  const status = String(tool.link_check_status || '')
     .trim()
     .toLowerCase();
-  if (!status || status === "valid" || status === "skipped") return null;
+  if (!status || status === 'valid' || status === 'skipped') return null;
 
   const checkedAt = tool.link_checked_at
-    ? new Intl.DateTimeFormat("tr-TR", {
-        dateStyle: "short",
-        timeStyle: "short",
-        timeZone: "Europe/Istanbul",
+    ? new Intl.DateTimeFormat('tr-TR', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+        timeZone: 'Europe/Istanbul',
       }).format(new Date(tool.link_checked_at))
     : null;
-  const suffix = checkedAt ? ` · ${checkedAt}` : "";
+  const suffix = checkedAt ? ` · ${checkedAt}` : '';
 
-  if (status === "invalid") {
+  if (status === 'invalid') {
     return {
-      key: "link-invalid",
+      key: 'link-invalid',
       label: `Kırık link${suffix}`,
     };
   }
 
-  if (status === "review") {
+  if (status === 'review') {
     return {
-      key: "link-review",
+      key: 'link-review',
       label: `Link inceleme${suffix}`,
     };
   }
 
   return {
-    key: "link-review",
+    key: 'link-review',
     label: `Link durumu: ${status}${suffix}`,
   };
 }
 
 const linkReportReasonLabels = {
-  broken: "Site açılmıyor / kırık link",
-  redirects_wrong: "Yanlış siteye yönlendiriyor",
-  suspicious: "Şüpheli veya güvenli görünmüyor",
-  outdated: "Link güncel değil",
-  other: "Diğer",
+  broken: 'Site açılmıyor / kırık link',
+  redirects_wrong: 'Yanlış siteye yönlendiriyor',
+  suspicious: 'Şüpheli veya güvenli görünmüyor',
+  outdated: 'Link güncel değil',
+  other: 'Diğer',
 };
 
 const linkReportStatusLabels = {
-  open: "Açık",
-  reviewing: "İncelemede",
-  resolved: "Çözüldü",
-  dismissed: "Geçersiz",
+  open: 'Açık',
+  reviewing: 'İncelemede',
+  resolved: 'Çözüldü',
+  dismissed: 'Geçersiz',
 };
 
 function formatReportDate(value) {
-  if (!value) return "Tarih yok";
-  return new Intl.DateTimeFormat("tr-TR", {
-    dateStyle: "short",
-    timeStyle: "short",
-    timeZone: "Europe/Istanbul",
+  if (!value) return 'Tarih yok';
+  return new Intl.DateTimeFormat('tr-TR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+    timeZone: 'Europe/Istanbul',
   }).format(new Date(value));
 }
 
 function getReportStatusBadgeClass(status) {
-  if (status === "open") return "bg-red-600 hover:bg-red-600";
-  if (status === "reviewing") return "bg-orange-600 hover:bg-orange-600";
-  if (status === "resolved") return "bg-emerald-600 hover:bg-emerald-600";
-  return "bg-slate-600 hover:bg-slate-600";
+  if (status === 'open') return 'bg-red-600 hover:bg-red-600';
+  if (status === 'reviewing') return 'bg-orange-600 hover:bg-orange-600';
+  if (status === 'resolved') return 'bg-emerald-600 hover:bg-emerald-600';
+  return 'bg-slate-600 hover:bg-slate-600';
 }
 
 function getCanonicalScore(tool) {
-  const descriptionLength = String(tool.description || "").trim().length;
+  const descriptionLength = String(tool.description || '').trim().length;
   let score = Math.min(descriptionLength, 300) / 30;
 
   if (!isLikelyEnglishDescription(tool.description)) score += 5;
@@ -208,8 +195,8 @@ function getCanonicalScore(tool) {
   if (tool.is_featured) score += 2;
 
   try {
-    const hostname = new URL(tool.link).hostname.replace(/^www\./, "");
-    if (!hostname.endsWith("topai.tools")) score += 4;
+    const hostname = new URL(tool.link).hostname.replace(/^www\./, '');
+    if (!hostname.endsWith('topai.tools')) score += 4;
   } catch {
     score -= 5;
   }
@@ -221,18 +208,16 @@ function PendingToolCard({ tool, categories, allTags, hasDuplicateLink }) {
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
   const qualityWarnings = [
-    !tool.description || tool.description.trim().length < 60
-      ? "Açıklama kısa"
-      : null,
-    !tool.category_id ? "Kategori eksik" : null,
-    !tool.link ? "Site bağlantısı eksik" : null,
-    !tool.slug ? "Slug eksik" : null,
-    hasDuplicateLink ? "Benzer bağlantı yayında" : null,
+    !tool.description || tool.description.trim().length < 60 ? 'Açıklama kısa' : null,
+    !tool.category_id ? 'Kategori eksik' : null,
+    !tool.link ? 'Site bağlantısı eksik' : null,
+    !tool.slug ? 'Slug eksik' : null,
+    hasDuplicateLink ? 'Benzer bağlantı yayında' : null,
   ].filter(Boolean);
 
   const runAction = (action, successFallback) => {
     const formData = new FormData();
-    formData.set("toolId", tool.id);
+    formData.set('toolId', tool.id);
 
     startTransition(async () => {
       const result = await action(formData);
@@ -251,48 +236,39 @@ function PendingToolCard({ tool, categories, allTags, hasDuplicateLink }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-semibold">{tool.name}</h3>
-            <Badge variant="outline">
-              {tool.categories?.name || "Kategorisiz"}
-            </Badge>
+            <Badge variant="outline">{tool.categories?.name || 'Kategorisiz'}</Badge>
             {qualityWarnings.length === 0 && (
-              <Badge className="bg-emerald-600 hover:bg-emerald-600">
-                İncelemeye hazır
-              </Badge>
+              <Badge className="bg-emerald-600 hover:bg-emerald-600">İncelemeye hazır</Badge>
             )}
           </div>
 
           <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-            {tool.description || "Açıklama girilmemiş."}
+            {tool.description || 'Açıklama girilmemiş.'}
           </p>
 
           <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Mail aria-hidden="true" className="h-4 w-4 shrink-0" />
               <dt className="sr-only">Gönderen</dt>
-              <dd className="truncate">
-                {tool.suggester_email || "Bilinmiyor"}
-              </dd>
+              <dd className="truncate">{tool.suggester_email || 'Bilinmiyor'}</dd>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <CalendarDays aria-hidden="true" className="h-4 w-4 shrink-0" />
               <dt className="sr-only">Gönderim tarihi</dt>
               <dd>
                 {tool.created_at
-                  ? new Intl.DateTimeFormat("tr-TR", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                      timeZone: "Europe/Istanbul",
+                  ? new Intl.DateTimeFormat('tr-TR', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                      timeZone: 'Europe/Istanbul',
                     }).format(new Date(tool.created_at))
-                  : "Tarih bilinmiyor"}
+                  : 'Tarih bilinmiyor'}
               </dd>
             </div>
           </dl>
 
           {qualityWarnings.length > 0 && (
-            <div
-              className="mt-4 flex flex-wrap gap-2"
-              aria-label="Veri kalitesi uyarıları"
-            >
+            <div className="mt-4 flex flex-wrap gap-2" aria-label="Veri kalitesi uyarıları">
               {qualityWarnings.map((warning) => (
                 <Badge
                   key={warning}
@@ -316,23 +292,19 @@ function PendingToolCard({ tool, categories, allTags, hasDuplicateLink }) {
               </a>
             </Button>
           )}
-          <EditToolDialog
-            tool={tool}
-            categories={categories}
-            allTags={allTags}
-          />
+          <EditToolDialog tool={tool} categories={categories} allTags={allTags} />
           <Button
             size="sm"
             disabled={
               isPending ||
-              qualityWarnings.includes("Site bağlantısı eksik") ||
-              qualityWarnings.includes("Kategori eksik") ||
-              qualityWarnings.includes("Slug eksik")
+              qualityWarnings.includes('Site bağlantısı eksik') ||
+              qualityWarnings.includes('Kategori eksik') ||
+              qualityWarnings.includes('Slug eksik')
             }
-            onClick={() => runAction(approveTool, "Araç onaylandı.")}
+            onClick={() => runAction(approveTool, 'Araç onaylandı.')}
           >
             <Check aria-hidden="true" className="mr-2 h-4 w-4" />
-            {isPending ? "İşleniyor…" : "Onayla"}
+            {isPending ? 'İşleniyor…' : 'Onayla'}
           </Button>
 
           <AlertDialog>
@@ -344,21 +316,16 @@ function PendingToolCard({ tool, categories, allTags, hasDuplicateLink }) {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {tool.name} önerisi reddedilsin mi?
-                </AlertDialogTitle>
+                <AlertDialogTitle>{tool.name} önerisi reddedilsin mi?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Bu işlem bekleyen öneriyi kalıcı olarak siler ve geri
-                  alınamaz.
+                  Bu işlem bekleyen öneriyi kalıcı olarak siler ve geri alınamaz.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Vazgeç</AlertDialogCancel>
                 <AlertDialogAction
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={() =>
-                    runAction(rejectTool, "Araç önerisi reddedildi.")
-                  }
+                  onClick={() => runAction(rejectTool, 'Araç önerisi reddedildi.')}
                 >
                   Evet, reddet
                 </AlertDialogAction>
@@ -379,19 +346,14 @@ function ApprovalQueueTab({
   categories,
   allTags,
 }) {
-  const approvedLinks = new Set(
-    approvedTools.map((tool) => normalizeToolLink(tool.link)),
-  );
+  const approvedLinks = new Set(approvedTools.map((tool) => normalizeToolLink(tool.link)));
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>
-            Onay Bekleyen Araçlar ({unapprovedTools.length})
-          </CardTitle>
+          <CardTitle>Onay Bekleyen Araçlar ({unapprovedTools.length})</CardTitle>
           <CardDescription>
-            Siteyi ve veri kalitesi uyarılarını inceleyin; gerekirse
-            düzenledikten sonra onaylayın.
+            Siteyi ve veri kalitesi uyarılarını inceleyin; gerekirse düzenledikten sonra onaylayın.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -403,24 +365,18 @@ function ApprovalQueueTab({
                   tool={tool}
                   categories={categories}
                   allTags={allTags}
-                  hasDuplicateLink={approvedLinks.has(
-                    normalizeToolLink(tool.link),
-                  )}
+                  hasDuplicateLink={approvedLinks.has(normalizeToolLink(tool.link))}
                 />
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-4">
-              Onay bekleyen araç bulunmuyor.
-            </p>
+            <p className="text-muted-foreground text-center py-4">Onay bekleyen araç bulunmuyor.</p>
           )}
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>
-            Onay Bekleyen Eserler ({unapprovedShowcaseItems.length})
-          </CardTitle>
+          <CardTitle>Onay Bekleyen Eserler ({unapprovedShowcaseItems.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {unapprovedShowcaseItems.length > 0 ? (
@@ -441,7 +397,7 @@ function ApprovalQueueTab({
                     <div>
                       <h3 className="font-semibold">{item.title}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Gönderen: {item.profiles?.email || "Bilinmiyor"}
+                        Gönderen: {item.profiles?.email || 'Bilinmiyor'}
                       </p>
                     </div>
                   </div>
@@ -455,9 +411,7 @@ function ApprovalQueueTab({
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-4">
-              Onay bekleyen eser bulunmuyor.
-            </p>
+            <p className="text-muted-foreground text-center py-4">Onay bekleyen eser bulunmuyor.</p>
           )}
         </CardContent>
       </Card>
@@ -468,26 +422,25 @@ function ApprovalQueueTab({
 // YENİ: "Araç Yönetimi" Sekmesi
 function ToolManagementTab({ approvedTools, categories, allTags }) {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [qualityFilter, setQualityFilter] = React.useState("all");
-  const [priorityFilter, setPriorityFilter] = React.useState("all");
-  const [sortMode, setSortMode] = React.useState("issues");
-  const [duplicateView, setDuplicateView] = React.useState("groups");
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [qualityFilter, setQualityFilter] = React.useState('all');
+  const [priorityFilter, setPriorityFilter] = React.useState('all');
+  const [sortMode, setSortMode] = React.useState('issues');
+  const [duplicateView, setDuplicateView] = React.useState('groups');
   const [iconAuditByToolId, setIconAuditByToolId] = React.useState({});
   const [iconAuditMeta, setIconAuditMeta] = React.useState({
     running: false,
     processed: 0,
     total: 0,
   });
-  const [isAutomationPending, startAutomationTransition] =
-    React.useTransition();
+  const [isAutomationPending, startAutomationTransition] = React.useTransition();
   const [automationReport, setAutomationReport] = React.useState(null);
   const duplicateNames = React.useMemo(() => {
     const counts = new Map();
     approvedTools.forEach((tool) => {
-      const key = String(tool.name || "")
+      const key = String(tool.name || '')
         .trim()
-        .toLocaleLowerCase("tr-TR");
+        .toLocaleLowerCase('tr-TR');
       if (key) counts.set(key, (counts.get(key) || 0) + 1);
     });
     return counts;
@@ -504,7 +457,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
   React.useEffect(() => {
     let cancelled = false;
     const auditableTools = approvedTools.filter(
-      (tool) => String(tool.link || "").trim().length > 0,
+      (tool) => String(tool.link || '').trim().length > 0
     );
 
     setIconAuditByToolId({});
@@ -524,15 +477,14 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         const tool = queue.shift();
         if (!tool) break;
 
-        let status = "fail";
+        let status = 'fail';
         try {
-          const response = await fetch(
-            `/api/tool-icon?link=${encodeURIComponent(tool.link)}`,
-            { cache: "no-store" },
-          );
-          status = response.ok ? "ok" : "fail";
+          const response = await fetch(`/api/tool-icon?link=${encodeURIComponent(tool.link)}`, {
+            cache: 'no-store',
+          });
+          status = response.ok ? 'ok' : 'fail';
         } catch {
-          status = "fail";
+          status = 'fail';
         }
 
         if (cancelled) return;
@@ -564,30 +516,20 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
   const auditedTools = React.useMemo(
     () =>
       approvedTools.map((tool) => {
-        const hasIconFetchIssue = iconAuditByToolId[tool.id] === "fail";
-        const issues = getToolQualityIssues(
-          tool,
-          duplicateNames,
-          duplicateLinks,
-          {
-            iconFetchIssue: hasIconFetchIssue,
-          },
-        );
+        const hasIconFetchIssue = iconAuditByToolId[tool.id] === 'fail';
+        const issues = getToolQualityIssues(tool, duplicateNames, duplicateLinks, {
+          iconFetchIssue: hasIconFetchIssue,
+        });
         const linkAuditIssue = getLinkAuditIssue(tool);
         if (linkAuditIssue) issues.unshift(linkAuditIssue);
         const duplicateNameCount =
           duplicateNames.get(
-            String(tool.name || "")
+            String(tool.name || '')
               .trim()
-              .toLocaleLowerCase("tr-TR"),
+              .toLocaleLowerCase('tr-TR')
           ) || 0;
-        const duplicateLinkCount =
-          duplicateLinks.get(normalizeToolLink(tool.link)) || 0;
-        const priority = getQualityPriority(
-          issues,
-          duplicateNameCount,
-          duplicateLinkCount,
-        );
+        const duplicateLinkCount = duplicateLinks.get(normalizeToolLink(tool.link)) || 0;
+        const priority = getQualityPriority(issues, duplicateNameCount, duplicateLinkCount);
 
         return {
           tool,
@@ -595,151 +537,127 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
           duplicateNameCount,
           duplicateLinkCount,
           priority,
-          actionHint: getQualityActionHint(
-            issues,
-            duplicateNameCount,
-            duplicateLinkCount,
-          ),
+          actionHint: getQualityActionHint(issues, duplicateNameCount, duplicateLinkCount),
         };
       }),
-    [approvedTools, duplicateLinks, duplicateNames, iconAuditByToolId],
+    [approvedTools, duplicateLinks, duplicateNames, iconAuditByToolId]
   );
   const qualityCounts = React.useMemo(
     () => ({
       all: auditedTools.length,
       duplicate: auditedTools.filter(({ issues }) =>
-        issues.some((issue) => issue.key === "duplicate"),
+        issues.some((issue) => issue.key === 'duplicate')
       ).length,
-      english: auditedTools.filter(({ issues }) =>
-        issues.some((issue) => issue.key === "english"),
-      ).length,
-      source: auditedTools.filter(({ issues }) =>
-        issues.some((issue) => issue.key === "source"),
-      ).length,
-      short: auditedTools.filter(({ issues }) =>
-        issues.some((issue) => issue.key === "short"),
-      ).length,
+      english: auditedTools.filter(({ issues }) => issues.some((issue) => issue.key === 'english'))
+        .length,
+      source: auditedTools.filter(({ issues }) => issues.some((issue) => issue.key === 'source'))
+        .length,
+      short: auditedTools.filter(({ issues }) => issues.some((issue) => issue.key === 'short'))
+        .length,
       metadata: auditedTools.filter(({ issues }) =>
-        issues.some((issue) => issue.key === "metadata"),
+        issues.some((issue) => issue.key === 'metadata')
       ).length,
-      icon: auditedTools.filter(({ issues }) =>
-        issues.some((issue) => issue.key === "icon"),
-      ).length,
+      icon: auditedTools.filter(({ issues }) => issues.some((issue) => issue.key === 'icon'))
+        .length,
       linkReview: auditedTools.filter(({ issues }) =>
-        issues.some((issue) => issue.key === "link-review"),
+        issues.some((issue) => issue.key === 'link-review')
       ).length,
       linkInvalid: auditedTools.filter(({ issues }) =>
-        issues.some((issue) => issue.key === "link-invalid"),
+        issues.some((issue) => issue.key === 'link-invalid')
       ).length,
       linkAudit: auditedTools.filter(({ issues }) =>
-        issues.some(
-          (issue) =>
-            issue.key === "link-review" || issue.key === "link-invalid",
-        ),
+        issues.some((issue) => issue.key === 'link-review' || issue.key === 'link-invalid')
       ).length,
-      high: auditedTools.filter(({ priority }) => priority === "high").length,
-      medium: auditedTools.filter(({ priority }) => priority === "medium")
-        .length,
-      low: auditedTools.filter(({ priority }) => priority === "low").length,
+      high: auditedTools.filter(({ priority }) => priority === 'high').length,
+      medium: auditedTools.filter(({ priority }) => priority === 'medium').length,
+      low: auditedTools.filter(({ priority }) => priority === 'low').length,
       ready: auditedTools.filter(({ issues }) => issues.length === 0).length,
     }),
-    [auditedTools],
+    [auditedTools]
   );
   const activeIssueCount = qualityCounts.all - qualityCounts.ready;
   const qualityPresets = [
     {
-      value: "duplicate",
-      label: "Tekrarlar",
+      value: 'duplicate',
+      label: 'Tekrarlar',
       count: qualityCounts.duplicate,
-      tone: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
+      tone: 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300',
     },
     {
-      value: "english",
-      label: "İngilizce açıklama",
+      value: 'english',
+      label: 'İngilizce açıklama',
       count: qualityCounts.english,
-      tone: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+      tone: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
     },
     {
-      value: "source",
-      label: "Dizin linki",
+      value: 'source',
+      label: 'Dizin linki',
       count: qualityCounts.source,
-      tone: "border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-300",
+      tone: 'border-red-600/30 bg-red-600/10 text-red-700 dark:text-red-300',
     },
     {
-      value: "link-audit",
-      label: "Link inceleme",
+      value: 'link-audit',
+      label: 'Link inceleme',
       count: qualityCounts.linkAudit,
-      tone: "border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300",
+      tone: 'border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-300',
     },
     {
-      value: "short",
-      label: "Kısa açıklama",
+      value: 'short',
+      label: 'Kısa açıklama',
       count: qualityCounts.short,
-      tone: "border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300",
+      tone: 'border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300',
     },
     {
-      value: "metadata",
-      label: "Eksik metadata",
+      value: 'metadata',
+      label: 'Eksik metadata',
       count: qualityCounts.metadata,
-      tone: "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+      tone: 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300',
     },
     {
-      value: "icon",
-      label: "İkon sorunu",
+      value: 'icon',
+      label: 'İkon sorunu',
       count: qualityCounts.icon,
-      tone: "border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300",
+      tone: 'border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300',
     },
   ];
   const priorityLabels = {
-    all: "tüm öncelikler",
-    high: "yüksek öncelik",
-    medium: "orta öncelik",
-    low: "düşük öncelik",
-    clean: "temiz kayıtlar",
+    all: 'tüm öncelikler',
+    high: 'yüksek öncelik',
+    medium: 'orta öncelik',
+    low: 'düşük öncelik',
+    clean: 'temiz kayıtlar',
   };
-  const normalizedSearch = searchTerm.trim().toLocaleLowerCase("tr-TR");
+  const normalizedSearch = searchTerm.trim().toLocaleLowerCase('tr-TR');
   const filteredTools = auditedTools
     .filter(({ tool, issues, priority }) => {
       const matchesSearch =
         !normalizedSearch ||
-        [tool.name, tool.description, tool.category_name, tool.link].some(
-          (value) =>
-            String(value || "")
-              .toLocaleLowerCase("tr-TR")
-              .includes(normalizedSearch),
+        [tool.name, tool.description, tool.category_name, tool.link].some((value) =>
+          String(value || '')
+            .toLocaleLowerCase('tr-TR')
+            .includes(normalizedSearch)
         );
       const matchesQuality =
-        qualityFilter === "all" ||
-        (qualityFilter === "link-audit"
-          ? issues.some(
-              (issue) =>
-                issue.key === "link-review" || issue.key === "link-invalid",
-            )
+        qualityFilter === 'all' ||
+        (qualityFilter === 'link-audit'
+          ? issues.some((issue) => issue.key === 'link-review' || issue.key === 'link-invalid')
           : false) ||
-        (qualityFilter === "ready"
+        (qualityFilter === 'ready'
           ? issues.length === 0
           : issues.some((issue) => issue.key === qualityFilter));
-      const matchesPriority =
-        priorityFilter === "all" || priority === priorityFilter;
+      const matchesPriority = priorityFilter === 'all' || priority === priorityFilter;
 
       return matchesSearch && matchesQuality && matchesPriority;
     })
     .sort((a, b) => {
-      if (sortMode === "name") {
-        return String(a.tool.name || "").localeCompare(
-          String(b.tool.name || ""),
-          "tr",
-        );
+      if (sortMode === 'name') {
+        return String(a.tool.name || '').localeCompare(String(b.tool.name || ''), 'tr');
       }
-      if (sortMode === "newest") {
-        return (
-          new Date(b.tool.created_at || 0) - new Date(a.tool.created_at || 0)
-        );
+      if (sortMode === 'newest') {
+        return new Date(b.tool.created_at || 0) - new Date(a.tool.created_at || 0);
       }
-      if (sortMode === "oldest") {
-        return (
-          new Date(a.tool.created_at || 0) - new Date(b.tool.created_at || 0)
-        );
+      if (sortMode === 'oldest') {
+        return new Date(a.tool.created_at || 0) - new Date(b.tool.created_at || 0);
       }
 
       const duplicateWeight = (entry) =>
@@ -749,10 +667,8 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         (priorityWeight[b.priority] || 0) +
           b.issues.length +
           duplicateWeight(b) -
-          ((priorityWeight[a.priority] || 0) +
-            a.issues.length +
-            duplicateWeight(a)) ||
-        String(a.tool.name || "").localeCompare(String(b.tool.name || ""), "tr")
+          ((priorityWeight[a.priority] || 0) + a.issues.length + duplicateWeight(a)) ||
+        String(a.tool.name || '').localeCompare(String(b.tool.name || ''), 'tr')
       );
     });
   const duplicateGroups = React.useMemo(() => {
@@ -764,13 +680,11 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
       }
 
       const normalizedLink = normalizeToolLink(entry.tool.link);
-      const normalizedName = String(entry.tool.name || "")
+      const normalizedName = String(entry.tool.name || '')
         .trim()
-        .toLocaleLowerCase("tr-TR");
+        .toLocaleLowerCase('tr-TR');
       const groupKey =
-        entry.duplicateLinkCount > 1
-          ? `link:${normalizedLink}`
-          : `name:${normalizedName}`;
+        entry.duplicateLinkCount > 1 ? `link:${normalizedLink}` : `name:${normalizedName}`;
 
       if (!groups.has(groupKey)) groups.set(groupKey, []);
       groups.get(groupKey).push(entry);
@@ -781,7 +695,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         const sortedEntries = [...entries].sort(
           (a, b) =>
             getCanonicalScore(b.tool) - getCanonicalScore(a.tool) ||
-            new Date(a.tool.created_at || 0) - new Date(b.tool.created_at || 0),
+            new Date(a.tool.created_at || 0) - new Date(b.tool.created_at || 0)
         );
         return {
           key,
@@ -793,24 +707,23 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
       .sort(
         (a, b) =>
           b.entries.length - a.entries.length ||
-          String(a.entries[0]?.tool.name || "").localeCompare(
-            String(b.entries[0]?.tool.name || ""),
-            "tr",
-          ),
+          String(a.entries[0]?.tool.name || '').localeCompare(
+            String(b.entries[0]?.tool.name || ''),
+            'tr'
+          )
       );
   }, [auditedTools]);
   const visibleDuplicateGroups = duplicateGroups.filter(({ entries }) =>
     entries.some(
       ({ tool, priority }) =>
-        (priorityFilter === "all" || priority === priorityFilter) &&
+        (priorityFilter === 'all' || priority === priorityFilter) &&
         (!normalizedSearch ||
-          [tool.name, tool.description, tool.category_name, tool.link].some(
-            (value) =>
-              String(value || "")
-                .toLocaleLowerCase("tr-TR")
-                .includes(normalizedSearch),
-          )),
-    ),
+          [tool.name, tool.description, tool.category_name, tool.link].some((value) =>
+            String(value || '')
+              .toLocaleLowerCase('tr-TR')
+              .includes(normalizedSearch)
+          ))
+    )
   );
   const runAutomation = () => {
     startAutomationTransition(async () => {
@@ -826,20 +739,18 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
           `${result.updatedCount} kayıt güncellendi${
             result.aiDescriptionFixCount > 0
               ? `, ${result.aiDescriptionFixCount} açıklama AI ile iyileştirildi`
-              : ""
+              : ''
           }${
             result.fallbackDescriptionFixCount > 0
               ? `, ${result.fallbackDescriptionFixCount} kısa açıklama otomatik genişletildi`
-              : ""
-          }.`,
+              : ''
+          }.`
         );
       } else {
         toast(
           `Güncelleme yapılmadı. Taranan: ${result.scannedCount}, kısa açıklama: ${result.shortDescriptionCount}, İngilizce açıklama: ${result.englishDescriptionCount}${
-            result.aiRateLimitHitCount > 0
-              ? `, AI limit hatası: ${result.aiRateLimitHitCount}`
-              : ""
-          }.`,
+            result.aiRateLimitHitCount > 0 ? `, AI limit hatası: ${result.aiRateLimitHitCount}` : ''
+          }.`
         );
       }
       router.refresh();
@@ -851,8 +762,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
       <CardHeader>
         <CardTitle>Onaylanmış Araçları Yönet</CardTitle>
         <CardDescription>
-          Veri kalitesi sorunlarını filtreleyin; araçları düzenleyin, silin veya
-          öne çıkarın.
+          Veri kalitesi sorunlarını filtreleyin; araçları düzenleyin, silin veya öne çıkarın.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -861,8 +771,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
             <p className="text-sm font-semibold">Veri kalitesi kuyruğu</p>
             <p className="mt-1 text-2xl font-bold">{activeIssueCount}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Düzeltme gerektiren kayıt; sorunsuz kayıt sayısı{" "}
-              {qualityCounts.ready}.
+              Düzeltme gerektiren kayıt; sorunsuz kayıt sayısı {qualityCounts.ready}.
             </p>
             <Button
               className="mt-3"
@@ -870,34 +779,26 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
               onClick={runAutomation}
               disabled={isAutomationPending}
             >
-              {isAutomationPending
-                ? "Otomasyon çalışıyor..."
-                : "Akıllı düzeltmeyi çalıştır"}
+              {isAutomationPending ? 'Otomasyon çalışıyor...' : 'Akıllı düzeltmeyi çalıştır'}
             </Button>
             {automationReport && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Son çalışma: {automationReport.updatedCount} güncellendi,{" "}
-                {automationReport.inferredPricingCount} fiyat modeli ve{" "}
-                {automationReport.defaultedPlatformCount} platform alanı
-                otomatik dolduruldu, {automationReport.aiDescriptionFixCount}{" "}
-                açıklama AI ile iyileştirildi,{" "}
-                {automationReport.fallbackDescriptionFixCount} kısa açıklama
-                fallback ile düzeltildi
+                Son çalışma: {automationReport.updatedCount} güncellendi,{' '}
+                {automationReport.inferredPricingCount} fiyat modeli ve{' '}
+                {automationReport.defaultedPlatformCount} platform alanı otomatik dolduruldu,{' '}
+                {automationReport.aiDescriptionFixCount} açıklama AI ile iyileştirildi,{' '}
+                {automationReport.fallbackDescriptionFixCount} kısa açıklama fallback ile düzeltildi
                 {automationReport.aiRateLimitHitCount > 0
                   ? `, ${automationReport.aiRateLimitHitCount} kayıt AI limitine takıldı.`
-                  : "."}
+                  : '.'}
               </p>
             )}
             <div className="mt-3 flex flex-wrap gap-1.5">
-              <Badge className="bg-red-600 hover:bg-red-600">
-                {qualityCounts.high} yüksek
-              </Badge>
+              <Badge className="bg-red-600 hover:bg-red-600">{qualityCounts.high} yüksek</Badge>
               <Badge className="bg-orange-600 hover:bg-orange-600">
                 {qualityCounts.medium} orta
               </Badge>
-              <Badge className="bg-sky-600 hover:bg-sky-600">
-                {qualityCounts.low} düşük
-              </Badge>
+              <Badge className="bg-sky-600 hover:bg-sky-600">{qualityCounts.low} düşük</Badge>
             </div>
           </div>
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
@@ -907,18 +808,14 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                 type="button"
                 onClick={() => setQualityFilter(preset.value)}
                 className={`rounded-xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                  qualityFilter === preset.value
-                    ? preset.tone
-                    : "bg-background hover:bg-muted/50"
+                  qualityFilter === preset.value ? preset.tone : 'bg-background hover:bg-muted/50'
                 }`}
                 aria-pressed={qualityFilter === preset.value}
               >
                 <span className="block text-xs font-medium text-muted-foreground">
                   {preset.label}
                 </span>
-                <span className="mt-1 block text-xl font-bold">
-                  {preset.count}
-                </span>
+                <span className="mt-1 block text-xl font-bold">{preset.count}</span>
               </button>
             ))}
           </div>
@@ -938,20 +835,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
             aria-label="Veri kalitesi filtresi"
           >
             <option value="all">Tüm araçlar ({qualityCounts.all})</option>
-            <option value="duplicate">
-              Tekrarlar ({qualityCounts.duplicate})
-            </option>
-            <option value="english">
-              İngilizce açıklama ({qualityCounts.english})
-            </option>
+            <option value="duplicate">Tekrarlar ({qualityCounts.duplicate})</option>
+            <option value="english">İngilizce açıklama ({qualityCounts.english})</option>
             <option value="source">Dizin linki ({qualityCounts.source})</option>
-            <option value="link-audit">
-              Link inceleme ({qualityCounts.linkAudit})
-            </option>
+            <option value="link-audit">Link inceleme ({qualityCounts.linkAudit})</option>
             <option value="short">Kısa açıklama ({qualityCounts.short})</option>
-            <option value="metadata">
-              Eksik fiyat/platform ({qualityCounts.metadata})
-            </option>
+            <option value="metadata">Eksik fiyat/platform ({qualityCounts.metadata})</option>
             <option value="icon">İkon sorunu ({qualityCounts.icon})</option>
             <option value="ready">Sorunsuz ({qualityCounts.ready})</option>
           </select>
@@ -981,23 +870,15 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         </div>
 
         <div className="flex flex-wrap gap-2" aria-label="Veri kalitesi özeti">
-          <Badge variant="secondary">
-            {qualityCounts.duplicate} tekrarlı kayıt
-          </Badge>
-          <Badge variant="secondary">
-            {qualityCounts.english} İngilizce açıklama
-          </Badge>
+          <Badge variant="secondary">{qualityCounts.duplicate} tekrarlı kayıt</Badge>
+          <Badge variant="secondary">{qualityCounts.english} İngilizce açıklama</Badge>
           <Badge variant="secondary">{qualityCounts.source} dizin linki</Badge>
           <Badge variant="secondary">
             {qualityCounts.linkAudit} link inceleme
-            {qualityCounts.linkInvalid > 0
-              ? ` (${qualityCounts.linkInvalid} kırık)`
-              : ""}
+            {qualityCounts.linkInvalid > 0 ? ` (${qualityCounts.linkInvalid} kırık)` : ''}
           </Badge>
           <Badge variant="secondary">{qualityCounts.short} kısa açıklama</Badge>
-          <Badge variant="secondary">
-            {qualityCounts.metadata} eksik metadata
-          </Badge>
+          <Badge variant="secondary">{qualityCounts.metadata} eksik metadata</Badge>
           <Badge variant="secondary">{qualityCounts.icon} ikon sorunu</Badge>
         </div>
 
@@ -1007,15 +888,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
             : `İkon denetimi tamamlandı: ${iconAuditMeta.processed}/${iconAuditMeta.total}`}
         </p>
 
-        {qualityFilter === "duplicate" && (
+        {qualityFilter === 'duplicate' && (
           <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold">
-                {visibleDuplicateGroups.length} tekrar kümesi
-              </p>
+              <p className="text-sm font-semibold">{visibleDuplicateGroups.length} tekrar kümesi</p>
               <p className="text-xs text-muted-foreground">
-                Önerilen kayıt, veri doluluğu ve resmî bağlantı olasılığına göre
-                hesaplanır.
+                Önerilen kayıt, veri doluluğu ve resmî bağlantı olasılığına göre hesaplanır.
               </p>
             </div>
             <select
@@ -1031,12 +909,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         )}
 
         <p className="text-sm text-muted-foreground" role="status">
-          {qualityFilter === "duplicate" && duplicateView === "groups"
+          {qualityFilter === 'duplicate' && duplicateView === 'groups'
             ? `${visibleDuplicateGroups.length} tekrar kümesi gösteriliyor · ${priorityLabels[priorityFilter]}.`
             : `${filteredTools.length} araç gösteriliyor · ${priorityLabels[priorityFilter]}.`}
         </p>
         <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-          {qualityFilter === "duplicate" && duplicateView === "groups"
+          {qualityFilter === 'duplicate' && duplicateView === 'groups'
             ? visibleDuplicateGroups.map((group) => (
                 <section
                   key={group.key}
@@ -1044,40 +922,29 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                 >
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <h3 className="font-semibold">
-                        {group.entries[0].tool.name}
-                      </h3>
+                      <h3 className="font-semibold">{group.entries[0].tool.name}</h3>
                       <p className="text-xs text-muted-foreground">
                         {group.entries.length} kayıt karşılaştırılıyor
                       </p>
                     </div>
                     <Badge variant="secondary">
-                      {group.key.startsWith("link:")
-                        ? "Aynı bağlantı"
-                        : "Aynı ad"}
+                      {group.key.startsWith('link:') ? 'Aynı bağlantı' : 'Aynı ad'}
                     </Badge>
                   </div>
                   <div className="grid gap-3 xl:grid-cols-2">
                     {group.entries.map(({ tool, issues }) => (
-                      <article
-                        key={tool.id}
-                        className="rounded-lg border bg-background p-3"
-                      >
+                      <article key={tool.id} className="rounded-lg border bg-background p-3">
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant="outline">
-                            {tool.category_name || "Kategorisiz"}
-                          </Badge>
+                          <Badge variant="outline">{tool.category_name || 'Kategorisiz'}</Badge>
                           {tool.id === group.recommendedId && (
                             <Badge className="bg-emerald-600 hover:bg-emerald-600">
                               Korunması önerilen
                             </Badge>
                           )}
-                          <span className="text-xs text-muted-foreground">
-                            #{tool.id}
-                          </span>
+                          <span className="text-xs text-muted-foreground">#{tool.id}</span>
                         </div>
                         <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">
-                          {tool.description || "Açıklama yok."}
+                          {tool.description || 'Açıklama yok.'}
                         </p>
                         <p className="mt-2 truncate text-xs text-muted-foreground">
                           {normalizeToolLink(tool.link)}
@@ -1101,21 +968,11 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                               rel="noopener noreferrer"
                             >
                               Canlı sayfa
-                              <ExternalLink
-                                aria-hidden="true"
-                                className="ml-2 h-4 w-4"
-                              />
+                              <ExternalLink aria-hidden="true" className="ml-2 h-4 w-4" />
                             </Link>
                           </Button>
-                          <EditToolDialog
-                            tool={tool}
-                            categories={categories}
-                            allTags={allTags}
-                          />
-                          <DeleteToolButton
-                            toolId={tool.id}
-                            toolName={tool.name}
-                          />
+                          <EditToolDialog tool={tool} categories={categories} allTags={allTags} />
+                          <DeleteToolButton toolId={tool.id} toolName={tool.name} />
                         </div>
                       </article>
                     ))}
@@ -1138,17 +995,13 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-semibold">{tool.name}</h3>
-                        <Badge variant="outline">
-                          {tool.category_name || "Kategorisiz"}
-                        </Badge>
-                        <Badge
-                          className={getQualityPriorityMeta(priority).className}
-                        >
+                        <Badge variant="outline">{tool.category_name || 'Kategorisiz'}</Badge>
+                        <Badge className={getQualityPriorityMeta(priority).className}>
                           {getQualityPriorityMeta(priority).label}
                         </Badge>
                       </div>
                       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                        {tool.description || "Açıklama yok."}
+                        {tool.description || 'Açıklama yok.'}
                       </p>
                       {actionHint && (
                         <p className="mt-2 rounded-md bg-muted/60 px-3 py-2 text-xs leading-5 text-muted-foreground">
@@ -1184,37 +1037,23 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center justify-end gap-2">
-                      <FeaturedToggle
-                        toolId={tool.id}
-                        isFeatured={tool.is_featured}
-                      />
+                      <FeaturedToggle toolId={tool.id} isFeatured={tool.is_featured} />
                       <Button asChild variant="outline" size="sm">
-                        <Link
-                          href={`/tool/${tool.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
+                        <Link href={`/tool/${tool.slug}`} target="_blank" rel="noopener noreferrer">
                           Canlı sayfa
-                          <ExternalLink
-                            aria-hidden="true"
-                            className="ml-2 h-4 w-4"
-                          />
+                          <ExternalLink aria-hidden="true" className="ml-2 h-4 w-4" />
                         </Link>
                       </Button>
-                      <EditToolDialog
-                        tool={tool}
-                        categories={categories}
-                        allTags={allTags}
-                      />
+                      <EditToolDialog tool={tool} categories={categories} allTags={allTags} />
                       <DeleteToolButton toolId={tool.id} toolName={tool.name} />
                     </div>
                   </div>
-                ),
+                )
               )}
-          {((qualityFilter === "duplicate" &&
-            duplicateView === "groups" &&
+          {((qualityFilter === 'duplicate' &&
+            duplicateView === 'groups' &&
             visibleDuplicateGroups.length === 0) ||
-            (!(qualityFilter === "duplicate" && duplicateView === "groups") &&
+            (!(qualityFilter === 'duplicate' && duplicateView === 'groups') &&
               filteredTools.length === 0)) && (
             <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
               Bu arama ve kalite filtresiyle eşleşen araç bulunamadı.
@@ -1238,7 +1077,7 @@ function LinkReportCard({ report }) {
         toast.error(result.error);
         return;
       }
-      toast.success(result?.success || "Rapor güncellendi.");
+      toast.success(result?.success || 'Rapor güncellendi.');
       router.refresh();
     });
   };
@@ -1248,9 +1087,7 @@ function LinkReportCard({ report }) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold">
-              {tool?.name || `Araç #${report.tool_id}`}
-            </h3>
+            <h3 className="text-lg font-semibold">{tool?.name || `Araç #${report.tool_id}`}</h3>
             <Badge className={getReportStatusBadgeClass(report.status)}>
               {linkReportStatusLabels[report.status] || report.status}
             </Badge>
@@ -1268,9 +1105,7 @@ function LinkReportCard({ report }) {
             <div className="flex items-center gap-2">
               <Mail aria-hidden="true" className="h-4 w-4 shrink-0" />
               <dt className="sr-only">Raporlayan</dt>
-              <dd className="truncate">
-                {report.reporter_email || "E-posta yok"}
-              </dd>
+              <dd className="truncate">{report.reporter_email || 'E-posta yok'}</dd>
             </div>
           </dl>
 
@@ -1290,9 +1125,7 @@ function LinkReportCard({ report }) {
 
           {report.admin_note && (
             <p className="rounded-lg bg-primary/5 p-3 text-sm leading-6 text-muted-foreground">
-              <span className="font-semibold text-foreground">
-                Admin notu:{" "}
-              </span>
+              <span className="font-semibold text-foreground">Admin notu: </span>
               {report.admin_note}
             </p>
           )}
@@ -1301,11 +1134,7 @@ function LinkReportCard({ report }) {
         <div className="flex shrink-0 flex-wrap gap-2 lg:max-w-[260px] lg:justify-end">
           {tool?.slug && (
             <Button asChild variant="outline" size="sm">
-              <Link
-                href={`/tool/${tool.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <Link href={`/tool/${tool.slug}`} target="_blank" rel="noopener noreferrer">
                 Canlı sayfa
                 <ExternalLink aria-hidden="true" className="ml-2 h-4 w-4" />
               </Link>
@@ -1313,11 +1142,7 @@ function LinkReportCard({ report }) {
           )}
           {report.reported_url && (
             <Button asChild variant="outline" size="sm">
-              <a
-                href={report.reported_url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href={report.reported_url} target="_blank" rel="noopener noreferrer">
                 Linki aç
                 <ExternalLink aria-hidden="true" className="ml-2 h-4 w-4" />
               </a>
@@ -1333,7 +1158,7 @@ function LinkReportCard({ report }) {
         <input type="hidden" name="reportId" value={report.id} />
         <select
           name="status"
-          defaultValue={report.status || "open"}
+          defaultValue={report.status || 'open'}
           disabled={isPending}
           className="h-10 rounded-md border border-input bg-background px-3 text-sm"
           aria-label="Rapor durumu"
@@ -1345,14 +1170,14 @@ function LinkReportCard({ report }) {
         </select>
         <Input
           name="adminNote"
-          defaultValue={report.admin_note || ""}
+          defaultValue={report.admin_note || ''}
           disabled={isPending}
           maxLength={1000}
           placeholder="Admin notu ekle..."
           aria-label="Admin notu"
         />
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Kaydediliyor…" : "Güncelle"}
+          {isPending ? 'Kaydediliyor…' : 'Güncelle'}
         </Button>
       </form>
     </article>
@@ -1360,26 +1185,22 @@ function LinkReportCard({ report }) {
 }
 
 function ReportedLinksTab({ reports }) {
-  const [statusFilter, setStatusFilter] = React.useState("active");
+  const [statusFilter, setStatusFilter] = React.useState('active');
   const counts = React.useMemo(
     () => ({
       all: reports.length,
-      active: reports.filter(
-        (report) => report.status === "open" || report.status === "reviewing",
-      ).length,
-      open: reports.filter((report) => report.status === "open").length,
-      reviewing: reports.filter((report) => report.status === "reviewing")
+      active: reports.filter((report) => report.status === 'open' || report.status === 'reviewing')
         .length,
-      resolved: reports.filter((report) => report.status === "resolved").length,
-      dismissed: reports.filter((report) => report.status === "dismissed")
-        .length,
+      open: reports.filter((report) => report.status === 'open').length,
+      reviewing: reports.filter((report) => report.status === 'reviewing').length,
+      resolved: reports.filter((report) => report.status === 'resolved').length,
+      dismissed: reports.filter((report) => report.status === 'dismissed').length,
     }),
-    [reports],
+    [reports]
   );
   const filteredReports = reports.filter((report) => {
-    if (statusFilter === "all") return true;
-    if (statusFilter === "active")
-      return report.status === "open" || report.status === "reviewing";
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'active') return report.status === 'open' || report.status === 'reviewing';
     return report.status === statusFilter;
   });
 
@@ -1388,34 +1209,29 @@ function ReportedLinksTab({ reports }) {
       <CardHeader>
         <CardTitle>Reported Links</CardTitle>
         <CardDescription>
-          Kullanıcıların araç detay sayfalarından gönderdiği hatalı link
-          bildirimlerini inceleyin.
+          Kullanıcıların araç detay sayfalarından gönderdiği hatalı link bildirimlerini inceleyin.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
           {[
-            ["active", "Aktif", counts.active],
-            ["open", "Açık", counts.open],
-            ["reviewing", "İncelemede", counts.reviewing],
-            ["resolved", "Çözüldü", counts.resolved],
-            ["dismissed", "Geçersiz", counts.dismissed],
-            ["all", "Tümü", counts.all],
+            ['active', 'Aktif', counts.active],
+            ['open', 'Açık', counts.open],
+            ['reviewing', 'İncelemede', counts.reviewing],
+            ['resolved', 'Çözüldü', counts.resolved],
+            ['dismissed', 'Geçersiz', counts.dismissed],
+            ['all', 'Tümü', counts.all],
           ].map(([value, label, count]) => (
             <button
               key={value}
               type="button"
               onClick={() => setStatusFilter(value)}
               className={`rounded-xl border p-3 text-left transition hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                statusFilter === value
-                  ? "bg-primary/10 text-primary"
-                  : "bg-background"
+                statusFilter === value ? 'bg-primary/10 text-primary' : 'bg-background'
               }`}
               aria-pressed={statusFilter === value}
             >
-              <span className="block text-xs font-medium text-muted-foreground">
-                {label}
-              </span>
+              <span className="block text-xs font-medium text-muted-foreground">{label}</span>
               <span className="mt-1 block text-xl font-bold">{count}</span>
             </button>
           ))}
@@ -1427,9 +1243,7 @@ function ReportedLinksTab({ reports }) {
 
         <div className="space-y-3">
           {filteredReports.length > 0 ? (
-            filteredReports.map((report) => (
-              <LinkReportCard key={report.id} report={report} />
-            ))
+            filteredReports.map((report) => <LinkReportCard key={report.id} report={report} />)
           ) : (
             <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
               Bu filtrede link raporu bulunmuyor.
@@ -1456,31 +1270,22 @@ export function AdminPageClient({ data }) {
 
   const approvalCount = unapprovedTools.length + unapprovedShowcaseItems.length;
   const activeReportCount = reportedLinks.filter(
-    (report) => report.status === "open" || report.status === "reviewing",
+    (report) => report.status === 'open' || report.status === 'reviewing'
   ).length;
 
   return (
     <Tabs defaultValue="approval_queue" className="w-full">
       <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto p-1">
-        <TabsTrigger
-          value="approval_queue"
-          className="shrink-0 text-xs sm:text-sm"
-        >
-          Onay Kuyruğu{" "}
-          <Badge
-            variant={approvalCount > 0 ? "default" : "secondary"}
-            className="ml-2"
-          >
+        <TabsTrigger value="approval_queue" className="shrink-0 text-xs sm:text-sm">
+          Onay Kuyruğu{' '}
+          <Badge variant={approvalCount > 0 ? 'default' : 'secondary'} className="ml-2">
             {approvalCount}
           </Badge>
         </TabsTrigger>
         <TabsTrigger value="tool_management">Araç Yönetimi</TabsTrigger>
         <TabsTrigger value="reported_links">
           Reported Links
-          <Badge
-            variant={activeReportCount > 0 ? "default" : "secondary"}
-            className="ml-2"
-          >
+          <Badge variant={activeReportCount > 0 ? 'default' : 'secondary'} className="ml-2">
             {activeReportCount}
           </Badge>
         </TabsTrigger>

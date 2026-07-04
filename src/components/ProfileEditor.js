@@ -1,22 +1,16 @@
-"use client";
+'use client';
 
-import { useTransition } from "react";
-import { updateUserProfile } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { AvatarUploader } from "@/components/AvatarUploader";
-import toast from "react-hot-toast";
+import { useTransition } from 'react';
+import { updateUserProfile } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AvatarUploader } from '@/components/AvatarUploader';
+import toast from 'react-hot-toast';
 import { PushNotificationManager } from './PushNotificationManager';
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 export function ProfileEditor({ user, profile }) {
   const [isPending, startTransition] = useTransition();
@@ -43,10 +37,7 @@ export function ProfileEditor({ user, profile }) {
       <CardContent className="space-y-6">
         <div className="space-y-2">
           <Label>Profil Fotoğrafı</Label>
-          <AvatarUploader
-            userId={user.id}
-            currentAvatarUrl={profile?.avatar_url}
-          />
+          <AvatarUploader userId={user.id} currentAvatarUrl={profile?.avatar_url} />
         </div>
 
         <form action={handleFormAction} className="space-y-4">
@@ -55,7 +46,7 @@ export function ProfileEditor({ user, profile }) {
             <Input
               id="username"
               name="username"
-              defaultValue={profile?.username || ""}
+              defaultValue={profile?.username || ''}
               placeholder="benzersiz_kullanici_adiniz"
             />
             <p className="text-xs text-muted-foreground">
@@ -67,19 +58,19 @@ export function ProfileEditor({ user, profile }) {
             <Textarea
               id="bio"
               name="bio"
-              defaultValue={profile?.bio || ""}
+              defaultValue={profile?.bio || ''}
               placeholder="Kendinizden kısaca bahsedin..."
               maxLength="200"
             />
           </div>
           {/* YENİ: Bildirim Ayarları Bölümü */}
-                <div className="space-y-4 pt-6 border-t">
-                     <Label className="font-semibold">Bildirim Ayarları</Label>
-                     <PushNotificationManager initialSubscriptionStatus={profile.wants_push_notifications} />
-                </div>
+          <div className="space-y-4 pt-6 border-t">
+            <Label className="font-semibold">Bildirim Ayarları</Label>
+            <PushNotificationManager initialSubscriptionStatus={profile.wants_push_notifications} />
+          </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Kaydediliyor..." : "Profili Güncelle"}
+              {isPending ? 'Kaydediliyor...' : 'Profili Güncelle'}
             </Button>
           </div>
         </form>

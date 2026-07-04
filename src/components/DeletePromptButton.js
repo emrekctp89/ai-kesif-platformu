@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   AlertDialog,
@@ -10,11 +10,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { deletePrompt } from "@/app/actions";
-import toast from "react-hot-toast";
-import { Trash2 } from "lucide-react";
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { deletePrompt } from '@/app/actions';
+import toast from 'react-hot-toast';
+import { Trash2 } from 'lucide-react';
 
 export function DeletePromptButton({ promptId, toolSlug }) {
   const handleFormAction = async (formData) => {
@@ -22,7 +22,7 @@ export function DeletePromptButton({ promptId, toolSlug }) {
     if (result?.error) {
       toast.error(result.error);
     } else {
-      toast.success("Prompt silindi.");
+      toast.success('Prompt silindi.');
     }
   };
 

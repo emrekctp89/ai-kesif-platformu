@@ -1,100 +1,100 @@
-"use server";
+'use server';
 
-import { createClient } from "@/utils/supabase/actions";
-import { createAdminClient } from "@/utils/supabase/admin";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { slugify } from "@/utils/slugify";
+import { createClient } from '@/utils/supabase/actions';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { slugify } from '@/utils/slugify';
 
 export async function createProject(formData) {
-  "use server";
+  'use server';
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: "Bu işlem için giriş yapmalısınız." };
+    return { error: 'Bu işlem için giriş yapmalısınız.' };
   }
 
-  const title = formData.get("title");
+  const title = formData.get('title');
   if (!title) {
-    return { error: "Proje başlığı boş olamaz." };
+    return { error: 'Proje başlığı boş olamaz.' };
   }
 
-  const slug = slugify(title) + "-" + Date.now().toString(36);
+  const slug = slugify(title) + '-' + Date.now().toString(36);
 
   const { data: newProject, error } = await supabase
-    .from("projects")
-    .insert({ title, user_id: user.id, description: "" })
-    .select("id")
+    .from('projects')
+    .insert({ title, user_id: user.id, description: '' })
+    .select('id')
     .single();
 
   if (error) {
-    console.error("Proje oluşturma hatası:", error);
-    return { error: "Proje oluşturulurken bir hata oluştu." };
+    console.error('Proje oluşturma hatası:', error);
+    return { error: 'Proje oluşturulurken bir hata oluştu.' };
   }
 
   redirect(`/profile/projects/${newProject.id}/edit`);
 }
 
 export async function updateProject(formData) {
-  "use server";
+  'use server';
   const supabase = createClient();
 
-  const id = formData.get("id");
-  const title = formData.get("title");
-  const description = formData.get("description");
+  const id = formData.get('id');
+  const title = formData.get('title');
+  const description = formData.get('description');
 
   const { error } = await supabase
-    .from("projects")
+    .from('projects')
     .update({ title, description, updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq('id', id);
 
   if (error) {
-    console.error("Proje güncelleme hatası:", error);
-    return { error: "Proje güncellenirken bir hata oluştu." };
+    console.error('Proje güncelleme hatası:', error);
+    return { error: 'Proje güncellenirken bir hata oluştu.' };
   }
 
   revalidatePath(`/profile/projects/${id}/edit`);
-  revalidatePath("/profile");
-  return { success: "Proje başarıyla güncellendi." };
+  revalidatePath('/profile');
+  return { success: 'Proje başarıyla güncellendi.' };
 }
 
 export async function deleteProject(formData) {
-  "use server";
+  'use server';
   const supabase = createClient();
-  const id = formData.get("id");
+  const id = formData.get('id');
 
-  const { error } = await supabase.from("projects").delete().eq("id", id);
+  const { error } = await supabase.from('projects').delete().eq('id', id);
 
   if (error) {
-    console.error("Proje silme hatası:", error);
-    return { error: "Proje silinirken bir hata oluştu." };
+    console.error('Proje silme hatası:', error);
+    return { error: 'Proje silinirken bir hata oluştu.' };
   }
 
-  redirect("/profile");
+  redirect('/profile');
 }
 
 export async function updateProjectItems(formData) {
-  "use server";
+  'use server';
   const supabase = createClient();
 
-  const projectId = formData.get("projectId");
-  const items = JSON.parse(formData.get("items") || "[]");
+  const projectId = formData.get('projectId');
+  const items = JSON.parse(formData.get('items') || '[]');
 
   if (!projectId) {
     return { error: "Proje ID'si bulunamadı." };
   }
 
   const { error: deleteError } = await supabase
-    .from("project_items")
+    .from('project_items')
     .delete()
-    .eq("project_id", projectId);
+    .eq('project_id', projectId);
 
   if (deleteError) {
-    console.error("Eski proje içerikleri silme hatası:", deleteError);
-    return { error: "Proje güncellenirken bir hata oluştu." };
+    console.error('Eski proje içerikleri silme hatası:', deleteError);
+    return { error: 'Proje güncellenirken bir hata oluştu.' };
   }
 
   if (items.length > 0) {
@@ -104,29 +104,27 @@ export async function updateProjectItems(formData) {
       item_type: item.item_type,
     }));
 
-    const { error: insertError } = await supabase
-      .from("project_items")
-      .insert(newItems);
+    const { error: insertError } = await supabase.from('project_items').insert(newItems);
 
     if (insertError) {
-      console.error("Yeni proje içerikleri ekleme hatası:", insertError);
-      return { error: "Proje güncellenirken bir hata oluştu." };
+      console.error('Yeni proje içerikleri ekleme hatası:', insertError);
+      return { error: 'Proje güncellenirken bir hata oluştu.' };
     }
   }
 
   revalidatePath(`/profile/projects/${projectId}/edit`);
-  return { success: "Projedeki içerikler güncellendi." };
+  return { success: 'Projedeki içerikler güncellendi.' };
 }
 
 export async function getAiProjectStrategy(projectId) {
-  "use server";
+  'use server';
 
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return { error: "Bu özelliği kullanmak için giriş yapmalısınız." };
+    return { error: 'Bu özelliği kullanmak için giriş yapmalısınız.' };
   }
 
   if (!projectId) {
@@ -135,12 +133,12 @@ export async function getAiProjectStrategy(projectId) {
 
   try {
     const { data: projectData, error: projectError } = await supabase.rpc(
-      "get_project_details_for_ai",
+      'get_project_details_for_ai',
       { p_project_id: projectId }
     );
 
     if (projectError || !projectData) {
-      throw new Error("Proje detayları veritabanından alınamadı.");
+      throw new Error('Proje detayları veritabanından alınamadı.');
     }
 
     const formattedData = `
@@ -148,13 +146,13 @@ export async function getAiProjectStrategy(projectId) {
       Proje Açıklaması: ${projectData.description}
 
       Projeye Eklenen Araçlar:
-      ${projectData.tools?.map((t) => `- ${t.name}: ${t.description}`).join("\n") || "Yok"}
+      ${projectData.tools?.map((t) => `- ${t.name}: ${t.description}`).join('\n') || 'Yok'}
 
       Projeye Eklenen Eserler:
-      ${projectData.showcase_items?.map((s) => `- ${s.title}: ${s.description}`).join("\n") || "Yok"}
+      ${projectData.showcase_items?.map((s) => `- ${s.title}: ${s.description}`).join('\n') || 'Yok'}
 
       Projeye Eklenen Prompt'lar:
-      ${projectData.prompts?.map((p) => `- ${p.title}: "${p.prompt_text}"`).join("\n") || "Yok"}
+      ${projectData.prompts?.map((p) => `- ${p.title}: "${p.prompt_text}"`).join('\n') || 'Yok'}
     `;
 
     const prompt = `
@@ -166,42 +164,44 @@ export async function getAiProjectStrategy(projectId) {
       GÖREVİN: Bu verilere dayanarak, kullanıcının projesini daha da ileriye taşıması için stratejik tavsiyeler sunmaktır. Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin veya açıklama ekleme.
     `;
 
-    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const chatHistory = [{ role: 'user', parts: [{ text: prompt }] }];
     const payload = {
       contents: chatHistory,
       generationConfig: {
-        responseMimeType: "application/json",
+        responseMimeType: 'application/json',
         responseSchema: {
-          type: "OBJECT",
+          type: 'OBJECT',
           properties: {
             project_summary: {
-              type: "STRING",
-              description: "Projenin genel amacını ve durumunu 2 cümleyle özetle.",
+              type: 'STRING',
+              description: 'Projenin genel amacını ve durumunu 2 cümleyle özetle.',
             },
             strategic_suggestions: {
-              type: "ARRAY",
-              items: { type: "STRING" },
-              description: "Projenin hedefine ulaşması için 3 adet somut ve yaratıcı stratejik öneri sun.",
+              type: 'ARRAY',
+              items: { type: 'STRING' },
+              description:
+                'Projenin hedefine ulaşması için 3 adet somut ve yaratıcı stratejik öneri sun.',
             },
             potential_tools: {
-              type: "ARRAY",
-              items: { type: "STRING" },
-              description: "Bu projeye fayda sağlayabilecek, listede olmayan 2 farklı araç türü öner.",
+              type: 'ARRAY',
+              items: { type: 'STRING' },
+              description:
+                'Bu projeye fayda sağlayabilecek, listede olmayan 2 farklı araç türü öner.',
             },
           },
-          required: ["project_summary", "strategic_suggestions", "potential_tools"],
+          required: ['project_summary', 'strategic_suggestions', 'potential_tools'],
         },
       },
     };
 
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+    if (!apiKey) return { error: 'Gemini API anahtarı bulunamadı.' };
 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
 
@@ -221,11 +221,11 @@ export async function getAiProjectStrategy(projectId) {
       };
     } else {
       return {
-        error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı.",
+        error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.',
       };
     }
   } catch (e) {
-    console.error("AI Stratejist fonksiyonunda genel hata:", e);
-    return { error: "Analiz oluşturulurken beklenmedik bir hata oluştu." };
+    console.error('AI Stratejist fonksiyonunda genel hata:', e);
+    return { error: 'Analiz oluşturulurken beklenmedik bir hata oluştu.' };
   }
 }

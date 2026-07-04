@@ -1,4 +1,4 @@
-import { FeedbackDialog } from "@/components/FeedbackDialog";
+import { FeedbackDialog } from '@/components/FeedbackDialog';
 
 export default function FeedbackPage() {
   return (

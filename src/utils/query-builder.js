@@ -99,9 +99,7 @@ export class QueryBuilder {
     const minPlaceholder = `$${++this.paramIndex}`;
     const maxPlaceholder = `$${++this.paramIndex}`;
 
-    this.where.push(
-      `${this.escapeColumn(column)} BETWEEN ${minPlaceholder} AND ${maxPlaceholder}`
-    );
+    this.where.push(`${this.escapeColumn(column)} BETWEEN ${minPlaceholder} AND ${maxPlaceholder}`);
 
     this.params.push(min, max);
     return this;
@@ -254,9 +252,9 @@ export class InsertBuilder {
     }
 
     const values = columns.map(() => `$${++this.paramIndex}`);
-    this.params = columns.map(col => this.data[col]);
+    this.params = columns.map((col) => this.data[col]);
 
-    const columnList = columns.map(col => `"${col}"`).join(', ');
+    const columnList = columns.map((col) => `"${col}"`).join(', ');
     const valueList = values.join(', ');
 
     return `INSERT INTO "${this.table}" (${columnList}) VALUES (${valueList})`;
@@ -328,9 +326,7 @@ export class UpdateBuilder {
    * Build UPDATE query
    */
   build() {
-    const updates = Object.keys(this.updates).map(
-      col => `"${col}" = $${++this.paramIndex}`
-    );
+    const updates = Object.keys(this.updates).map((col) => `"${col}" = $${++this.paramIndex}`);
 
     if (updates.length === 0) {
       throw new ValidationError('No columns specified for update');

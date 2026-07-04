@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { usePathname } from "next/navigation";
-import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
-import Script from "next/script";
+import { usePathname } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import Script from 'next/script';
 
 // Sayfa görüntüleme olayını Google Analytics'e gönderen yardımcı fonksiyon
 const pageview = (GA_MEASUREMENT_ID, url) => {
-  if (typeof window.gtag !== "function") return;
+  if (typeof window.gtag !== 'function') return;
 
-  window.gtag("config", GA_MEASUREMENT_ID, {
+  window.gtag('config', GA_MEASUREMENT_ID, {
     page_path: url,
   });
 };

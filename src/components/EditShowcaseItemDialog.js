@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
+import * as React from 'react';
+import { useTransition } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,13 +11,13 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { updateShowcaseItem } from "@/app/actions";
-import toast from "react-hot-toast";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { updateShowcaseItem } from '@/app/actions';
+import toast from 'react-hot-toast';
 
 export function EditShowcaseItemDialog({ item }) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -63,11 +63,9 @@ export function EditShowcaseItemDialog({ item }) {
           </div>
 
           {/* Sadece Metin veya Kod ise içerik düzenlenebilir */}
-          {item.content_type !== "Görsel" && (
+          {item.content_type !== 'Görsel' && (
             <div className="space-y-2">
-              <Label htmlFor="content_text">
-                {item.content_type} İçeriği *
-              </Label>
+              <Label htmlFor="content_text">{item.content_type} İçeriği *</Label>
               <Textarea
                 id="content_text"
                 name="content_text"
@@ -97,7 +95,7 @@ export function EditShowcaseItemDialog({ item }) {
               </Button>
             </DialogClose>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Kaydediliyor..." : "Kaydet"}
+              {isPending ? 'Kaydediliyor...' : 'Kaydet'}
             </Button>
           </DialogFooter>
         </form>

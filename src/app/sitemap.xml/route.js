@@ -1,40 +1,35 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
-const SITE_URL = new URL(
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com",
-).origin;
+const SITE_URL = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
 
 export const revalidate = 3600;
 
-function withBase(path = "") {
+function withBase(path = '') {
   return `${SITE_URL}${path}`;
 }
 
 function escapeXml(value) {
   return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&apos;");
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
 }
 
 export async function GET() {
   const generatedAt = new Date().toISOString();
   const urls = [
-    { url: withBase("/"), lastModified: generatedAt },
-    { url: withBase("/tavsiye"), lastModified: generatedAt },
-    { url: withBase("/hakkimizda"), lastModified: generatedAt },
-    { url: withBase("/iletisim"), lastModified: generatedAt },
-    { url: withBase("/gizlilik"), lastModified: generatedAt },
-    { url: withBase("/kullanim-kosullari"), lastModified: generatedAt },
-    { url: withBase("/submit"), lastModified: generatedAt },
+    { url: withBase('/'), lastModified: generatedAt },
+    { url: withBase('/tavsiye'), lastModified: generatedAt },
+    { url: withBase('/hakkimizda'), lastModified: generatedAt },
+    { url: withBase('/iletisim'), lastModified: generatedAt },
+    { url: withBase('/gizlilik'), lastModified: generatedAt },
+    { url: withBase('/kullanim-kosullari'), lastModified: generatedAt },
+    { url: withBase('/submit'), lastModified: generatedAt },
   ];
 
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return createSitemapResponse(urls);
   }
 
@@ -46,24 +41,24 @@ export async function GET() {
         persistSession: false,
         autoRefreshToken: false,
       },
-    },
+    }
   );
 
   const [toolsResult, categoriesResult] = await Promise.all([
     supabase
-      .from("tools")
-      .select("slug, updated_at")
-      .eq("is_approved", true)
-      .not("slug", "is", null),
-    supabase.from("categories").select("slug").not("slug", "is", null),
+      .from('tools')
+      .select('slug, updated_at')
+      .eq('is_approved', true)
+      .not('slug', 'is', null),
+    supabase.from('categories').select('slug').not('slug', 'is', null),
   ]);
 
   if (toolsResult.error) {
-    console.error("Araçlar alınamadı:", toolsResult.error);
+    console.error('Araçlar alınamadı:', toolsResult.error);
   }
 
   if (categoriesResult.error) {
-    console.error("Kategoriler alınamadı:", categoriesResult.error);
+    console.error('Kategoriler alınamadı:', categoriesResult.error);
   }
 
   categoriesResult.data?.forEach((category) => {
@@ -92,15 +87,15 @@ ${urls
   <url>
     <loc>${escapeXml(url)}</loc>
     <lastmod>${escapeXml(lastModified)}</lastmod>
-  </url>`,
+  </url>`
   )
-  .join("")}
+  .join('')}
 </urlset>`;
 
   return new Response(sitemap, {
     headers: {
-      "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
     },
   });
 }

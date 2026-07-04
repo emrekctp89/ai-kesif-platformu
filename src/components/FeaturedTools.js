@@ -1,24 +1,24 @@
-import Link from "next/link";
-import { cookies } from "next/headers";
-import { createClient } from "@/utils/supabase/server";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import ToolIcon from "@/components/ToolIcon";
-import { TrackedExternalLink } from "@/components/TrackedExternalLink";
+import Link from 'next/link';
+import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import ToolIcon from '@/components/ToolIcon';
+import { TrackedExternalLink } from '@/components/TrackedExternalLink';
 
 async function getFeaturedTools() {
   const supabase = createClient(await cookies());
   const { data, error } = await supabase
-    .from("tools_with_ratings")
-    .select("id, name, slug, description, link, tier, category_name, category_slug")
-    .eq("is_approved", true)
-    .eq("is_featured", true)
-    .order("created_at", { ascending: false })
+    .from('tools_with_ratings')
+    .select('id, name, slug, description, link, tier, category_name, category_slug')
+    .eq('is_approved', true)
+    .eq('is_featured', true)
+    .order('created_at', { ascending: false })
     .limit(3);
 
   if (error) {
-    console.error("Öne çıkan araçlar çekilirken hata:", error);
+    console.error('Öne çıkan araçlar çekilirken hata:', error);
     return [];
   }
 
@@ -61,9 +61,7 @@ export async function FeaturedTools() {
                     {tool.name}
                   </h3>
                 </Link>
-                <p className="mt-2 line-clamp-3 text-sm text-white/85">
-                  {tool.description}
-                </p>
+                <p className="mt-2 line-clamp-3 text-sm text-white/85">{tool.description}</p>
               </div>
               <div className="mt-auto flex items-center justify-between gap-3 pt-5">
                 <Link
@@ -81,7 +79,7 @@ export async function FeaturedTools() {
                       rel="noopener noreferrer"
                       eventName="official_site_click"
                       eventParameters={{
-                        source: "featured_tools",
+                        source: 'featured_tools',
                         tool_slug: tool.slug,
                         category: tool.category_slug,
                       }}

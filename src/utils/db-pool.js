@@ -121,7 +121,7 @@ export class ConnectionPool {
       // Create new connection if under limit
       if (this.pool.length < this.config.max) {
         this.createConnection()
-          .then(conn => {
+          .then((conn) => {
             conn._lastUsed = Date.now();
             this.activeConnections.add(conn);
             resolve(conn);
@@ -265,11 +265,11 @@ export class ConnectionPool {
     const startTime = Date.now();
 
     while (this.activeConnections.size > 0 && Date.now() - startTime < maxWait) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     // Close all connections
-    const promises = this.pool.map(conn => this.removeConnection(conn));
+    const promises = this.pool.map((conn) => this.removeConnection(conn));
     await Promise.all(promises);
 
     logger.info('Connection pool closed', {
@@ -353,9 +353,7 @@ export class DatabaseClient {
     const connection = await this.pool.acquire();
 
     try {
-      return await Promise.all(
-        queries.map(({ sql, params }) => connection.query(sql, params))
-      );
+      return await Promise.all(queries.map(({ sql, params }) => connection.query(sql, params)));
     } finally {
       await this.pool.release(connection);
     }

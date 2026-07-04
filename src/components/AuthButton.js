@@ -1,7 +1,7 @@
-import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
-import { signOut } from "@/app/actions";
-import { Button } from "@/components/ui/button";
+import { createClient } from '@/utils/supabase/server';
+import Link from 'next/link';
+import { signOut } from '@/app/actions';
+import { Button } from '@/components/ui/button';
 
 export default async function AuthButton() {
   const supabase = createClient();

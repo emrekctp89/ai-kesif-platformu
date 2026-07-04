@@ -77,8 +77,8 @@ export class FileUploadHandler {
     const filepath = `${this.uploadDir}/${filename}`;
 
     try {
-      const fs = await import('fs').then(m => m.promises);
-      
+      const fs = await import('fs').then((m) => m.promises);
+
       // Ensure upload directory exists
       await fs.mkdir(this.uploadDir, { recursive: true });
 
@@ -146,7 +146,7 @@ export class FileUploadHandler {
    */
   async deleteFile(filepath) {
     try {
-      const fs = await import('fs').then(m => m.promises);
+      const fs = await import('fs').then((m) => m.promises);
       await fs.unlink(filepath);
 
       logger.info('File deleted', { filepath });

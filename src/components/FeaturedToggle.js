@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useTransition } from 'react'
-import { Switch } from "@/components/ui/switch"
-import { toggleFeatured } from "@/app/actions"
-import toast from 'react-hot-toast'
+import { useTransition } from 'react';
+import { Switch } from '@/components/ui/switch';
+import { toggleFeatured } from '@/app/actions';
+import toast from 'react-hot-toast';
 
 export function FeaturedToggle({ toolId, isFeatured }) {
   const [isPending, startTransition] = useTransition();
@@ -32,9 +32,12 @@ export function FeaturedToggle({ toolId, isFeatured }) {
         disabled={isPending}
         aria-label="Öne çıkan yap"
       />
-      <label htmlFor={`featured-switch-${toolId}`} className="text-sm font-medium text-muted-foreground">
+      <label
+        htmlFor={`featured-switch-${toolId}`}
+        className="text-sm font-medium text-muted-foreground"
+      >
         Öne Çıkan
       </label>
     </div>
-  )
+  );
 }

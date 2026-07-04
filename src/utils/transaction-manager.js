@@ -211,10 +211,7 @@ export class TransactionManager {
     const savepointName = name || `sp_${++this.transactionId}`;
 
     try {
-      const savepoint = new Transaction(
-        parentTransaction.connection,
-        savepointName
-      );
+      const savepoint = new Transaction(parentTransaction.connection, savepointName);
       await savepoint.begin(true);
 
       this.activeTransactions.set(savepointName, savepoint);
@@ -252,14 +249,12 @@ export class TransactionManager {
    * Get transaction stats
    */
   getStats() {
-    const active = Array.from(this.activeTransactions.values()).filter(
-      t => t.isActive
-    );
+    const active = Array.from(this.activeTransactions.values()).filter((t) => t.isActive);
 
     return {
       totalActive: active.length,
       totalTransactions: this.transactionId,
-      transactions: active.map(t => t.getState()),
+      transactions: active.map((t) => t.getState()),
     };
   }
 
@@ -289,12 +284,7 @@ export class TransactionManager {
 /**
  * Retry transaction helper
  */
-export async function retryTransaction(
-  database,
-  fn,
-  maxRetries = 3,
-  name = null
-) {
+export async function retryTransaction(database, fn, maxRetries = 3, name = null) {
   const transactionManager = new TransactionManager(database);
   let lastError;
 
@@ -321,7 +311,7 @@ export async function retryTransaction(
           error: error.message,
         });
 
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }

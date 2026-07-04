@@ -5,7 +5,8 @@
 
 export const siteConfig = {
   name: 'AI Keşif Platformu',
-  description: 'Yapay zeka araçlarını keşfet, karşılaştır, test et ve toplulukla paylaş. 1000+ AI aracının kapsamlı kütüphanesi.',
+  description:
+    'Yapay zeka araçlarını keşfet, karşılaştır, test et ve toplulukla paylaş. 1000+ AI aracının kapsamlı kütüphanesi.',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'https://ai-kesif-platformu.vercel.app',
   ogImage: 'https://ai-kesif-platformu.vercel.app/og-image.png',
   twitterHandle: '@AIKesifPlatformu',
@@ -33,13 +34,7 @@ export function generatePageMetadata({
   return {
     title: fullTitle,
     description: fullDescription,
-    keywords: [
-      'AI araçları',
-      'yapay zeka',
-      'AI keşfi',
-      'AI platformu',
-      'araç karşılaştırma',
-    ],
+    keywords: ['AI araçları', 'yapay zeka', 'AI keşfi', 'AI platformu', 'araç karşılaştırma'],
     authors: [{ name: author }],
     creator: author,
     publisher: siteConfig.name,
@@ -57,8 +52,8 @@ export function generatePageMetadata({
     alternates: {
       canonical: fullUrl,
       languages: {
-        'en': `${siteConfig.url}/en${path}`,
-        'tr': fullUrl,
+        en: `${siteConfig.url}/en${path}`,
+        tr: fullUrl,
       },
     },
     openGraph: {
@@ -101,16 +96,11 @@ export function generatePageMetadata({
 /**
  * Generate metadata for tool pages
  */
-export function generateToolMetadata({
-  name,
-  description,
-  category,
-  rating,
-  image,
-}) {
+export function generateToolMetadata({ name, description, category, rating, image }) {
   return generatePageMetadata({
     title: `${name} - AI Aracı`,
-    description: description || `${name} hakkında bilgi edinin, puanları görmek ve karşılaştırma yapın.`,
+    description:
+      description || `${name} hakkında bilgi edinin, puanları görmek ve karşılaştırma yapın.`,
     path: `/tool/${name.toLowerCase().replace(/\s+/g, '-')}`,
     image: image,
     type: 'product',
@@ -121,11 +111,7 @@ export function generateToolMetadata({
 /**
  * Generate metadata for collection/list pages
  */
-export function generateCollectionMetadata({
-  name,
-  description,
-  itemCount,
-}) {
+export function generateCollectionMetadata({ name, description, itemCount }) {
   return generatePageMetadata({
     title: name,
     description: description || `${itemCount} araçtan oluşan koleksiyon`,
@@ -175,10 +161,7 @@ export function generateStructuredData(type, data) {
         description: siteConfig.description,
         url: siteConfig.url,
         logo: `${siteConfig.url}/logo.png`,
-        sameAs: [
-          'https://twitter.com/AIKesifPlatformu',
-          'https://instagram.com/aikesifplatformu',
-        ],
+        sameAs: ['https://twitter.com/AIKesifPlatformu', 'https://instagram.com/aikesifplatformu'],
         contactPoint: {
           '@type': 'ContactPoint',
           contactType: 'Customer Support',

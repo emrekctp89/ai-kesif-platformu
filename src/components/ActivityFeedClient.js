@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client"; // İstemci tarafı client'ını kullanıyoruz
-import { fetchActivityFeed } from "@/app/actions";
-import Link from "next/link";
-import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageSquare, Star, Image as ImageIcon } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/utils/supabase/client'; // İstemci tarafı client'ını kullanıyoruz
+import { fetchActivityFeed } from '@/app/actions';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Heart, MessageSquare, Star, Image as ImageIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Her bir olay türü için farklı bir kart tasarımı
 const eventComponents = {
@@ -18,23 +18,20 @@ const eventComponents = {
       <Heart className="w-6 h-6 text-red-500" />
       <div>
         <p className="text-sm">
-          <Link
-            href={`/u/${event.username}`}
-            className="font-bold hover:underline"
-          >
-            {event.username || "Bir kullanıcı"}
+          <Link href={`/u/${event.username}`} className="font-bold hover:underline">
+            {event.username || 'Bir kullanıcı'}
           </Link>
-          ,{" "}
+          ,{' '}
           <Link
             href={`/tool/${event.details.tool_slug}`}
             className="font-semibold text-primary hover:underline"
           >
             {event.details.tool_name}
-          </Link>{" "}
+          </Link>{' '}
           aracını favorilerine ekledi.
         </p>
         <time className="text-xs text-muted-foreground">
-          {new Date(event.event_time).toLocaleDateString("tr-TR")}
+          {new Date(event.event_time).toLocaleDateString('tr-TR')}
         </time>
       </div>
     </CardContent>
@@ -45,26 +42,23 @@ const eventComponents = {
       <MessageSquare className="w-6 h-6 text-blue-500" />
       <div>
         <p className="text-sm">
-          <Link
-            href={`/u/${event.username}`}
-            className="font-bold hover:underline"
-          >
-            {event.username || "Bir kullanıcı"}
+          <Link href={`/u/${event.username}`} className="font-bold hover:underline">
+            {event.username || 'Bir kullanıcı'}
           </Link>
-          ,{" "}
+          ,{' '}
           <Link
             href={`/tool/${event.details.tool_slug}`}
             className="font-semibold text-primary hover:underline"
           >
             {event.details.tool_name}
-          </Link>{" "}
+          </Link>{' '}
           aracına yeni bir yorum yaptı.
         </p>
         <p className="text-xs italic text-muted-foreground mt-1">
           "{event.details.comment_content}"
         </p>
         <time className="text-xs text-muted-foreground mt-2 block">
-          {new Date(event.event_time).toLocaleDateString("tr-TR")}
+          {new Date(event.event_time).toLocaleDateString('tr-TR')}
         </time>
       </div>
     </CardContent>
@@ -74,23 +68,20 @@ const eventComponents = {
       <ImageIcon className="w-6 h-6 text-green-500" />
       <div>
         <p className="text-sm">
-          <Link
-            href={`/u/${event.username}`}
-            className="font-bold hover:underline"
-          >
-            {event.username || "Bir kullanıcı"}
+          <Link href={`/u/${event.username}`} className="font-bold hover:underline">
+            {event.username || 'Bir kullanıcı'}
           </Link>
-          ,{" "}
+          ,{' '}
           <Link
             href={`/eserler?eserId=${event.details.item_id}`}
             className="font-semibold text-primary hover:underline"
           >
             {event.details.item_title}
-          </Link>{" "}
+          </Link>{' '}
           adlı yeni bir eser paylaştı.
         </p>
         <time className="text-xs text-muted-foreground">
-          {new Date(event.event_time).toLocaleDateString("tr-TR")}
+          {new Date(event.event_time).toLocaleDateString('tr-TR')}
         </time>
       </div>
       <Image
@@ -107,23 +98,20 @@ const eventComponents = {
       <Star className="w-6 h-6 text-yellow-500" />
       <div>
         <p className="text-sm">
-          <Link
-            href={`/u/${event.username}`}
-            className="font-bold hover:underline"
-          >
-            {event.username || "Bir kullanıcı"}
+          <Link href={`/u/${event.username}`} className="font-bold hover:underline">
+            {event.username || 'Bir kullanıcı'}
           </Link>
-          ,{" "}
+          ,{' '}
           <Link
             href={`/tool/${event.details.tool_slug}`}
             className="font-semibold text-primary hover:underline"
           >
             {event.details.tool_name}
-          </Link>{" "}
+          </Link>{' '}
           için yeni bir prompt paylaştı: "{event.details.prompt_title}"
         </p>
         <time className="text-xs text-muted-foreground">
-          {new Date(event.event_time).toLocaleDateString("tr-TR")}
+          {new Date(event.event_time).toLocaleDateString('tr-TR')}
         </time>
       </div>
     </CardContent>
@@ -146,20 +134,16 @@ export function ActivityFeedClient({ initialFeedItems }) {
 
     // İlgili tüm tablolardaki INSERT olaylarını dinlemek için abonelikler oluşturuyoruz
     const channels = [
-      "favorites",
-      "comments",
-      "prompts",
-      "showcase_items",
-      "showcase_comments",
-      "showcase_votes",
+      'favorites',
+      'comments',
+      'prompts',
+      'showcase_items',
+      'showcase_comments',
+      'showcase_votes',
     ].map((table) =>
       supabase
         .channel(`public:${table}`)
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: table },
-          handleNewEvent
-        )
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: table }, handleNewEvent)
         .subscribe()
     );
 
@@ -181,7 +165,7 @@ export function ActivityFeedClient({ initialFeedItems }) {
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
             >
               <Card className="transition-all hover:shadow-md">
                 <EventComponent event={event} />

@@ -5,18 +5,18 @@
  * interaktif bir istemci bileşenidir.
  * ---------------------------------------------------
  */
-"use client";
+'use client';
 
-import * as React from "react";
-import { useOptimistic, useTransition } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { toggleLaunchVote } from "@/app/actions";
-import toast from "react-hot-toast";
-import { ArrowUp } from "lucide-react";
-import { cn } from "@/lib/utils";
+import * as React from 'react';
+import { useOptimistic, useTransition } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { toggleLaunchVote } from '@/app/actions';
+import toast from 'react-hot-toast';
+import { ArrowUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function LaunchCard({ launch, user, isVoted }) {
   const [isPending, startTransition] = useTransition();
@@ -30,13 +30,13 @@ export function LaunchCard({ launch, user, isVoted }) {
 
   const handleVoteAction = () => {
     if (!user) {
-      toast.error("Oylama yapmak için giriş yapmalısınız.");
+      toast.error('Oylama yapmak için giriş yapmalısınız.');
       return;
     }
     startTransition(() => {
       toggleOptimisticVote();
       const formData = new FormData();
-      formData.append("launchId", launch.id);
+      formData.append('launchId', launch.id);
       toggleLaunchVote(formData).then((result) => {
         if (result?.error) {
           toast.error(result.error);
@@ -45,9 +45,7 @@ export function LaunchCard({ launch, user, isVoted }) {
     });
   };
 
-  const fallback = (launch.author_username || "AI")
-    .substring(0, 2)
-    .toUpperCase();
+  const fallback = (launch.author_username || 'AI').substring(0, 2).toUpperCase();
 
   return (
     <Card className="transition-all hover:shadow-md">
@@ -59,16 +57,11 @@ export function LaunchCard({ launch, user, isVoted }) {
             variant="ghost"
             size="icon"
             className={cn(
-              "h-10 w-10 border",
-              optimisticVote.isVoted && "border-primary text-primary"
+              'h-10 w-10 border',
+              optimisticVote.isVoted && 'border-primary text-primary'
             )}
           >
-            <ArrowUp
-              className={cn(
-                "h-5 w-5",
-                optimisticVote.isVoted && "fill-current"
-              )}
-            />
+            <ArrowUp className={cn('h-5 w-5', optimisticVote.isVoted && 'fill-current')} />
           </Button>
           <span className="text-sm font-bold">{optimisticVote.voteCount}</span>
         </div>
@@ -76,9 +69,7 @@ export function LaunchCard({ launch, user, isVoted }) {
         {/* Ana İçerik */}
         <div className="flex-1">
           <Link href={`/tool/${launch.tool_slug}`} className="group">
-            <h3 className="font-bold group-hover:text-primary">
-              {launch.tool_name}
-            </h3>
+            <h3 className="font-bold group-hover:text-primary">{launch.tool_name}</h3>
           </Link>
           <p className="text-sm text-muted-foreground">{launch.tagline}</p>
           <div className="flex items-center gap-2 mt-2">

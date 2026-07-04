@@ -1,18 +1,12 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
-import { getAiProjectStrategy } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Bot, Lightbulb, CheckCircle } from "lucide-react";
-import toast from "react-hot-toast";
+import * as React from 'react';
+import { useTransition } from 'react';
+import { getAiProjectStrategy } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Bot, Lightbulb, CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export function AiProjectStrategist({ projectId }) {
   const [isPending, startTransition] = useTransition();
@@ -26,7 +20,7 @@ export function AiProjectStrategist({ projectId }) {
         toast.error(result.error);
       } else {
         setAnalysis(result.data);
-        toast.success("Analiz tamamlandı!");
+        toast.success('Analiz tamamlandı!');
       }
     });
   };
@@ -39,17 +33,13 @@ export function AiProjectStrategist({ projectId }) {
           AI Proje Stratejisti
         </CardTitle>
         <CardDescription>
-          Projenizin verilerini yapay zekaya analiz ettirerek stratejik öneriler
-          ve yeni fikirler alın.
+          Projenizin verilerini yapay zekaya analiz ettirerek stratejik öneriler ve yeni fikirler
+          alın.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Button
-          onClick={handleAnalysisRequest}
-          disabled={isPending}
-          className="w-full"
-        >
-          {isPending ? "Analiz Ediliyor..." : "Strateji Oluştur"}
+        <Button onClick={handleAnalysisRequest} disabled={isPending} className="w-full">
+          {isPending ? 'Analiz Ediliyor...' : 'Strateji Oluştur'}
         </Button>
 
         {analysis && (
@@ -58,9 +48,7 @@ export function AiProjectStrategist({ projectId }) {
             {analysis.project_summary && (
               <div>
                 <h4 className="font-semibold mb-2">Proje Özeti</h4>
-                <p className="text-sm text-muted-foreground">
-                  {analysis.project_summary}
-                </p>
+                <p className="text-sm text-muted-foreground">{analysis.project_summary}</p>
               </div>
             )}
             {analysis.strategic_suggestions?.length > 0 && (
@@ -78,9 +66,7 @@ export function AiProjectStrategist({ projectId }) {
             )}
             {analysis.potential_tools?.length > 0 && (
               <div>
-                <h4 className="font-semibold mb-2">
-                  Potansiyel Araç Önerileri
-                </h4>
+                <h4 className="font-semibold mb-2">Potansiyel Araç Önerileri</h4>
                 <ul className="space-y-2">
                   {analysis.potential_tools.map((tool, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm">

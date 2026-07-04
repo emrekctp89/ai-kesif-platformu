@@ -3,12 +3,7 @@
  * Centralized configuration loading and validation
  */
 
-import {
-  getValidatedEnv,
-  getEnvString,
-  getEnvNumber,
-  getEnvBoolean,
-} from './env-validator';
+import { getValidatedEnv, getEnvString, getEnvNumber, getEnvBoolean } from './env-validator';
 import { logger } from './logger';
 
 /**
@@ -164,12 +159,10 @@ class AppConfig {
       { key: 'auth.jwtSecret', value: this.config.auth.jwtSecret },
     ];
 
-    const missing = critical.filter(item => !item.value);
+    const missing = critical.filter((item) => !item.value);
 
     if (missing.length > 0) {
-      throw new Error(
-        `Missing critical configuration: ${missing.map(m => m.key).join(', ')}`
-      );
+      throw new Error(`Missing critical configuration: ${missing.map((m) => m.key).join(', ')}`);
     }
   }
 

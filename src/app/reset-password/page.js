@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { updatePassword } from '@/app/actions'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useSearchParams } from 'next/navigation'
+import Link from 'next/link';
+import { updatePassword } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useSearchParams } from 'next/navigation';
 
 export default function ResetPasswordPage() {
-  const searchParams = useSearchParams()
-  const message = searchParams.get('message')
+  const searchParams = useSearchParams();
+  const message = searchParams.get('message');
 
   return (
     <div className="flex items-center justify-center py-12 h-screen">
@@ -23,12 +23,7 @@ export default function ResetPasswordPage() {
         <form action={updatePassword} className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="password">Yeni Şifre</Label>
-            <Input
-              id="password"
-              type="password"
-              name="password"
-              required
-            />
+            <Input id="password" type="password" name="password" required />
           </div>
           {/* İsteğe bağlı: Şifre tekrarı alanı eklenebilir. Şimdilik basit tutuyoruz. */}
           <Button type="submit" className="w-full">
@@ -41,12 +36,12 @@ export default function ResetPasswordPage() {
           )}
         </form>
         <div className="mt-4 text-center text-sm">
-          Giriş yapmaya hazır mısın?{" "}
+          Giriş yapmaya hazır mısın?{' '}
           <Link href="/login" className="underline">
             Giriş Yap
           </Link>
         </div>
       </div>
     </div>
-  )
+  );
 }

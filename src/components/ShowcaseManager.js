@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Image from "next/image";
+import * as React from 'react';
+import Image from 'next/image';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,14 +12,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { deleteShowcaseItem } from "@/app/actions";
-import toast from "react-hot-toast";
-import { Trash2 } from "lucide-react";
-import { AddShowcaseItemDialog } from "./AddShowcaseItemDialog";
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { deleteShowcaseItem } from '@/app/actions';
+import toast from 'react-hot-toast';
+import { Trash2 } from 'lucide-react';
+import { AddShowcaseItemDialog } from './AddShowcaseItemDialog';
 // Yeni Düzenleme bileşenini import ediyoruz
-import { EditShowcaseItemDialog } from "./EditShowcaseItemDialog";
+import { EditShowcaseItemDialog } from './EditShowcaseItemDialog';
 
 // Eser Silme Butonu
 function DeleteShowcaseItemButton({ item }) {
@@ -28,7 +28,7 @@ function DeleteShowcaseItemButton({ item }) {
     if (result?.error) {
       toast.error(result.error);
     } else {
-      toast.success("Eser başarıyla silindi.");
+      toast.success('Eser başarıyla silindi.');
     }
   };
 
@@ -43,8 +43,7 @@ function DeleteShowcaseItemButton({ item }) {
         <AlertDialogHeader>
           <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
           <AlertDialogDescription>
-            Bu işlem geri alınamaz. "{item.title}" başlıklı eseriniz kalıcı
-            olarak silinecektir.
+            Bu işlem geri alınamaz. "{item.title}" başlıklı eseriniz kalıcı olarak silinecektir.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -71,10 +70,7 @@ export function ShowcaseManager({ items }) {
       <div className="space-y-4">
         {items.length > 0 ? (
           items.map((item) => (
-            <div
-              key={item.id}
-              className="p-4 rounded-lg border flex justify-between items-center"
-            >
+            <div key={item.id} className="p-4 rounded-lg border flex justify-between items-center">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center">
                   {item.image_url ? (
@@ -94,9 +90,9 @@ export function ShowcaseManager({ items }) {
                 <div>
                   <p className="font-semibold">{item.title}</p>
                   <p
-                    className={`text-sm ${item.is_approved ? "text-green-500" : "text-yellow-500"}`}
+                    className={`text-sm ${item.is_approved ? 'text-green-500' : 'text-yellow-500'}`}
                   >
-                    {item.is_approved ? "Onaylandı" : "Onay Bekliyor"}
+                    {item.is_approved ? 'Onaylandı' : 'Onay Bekliyor'}
                   </p>
                 </div>
               </div>

@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { trackEvent } from "@/utils/analytics";
+import { trackEvent } from '@/utils/analytics';
 
 export function TrackedExternalLink({
-  eventName = "official_site_click",
+  eventName = 'official_site_click',
   eventParameters,
   children,
   ...props
 }) {
-  const hrefValue = typeof props.href === "string" ? props.href : "";
+  const hrefValue = typeof props.href === 'string' ? props.href : '';
 
   return (
     <a

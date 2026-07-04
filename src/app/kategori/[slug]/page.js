@@ -1,18 +1,16 @@
-import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
-import { createClient } from "@/utils/supabase/server";
-import { HomepageClient } from "@/components/HomepageClient";
+import { notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
+import { HomepageClient } from '@/components/HomepageClient';
 
-const siteUrl = new URL(
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com"
-).origin;
+const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
 
 async function getCategory(slug) {
   const supabase = createClient(await cookies());
   const { data } = await supabase
-    .from("categories")
-    .select("name, slug")
-    .eq("slug", slug)
+    .from('categories')
+    .select('name, slug')
+    .eq('slug', slug)
     .maybeSingle();
 
   return data;
@@ -20,31 +18,28 @@ async function getCategory(slug) {
 
 async function getCategoryPageData(slug) {
   const supabase = createClient(await cookies());
-  const { fetchMoreTools } = await import("@/app/actions");
+  const { fetchMoreTools } = await import('@/app/actions');
 
-  const [category, authResult, initialTools, categoriesResult, tagsResult] =
-    await Promise.all([
-      getCategory(slug),
-      supabase.auth.getUser(),
-      fetchMoreTools({ page: 0, searchParams: { category: slug } }),
-      supabase.from("categories").select("name, slug").order("name"),
-      supabase.from("tags").select("id, name").order("name"),
-    ]);
+  const [category, authResult, initialTools, categoriesResult, tagsResult] = await Promise.all([
+    getCategory(slug),
+    supabase.auth.getUser(),
+    fetchMoreTools({ page: 0, searchParams: { category: slug } }),
+    supabase.from('categories').select('name, slug').order('name'),
+    supabase.from('tags').select('id, name').order('name'),
+  ]);
 
   if (!category) return null;
 
   const user = authResult.data.user;
   const { data: favorites } = user
-    ? await supabase.from("favorites").select("tool_id").eq("user_id", user.id)
+    ? await supabase.from('favorites').select('tool_id').eq('user_id', user.id)
     : { data: [] };
 
   return {
     category,
     initialData: {
       user,
-      favoriteToolIds: new Set(
-        favorites?.map((favorite) => favorite.tool_id) || []
-      ),
+      favoriteToolIds: new Set(favorites?.map((favorite) => favorite.tool_id) || []),
       initialTools,
       categories: categoriesResult.data || [],
       allTags: tagsResult.data || [],
@@ -58,7 +53,7 @@ export async function generateMetadata({ params }) {
 
   if (!category) {
     return {
-      title: "Kategori bulunamadı",
+      title: 'Kategori bulunamadı',
       robots: { index: false, follow: false },
     };
   }
@@ -76,10 +71,10 @@ export async function generateMetadata({ params }) {
       title,
       description,
       url: `/kategori/${category.slug}`,
-      type: "website",
+      type: 'website',
       images: [
         {
-          url: "/opengraph-image",
+          url: '/opengraph-image',
           width: 1200,
           height: 630,
           alt: `${category.name} yapay zeka araçları - AI Keşif`,
@@ -87,10 +82,10 @@ export async function generateMetadata({ params }) {
       ],
     },
     twitter: {
-      card: "summary_large_image",
+      card: 'summary_large_image',
       title,
       description,
-      images: ["/opengraph-image"],
+      images: ['/opengraph-image'],
     },
   };
 }
@@ -107,20 +102,20 @@ export default async function CategoryPage({ params }) {
   const categoryUrl = `${siteUrl}/kategori/${category.slug}`;
 
   const structuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
+    '@context': 'https://schema.org',
+    '@graph': [
       {
-        "@type": "CollectionPage",
-        "@id": categoryUrl,
+        '@type': 'CollectionPage',
+        '@id': categoryUrl,
         name: title,
         description,
         url: categoryUrl,
-        inLanguage: "tr-TR",
+        inLanguage: 'tr-TR',
         mainEntity: {
-          "@type": "ItemList",
+          '@type': 'ItemList',
           numberOfItems: initialData.initialTools.length,
           itemListElement: initialData.initialTools.map((tool, index) => ({
-            "@type": "ListItem",
+            '@type': 'ListItem',
             position: index + 1,
             name: tool.name,
             url: `${siteUrl}/tool/${tool.slug}`,
@@ -128,17 +123,17 @@ export default async function CategoryPage({ params }) {
         },
       },
       {
-        "@type": "BreadcrumbList",
-        "@id": `${categoryUrl}#breadcrumb`,
+        '@type': 'BreadcrumbList',
+        '@id': `${categoryUrl}#breadcrumb`,
         itemListElement: [
           {
-            "@type": "ListItem",
+            '@type': 'ListItem',
             position: 1,
-            name: "Ana Sayfa",
+            name: 'Ana Sayfa',
             item: siteUrl,
           },
           {
-            "@type": "ListItem",
+            '@type': 'ListItem',
             position: 2,
             name: category.name,
             item: categoryUrl,
@@ -153,7 +148,7 @@ export default async function CategoryPage({ params }) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+          __html: JSON.stringify(structuredData).replace(/</g, '\\u003c'),
         }}
       />
       <HomepageClient

@@ -179,60 +179,56 @@ export const logout = factory.createPostHandler(
 /**
  * Refresh token endpoint
  */
-export const refreshToken = factory.createPostHandler(
-  async (req, res, next) => {
-    const { refreshToken } = req.body;
+export const refreshToken = factory.createPostHandler(async (req, res, next) => {
+  const { refreshToken } = req.body;
 
-    if (!refreshToken) {
-      throw new ValidationError('Refresh token is required');
-    }
-
-    try {
-      const newAccessToken = jwtManager.refreshAccessToken(refreshToken);
-
-      logger.info('Token refreshed');
-
-      return {
-        success: true,
-        accessToken: newAccessToken,
-        tokenType: 'Bearer',
-      };
-    } catch (error) {
-      throw new AuthenticationError('Token refresh failed', {
-        originalError: error.message,
-      });
-    }
+  if (!refreshToken) {
+    throw new ValidationError('Refresh token is required');
   }
-);
+
+  try {
+    const newAccessToken = jwtManager.refreshAccessToken(refreshToken);
+
+    logger.info('Token refreshed');
+
+    return {
+      success: true,
+      accessToken: newAccessToken,
+      tokenType: 'Bearer',
+    };
+  } catch (error) {
+    throw new AuthenticationError('Token refresh failed', {
+      originalError: error.message,
+    });
+  }
+});
 
 /**
  * Verify token endpoint
  */
-export const verifyToken = factory.createPostHandler(
-  async (req, res, next) => {
-    const { token } = req.body;
+export const verifyToken = factory.createPostHandler(async (req, res, next) => {
+  const { token } = req.body;
 
-    if (!token) {
-      throw new ValidationError('Token is required');
-    }
-
-    try {
-      const decoded = jwtManager.verifyToken(token);
-
-      return {
-        success: true,
-        valid: true,
-        user: decoded,
-      };
-    } catch (error) {
-      return {
-        success: true,
-        valid: false,
-        error: error.message,
-      };
-    }
+  if (!token) {
+    throw new ValidationError('Token is required');
   }
-);
+
+  try {
+    const decoded = jwtManager.verifyToken(token);
+
+    return {
+      success: true,
+      valid: true,
+      user: decoded,
+    };
+  } catch (error) {
+    return {
+      success: true,
+      valid: false,
+      error: error.message,
+    };
+  }
+});
 
 /**
  * Register routes

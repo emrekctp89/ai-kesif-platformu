@@ -1,36 +1,29 @@
-import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
-import Image from "next/image";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { createClient } from '@/utils/supabase/server';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 // Veritabanından yayınlanmış tüm yazıları çeken fonksiyon
 async function getPublishedPosts() {
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("posts")
-    .select("title, slug, description, featured_image_url, published_at")
+    .from('posts')
+    .select('title, slug, description, featured_image_url, published_at')
     // DEĞİŞİKLİK: 'is_published' yerine yeni 'status' sütununa göre filtreliyoruz
-    .eq("status", "Yayınlandı")
-    .order("published_at", { ascending: false });
+    .eq('status', 'Yayınlandı')
+    .order('published_at', { ascending: false });
 
   if (error) {
-    console.error("Yazılar çekilirken hata:", error);
+    console.error('Yazılar çekilirken hata:', error);
     return [];
   }
   return data;
 }
 
 export const metadata = {
-  title: "Blog | AI Keşif Platformu",
-  description:
-    "Yapay zeka dünyasındaki en son haberler, makaleler ve araç incelemeleri.",
+  title: 'Blog | AI Keşif Platformu',
+  description: 'Yapay zeka dünyasındaki en son haberler, makaleler ve araç incelemeleri.',
 };
 
 export default async function BlogPage() {
@@ -43,8 +36,7 @@ export default async function BlogPage() {
           Blog & Haberler
         </h1>
         <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-          Yapay zeka dünyasından en son gelişmeler, derinlemesine analizler ve
-          araç incelemeleri.
+          Yapay zeka dünyasından en son gelişmeler, derinlemesine analizler ve araç incelemeleri.
         </p>
       </div>
 
@@ -69,26 +61,22 @@ export default async function BlogPage() {
                     {post.title}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground pt-2">
-                    {new Date(post.published_at).toLocaleDateString("tr-TR", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
+                    {new Date(post.published_at).toLocaleDateString('tr-TR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
                     })}
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground line-clamp-3">
-                    {post.description || ""}
-                  </p>
+                  <p className="text-muted-foreground line-clamp-3">{post.description || ''}</p>
                 </CardContent>
               </Card>
             </Link>
           ))}
         </div>
       ) : (
-        <p className="text-center text-muted-foreground">
-          Henüz yayınlanmış bir yazı bulunmuyor.
-        </p>
+        <p className="text-center text-muted-foreground">Henüz yayınlanmış bir yazı bulunmuyor.</p>
       )}
     </div>
   );

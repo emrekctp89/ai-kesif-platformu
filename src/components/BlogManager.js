@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react"; // useTransition'ı import ediyoruz
-import Link from "next/link";
+import * as React from 'react';
+import { useTransition } from 'react'; // useTransition'ı import ediyoruz
+import Link from 'next/link';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,11 +10,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,25 +25,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { createPost, deletePost } from "@/app/actions";
-import toast from "react-hot-toast";
-import { PlusCircle } from "lucide-react";
+} from '@/components/ui/alert-dialog';
+import { createPost, deletePost } from '@/app/actions';
+import toast from 'react-hot-toast';
+import { PlusCircle } from 'lucide-react';
 
 // ✅ Yazı Silme Butonu
 function DeletePostButton({ post }) {
   const handleClick = async () => {
     const formData = new FormData();
-    formData.set("id", post.id);
+    formData.set('id', post.id);
 
-    toast.loading("Siliniyor...");
+    toast.loading('Siliniyor...');
     const result = await deletePost(formData);
     toast.dismiss();
 
     if (result?.error) {
       toast.error(result.error);
     } else {
-      toast.success("Yazı başarıyla silindi.");
+      toast.success('Yazı başarıyla silindi.');
     }
   };
 
@@ -65,7 +65,7 @@ function CreateNewPostMenu() {
     event.preventDefault();
     const formData = new FormData(formRef.current);
     const type = event.nativeEvent.submitter.value;
-    formData.set("type", type);
+    formData.set('type', type);
 
     // Sunucu eylemini startTransition ile sarmalıyoruz.
     // Bu, işlem sırasında arayüzün donmasını engeller ve 'isPending'i günceller.
@@ -89,9 +89,7 @@ function CreateNewPostMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80" align="end">
-        <DropdownMenuLabel>
-          Ne tür bir içerik oluşturmak istiyorsunuz?
-        </DropdownMenuLabel>
+        <DropdownMenuLabel>Ne tür bir içerik oluşturmak istiyorsunuz?</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <form ref={formRef} onSubmit={handleCreate} className="p-2 space-y-4">
           <div className="space-y-2">
@@ -114,16 +112,10 @@ function CreateNewPostMenu() {
               size="sm"
               disabled={isPending}
             >
-              {isPending ? "..." : "Blog Yazısı Oluştur"}
+              {isPending ? '...' : 'Blog Yazısı Oluştur'}
             </Button>
-            <Button
-              type="submit"
-              name="type"
-              value="Rehber"
-              size="sm"
-              disabled={isPending}
-            >
-              {isPending ? "..." : "Rehber Oluştur"}
+            <Button type="submit" name="type" value="Rehber" size="sm" disabled={isPending}>
+              {isPending ? '...' : 'Rehber Oluştur'}
             </Button>
           </div>
         </form>
@@ -146,7 +138,7 @@ export function BlogManager({ posts }) {
         <h3 className="text-lg font-medium mb-2">Mevcut Yazılar</h3>
         <div className="space-y-2">
           {posts.map((post) => {
-            const isPublished = post.status === "Yayınlandı";
+            const isPublished = post.status === 'Yayınlandı';
             // DEĞİŞİKLİK: editUrl artık her zaman yeni, merkezi sayfayı işaret ediyor.
             const editUrl = `/admin/posts/${post.id}/edit`;
 
@@ -158,9 +150,7 @@ export function BlogManager({ posts }) {
                 <div>
                   <p className="font-medium">{post.title}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge variant={isPublished ? "default" : "secondary"}>
-                      {post.status}
-                    </Badge>
+                    <Badge variant={isPublished ? 'default' : 'secondary'}>{post.status}</Badge>
                     <Badge variant="outline">{post.type}</Badge>
                   </div>
                 </div>

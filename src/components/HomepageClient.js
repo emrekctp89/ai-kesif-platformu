@@ -1,77 +1,66 @@
-"use client";
+'use client';
 
-import { useState, useEffect, Suspense, useMemo } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { SearchInput } from "@/components/SearchInput";
-import { FilterSheet } from "@/components/FilterSheet";
-import { InfiniteToolsList } from "@/components/InfiniteToolsList";
-import { ToolsGridSkeleton } from "@/components/ToolsGridSkeleton";
-import { Button } from "@/components/ui/button";
-import { trackEvent } from "@/utils/analytics";
-import {
-  ArrowRight,
-  Code2,
-  ImageIcon,
-  Megaphone,
-  Sparkles,
-  WandSparkles,
-  X,
-} from "lucide-react";
+import { useState, useEffect, Suspense, useMemo } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { SearchInput } from '@/components/SearchInput';
+import { FilterSheet } from '@/components/FilterSheet';
+import { InfiniteToolsList } from '@/components/InfiniteToolsList';
+import { ToolsGridSkeleton } from '@/components/ToolsGridSkeleton';
+import { Button } from '@/components/ui/button';
+import { trackEvent } from '@/utils/analytics';
+import { ArrowRight, Code2, ImageIcon, Megaphone, Sparkles, WandSparkles, X } from 'lucide-react';
 
 const quickStarts = [
   {
-    href: "/kategori/gorsel-video",
-    label: "Görsel ve video üret",
+    href: '/kategori/gorsel-video',
+    label: 'Görsel ve video üret',
     icon: ImageIcon,
   },
   {
-    href: "/kategori/pazarlama",
-    label: "Pazarlama içeriği hazırla",
+    href: '/kategori/pazarlama',
+    label: 'Pazarlama içeriği hazırla',
     icon: Megaphone,
   },
   {
-    href: "/kategori/kod-yazilim",
-    label: "Kodlama aracını bul",
+    href: '/kategori/kod-yazilim',
+    label: 'Kodlama aracını bul',
     icon: Code2,
   },
 ];
 
 const sortLabels = {
-  rating: "En yüksek puanlı",
-  popularity: "En çok oylanan",
+  rating: 'En yüksek puanlı',
+  popularity: 'En çok oylanan',
 };
 
 export function HomepageClient({
   initialData,
   searchParams: serverSearchParams,
   discoverySections,
-  pageTitle = "İhtiyacına Uygun Yapay Zeka Aracını Bul",
-  pageDescription = "Ne yapmak istediğini ara, kategorileri keşfet veya AI tavsiyesiyle doğru araca daha hızlı ulaş.",
+  pageTitle = 'İhtiyacına Uygun Yapay Zeka Aracını Bul',
+  pageDescription = 'Ne yapmak istediğini ara, kategorileri keşfet veya AI tavsiyesiyle doğru araca daha hızlı ulaş.',
   fixedSearchParams,
 }) {
-  const { user, favoriteToolIds, initialTools, categories, allTags } =
-    initialData;
+  const { user, favoriteToolIds, initialTools, categories, allTags } = initialData;
 
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const searchParamsString = searchParams.toString();
   const activeFilters = useMemo(() => {
     const filters = [];
-    const categoryNames = new Map(
-      categories.map((category) => [category.slug, category.name])
-    );
+    const categoryNames = new Map(categories.map((category) => [category.slug, category.name]));
     const tagNames = new Map(allTags.map((tag) => [String(tag.id), tag.name]));
     const addFilter = ({ key, value, label, multiValue }) => {
       const nextParams = new URLSearchParams(searchParamsString);
 
       if (multiValue) {
-        const remainingValues = (nextParams.get(key) || "")
-          .split(",")
+        const remainingValues = (nextParams.get(key) || '')
+          .split(',')
           .filter((item) => item && item !== value);
 
         if (remainingValues.length > 0) {
-          nextParams.set(key, remainingValues.join(","));
+          nextParams.set(key, remainingValues.join(','));
         } else {
           nextParams.delete(key);
         }
@@ -79,7 +68,7 @@ export function HomepageClient({
         nextParams.delete(key);
       }
 
-      nextParams.delete("page");
+      nextParams.delete('page');
       const query = nextParams.toString();
       filters.push({
         id: `${key}-${value}`,
@@ -88,63 +77,62 @@ export function HomepageClient({
       });
     };
 
-    const search = searchParams.get("search");
+    const search = searchParams.get('search');
     if (search) {
-      const shortenedSearch =
-        search.length > 32 ? `${search.slice(0, 32)}…` : search;
+      const shortenedSearch = search.length > 32 ? `${search.slice(0, 32)}…` : search;
       addFilter({
-        key: "search",
+        key: 'search',
         value: search,
         label: `Arama: “${shortenedSearch}”`,
       });
     }
 
-    const category = searchParams.get("category");
+    const category = searchParams.get('category');
     if (category) {
       addFilter({
-        key: "category",
+        key: 'category',
         value: category,
         label: `Kategori: ${categoryNames.get(category) || category}`,
       });
     }
 
-    (searchParams.get("tags") || "")
-      .split(",")
+    (searchParams.get('tags') || '')
+      .split(',')
       .filter(Boolean)
       .forEach((tagId) =>
         addFilter({
-          key: "tags",
+          key: 'tags',
           value: tagId,
           label: `Etiket: ${tagNames.get(tagId) || `#${tagId}`}`,
           multiValue: true,
         })
       );
 
-    const pricing = searchParams.get("pricing");
+    const pricing = searchParams.get('pricing');
     if (pricing) {
       addFilter({
-        key: "pricing",
+        key: 'pricing',
         value: pricing,
         label: `Fiyat: ${pricing}`,
       });
     }
 
-    (searchParams.get("platforms") || "")
-      .split(",")
+    (searchParams.get('platforms') || '')
+      .split(',')
       .filter(Boolean)
       .forEach((platform) =>
         addFilter({
-          key: "platforms",
+          key: 'platforms',
           value: platform,
           label: `Platform: ${platform}`,
           multiValue: true,
         })
       );
 
-    const sort = searchParams.get("sort");
+    const sort = searchParams.get('sort');
     if (sort) {
       addFilter({
-        key: "sort",
+        key: 'sort',
         value: sort,
         label: `Sıralama: ${sortLabels[sort] || sort}`,
       });
@@ -161,7 +149,7 @@ export function HomepageClient({
     }
 
     const keys = Array.from(searchParams.keys());
-    return keys.some((key) => key !== "page");
+    return keys.some((key) => key !== 'page');
   }, [fixedSearchParams, searchParams]);
 
   const [showDiscovery, setShowDiscovery] = useState(!hasActiveFilters);
@@ -180,7 +168,10 @@ export function HomepageClient({
         className="sticky top-16 z-40 border-b px-3 py-2 text-center sm:px-4 sm:py-5 md:py-7
              bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
-        <h1 id="tools-page-title" className="text-xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl">
+        <h1
+          id="tools-page-title"
+          className="text-xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl"
+        >
           {pageTitle}
         </h1>
         <p className="mx-auto mt-1 hidden max-w-xl text-sm text-muted-foreground sm:block sm:mt-2 sm:text-base">
@@ -188,31 +179,28 @@ export function HomepageClient({
         </p>
 
         {showControls && (
-            <div className="mt-2 grid grid-cols-2 items-stretch justify-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 sm:mt-4 sm:flex sm:items-center sm:gap-3 md:mt-6">
-              <div className="col-span-2 sm:col-span-1 sm:min-w-80 sm:flex-1">
-              <SearchInput key={searchParams.get("search") || "empty-search"} />
-              </div>
-              <FilterSheet
-                categories={categories}
-                allTags={allTags}
-                fixedSearchParams={fixedSearchParams}
-              />
-              <Button
-  variant="outline"
-  onClick={() => setShowDiscovery(!showDiscovery)}
-  className="h-9 w-full group text-white border-none shadow-xl bg-gradient-to-r from-[#7F00FF] via-[#00BFFF] to-[#FF1493] bg-[length:200%_200%] animate-[gradientShift_6s_ease_infinite] sm:h-10 sm:w-auto"
->
-  {showDiscovery ? (
-    <X className="mr-2 h-4 w-4" />
-  ) : (
-    <Sparkles className="mr-2 h-4 w-4" />
-  )}
-  {showDiscovery ? "Keşfi Gizle" : "Keşfet"}
-</Button>
-
-
-
+          <div className="mt-2 grid grid-cols-2 items-stretch justify-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 sm:mt-4 sm:flex sm:items-center sm:gap-3 md:mt-6">
+            <div className="col-span-2 sm:col-span-1 sm:min-w-80 sm:flex-1">
+              <SearchInput key={searchParams.get('search') || 'empty-search'} />
             </div>
+            <FilterSheet
+              categories={categories}
+              allTags={allTags}
+              fixedSearchParams={fixedSearchParams}
+            />
+            <Button
+              variant="outline"
+              onClick={() => setShowDiscovery(!showDiscovery)}
+              className="h-9 w-full group text-white border-none shadow-xl bg-gradient-to-r from-[#7F00FF] via-[#00BFFF] to-[#FF1493] bg-[length:200%_200%] animate-[gradientShift_6s_ease_infinite] sm:h-10 sm:w-auto"
+            >
+              {showDiscovery ? (
+                <X className="mr-2 h-4 w-4" />
+              ) : (
+                <Sparkles className="mr-2 h-4 w-4" />
+              )}
+              {showDiscovery ? 'Keşfi Gizle' : 'Keşfet'}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -246,8 +234,8 @@ export function HomepageClient({
                 scroll={false}
                 aria-label={`${filter.label} ölçütünü kaldır`}
                 onClick={() =>
-                  trackEvent("active_filter_remove", {
-                    filter_type: filter.id.split("-")[0],
+                  trackEvent('active_filter_remove', {
+                    filter_type: filter.id.split('-')[0],
                     remaining_filter_count: activeFilters.length - 1,
                   })
                 }
@@ -279,8 +267,8 @@ export function HomepageClient({
                 Nereden başlayacağını bilmiyor musun?
               </h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                İhtiyacını birkaç cümleyle anlat; AI Tavsiye sana uygun araçları
-                kısa bir liste halinde sunsun.
+                İhtiyacını birkaç cümleyle anlat; AI Tavsiye sana uygun araçları kısa bir liste
+                halinde sunsun.
               </p>
             </div>
 
@@ -289,8 +277,8 @@ export function HomepageClient({
                 href="/tavsiye"
                 prefetch={false}
                 onClick={() =>
-                  trackEvent("recommendation_cta_click", {
-                    source: "homepage_quick_start",
+                  trackEvent('recommendation_cta_click', {
+                    source: 'homepage_quick_start',
                   })
                 }
               >
@@ -310,7 +298,7 @@ export function HomepageClient({
                 href={href}
                 prefetch={false}
                 onClick={() =>
-                  trackEvent("quick_start_click", {
+                  trackEvent('quick_start_click', {
                     destination: href,
                     label,
                   })
@@ -327,18 +315,15 @@ export function HomepageClient({
 
       {/* Keşif Bölümü */}
       {showDiscovery && (
-          <div className="animate-in fade-in slide-in-from-top-4 duration-300">
-            {discoverySections}
-            <div className="w-full border-t border-dashed mt-12"></div>
-          </div>
+        <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+          {discoverySections}
+          <div className="w-full border-t border-dashed mt-12"></div>
+        </div>
       )}
 
       {/* Sonsuz Kaydırma Listesi */}
       <section className="mt-12" aria-labelledby="tools-page-title">
-        <Suspense
-          key={searchParams.toString()}
-          fallback={<ToolsGridSkeleton />}
-        >
+        <Suspense key={searchParams.toString()} fallback={<ToolsGridSkeleton />}>
           <InfiniteToolsList
             initialTools={initialTools}
             searchParams={searchParams}

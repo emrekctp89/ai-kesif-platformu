@@ -1,27 +1,27 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import FavoriteButton from "@/components/FavoriteButton";
-import { Star, Crown, Gem } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { recordVariantImpression, recordVariantClick } from "@/app/actions";
-import ToolIcon from "@/components/ToolIcon";
-import { TrackedExternalLink } from "@/components/TrackedExternalLink";
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import FavoriteButton from '@/components/FavoriteButton';
+import { Star, Crown, Gem } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { recordVariantImpression, recordVariantClick } from '@/app/actions';
+import ToolIcon from '@/components/ToolIcon';
+import { TrackedExternalLink } from '@/components/TrackedExternalLink';
 
 // Seviyelere göre stiller
 const tierStyles = {
   Pro: {
-    badge: "bg-purple-600 text-white hover:bg-purple-700",
-    card: "border-purple-500/50 shadow-lg shadow-purple-500/10",
+    badge: 'bg-purple-600 text-white hover:bg-purple-700',
+    card: 'border-purple-500/50 shadow-lg shadow-purple-500/10',
     icon: <Crown className="w-4 h-4 mr-1.5" />,
   },
   Sponsorlu: {
-    badge: "bg-amber-500 text-white hover:bg-amber-600",
-    card: "border-amber-500/50 shadow-lg shadow-amber-500/10",
+    badge: 'bg-amber-500 text-white hover:bg-amber-600',
+    card: 'border-amber-500/50 shadow-lg shadow-amber-500/10',
     icon: <Gem className="w-4 h-4 mr-1.5" />,
   },
 };
@@ -45,9 +45,7 @@ function ToolCard({ tool, user, isFavorited }) {
     // Eğer test edilecek aktif varyantlar varsa, orijinali de listeye ekle ve rastgele birini seç
     if (activeVariants.length > 0) {
       const allTestableVariants = [originalVariant, ...activeVariants];
-      const randomIndex = Math.floor(
-        Math.random() * allTestableVariants.length
-      );
+      const randomIndex = Math.floor(Math.random() * allTestableVariants.length);
       const selectedVariant = allTestableVariants[randomIndex];
       setDisplayedVariant(selectedVariant);
 
@@ -75,12 +73,12 @@ function ToolCard({ tool, user, isFavorited }) {
     return null; // Varyant henüz seçilmediyse hiçbir şey gösterme
   }
 
-  const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
+  const isPremium = tool.tier === 'Pro' || tool.tier === 'Sponsorlu';
 
   return (
     <div
       className={cn(
-        "bg-card border rounded-xl p-6 shadow-lg flex flex-col relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
+        'bg-card border rounded-xl p-6 shadow-lg flex flex-col relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1',
         isPremium && tierStyles[tool.tier]?.card
       )}
     >
@@ -95,12 +93,7 @@ function ToolCard({ tool, user, isFavorited }) {
       )}
       <div className="flex-grow">
         {isPremium && (
-          <Badge
-            className={cn(
-              "mb-2 flex w-fit items-center",
-              tierStyles[tool.tier]?.badge
-            )}
-          >
+          <Badge className={cn('mb-2 flex w-fit items-center', tierStyles[tool.tier]?.badge)}>
             {tierStyles[tool.tier]?.icon}
             {tool.tier}
           </Badge>
@@ -135,9 +128,7 @@ function ToolCard({ tool, user, isFavorited }) {
       <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-          <span className="font-bold text-foreground">
-            {tool.average_rating.toFixed(1)}
-          </span>
+          <span className="font-bold text-foreground">{tool.average_rating.toFixed(1)}</span>
           <span>({tool.total_ratings} oy)</span>
         </div>
         <Button asChild size="sm">
@@ -147,7 +138,7 @@ function ToolCard({ tool, user, isFavorited }) {
             rel="noopener noreferrer"
             eventName="official_site_click"
             eventParameters={{
-              source: "tools_list_ab_card",
+              source: 'tools_list_ab_card',
               tool_slug: tool.slug,
               category: tool.category_slug,
             }}

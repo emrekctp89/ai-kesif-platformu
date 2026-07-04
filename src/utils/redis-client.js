@@ -159,7 +159,7 @@ export class RedisClient {
     }
 
     try {
-      const fullKeys = keys.map(k => this.getFullKey(k));
+      const fullKeys = keys.map((k) => this.getFullKey(k));
       const result = await this.client.del(fullKeys);
       this.stats.commands++;
       return result;
@@ -219,7 +219,7 @@ export class RedisClient {
     }
 
     try {
-      const fullKeys = keys.map(k => this.getFullKey(k));
+      const fullKeys = keys.map((k) => this.getFullKey(k));
       const values = await this.client.mGet(fullKeys);
       this.stats.commands++;
 
@@ -327,9 +327,10 @@ export class RedisClient {
       errors: this.stats.errors,
       hits: this.stats.hits,
       misses: this.stats.misses,
-      hitRate: this.stats.hits + this.stats.misses > 0
-        ? ((this.stats.hits / (this.stats.hits + this.stats.misses)) * 100).toFixed(2)
-        : 0,
+      hitRate:
+        this.stats.hits + this.stats.misses > 0
+          ? ((this.stats.hits / (this.stats.hits + this.stats.misses)) * 100).toFixed(2)
+          : 0,
     };
   }
 
@@ -389,7 +390,7 @@ export class RedisPool {
     }
 
     // Wait for available client
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const interval = setInterval(() => {
         if (this.availableClients.length > 0) {
           clearInterval(interval);

@@ -1,29 +1,28 @@
-import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Trophy } from "lucide-react";
+import { createClient } from '@/utils/supabase/server';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Trophy } from 'lucide-react';
 
 // Veritabanından en yüksek puanlı kullanıcıları çeken fonksiyon
 async function getTopUsers() {
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("profiles")
-    .select("email, avatar_url, reputation_points")
-    .order("reputation_points", { ascending: false })
+    .from('profiles')
+    .select('email, avatar_url, reputation_points')
+    .order('reputation_points', { ascending: false })
     .limit(10); // İlk 10 kullanıcıyı alıyoruz
 
   if (error) {
-    console.error("Liderlik tablosu çekilirken hata:", error);
+    console.error('Liderlik tablosu çekilirken hata:', error);
     return [];
   }
   return data;
 }
 
 export const metadata = {
-  title: "Liderlik Tablosu | AI Keşif Platformu",
-  description:
-    "Platforma en çok katkıda bulunan, en itibarlı kullanıcıları keşfedin.",
+  title: 'Liderlik Tablosu | AI Keşif Platformu',
+  description: 'Platforma en çok katkıda bulunan, en itibarlı kullanıcıları keşfedin.',
 };
 
 export default async function LeaderboardPage() {
@@ -51,17 +50,13 @@ export default async function LeaderboardPage() {
                   key={user.email}
                   className="flex items-center gap-4 p-4 rounded-lg bg-muted/50"
                 >
-                  <div className="font-bold text-lg w-8 text-center">
-                    {index + 1}
-                  </div>
+                  <div className="font-bold text-lg w-8 text-center">{index + 1}</div>
                   <Avatar>
                     <AvatarImage src={user.avatar_url} />
                     <AvatarFallback>{fallback}</AvatarFallback>
                   </Avatar>
                   <p className="flex-1 font-medium">{user.email}</p>
-                  <div className="font-bold text-primary">
-                    {user.reputation_points} Puan
-                  </div>
+                  <div className="font-bold text-primary">{user.reputation_points} Puan</div>
                 </div>
               );
             })}

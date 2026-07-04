@@ -1,4 +1,4 @@
-import { LoadingSpinner } from "@/components/LoadingComponents";
+import { LoadingSpinner } from '@/components/LoadingComponents';
 
 export default function StudioLoading() {
   return (

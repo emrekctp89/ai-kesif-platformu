@@ -9,42 +9,49 @@ Yapay zeka araçlarını keşfet, karşılaştır, test et ve toplulukla paylaş
 ## ✨ Ana Özellikler
 
 ### 🔍 **Araç Keşfi**
+
 - 1000+ AI aracının kapsamlı kütüphanesi
 - Gelişmiş filtreleme ve arama
 - Kategori ve etiket tabanlı keşif
 - Günlük öne çıkan araçlar
 
 ### 🔄 **Karşılaştırma**
+
 - 2+ aracı yan yana karşılaştır
 - Özellik, fiyatlandırma ve platform karşılaştırması
 - Benzer araçların önerileri
 - Kullanıcı puanları ve yorumları
 
 ### 🤖 **AI Tavsiyelendirme**
+
 - Yapay zeka destekli araç önerileri
 - İhtiyacınıza göre kişiselleştirilmiş sonuçlar
 - Proje stratejisi analizi
 - İçerik oluşturmada yardım
 
 ### 📚 **Koleksiyonlar & Projeler**
+
 - Araçları kişisel koleksiyonlarda saklayın
 - Proje şablonları oluşturun
 - Koleksiyonları toplulukla paylaşın
 - Araç önerileri alın
 
 ### 🎨 **Stüdyo Özellikleri** (Pro)
+
 - AI ile metin oluşturma
 - AI ile görsel oluşturma (Imagen)
 - İçerik mentorluğu
 - Prompt kütüphanesi
 
 ### 🏆 **Topluluk**
+
 - Araçlara yorum yapın ve puanlayın
 - Haftalık zorluklar ve yarışmalar
 - Kullanıcı profileri ve ün sistemi
 - Eser gösterisi (Showcase)
 
 ### 👨‍💼 **Admin Panel**
+
 - Araç onayı ve yönetimi
 - Kullanıcı yönetimi
 - İçerik yönetimi
@@ -54,24 +61,25 @@ Yapay zeka araçlarını keşfet, karşılaştır, test et ve toplulukla paylaş
 
 ## 🛠️ **Tech Stack**
 
-| Kategori | Teknoloji |
-|----------|-----------|
-| **Frontend** | Next.js 15.5, React 19, TailwindCSS |
-| **UI Components** | Radix UI, Shadcn/ui |
-| **Backend** | Next.js Server Actions, Node.js |
-| **Database** | Supabase (PostgreSQL) |
-| **Authentication** | Supabase Auth |
-| **AI** | Google Gemini API, Imagen |
-| **Hosting** | Vercel |
-| **Analytics** | Vercel Analytics, Speed Insights |
-| **Email** | Resend |
-| **Payments** | Stripe |
+| Kategori           | Teknoloji                           |
+| ------------------ | ----------------------------------- |
+| **Frontend**       | Next.js 15.5, React 19, TailwindCSS |
+| **UI Components**  | Radix UI, Shadcn/ui                 |
+| **Backend**        | Next.js Server Actions, Node.js     |
+| **Database**       | Supabase (PostgreSQL)               |
+| **Authentication** | Supabase Auth                       |
+| **AI**             | Google Gemini API, Imagen           |
+| **Hosting**        | Vercel                              |
+| **Analytics**      | Vercel Analytics, Speed Insights    |
+| **Email**          | Resend                              |
+| **Payments**       | Stripe                              |
 
 ---
 
 ## 📖 **Dokümantasyon (Documentation)**
 
 Projeye katkıda bulunmak veya mimariyi anlamak için aşağıdaki belgeleri inceleyin:
+
 - [Geliştirici Kılavuzu (Developer Guide)](./DEVELOPER_GUIDE.md) - Mimari, UI ve Test stratejileri
 - [API Dokümantasyonu](./API_DOCS.md) - Server Actions ve API yapılandırmaları
 - [Bileşen (Component) Kılavuzu](./COMPONENTS_GUIDE.md) - İstemci/Sunucu bileşeni kuralları ve Tailwind UI rehberi
@@ -82,6 +90,7 @@ Projeye katkıda bulunmak veya mimariyi anlamak için aşağıdaki belgeleri inc
 ## 🚀 **Hızlı Başlangıç**
 
 ### Gereksinimler
+
 - Node.js 18+
 - npm/yarn/pnpm
 - Git
@@ -89,12 +98,14 @@ Projeye katkıda bulunmak veya mimariyi anlamak için aşağıdaki belgeleri inc
 ### Kurulum
 
 1. **Repository'yi clone et**
+
 ```bash
 git clone https://github.com/emrekctp89/ai-kesif-platformu.git
 cd ai-kesif-platformu
 ```
 
 2. **Dependencies yükle**
+
 ```bash
 npm install
 # veya
@@ -102,6 +113,7 @@ yarn install
 ```
 
 3. **Environment variables ayarla**
+
 ```bash
 cp .env.example .env.local
 ```
@@ -109,11 +121,13 @@ cp .env.example .env.local
 `.env.local` dosyasını kendi values'larınızla doldurun (aşağıdaki bölümü gör)
 
 4. **Development sunucusunu başlat**
+
 ```bash
 npm run dev
 ```
 
 5. **Tarayıcıda aç**
+
 ```
 http://localhost:3005
 ```
@@ -183,18 +197,21 @@ public/                   # Static assets
 ## 📖 **Documentation**
 
 ### Kullanıcı Rehberi
+
 - [Araç Keşfi Rehberi](./docs/user-guide.md)
 - [Koleksiyonlar Oluşturma](./docs/collections.md)
 - [Karşılaştırma Rehberi](./docs/comparison.md)
 - [AI Stüdyosu](./docs/studio.md)
 
 ### Geliştirici Rehberi
+
 - [API Documentation](./docs/api.md)
 - [Veritabanı Schema](./docs/database.md)
 - [Component Library](./docs/components.md)
 - [Deployment Guide](./docs/deployment.md)
 
 ### Admin Rehberi
+
 - [Admin Panel](./docs/admin.md)
 - [Content Management](./docs/content-management.md)
 - [User Management](./docs/user-management.md)
@@ -226,12 +243,14 @@ npm run tools:audit-links:deactivate
 ## 📊 **Build & Deployment**
 
 ### Production Build
+
 ```bash
 npm run build
 npm start
 ```
 
 ### Deploy to Vercel
+
 ```bash
 vercel deploy --prod
 ```
@@ -251,6 +270,7 @@ Katkılarınızı bekliyoruz! Lütfen şu adımları izleyin:
 5. **Pull Request aç** - Açıklamalarıyla birlikte
 
 ### Contribution Rehberi
+
 - [Contributing Guidelines](./CONTRIBUTING.md)
 - [Code of Conduct](./CODE_OF_CONDUCT.md)
 - [Development Roadmap](./DEVELOPMENT_ROADMAP.md)
@@ -262,6 +282,7 @@ Katkılarınızı bekliyoruz! Lütfen şu adımları izleyin:
 Bug buldum? Lütfen [issue aç](https://github.com/emrekctp89/ai-kesif-platformu/issues)!
 
 Detaylı bilgi gönderin:
+
 - Hata açıklaması
 - Adımlar (replikasyon)
 - Beklenen davranış

@@ -1,22 +1,13 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useState, useMemo, useTransition } from "react";
-import {
-  updatePost,
-  assignToolsToPost,
-  assignTagsToPost,
-  uploadBlogImage,
-} from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import * as React from 'react';
+import { useState, useMemo, useTransition } from 'react';
+import { updatePost, assignToolsToPost, assignTagsToPost, uploadBlogImage } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -24,18 +15,18 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import toast from "react-hot-toast";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import dynamic from "next/dynamic";
+} from '@/components/ui/command';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import toast from 'react-hot-toast';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import dynamic from 'next/dynamic';
 
-const SimpleMDE = dynamic(() => import("react-simplemde-editor"), {
+const SimpleMDE = dynamic(() => import('react-simplemde-editor'), {
   ssr: false,
 });
-import "easymde/dist/easymde.min.css";
+import 'easymde/dist/easymde.min.css';
 
 // Çoklu Seçim Bileşenleri (Bunlar için src/components altında ayrı dosyalar oluşturulabilir)
 function MultiSelect({ items, selectedIds, onSelectionChange, placeholder }) {
@@ -74,15 +65,11 @@ function MultiSelect({ items, selectedIds, onSelectionChange, placeholder }) {
             <CommandEmpty>Bulunamadı.</CommandEmpty>
             <CommandGroup>
               {items.map((item) => (
-                <CommandItem
-                  key={item.id}
-                  value={item.name}
-                  onSelect={() => handleSelect(item.id)}
-                >
+                <CommandItem key={item.id} value={item.name} onSelect={() => handleSelect(item.id)}>
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedIds.has(item.id) ? "opacity-100" : "opacity-0"
+                      'mr-2 h-4 w-4',
+                      selectedIds.has(item.id) ? 'opacity-100' : 'opacity-0'
                     )}
                   />
                   {item.name}
@@ -99,49 +86,47 @@ function MultiSelect({ items, selectedIds, onSelectionChange, placeholder }) {
 // Ana Yazı Editör Bileşeni
 export function PostEditor({ post, allTools, allTags, allCategories }) {
   const [isPending, startTransition] = useTransition();
-  const [content, setContent] = useState(post.content || "");
+  const [content, setContent] = useState(post.content || '');
   const [selectedTools, setSelectedTools] = useState(
     new Set(post.post_tools.map((pt) => pt.tools.id))
   );
-  const [selectedTags, setSelectedTags] = useState(
-    new Set(post.post_tags.map((pt) => pt.tags.id))
-  );
+  const [selectedTags, setSelectedTags] = useState(new Set(post.post_tags.map((pt) => pt.tags.id)));
 
   const editorOptions = useMemo(
     () => ({
       spellChecker: false,
-      placeholder: "Yazınızı buraya yazmaya başlayın...",
+      placeholder: 'Yazınızı buraya yazmaya başlayın...',
       toolbar: [
-        "bold",
-        "italic",
-        "heading",
-        "|",
-        "quote",
-        "unordered-list",
-        "ordered-list",
-        "|",
-        "link",
-        "image",
-        "|",
-        "preview",
-        "side-by-side",
-        "fullscreen",
+        'bold',
+        'italic',
+        'heading',
+        '|',
+        'quote',
+        'unordered-list',
+        'ordered-list',
+        '|',
+        'link',
+        'image',
+        '|',
+        'preview',
+        'side-by-side',
+        'fullscreen',
       ],
       uploadImage: true,
       imageUploadFunction: (file, onSuccess, onError) => {
         const formData = new FormData();
-        formData.append("image", file);
+        formData.append('image', file);
         toast.promise(
           uploadBlogImage(formData).then((result) => {
             if (result.success) {
               onSuccess(result.url);
-              return "Görsel başarıyla yüklendi!";
+              return 'Görsel başarıyla yüklendi!';
             } else {
               throw new Error(result.error);
             }
           }),
           {
-            loading: "Yükleniyor...",
+            loading: 'Yükleniyor...',
             success: (msg) => msg,
             error: (err) => `Hata: ${err.message}`,
           }
@@ -152,15 +137,15 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
   );
 
   const handleFormSubmit = async (formData) => {
-    formData.set("content", content);
+    formData.set('content', content);
 
     const toolsFormData = new FormData();
-    toolsFormData.append("postId", post.id);
-    selectedTools.forEach((id) => toolsFormData.append("toolId", id));
+    toolsFormData.append('postId', post.id);
+    selectedTools.forEach((id) => toolsFormData.append('toolId', id));
 
     const tagsFormData = new FormData();
-    tagsFormData.append("postId", post.id);
-    selectedTags.forEach((id) => tagsFormData.append("tagId", id));
+    tagsFormData.append('postId', post.id);
+    selectedTags.forEach((id) => tagsFormData.append('tagId', id));
 
     startTransition(async () => {
       const [postResult, toolsResult, tagsResult] = await Promise.all([
@@ -170,13 +155,10 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
       ]);
       if (postResult.error || toolsResult.error || tagsResult.error) {
         toast.error(
-          postResult.error ||
-            toolsResult.error ||
-            tagsResult.error ||
-            "Bir hata oluştu."
+          postResult.error || toolsResult.error || tagsResult.error || 'Bir hata oluştu.'
         );
       } else {
-        toast.success("Yazı ve ilişkili içerikler başarıyla güncellendi.");
+        toast.success('Yazı ve ilişkili içerikler başarıyla güncellendi.');
       }
     });
   };
@@ -202,11 +184,7 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
           </div>
           <div className="space-y-2">
             <Label>İçerik (Markdown)</Label>
-            <SimpleMDE
-              options={editorOptions}
-              value={content}
-              onChange={setContent}
-            />
+            <SimpleMDE options={editorOptions} value={content} onChange={setContent} />
           </div>
         </div>
 
@@ -218,12 +196,7 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="slug">URL Uzantısı</Label>
-                <Input
-                  id="slug"
-                  name="slug"
-                  defaultValue={post.slug}
-                  required
-                />
+                <Input id="slug" name="slug" defaultValue={post.slug} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Durum</Label>
@@ -256,7 +229,7 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
           </Card>
 
           {/* Organizasyon Kartı sadece Rehber ve Makaleler için görünür */}
-          {(post.type === "Rehber" || post.type === "Makale") && (
+          {(post.type === 'Rehber' || post.type === 'Makale') && (
             <Card>
               <CardHeader>
                 <CardTitle>Organizasyon</CardTitle>
@@ -308,7 +281,7 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
 
       <div className="flex justify-end gap-2 pt-6 border-t">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
+          {isPending ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
         </Button>
         {/* DEĞİŞİKLİK: "Önizle" butonu artık yeni ve güvenli önizleme sayfasına gidiyor */}
         <Button variant="outline" asChild>

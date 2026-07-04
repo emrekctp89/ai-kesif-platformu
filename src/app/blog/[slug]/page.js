@@ -1,19 +1,19 @@
-import { createClient } from "@/utils/supabase/server";
-import { notFound } from "next/navigation";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import Link from "next/link";
-import Image from "next/image";
+import { createClient } from '@/utils/supabase/server';
+import { notFound } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import Link from 'next/link';
+import Image from 'next/image';
 
 // Veritabanından belirli bir yazıyı slug'ına göre çeken fonksiyon
 async function getPost(slug) {
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("posts")
-    .select("*")
-    .eq("slug", slug)
+    .from('posts')
+    .select('*')
+    .eq('slug', slug)
     // DEĞİŞİKLİK: 'is_published' yerine yeni 'status' sütununa göre filtreliyoruz
-    .eq("status", "Yayınlandı")
+    .eq('status', 'Yayınlandı')
     .single();
 
   if (error || !data) {
@@ -41,15 +41,12 @@ export default async function PostPage({ params }) {
           {post.title}
         </h1>
         <p className="mt-4 text-lg text-muted-foreground">{post.description}</p>
-        <time
-          dateTime={post.published_at}
-          className="mt-4 block text-sm text-muted-foreground"
-        >
-          Yayınlanma Tarihi:{" "}
-          {new Date(post.published_at).toLocaleDateString("tr-TR", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
+        <time dateTime={post.published_at} className="mt-4 block text-sm text-muted-foreground">
+          Yayınlanma Tarihi:{' '}
+          {new Date(post.published_at).toLocaleDateString('tr-TR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
           })}
         </time>
       </header>
@@ -72,15 +69,9 @@ export default async function PostPage({ params }) {
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
-            a: ({ node, ...props }) => (
-              <a className="text-primary hover:underline" {...props} />
-            ),
-            h2: ({ node, ...props }) => (
-              <h2 className="text-2xl font-bold mt-8 mb-4" {...props} />
-            ),
-            h3: ({ node, ...props }) => (
-              <h3 className="text-xl font-bold mt-6 mb-3" {...props} />
-            ),
+            a: ({ node, ...props }) => <a className="text-primary hover:underline" {...props} />,
+            h2: ({ node, ...props }) => <h2 className="text-2xl font-bold mt-8 mb-4" {...props} />,
+            h3: ({ node, ...props }) => <h3 className="text-xl font-bold mt-6 mb-3" {...props} />,
           }}
         >
           {post.content}

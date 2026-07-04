@@ -4,7 +4,12 @@
  */
 
 import { logger } from '../utils/logger';
-import { ValidationError, AuthenticationError, AuthorizationError, NotFoundError } from '../utils/errors';
+import {
+  ValidationError,
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
+} from '../utils/errors';
 
 /**
  * Error handler middleware

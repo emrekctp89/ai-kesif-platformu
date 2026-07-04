@@ -4,8 +4,8 @@
  * Bu, tüm aktif ödül ilanlarını listeleyen ana sayfadır.
  * ---------------------------------------------------
  */
-import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
+import { createClient } from '@/utils/supabase/server';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -13,16 +13,16 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
-} from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CreateBountyDialog } from "@/components/CreateBountyDialog";
-import { Award, Clock } from "lucide-react";
+} from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CreateBountyDialog } from '@/components/CreateBountyDialog';
+import { Award, Clock } from 'lucide-react';
 
 // Veritabanından herkese açık tüm ödül ilanlarını çeken fonksiyon
 async function getActiveBounties() {
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("bounties")
+    .from('bounties')
     .select(
       `
             id,
@@ -33,20 +33,20 @@ async function getActiveBounties() {
             profiles ( username, avatar_url )
         `
     )
-    .eq("status", "Açık")
-    .order("created_at", { ascending: false });
+    .eq('status', 'Açık')
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error("Aktif ödüller çekilirken hata:", error);
+    console.error('Aktif ödüller çekilirken hata:', error);
     return [];
   }
   return data;
 }
 
 export const metadata = {
-  title: "Ödül Avcılığı | AI Keşif Platformu",
+  title: 'Ödül Avcılığı | AI Keşif Platformu',
   description:
-    "Topluluğun yardımıyla ihtiyacınız olan yapay zeka aracını bulun ve katkıda bulunanları ödüllendirin.",
+    'Topluluğun yardımıyla ihtiyacınız olan yapay zeka aracını bulun ve katkıda bulunanları ödüllendirin.',
 };
 
 export default async function BountiesPage() {
@@ -62,8 +62,7 @@ export default async function BountiesPage() {
           Ödül Avcılığı
         </h1>
         <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-          Aradığınız aracı bulamıyor musunuz? Bir ödül ilanı oluşturun, topluluk
-          sizin için bulsun!
+          Aradığınız aracı bulamıyor musunuz? Bir ödül ilanı oluşturun, topluluk sizin için bulsun!
         </p>
       </div>
 
@@ -76,11 +75,7 @@ export default async function BountiesPage() {
       <div className="space-y-6">
         {bounties.length > 0 ? (
           bounties.map((bounty) => (
-            <Link
-              key={bounty.id}
-              href={`/odul-avciligi/${bounty.id}`}
-              className="block"
-            >
+            <Link key={bounty.id} href={`/odul-avciligi/${bounty.id}`} className="block">
               <Card className="hover:border-primary transition-colors">
                 <CardHeader>
                   <CardTitle>{bounty.title}</CardTitle>
@@ -93,9 +88,7 @@ export default async function BountiesPage() {
                     <Avatar className="h-6 w-6">
                       <AvatarImage src={bounty.profiles.avatar_url} />
                       <AvatarFallback>
-                        {bounty.profiles.username
-                          ?.substring(0, 2)
-                          .toUpperCase()}
+                        {bounty.profiles.username?.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <span>{bounty.profiles.username}</span>
@@ -107,7 +100,7 @@ export default async function BountiesPage() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-4 h-4" />
-                      {new Date(bounty.expires_at).toLocaleDateString("tr-TR")}
+                      {new Date(bounty.expires_at).toLocaleDateString('tr-TR')}
                     </div>
                   </div>
                 </CardFooter>

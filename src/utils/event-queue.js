@@ -101,7 +101,7 @@ export class EventQueue {
           this.stats.retried++;
 
           const delay = job.retryDelay * Math.pow(2, job.attempts - 1);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
 
           this.queue.push(job);
           this.queue.sort((a, b) => b.priority - a.priority);
@@ -139,9 +139,7 @@ export class EventQueue {
    */
   async executeJob(job) {
     return new Promise((resolve, reject) => {
-      Promise.resolve(job.handler())
-        .then(resolve)
-        .catch(reject);
+      Promise.resolve(job.handler()).then(resolve).catch(reject);
     });
   }
 
@@ -149,14 +147,14 @@ export class EventQueue {
    * Get job
    */
   getJob(jobId) {
-    return this.queue.find(job => job.id === jobId);
+    return this.queue.find((job) => job.id === jobId);
   }
 
   /**
    * Cancel job
    */
   cancelJob(jobId) {
-    const index = this.queue.findIndex(job => job.id === jobId);
+    const index = this.queue.findIndex((job) => job.id === jobId);
 
     if (index === -1) {
       return false;
@@ -198,7 +196,7 @@ export class EventQueue {
    * Get queue
    */
   getQueue() {
-    return this.queue.map(job => ({
+    return this.queue.map((job) => ({
       id: job.id,
       event: job.event,
       priority: job.priority,
@@ -222,9 +220,10 @@ export class EventQueue {
       processed: this.stats.processed,
       failed: this.stats.failed,
       retried: this.stats.retried,
-      successRate: this.stats.enqueued > 0
-        ? ((this.stats.processed / this.stats.enqueued) * 100).toFixed(2) + '%'
-        : '0%',
+      successRate:
+        this.stats.enqueued > 0
+          ? ((this.stats.processed / this.stats.enqueued) * 100).toFixed(2) + '%'
+          : '0%',
     };
   }
 
@@ -239,7 +238,7 @@ export class EventQueue {
    * Wait for queue to be empty
    */
   async waitUntilEmpty() {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
         if (this.queue.length === 0 && this.activeJobs === 0) {
           clearInterval(checkInterval);

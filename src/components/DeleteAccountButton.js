@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import {
   AlertDialog,
@@ -10,9 +10,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import { deleteUser } from "@/app/actions"
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { deleteUser } from '@/app/actions';
 
 export function DeleteAccountButton() {
   return (
@@ -24,19 +24,18 @@ export function DeleteAccountButton() {
         <AlertDialogHeader>
           <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
           <AlertDialogDescription>
-            Bu işlem geri alınamaz. Hesabınız kalıcı olarak silinecek ve tüm verileriniz (verdiğiniz puanlar vb.) kaybolacaktır.
+            Bu işlem geri alınamaz. Hesabınız kalıcı olarak silinecek ve tüm verileriniz (verdiğiniz
+            puanlar vb.) kaybolacaktır.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Vazgeç</AlertDialogCancel>
           {/* Silme işlemini tetiklemek için bir form kullanıyoruz */}
           <form action={deleteUser}>
-            <AlertDialogAction type="submit">
-              Evet, Hesabımı Sil
-            </AlertDialogAction>
+            <AlertDialogAction type="submit">Evet, Hesabımı Sil</AlertDialogAction>
           </form>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

@@ -3,14 +3,14 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import { createClient } from 'npm:@supabase/supabase-js@2'
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { corsHeaders } from '../_shared/cors.ts'
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { corsHeaders } from '../_shared/cors.ts';
 
 // Bu ana fonksiyon, Edge Function çağrıldığında çalışır
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
@@ -26,7 +26,7 @@ serve(async (req) => {
       .eq('is_active', true);
     if (questsError) throw questsError;
     if (!allQuests || allQuests.length < 3) {
-      throw new Error("Yeterli sayıda aktif görev bulunmuyor (en az 3 tane olmalı).");
+      throw new Error('Yeterli sayıda aktif görev bulunmuyor (en az 3 tane olmalı).');
     }
 
     // 2. ADIM: Tüm kullanıcıları çek
@@ -46,10 +46,10 @@ serve(async (req) => {
         .select('is_completed')
         .eq('user_id', user.id)
         .eq('quest_date', yesterday);
-      
+
       let completedYesterday = false;
       if (yesterdayQuests && yesterdayQuests.length > 0) {
-        completedYesterday = yesterdayQuests.every(q => q.is_completed);
+        completedYesterday = yesterdayQuests.every((q) => q.is_completed);
       }
 
       // b. Seriyi güncelle
@@ -59,11 +59,8 @@ serve(async (req) => {
       } else {
         newStreak = 0; // Eğer tamamlamadıysa, seriyi sıfırla
       }
-      
-      await supabaseAdmin
-        .from('profiles')
-        .update({ daily_streak: newStreak })
-        .eq('id', user.id);
+
+      await supabaseAdmin.from('profiles').update({ daily_streak: newStreak }).eq('id', user.id);
 
       // c. Bugün için 3 adet rastgele görev seç
       const _userQuests = [];
@@ -71,32 +68,34 @@ serve(async (req) => {
       const selectedQuests = shuffledQuests.slice(0, 3);
 
       // d. Seçilen görevleri kullanıcıya ata
-      const questsToInsert = selectedQuests.map(quest => ({
+      const questsToInsert = selectedQuests.map((quest) => ({
         user_id: user.id,
         quest_id: quest.id,
         quest_date: today,
         current_progress: 0,
-        is_completed: false
+        is_completed: false,
       }));
 
       await supabaseAdmin.from('user_daily_quests').insert(questsToInsert);
     }
-    
+
     return new Response(
-      JSON.stringify({ message: `${users.length} kullanıcı için günlük görevler başarıyla atandı.` }),
+      JSON.stringify({
+        message: `${users.length} kullanıcı için günlük görevler başarıyla atandı.`,
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
-      },
-    )
+      }
+    );
   } catch (error) {
-    const errorMessage = (error instanceof Error) ? error.message : String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
-    })
+    });
   }
-})
+});
 
 //import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
@@ -104,9 +103,9 @@ serve(async (req) => {
 
 //Deno.serve(async (req) => {
 //  const { name } = await req.json()
- // const data = {
-  //  message: `Hello ${name}!`,
- // }
+// const data = {
+//  message: `Hello ${name}!`,
+// }
 
 //  return new Response(
 //    JSON.stringify(data),

@@ -1,11 +1,11 @@
 // middleware.js
 // Correct the import path if the file is named differently or located elsewhere
-import { updateSession } from './src/utils/supabase/middleware.js'
+import { updateSession } from './src/utils/supabase/middleware.js';
 // If the file is named 'Middleware.js', use:
 // import { updateSession } from './utils/supabase/Middleware.js'
 // If the file is in a different folder, update the path accordingly.
 export async function middleware(request) {
-  return await updateSession(request)
+  return await updateSession(request);
 }
 
 export const config = {
@@ -19,4 +19,4 @@ export const config = {
      */
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
-}
+};

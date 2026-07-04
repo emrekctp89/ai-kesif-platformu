@@ -1,4 +1,4 @@
-import { ToolCardSkeleton } from "./ToolCardSkeleton";
+import { ToolCardSkeleton } from './ToolCardSkeleton';
 
 // Ana sayfada gösterilecek iskelet kartlarının sayısını belirler
 const SKELETON_COUNT = 12;

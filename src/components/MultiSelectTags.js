@@ -1,12 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import * as React from "react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { useState } from 'react';
+import * as React from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -14,11 +10,11 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/command';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function MultiSelectTags({ allTags, selectedTags, onSelectionChange }) {
   const [open, setOpen] = useState(false);
@@ -50,7 +46,7 @@ export function MultiSelectTags({ allTags, selectedTags, onSelectionChange }) {
                     {tag.name}
                   </Badge>
                 ))
-              : "Etiket seç..."}
+              : 'Etiket seç...'}
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -62,15 +58,11 @@ export function MultiSelectTags({ allTags, selectedTags, onSelectionChange }) {
             <CommandEmpty>Etiket bulunamadı.</CommandEmpty>
             <CommandGroup>
               {allTags.map((tag) => (
-                <CommandItem
-                  key={tag.id}
-                  value={tag.name}
-                  onSelect={() => handleSelect(tag.id)}
-                >
+                <CommandItem key={tag.id} value={tag.name} onSelect={() => handleSelect(tag.id)}>
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedTags.has(tag.id) ? "opacity-100" : "opacity-0"
+                      'mr-2 h-4 w-4',
+                      selectedTags.has(tag.id) ? 'opacity-100' : 'opacity-0'
                     )}
                   />
                   {tag.name}

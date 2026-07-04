@@ -1,58 +1,67 @@
-"use server";
+'use server';
 
-import { createClient } from "@/utils/supabase/actions";
-import { revalidatePath } from "next/cache";
+import { createClient } from '@/utils/supabase/actions';
+import { revalidatePath } from 'next/cache';
 
 export async function submitToShowcaseChallenge(formData) {
-  "use server";
+  'use server';
 
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Bu işlem için giriş yapmalısınız." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Bu işlem için giriş yapmalısınız.' };
 
-  const showcaseItemId = formData.get("showcaseItemId");
-  const challengeId = formData.get("challengeId");
+  const showcaseItemId = formData.get('showcaseItemId');
+  const challengeId = formData.get('challengeId');
 
   if (!showcaseItemId || !challengeId) {
-    return { error: "Gerekli bilgiler eksik." };
+    return { error: 'Gerekli bilgiler eksik.' };
   }
 
-  const { error } = await supabase.from("challenge_submissions").insert({
+  const { error } = await supabase.from('challenge_submissions').insert({
     challenge_id: challengeId,
     showcase_item_id: showcaseItemId,
-    user_id: user.id
+    user_id: user.id,
   });
 
   if (error) {
-    if (error.code === '23505') return { error: "Bu eseri bu yarışmaya zaten göndermişsiniz." };
-    console.error("Yarışmaya eser gönderme hatası:", error);
-    return { error: "Eser gönderilirken bir hata oluştu." };
+    if (error.code === '23505') return { error: 'Bu eseri bu yarışmaya zaten göndermişsiniz.' };
+    console.error('Yarışmaya eser gönderme hatası:', error);
+    return { error: 'Eser gönderilirken bir hata oluştu.' };
   }
 
   revalidatePath('/yarisma');
-  return { success: "Eseriniz başarıyla yarışmaya gönderildi!" };
+  return { success: 'Eseriniz başarıyla yarışmaya gönderildi!' };
 }
 
 export async function toggleChallengeVote(formData) {
-  "use server";
+  'use server';
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Oylama yapmak için giriş yapmalısınız." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'Oylama yapmak için giriş yapmalısınız.' };
 
-  const submissionId = formData.get("submissionId");
+  const submissionId = formData.get('submissionId');
   if (!submissionId) return { error: "Gönderim ID'si bulunamadı." };
 
   const { data: existingVote } = await supabase
-    .from("challenge_submission_votes")
+    .from('challenge_submission_votes')
     .select('submission_id')
-    .eq("user_id", user.id)
-    .eq("submission_id", submissionId)
+    .eq('user_id', user.id)
+    .eq('submission_id', submissionId)
     .maybeSingle();
 
   if (existingVote) {
-    await supabase.from("challenge_submission_votes").delete().match({ user_id: user.id, submission_id: submissionId });
+    await supabase
+      .from('challenge_submission_votes')
+      .delete()
+      .match({ user_id: user.id, submission_id: submissionId });
   } else {
-    await supabase.from("challenge_submission_votes").insert({ user_id: user.id, submission_id: submissionId });
+    await supabase
+      .from('challenge_submission_votes')
+      .insert({ user_id: user.id, submission_id: submissionId });
   }
 
   revalidatePath('/yarisma');
@@ -60,46 +69,46 @@ export async function toggleChallengeVote(formData) {
 }
 
 export async function createChallengeManually(formData) {
-  "use server";
-  
+  'use server';
+
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user || user.email !== process.env.ADMIN_EMAIL) {
-    return { error: "Bu işlem için yetkiniz yok." };
+    return { error: 'Bu işlem için yetkiniz yok.' };
   }
 
-  const title = formData.get("title");
-  const description = formData.get("description");
-  const startDate = formData.get("start_date");
-  const endDate = formData.get("end_date");
+  const title = formData.get('title');
+  const description = formData.get('description');
+  const startDate = formData.get('start_date');
+  const endDate = formData.get('end_date');
 
   if (!title || !startDate || !endDate) {
-    return { error: "Başlık, başlangıç ve bitiş tarihleri zorunludur." };
+    return { error: 'Başlık, başlangıç ve bitiş tarihleri zorunludur.' };
   }
 
-  const { error } = await supabase
-    .from("challenges")
-    .insert({
-      title,
-      description,
-      start_date: startDate,
-      end_date: endDate,
-      status: 'Aktif'
-    });
+  const { error } = await supabase.from('challenges').insert({
+    title,
+    description,
+    start_date: startDate,
+    end_date: endDate,
+    status: 'Aktif',
+  });
 
   if (error) {
-    console.error("Manuel yarışma oluşturma hatası:", error);
-    return { error: "Yarışma oluşturulurken bir hata oluştu." };
+    console.error('Manuel yarışma oluşturma hatası:', error);
+    return { error: 'Yarışma oluşturulurken bir hata oluştu.' };
   }
 
   revalidatePath('/admin');
   revalidatePath('/yarisma');
-  return { success: "Yeni yarışma başarıyla oluşturuldu!" };
+  return { success: 'Yeni yarışma başarıyla oluşturuldu!' };
 }
 
 export async function generateChallengeIdeasWithAi(topic) {
-  "use server";
-  if (!topic) return { error: "Lütfen bir konu girin." };
+  'use server';
+  if (!topic) return { error: 'Lütfen bir konu girin.' };
 
   try {
     const prompt = `
@@ -110,27 +119,31 @@ export async function generateChallengeIdeasWithAi(topic) {
       Cevabını SADECE aşağıdaki JSON formatında ver.
     `;
 
-    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const chatHistory = [{ role: 'user', parts: [{ text: prompt }] }];
     const payload = {
       contents: chatHistory,
       generationConfig: {
-        responseMimeType: "application/json",
+        responseMimeType: 'application/json',
         responseSchema: {
-          type: "OBJECT",
+          type: 'OBJECT',
           properties: {
-            "title": { "type": "STRING" },
-            "description": { "type": "STRING" }
+            title: { type: 'STRING' },
+            description: { type: 'STRING' },
           },
-          required: ["title", "description"]
-        }
-      }
+          required: ['title', 'description'],
+        },
+      },
     };
 
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return { error: "Gemini API anahtarı bulunamadı." };
+    if (!apiKey) return { error: 'Gemini API anahtarı bulunamadı.' };
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    
-    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
 
     if (!response.ok) return { error: `Yapay zeka modelinden hata alındı.` };
 
@@ -138,58 +151,62 @@ export async function generateChallengeIdeasWithAi(topic) {
     if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
       return { success: true, data: JSON.parse(result.candidates[0].content.parts[0].text) };
     } else {
-      return { error: "Yapay zeka modelinden beklenen formatta bir cevap alınamadı." };
+      return { error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.' };
     }
   } catch (e) {
-    console.error("Yarışma fikri üretme hatası:", e.message);
+    console.error('Yarışma fikri üretme hatası:', e.message);
     return { error: `Bir hata oluştu.` };
   }
 }
 
 export async function updateChallenge(formData) {
-  "use server";
-  
+  'use server';
+
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user || user.email !== process.env.ADMIN_EMAIL) {
-    return { error: "Bu işlem için yetkiniz yok." };
+    return { error: 'Bu işlem için yetkiniz yok.' };
   }
 
-  const id = formData.get("id");
-  const title = formData.get("title");
-  const description = formData.get("description");
-  const startDate = formData.get("start_date");
-  const endDate = formData.get("end_date");
-  const status = formData.get("status");
+  const id = formData.get('id');
+  const title = formData.get('title');
+  const description = formData.get('description');
+  const startDate = formData.get('start_date');
+  const endDate = formData.get('end_date');
+  const status = formData.get('status');
 
   if (!id || !title || !startDate || !endDate || !status) {
-    return { error: "Tüm alanlar zorunludur." };
+    return { error: 'Tüm alanlar zorunludur.' };
   }
 
   const { error } = await supabase
-    .from("challenges")
+    .from('challenges')
     .update({ title, description, start_date: startDate, end_date: endDate, status })
-    .eq("id", id);
+    .eq('id', id);
 
   if (error) {
-    console.error("Yarışma güncelleme hatası:", error);
-    return { error: "Yarışma güncellenirken bir hata oluştu." };
+    console.error('Yarışma güncelleme hatası:', error);
+    return { error: 'Yarışma güncellenirken bir hata oluştu.' };
   }
 
   revalidatePath('/admin');
   revalidatePath('/yarisma');
-  return { success: "Yarışma başarıyla güncellendi!" };
+  return { success: 'Yarışma başarıyla güncellendi!' };
 }
 
 export async function submitShowcaseToChallenge(formData) {
-  "use server";
+  'use server';
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return { error: "Bu işlem için giriş yapmalısınız." };
+    return { error: 'Bu işlem için giriş yapmalısınız.' };
   }
 
-  const showcaseItemId = formData.get("showcaseItemId");
+  const showcaseItemId = formData.get('showcaseItemId');
   if (!showcaseItemId) {
     return { error: "Eser ID'si bulunamadı." };
   }
@@ -205,31 +222,33 @@ export async function submitShowcaseToChallenge(formData) {
     .single();
 
   if (challengeError || !activeChallenge) {
-    return { error: "Şu anda katılabileceğiniz aktif bir yarışma bulunmuyor." };
+    return { error: 'Şu anda katılabileceğiniz aktif bir yarışma bulunmuyor.' };
   }
 
-  const { data: showcaseOwner } = await supabase.from('showcase_items').select('user_id').eq('id', showcaseItemId).single();
+  const { data: showcaseOwner } = await supabase
+    .from('showcase_items')
+    .select('user_id')
+    .eq('id', showcaseItemId)
+    .single();
   if (showcaseOwner?.user_id !== user.id) {
-    return { error: "Sadece kendi eserinizi yarışmaya gönderebilirsiniz." };
+    return { error: 'Sadece kendi eserinizi yarışmaya gönderebilirsiniz.' };
   }
 
-  const { error } = await supabase
-    .from('challenge_submissions')
-    .insert({
-      challenge_id: activeChallenge.id,
-      showcase_item_id: showcaseItemId,
-      user_id: user.id
-    });
+  const { error } = await supabase.from('challenge_submissions').insert({
+    challenge_id: activeChallenge.id,
+    showcase_item_id: showcaseItemId,
+    user_id: user.id,
+  });
 
   if (error) {
     if (error.code === '23505') {
-      return { error: "Bu eseri bu yarışmaya zaten göndermişsiniz." };
+      return { error: 'Bu eseri bu yarışmaya zaten göndermişsiniz.' };
     }
-    console.error("Yarışmaya gönderme hatası:", error);
-    return { error: "Eser yarışmaya gönderilirken bir hata oluştu." };
+    console.error('Yarışmaya gönderme hatası:', error);
+    return { error: 'Eser yarışmaya gönderilirken bir hata oluştu.' };
   }
 
   revalidatePath('/yarisma');
   revalidatePath('/profile');
-  return { success: "Eseriniz başarıyla yarışmaya gönderildi!" };
+  return { success: 'Eseriniz başarıyla yarışmaya gönderildi!' };
 }

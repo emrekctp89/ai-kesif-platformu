@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   FacebookIcon,
@@ -9,27 +9,22 @@ import {
   TwitterShareButton,
   WhatsappIcon,
   WhatsappShareButton,
-} from "react-share";
-import { trackEvent } from "@/utils/analytics";
+} from 'react-share';
+import { trackEvent } from '@/utils/analytics';
 
 export function ShareButtons({ url, title }) {
   const iconSize = 32;
 
   return (
-    <div
-      className="flex flex-wrap items-center gap-3"
-      aria-label="Paylaşım seçenekleri"
-    >
-      <p className="text-sm font-medium text-muted-foreground">
-        Bu aracı paylaş:
-      </p>
+    <div className="flex flex-wrap items-center gap-3" aria-label="Paylaşım seçenekleri">
+      <p className="text-sm font-medium text-muted-foreground">Bu aracı paylaş:</p>
 
       <TwitterShareButton
         url={url}
         title={title}
-        hashtags={["AIKeşif", "YapayZeka"]}
+        hashtags={['AIKeşif', 'YapayZeka']}
         aria-label="X üzerinde paylaş"
-        onClick={() => trackEvent("tool_share", { channel: "x" })}
+        onClick={() => trackEvent('tool_share', { channel: 'x' })}
       >
         <TwitterIcon size={iconSize} round aria-hidden="true" />
       </TwitterShareButton>
@@ -38,7 +33,7 @@ export function ShareButtons({ url, title }) {
         url={url}
         title={title}
         aria-label="LinkedIn üzerinde paylaş"
-        onClick={() => trackEvent("tool_share", { channel: "linkedin" })}
+        onClick={() => trackEvent('tool_share', { channel: 'linkedin' })}
       >
         <LinkedinIcon size={iconSize} round aria-hidden="true" />
       </LinkedinShareButton>
@@ -48,7 +43,7 @@ export function ShareButtons({ url, title }) {
         title={title}
         separator=":: "
         aria-label="WhatsApp ile paylaş"
-        onClick={() => trackEvent("tool_share", { channel: "whatsapp" })}
+        onClick={() => trackEvent('tool_share', { channel: 'whatsapp' })}
       >
         <WhatsappIcon size={iconSize} round aria-hidden="true" />
       </WhatsappShareButton>
@@ -57,7 +52,7 @@ export function ShareButtons({ url, title }) {
         url={url}
         quote={title}
         aria-label="Facebook üzerinde paylaş"
-        onClick={() => trackEvent("tool_share", { channel: "facebook" })}
+        onClick={() => trackEvent('tool_share', { channel: 'facebook' })}
       >
         <FacebookIcon size={iconSize} round aria-hidden="true" />
       </FacebookShareButton>

@@ -1,10 +1,10 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, Home, Search, ArrowLeft } from "lucide-react";
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, Home, Search, ArrowLeft } from 'lucide-react';
 
 export const metadata = {
-  title: "Sayfa Bulunamadı - 404",
-  description: "Aradığınız sayfa bulunamadı. Ana sayfaya dönün veya keşfet sayfasını ziyaret edin.",
+  title: 'Sayfa Bulunamadı - 404',
+  description: 'Aradığınız sayfa bulunamadı. Ana sayfaya dönün veya keşfet sayfasını ziyaret edin.',
   robots: {
     index: false,
     follow: true,
@@ -26,9 +26,7 @@ export default function NotFound() {
         {/* Status Code */}
         <div>
           <h1 className="text-7xl font-bold text-foreground">404</h1>
-          <p className="text-xl font-semibold text-muted-foreground mt-2">
-            Sayfa Bulunamadı
-          </p>
+          <p className="text-xl font-semibold text-muted-foreground mt-2">Sayfa Bulunamadı</p>
         </div>
 
         {/* Description */}
@@ -37,7 +35,8 @@ export default function NotFound() {
             Aradığınız sayfa silinmiş, taşınmış veya hiç var olmamış olabilir.
           </p>
           <p className="text-sm text-muted-foreground">
-            URL'i kontrol ettiğten sonra yeniden deneyin veya aşağıdaki seçeneklerden birini kullanın.
+            URL'i kontrol ettiğten sonra yeniden deneyin veya aşağıdaki seçeneklerden birini
+            kullanın.
           </p>
         </div>
 
@@ -53,21 +52,13 @@ export default function NotFound() {
 
         {/* Actions */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button
-            asChild
-            variant="default"
-            className="gap-2"
-          >
+          <Button asChild variant="default" className="gap-2">
             <Link href="/">
               <Home className="w-4 h-4" />
               Ana Sayfa
             </Link>
           </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="gap-2"
-          >
+          <Button asChild variant="outline" className="gap-2">
             <Link href="/kesfet">
               <Search className="w-4 h-4" />
               Keşfet
@@ -75,14 +66,12 @@ export default function NotFound() {
           </Button>
         </div>
 
-
-
         {/* Footer */}
         <p className="text-xs text-muted-foreground pt-4 border-t">
-          Yardıma ihtiyacınız mı var?{" "}
+          Yardıma ihtiyacınız mı var?{' '}
           <Link href="/iletisim" className="text-primary hover:underline">
             İletişim sayfasını
-          </Link>{" "}
+          </Link>{' '}
           ziyaret edin.
         </p>
       </div>

@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { oAuthSignIn, signIn } from '@/app/actions'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useSearchParams } from 'next/navigation'
-import ScrollingQuotes from '@/components/ScrollingQuotes' // Yeni component'i import ediyoruz
+import Link from 'next/link';
+import { oAuthSignIn, signIn } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useSearchParams } from 'next/navigation';
+import ScrollingQuotes from '@/components/ScrollingQuotes'; // Yeni component'i import ediyoruz
 
 export default function LoginPage() {
-  const searchParams = useSearchParams()
-  const message = searchParams.get('message')
+  const searchParams = useSearchParams();
+  const message = searchParams.get('message');
 
   return (
     <div className="w-full h-screen lg:grid lg:grid-cols-2">
@@ -30,7 +30,7 @@ export default function LoginPage() {
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
-              <Label htmlFor="password">Şifre</Label>
+                <Label htmlFor="password">Şifre</Label>
                 <Link
                   href="/forgot-password"
                   className="ml-auto inline-block text-sm underline hover:text-primary"
@@ -41,10 +41,10 @@ export default function LoginPage() {
               <Input id="password" type="password" name="password" required />
             </div>
             {typeof message === 'string' && (
-  <p className="text-sm p-2 bg-foreground/10 text-destructive text-center rounded-md">
-    {message}
-  </p>
-)}
+              <p className="text-sm p-2 bg-foreground/10 text-destructive text-center rounded-md">
+                {message}
+              </p>
+            )}
 
             <Button type="submit" className="w-full">
               Giriş Yap
@@ -66,12 +66,13 @@ export default function LoginPage() {
               <Button variant="outline" className="w-full">GitHub</Button>
             </form> */}
             <form action={oAuthSignIn.bind(null, 'google')}>
-  <Button variant="outline" className="w-full">Google</Button>
-</form>
-
+              <Button variant="outline" className="w-full">
+                Google
+              </Button>
+            </form>
           </div>
           <div className="mt-4 text-center text-sm">
-            Hesabınız yok mu?{" "}
+            Hesabınız yok mu?{' '}
             <Link href="/signup" className="underline">
               Kayıt Ol
             </Link>
@@ -81,5 +82,5 @@ export default function LoginPage() {
       {/* Sağ taraftaki boş div'i silip yerine yeni component'i koyuyoruz */}
       <ScrollingQuotes />
     </div>
-  )
+  );
 }

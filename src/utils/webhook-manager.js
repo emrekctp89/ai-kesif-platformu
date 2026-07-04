@@ -90,11 +90,11 @@ export class WebhookManager {
     let webhooks = Array.from(this.webhooks.values());
 
     if (filters.active !== undefined) {
-      webhooks = webhooks.filter(w => w.active === filters.active);
+      webhooks = webhooks.filter((w) => w.active === filters.active);
     }
 
     if (filters.event) {
-      webhooks = webhooks.filter(w => w.events.includes(filters.event));
+      webhooks = webhooks.filter((w) => w.events.includes(filters.event));
     }
 
     return webhooks;
@@ -230,7 +230,7 @@ export class WebhookManager {
       delay,
     });
 
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
 
     webhook.stats.retried++;
     this.stats.retried++;
@@ -269,10 +269,7 @@ export class WebhookManager {
     }
 
     const crypto = require('crypto');
-    return crypto
-      .createHmac('sha256', secret)
-      .update(payload)
-      .digest('hex');
+    return crypto.createHmac('sha256', secret).update(payload).digest('hex');
   }
 
   /**
@@ -300,7 +297,7 @@ export class WebhookManager {
   getStats() {
     return {
       totalWebhooks: this.webhooks.size,
-      activeWebhooks: Array.from(this.webhooks.values()).filter(w => w.active).length,
+      activeWebhooks: Array.from(this.webhooks.values()).filter((w) => w.active).length,
       registered: this.stats.registered,
       delivered: this.stats.delivered,
       failed: this.stats.failed,

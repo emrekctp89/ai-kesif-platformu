@@ -1,6 +1,6 @@
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
-import { LaunchForm } from "@/components/LaunchForm";
+import { createClient } from '@/utils/supabase/server';
+import { redirect } from 'next/navigation';
+import { LaunchForm } from '@/components/LaunchForm';
 
 // Kullanıcının, daha önce lansmanını yapmadığı, onaylanmış araçlarını çeken fonksiyon
 async function getLaunchableTools(userId) {
@@ -8,11 +8,11 @@ async function getLaunchableTools(userId) {
 
   // DEĞİŞİKLİK: 'launches' tablosunda zaten var olan tool_id'leri bir alt sorguyla buluyoruz.
   const { data: launchedToolIds, error: launchedError } = await supabase
-    .from("launches")
-    .select("tool_id");
+    .from('launches')
+    .select('tool_id');
 
   if (launchedError) {
-    console.error("Lansmanı yapılmış araçlar çekilirken hata:", launchedError);
+    console.error('Lansmanı yapılmış araçlar çekilirken hata:', launchedError);
     return [];
   }
 
@@ -21,27 +21,27 @@ async function getLaunchableTools(userId) {
 
   // Şimdi ana sorgumuzu yapıyoruz.
   let query = supabase
-    .from("tools")
-    .select("id, name")
-    .eq("user_id", userId)
-    .eq("is_approved", true);
+    .from('tools')
+    .select('id, name')
+    .eq('user_id', userId)
+    .eq('is_approved', true);
 
   // Eğer hariç tutulacak araçlar varsa, .not() filtresini kullanıyoruz.
   if (idsToExclude.length > 0) {
-    query = query.not("id", "in", `(${idsToExclude.join(",")})`);
+    query = query.not('id', 'in', `(${idsToExclude.join(',')})`);
   }
 
   const { data, error } = await query;
 
   if (error) {
-    console.error("Lansmanı yapılabilecek araçlar çekilirken hata:", error);
+    console.error('Lansmanı yapılabilecek araçlar çekilirken hata:', error);
     return [];
   }
   return data;
 }
 
 export const metadata = {
-  title: "Yeni Lansman | AI Keşif Platformu",
+  title: 'Yeni Lansman | AI Keşif Platformu',
 };
 
 export default async function SubmitLaunchPage() {
@@ -51,7 +51,7 @@ export default async function SubmitLaunchPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login?message=Lansman yapmak için giriş yapmalısınız.");
+    redirect('/login?message=Lansman yapmak için giriş yapmalısınız.');
   }
 
   const userTools = await getLaunchableTools(user.id);

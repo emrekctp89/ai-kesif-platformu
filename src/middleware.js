@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(request) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
-  })
+  });
 
   // Bu, Supabase istemcisini, sunucu tarafında çalışacak şekilde
   // özel olarak yapılandıran bir versiyonudur.
@@ -16,50 +16,50 @@ export async function middleware(request) {
     {
       cookies: {
         get(name) {
-          return request.cookies.get(name)?.value
+          return request.cookies.get(name)?.value;
         },
         set(name, value, options) {
           request.cookies.set({
             name,
             value,
             ...options,
-          })
+          });
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
-          })
+          });
           response.cookies.set({
             name,
             value,
             ...options,
-          })
+          });
         },
         remove(name, options) {
           request.cookies.set({
             name,
             value: '',
             ...options,
-          })
+          });
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
-          })
+          });
           response.cookies.set({
             name,
             value: '',
             ...options,
-          })
+          });
         },
       },
     }
-  )
+  );
 
   // Bu middleware, her istekten önce kullanıcının oturumunu yeniler.
-  await supabase.auth.getUser()
+  await supabase.auth.getUser();
 
-  return response
+  return response;
 }
 
 // Bu middleware'in, sitenizdeki tüm rotalar için çalışmasını sağlar.
@@ -74,4 +74,4 @@ export const config = {
      */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-}
+};

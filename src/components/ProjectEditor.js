@@ -1,18 +1,14 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useState } from "react";
-import { updateProject, updateProjectItems } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import * as React from 'react';
+import { useState } from 'react';
+import { updateProject, updateProjectItems } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -20,14 +16,14 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Check, ChevronsUpDown, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import toast from "react-hot-toast";
-import Link from "next/link";
+} from '@/components/ui/command';
+import { Check, ChevronsUpDown, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import toast from 'react-hot-toast';
+import Link from 'next/link';
 // Yeni AI bileşenini import ediyoruz
-import { AiProjectStrategist } from "./AiProjectStrategist";
-import { Badge } from "@/components/ui/badge";
+import { AiProjectStrategist } from './AiProjectStrategist';
+import { Badge } from '@/components/ui/badge';
 
 // Projeye içerik eklemek için kullanılan çoklu seçim bileşeni
 function AddItemToProject({ items, onSelect, typeName }) {
@@ -67,44 +63,36 @@ function AddItemToProject({ items, onSelect, typeName }) {
 }
 
 // Ana Proje Editör Bileşeni
-export function ProjectEditor({
-  project,
-  allTools,
-  allShowcaseItems,
-  allPrompts,
-}) {
+export function ProjectEditor({ project, allTools, allShowcaseItems, allPrompts }) {
   const [title, setTitle] = useState(project.title);
-  const [description, setDescription] = useState(project.description || "");
+  const [description, setDescription] = useState(project.description || '');
   const [items, setItems] = useState(project.project_items || []);
 
   const handleAddItem = (itemId, itemType) => {
     if (items.some((i) => i.item_id === itemId && i.item_type === itemType)) {
-      toast.error("Bu içerik zaten projede mevcut.");
+      toast.error('Bu içerik zaten projede mevcut.');
       return;
     }
     setItems((prev) => [...prev, { item_id: itemId, item_type: itemType }]);
   };
 
   const handleRemoveItem = (itemId, itemType) => {
-    setItems((prev) =>
-      prev.filter((i) => !(i.item_id === itemId && i.item_type === itemType))
-    );
+    setItems((prev) => prev.filter((i) => !(i.item_id === itemId && i.item_type === itemType)));
   };
 
   const getItemDetails = (itemId, itemType) => {
-    if (itemType === "tool") return allTools.find((t) => t.id === itemId);
-    if (itemType === "showcase_item")
-      return allShowcaseItems.find((s) => s.id === itemId);
-    if (itemType === "prompt") return allPrompts.find((p) => p.id === itemId);
+    if (itemType === 'tool') return allTools.find((t) => t.id === itemId);
+    if (itemType === 'showcase_item') return allShowcaseItems.find((s) => s.id === itemId);
+    if (itemType === 'prompt') return allPrompts.find((p) => p.id === itemId);
     return null;
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
-    formData.append("id", project.id);
-    formData.append("title", title);
-    formData.append("description", description);
+    formData.append('id', project.id);
+    formData.append('title', title);
+    formData.append('description', description);
 
     const updateResult = await updateProject(formData);
     if (updateResult?.error) {
@@ -113,14 +101,14 @@ export function ProjectEditor({
     }
 
     const itemsFormData = new FormData();
-    itemsFormData.append("projectId", project.id);
-    itemsFormData.append("items", JSON.stringify(items));
+    itemsFormData.append('projectId', project.id);
+    itemsFormData.append('items', JSON.stringify(items));
 
     const itemsResult = await updateProjectItems(itemsFormData);
     if (itemsResult?.error) {
       toast.error(itemsResult.error);
     } else {
-      toast.success("Proje başarıyla güncellendi.");
+      toast.success('Proje başarıyla güncellendi.');
     }
   };
 
@@ -142,18 +130,14 @@ export function ProjectEditor({
                   <CardContent className="p-3 flex items-center justify-between">
                     <div>
                       <Badge variant="secondary" className="mb-1">
-                        {item.item_type.replace("_", " ")}
+                        {item.item_type.replace('_', ' ')}
                       </Badge>
-                      <p className="font-semibold">
-                        {details.title || details.name}
-                      </p>
+                      <p className="font-semibold">{details.title || details.name}</p>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() =>
-                        handleRemoveItem(item.item_id, item.item_type)
-                      }
+                      onClick={() => handleRemoveItem(item.item_id, item.item_type)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -165,17 +149,17 @@ export function ProjectEditor({
           <div className="grid grid-cols-3 gap-2">
             <AddItemToProject
               items={allTools}
-              onSelect={(id) => handleAddItem(id, "tool")}
+              onSelect={(id) => handleAddItem(id, 'tool')}
               typeName="Araç"
             />
             <AddItemToProject
               items={allShowcaseItems}
-              onSelect={(id) => handleAddItem(id, "showcase_item")}
+              onSelect={(id) => handleAddItem(id, 'showcase_item')}
               typeName="Eser"
             />
             <AddItemToProject
               items={allPrompts}
-              onSelect={(id) => handleAddItem(id, "prompt")}
+              onSelect={(id) => handleAddItem(id, 'prompt')}
               typeName="Prompt"
             />
           </div>

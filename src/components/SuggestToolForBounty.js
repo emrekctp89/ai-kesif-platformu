@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
+import * as React from 'react';
+import { useTransition } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,14 +11,14 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { submitToBounty } from "@/app/actions";
-import toast from "react-hot-toast";
-import { Trophy } from "lucide-react";
+} from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { submitToBounty } from '@/app/actions';
+import toast from 'react-hot-toast';
+import { Trophy } from 'lucide-react';
 
 // DEĞİŞİKLİK: Bu bileşen artık currentUser prop'unu almıyor, çünkü bu sayfa zaten giriş yapmış kullanıcılar için.
 export function SuggestToolForBounty({ toolId, openBounties }) {
@@ -34,10 +34,10 @@ export function SuggestToolForBounty({ toolId, openBounties }) {
 
   const handleFormAction = (formData) => {
     if (!selectedBountyId) {
-      toast.error("Lütfen bir ödül ilanı seçin.");
+      toast.error('Lütfen bir ödül ilanı seçin.');
       return;
     }
-    formData.append("bountyId", selectedBountyId);
+    formData.append('bountyId', selectedBountyId);
 
     startTransition(async () => {
       const result = await submitToBounty(formData);
@@ -62,15 +62,11 @@ export function SuggestToolForBounty({ toolId, openBounties }) {
         <DialogHeader>
           <DialogTitle>Bu Aracı Bir Ödüle Öner</DialogTitle>
           <DialogDescription>
-            Bu aracın, aşağıdaki aktif ödül ilanlarından hangisinin ihtiyacını
-            karşıladığını düşünüyorsunuz?
+            Bu aracın, aşağıdaki aktif ödül ilanlarından hangisinin ihtiyacını karşıladığını
+            düşünüyorsunuz?
           </DialogDescription>
         </DialogHeader>
-        <form
-          ref={formRef}
-          action={handleFormAction}
-          className="space-y-4 py-2"
-        >
+        <form ref={formRef} action={handleFormAction} className="space-y-4 py-2">
           <input type="hidden" name="toolId" value={toolId} />
 
           <RadioGroup
@@ -110,7 +106,7 @@ export function SuggestToolForBounty({ toolId, openBounties }) {
               </Button>
             </DialogClose>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Gönderiliyor..." : "Öneriyi Gönder"}
+              {isPending ? 'Gönderiliyor...' : 'Öneriyi Gönder'}
             </Button>
           </DialogFooter>
         </form>

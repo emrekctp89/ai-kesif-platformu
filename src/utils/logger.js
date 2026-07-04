@@ -1,6 +1,6 @@
 /**
  * Centralized Logger Utility
- * 
+ *
  * Usage:
  * - logger.info('Message', { context: 'data' })
  * - logger.error('Error occurred', { error: err })

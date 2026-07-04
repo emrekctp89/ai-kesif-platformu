@@ -4,10 +4,10 @@
  * Bu, yeni bir ödül ilanı oluşturma formunu içeren penceredir.
  * ---------------------------------------------------
  */
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
+import * as React from 'react';
+import { useTransition } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,14 +17,14 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { createBounty } from "@/app/actions";
-import toast from "react-hot-toast";
-import { PlusCircle } from "lucide-react";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { createBounty } from '@/app/actions';
+import toast from 'react-hot-toast';
+import { PlusCircle } from 'lucide-react';
 
 export function CreateBountyDialog() {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -55,15 +55,10 @@ export function CreateBountyDialog() {
         <DialogHeader>
           <DialogTitle>Yeni Ödül İlanı</DialogTitle>
           <DialogDescription>
-            Aradığınız ama bulamadığınız bir araç için topluluktan yardım
-            isteyin.
+            Aradığınız ama bulamadığınız bir araç için topluluktan yardım isteyin.
           </DialogDescription>
         </DialogHeader>
-        <form
-          ref={formRef}
-          action={handleFormAction}
-          className="space-y-4 py-2"
-        >
+        <form ref={formRef} action={handleFormAction} className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="title">Aranan Araç (Başlık)</Label>
             <Input
@@ -101,7 +96,7 @@ export function CreateBountyDialog() {
               </Button>
             </DialogClose>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Oluşturuluyor..." : "İlanı Oluştur"}
+              {isPending ? 'Oluşturuluyor...' : 'İlanı Oluştur'}
             </Button>
           </DialogFooter>
         </form>

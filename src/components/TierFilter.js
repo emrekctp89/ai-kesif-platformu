@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import * as React from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,15 +9,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { ListFilter } from "lucide-react";
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { ListFilter } from 'lucide-react';
 
 export function TierFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
   // URL'den mevcut seçili seviyeyi alıyoruz
-  const selectedTier = searchParams.get("tier") || "";
+  const selectedTier = searchParams.get('tier') || '';
 
   // Bir seçenek seçildiğinde URL'i güncelleyen fonksiyon
   const handleSelect = (tier) => {
@@ -26,13 +26,13 @@ export function TierFilter() {
     // Eğer zaten seçili olan seviyeye tekrar tıklanırsa, filtreyi kaldır.
     // Aksi takdirde, yeni seçilen seviyeyi ayarla.
     if (selectedTier === tier) {
-      params.delete("tier");
+      params.delete('tier');
     } else {
-      params.set("tier", tier);
+      params.set('tier', tier);
     }
 
     // Filtre değiştiğinde her zaman 1. sayfaya dön
-    params.delete("page");
+    params.delete('page');
     router.push(`/?${params.toString()}`);
   };
 
@@ -48,23 +48,20 @@ export function TierFilter() {
         <DropdownMenuLabel>Seviyeye Göre Filtrele</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {/* "Tüm Seviyeler" seçeneği */}
-        <DropdownMenuCheckboxItem
-          checked={!selectedTier}
-          onCheckedChange={() => handleSelect("")}
-        >
+        <DropdownMenuCheckboxItem checked={!selectedTier} onCheckedChange={() => handleSelect('')}>
           Tüm Seviyeler
         </DropdownMenuCheckboxItem>
         {/* "Pro" seçeneği */}
         <DropdownMenuCheckboxItem
-          checked={selectedTier === "Pro"}
-          onCheckedChange={() => handleSelect("Pro")}
+          checked={selectedTier === 'Pro'}
+          onCheckedChange={() => handleSelect('Pro')}
         >
           Pro
         </DropdownMenuCheckboxItem>
         {/* "Sponsorlu" seçeneği */}
         <DropdownMenuCheckboxItem
-          checked={selectedTier === "Sponsorlu"}
-          onCheckedChange={() => handleSelect("Sponsorlu")}
+          checked={selectedTier === 'Sponsorlu'}
+          onCheckedChange={() => handleSelect('Sponsorlu')}
         >
           Sponsorlu
         </DropdownMenuCheckboxItem>

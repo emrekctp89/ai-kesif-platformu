@@ -1,12 +1,8 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useRouter, usePathname } from "next/navigation";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import * as React from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -14,19 +10,17 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { X, ChevronsUpDown, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/command';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { X, ChevronsUpDown, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function ToolSelectForComparison({ allTools, selectedSlugs }) {
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
-  const [selectedValues, setSelectedValues] = React.useState(
-    new Set(selectedSlugs)
-  );
+  const [selectedValues, setSelectedValues] = React.useState(new Set(selectedSlugs));
 
   const handleSelect = (slug) => {
     const newSelection = new Set(selectedValues);
@@ -41,14 +35,12 @@ export function ToolSelectForComparison({ allTools, selectedSlugs }) {
 
     const params = new URLSearchParams();
     if (newSelection.size > 0) {
-      params.set("tools", Array.from(newSelection).join(","));
+      params.set('tools', Array.from(newSelection).join(','));
     }
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const selectedToolObjects = allTools.filter((tool) =>
-    selectedValues.has(tool.slug)
-  );
+  const selectedToolObjects = allTools.filter((tool) => selectedValues.has(tool.slug));
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -73,7 +65,7 @@ export function ToolSelectForComparison({ allTools, selectedSlugs }) {
                         handleSelect(tool.slug);
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
+                        if (e.key === 'Enter' || e.key === ' ') {
                           e.stopPropagation();
                           handleSelect(tool.slug);
                         }
@@ -84,7 +76,7 @@ export function ToolSelectForComparison({ allTools, selectedSlugs }) {
                     </span>
                   </Badge>
                 ))
-              : "Karşılaştırmak için araç seçin..."}
+              : 'Karşılaştırmak için araç seçin...'}
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -103,10 +95,8 @@ export function ToolSelectForComparison({ allTools, selectedSlugs }) {
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedValues.has(tool.slug)
-                        ? "opacity-100"
-                        : "opacity-0"
+                      'mr-2 h-4 w-4',
+                      selectedValues.has(tool.slug) ? 'opacity-100' : 'opacity-0'
                     )}
                   />
                   {tool.name}

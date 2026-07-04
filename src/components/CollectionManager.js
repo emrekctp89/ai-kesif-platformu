@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import * as React from 'react';
+import { useTransition } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,10 +27,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { createCollection, deleteCollection } from "@/app/actions";
-import toast from "react-hot-toast";
-import { PlusCircle } from "lucide-react";
+} from '@/components/ui/alert-dialog';
+import { createCollection, deleteCollection } from '@/app/actions';
+import toast from 'react-hot-toast';
+import { PlusCircle } from 'lucide-react';
 
 // Koleksiyon Silme Butonu
 function DeleteCollectionButton({ collectionId }) {
@@ -39,7 +39,7 @@ function DeleteCollectionButton({ collectionId }) {
     if (result?.error) {
       toast.error(result.error);
     } else {
-      toast.success("Koleksiyon başarıyla silindi.");
+      toast.success('Koleksiyon başarıyla silindi.');
     }
   };
   return (
@@ -53,8 +53,8 @@ function DeleteCollectionButton({ collectionId }) {
         <AlertDialogHeader>
           <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
           <AlertDialogDescription>
-            Bu işlem geri alınamaz. Bu koleksiyon ve içindeki tüm araçlar kalıcı
-            olarak silinecektir.
+            Bu işlem geri alınamaz. Bu koleksiyon ve içindeki tüm araçlar kalıcı olarak
+            silinecektir.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -81,9 +81,7 @@ function CreateCollectionDialog() {
       if (result?.error) {
         toast.error(result.error);
       } else {
-        toast.success(
-          "Koleksiyon oluşturuldu, düzenleme sayfasına yönlendiriliyorsunuz..."
-        );
+        toast.success('Koleksiyon oluşturuldu, düzenleme sayfasına yönlendiriliyorsunuz...');
         setIsOpen(false);
       }
     });
@@ -101,15 +99,11 @@ function CreateCollectionDialog() {
         <DialogHeader>
           <DialogTitle>Yeni Koleksiyon Oluştur</DialogTitle>
           <DialogDescription>
-            Koleksiyonunuza akılda kalıcı bir başlık verin. Daha sonra içine
-            araçlar ekleyebilirsiniz.
+            Koleksiyonunuza akılda kalıcı bir başlık verin. Daha sonra içine araçlar
+            ekleyebilirsiniz.
           </DialogDescription>
         </DialogHeader>
-        <form
-          ref={formRef}
-          action={handleCreateCollection}
-          className="space-y-4 py-2"
-        >
+        <form ref={formRef} action={handleCreateCollection} className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="new-collection-title">Koleksiyon Başlığı</Label>
             <Input
@@ -127,7 +121,7 @@ function CreateCollectionDialog() {
               </Button>
             </DialogClose>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Oluşturuluyor..." : "Oluştur & Düzenle"}
+              {isPending ? 'Oluşturuluyor...' : 'Oluştur & Düzenle'}
             </Button>
           </DialogFooter>
         </form>
@@ -159,17 +153,13 @@ export function CollectionManager({ collections }) {
               >
                 <div>
                   <p className="font-medium">{collection.title}</p>
-                  <Badge
-                    variant={collection.is_public ? "default" : "secondary"}
-                  >
-                    {collection.is_public ? "Herkese Açık" : "Gizli"}
+                  <Badge variant={collection.is_public ? 'default' : 'secondary'}>
+                    {collection.is_public ? 'Herkese Açık' : 'Gizli'}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/profile/collections/${collection.id}/edit`}>
-                      Düzenle
-                    </Link>
+                    <Link href={`/profile/collections/${collection.id}/edit`}>Düzenle</Link>
                   </Button>
                   <DeleteCollectionButton collectionId={collection.id} />
                 </div>

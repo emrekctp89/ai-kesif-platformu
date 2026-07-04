@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
+import * as React from 'react';
+import { useTransition } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,14 +11,14 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import toast from "react-hot-toast";
-import { sendFeedback } from "@/app/actions";
-import { LoaderCircle, MessageSquarePlus } from "lucide-react";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import toast from 'react-hot-toast';
+import { sendFeedback } from '@/app/actions';
+import { LoaderCircle, MessageSquarePlus } from 'lucide-react';
 
 export function FeedbackDialog() {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -33,7 +33,7 @@ export function FeedbackDialog() {
       if (result?.error) {
         toast.error(result.error);
       } else {
-        toast.success("Geri bildiriminiz için teşekkürler!");
+        toast.success('Geri bildiriminiz için teşekkürler!');
         formRef.current?.reset();
         setMessageLength(0);
         setIsOpen(false);
@@ -62,13 +62,12 @@ export function FeedbackDialog() {
             Platformla ilgili görüşlerinizi veya yaşadığınız sorunları bizimle paylaşın.
           </DialogDescription>
         </DialogHeader>
-        <form
-          ref={formRef}
-          action={handleFormAction}
-          className="space-y-4 py-2"
-        >
+        <form ref={formRef} action={handleFormAction} className="space-y-4 py-2">
           <input type="hidden" name="started_at" value={startedAt} />
-          <div className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+          <div
+            className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden"
+            aria-hidden="true"
+          >
             <Label htmlFor="feedback-company-website">Şirket web sitesi</Label>
             <input
               id="feedback-company-website"
@@ -122,7 +121,10 @@ export function FeedbackDialog() {
               className="min-h-[150px]"
               aria-describedby="feedback-message-help"
             />
-            <div id="feedback-message-help" className="flex justify-between text-xs text-muted-foreground">
+            <div
+              id="feedback-message-help"
+              className="flex justify-between text-xs text-muted-foreground"
+            >
               <span>En az 20 karakter yazın.</span>
               <span>{messageLength}/2000</span>
             </div>
@@ -140,7 +142,9 @@ export function FeedbackDialog() {
                   <LoaderCircle aria-hidden="true" className="mr-2 h-4 w-4 animate-spin" />
                   Gönderiliyor…
                 </>
-              ) : "Gönder"}
+              ) : (
+                'Gönder'
+              )}
             </Button>
           </DialogFooter>
         </form>

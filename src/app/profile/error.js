@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import Link from "next/link";
-import { UserX, Home, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect } from 'react';
+import Link from 'next/link';
+import { UserX, Home, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function ProfileError({ error, reset }) {
   useEffect(() => {
-    console.error("[profile-error]", { digest: error?.digest });
+    console.error('[profile-error]', { digest: error?.digest });
   }, [error]);
 
   return (
@@ -15,17 +15,12 @@ export default function ProfileError({ error, reset }) {
       <div className="mb-5 rounded-full bg-destructive/10 p-4 text-destructive">
         <UserX className="h-8 w-8" />
       </div>
-      <h1 className="text-2xl font-bold sm:text-3xl">
-        Profil bilgileri yüklenirken sorun oluştu
-      </h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">Profil bilgileri yüklenirken sorun oluştu</h1>
       <p className="mt-3 text-muted-foreground">
-        Profil sayfası şu anda görüntülenemiyor. Oturumunuzun süresi dolmuş
-        olabilir.
+        Profil sayfası şu anda görüntülenemiyor. Oturumunuzun süresi dolmuş olabilir.
       </p>
       {error?.digest && (
-        <p className="mt-3 text-xs text-muted-foreground">
-          Hata kodu: {error.digest}
-        </p>
+        <p className="mt-3 text-xs text-muted-foreground">Hata kodu: {error.digest}</p>
       )}
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <Button onClick={reset}>

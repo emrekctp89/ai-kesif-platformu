@@ -1,5 +1,5 @@
-import { createClient } from "@/utils/supabase/server";
-import { Button } from "@/components/ui/button";
+import { createClient } from '@/utils/supabase/server';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -7,26 +7,25 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Check, Sparkles } from "lucide-react";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { createCheckoutSession } from "@/app/actions";
-
+} from '@/components/ui/card';
+import { Check, Sparkles } from 'lucide-react';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
+import { createCheckoutSession } from '@/app/actions';
 
 // Veritabanından ürünleri ve fiyatları çeken fonksiyon
 async function getProducts() {
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("products")
-    .select("*, prices(*)")
-    .eq("active", true)
-    .eq("prices.active", true)
-    .order("name");
+    .from('products')
+    .select('*, prices(*)')
+    .eq('active', true)
+    .eq('prices.active', true)
+    .order('name');
 
   if (error) {
-    console.error("Ürünler çekilirken hata:", error);
+    console.error('Ürünler çekilirken hata:', error);
     return [];
   }
   return data;
@@ -39,13 +38,11 @@ export default async function PricingPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return redirect(
-      "/login?message=Üyelik sayfasını görmek için giriş yapmalısınız."
-    );
+    return redirect('/login?message=Üyelik sayfasını görmek için giriş yapmalısınız.');
   }
 
   const products = await getProducts();
-  const proProduct = products.find((p) => p.id === "prod_pro_membership");
+  const proProduct = products.find((p) => p.id === 'prod_pro_membership');
 
   return (
     <div className="container mx-auto max-w-5xl py-12 px-4">
@@ -54,8 +51,8 @@ export default async function PricingPage() {
           Potansiyelinizi Ortaya Çıkarın
         </h1>
         <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-          "Pro" üyeliğe geçerek platformun tüm gücünü kullanın ve topluluğumuzun
-          en değerli üyelerinden biri olun.
+          "Pro" üyeliğe geçerek platformun tüm gücünü kullanın ve topluluğumuzun en değerli
+          üyelerinden biri olun.
         </p>
       </div>
 
@@ -107,13 +104,11 @@ export default async function PricingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-4xl font-bold">
-                {(proProduct.prices[0].unit_amount / 100).toLocaleString(
-                  "tr-TR",
-                  { style: "currency", currency: "TRY" }
-                )}
-                <span className="text-sm font-normal text-muted-foreground">
-                  /ay
-                </span>
+                {(proProduct.prices[0].unit_amount / 100).toLocaleString('tr-TR', {
+                  style: 'currency',
+                  currency: 'TRY',
+                })}
+                <span className="text-sm font-normal text-muted-foreground">/ay</span>
               </div>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2 font-semibold">
@@ -139,14 +134,14 @@ export default async function PricingPage() {
               </ul>
             </CardContent>
             <CardFooter>
-                            {/* DEĞİŞİKLİK: Formu ve aktif butonu geri getiriyoruz */}
-                            <form action={createCheckoutSession} className="w-full">
-                                <input type="hidden" name="priceId" value={proProduct.prices[0].id} />
-                                <Button type="submit" className="w-full" size="lg">
-                                    <Sparkles className="w-4 h-4 mr-2"/>
-                                    Pro'ya Şimdi Yükselt
-                                </Button>
-                            </form>
+              {/* DEĞİŞİKLİK: Formu ve aktif butonu geri getiriyoruz */}
+              <form action={createCheckoutSession} className="w-full">
+                <input type="hidden" name="priceId" value={proProduct.prices[0].id} />
+                <Button type="submit" className="w-full" size="lg">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Pro'ya Şimdi Yükselt
+                </Button>
+              </form>
             </CardFooter>
           </Card>
         )}

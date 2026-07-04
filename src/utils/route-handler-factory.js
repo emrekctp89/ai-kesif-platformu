@@ -42,10 +42,10 @@ export class RouteHandlerFactory {
         }
 
         if (options.requireRole) {
-          const roles = Array.isArray(options.requireRole) 
-            ? options.requireRole 
+          const roles = Array.isArray(options.requireRole)
+            ? options.requireRole
             : [options.requireRole];
-          
+
           if (!req.user || !roles.includes(req.user.role)) {
             throw new AuthenticationError('Insufficient permissions');
           }

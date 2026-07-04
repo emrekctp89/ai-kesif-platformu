@@ -1,30 +1,27 @@
-import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
-import { HomepageClient } from "@/components/HomepageClient";
-import { FeaturedTools } from "@/components/FeaturedTools";
-import { ToolOfTheDay } from "@/components/ToolOfTheDay";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
+import { HomepageClient } from '@/components/HomepageClient';
+import { FeaturedTools } from '@/components/FeaturedTools';
+import { ToolOfTheDay } from '@/components/ToolOfTheDay';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
-const siteUrl = new URL(
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com"
-).origin;
+const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
 
 // Bu fonksiyon, sayfa için gerekli olan tüm verileri sunucuda tek seferde çeker.
 async function getPageData(searchParams) {
   const supabase = createClient(await cookies());
 
-  const { fetchMoreTools } = await import("@/app/actions");
-  const [authResult, initialTools, categoriesResult, tagsResult] =
-    await Promise.all([
-      supabase.auth.getUser(),
-      fetchMoreTools({ page: 0, searchParams }),
-      supabase.from("categories").select("name, slug").order("name"),
-      supabase.from("tags").select("id, name").order("name"),
-    ]);
+  const { fetchMoreTools } = await import('@/app/actions');
+  const [authResult, initialTools, categoriesResult, tagsResult] = await Promise.all([
+    supabase.auth.getUser(),
+    fetchMoreTools({ page: 0, searchParams }),
+    supabase.from('categories').select('name, slug').order('name'),
+    supabase.from('tags').select('id, name').order('name'),
+  ]);
 
   const user = authResult.data.user;
   const { data: favorites } = user
-    ? await supabase.from("favorites").select("tool_id").eq("user_id", user.id)
+    ? await supabase.from('favorites').select('tool_id').eq('user_id', user.id)
     : { data: [] };
 
   const favoriteToolIds = new Set(favorites?.map((f) => f.tool_id) || []);
@@ -54,31 +51,31 @@ export default async function HomePage({ searchParams }) {
   );
 
   const structuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
+    '@context': 'https://schema.org',
+    '@graph': [
       {
-        "@type": "Organization",
-        "@id": `${siteUrl}/#organization`,
-        name: "AI Keşif",
+        '@type': 'Organization',
+        '@id': `${siteUrl}/#organization`,
+        name: 'AI Keşif',
         url: siteUrl,
         logo: `${siteUrl}/favicon.ico`,
       },
       {
-        "@type": "WebSite",
-        "@id": `${siteUrl}/#website`,
-        name: "AI Keşif Platformu",
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        name: 'AI Keşif Platformu',
         url: siteUrl,
-        inLanguage: "tr-TR",
+        inLanguage: 'tr-TR',
         publisher: {
-          "@id": `${siteUrl}/#organization`,
+          '@id': `${siteUrl}/#organization`,
         },
         potentialAction: {
-          "@type": "SearchAction",
+          '@type': 'SearchAction',
           target: {
-            "@type": "EntryPoint",
+            '@type': 'EntryPoint',
             urlTemplate: `${siteUrl}/?search={search_term_string}`,
           },
-          "query-input": "required name=search_term_string",
+          'query-input': 'required name=search_term_string',
         },
       },
     ],
@@ -91,7 +88,7 @@ export default async function HomePage({ searchParams }) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+          __html: JSON.stringify(structuredData).replace(/</g, '\\u003c'),
         }}
       />
       <HomepageClient

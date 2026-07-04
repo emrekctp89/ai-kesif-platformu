@@ -1,14 +1,14 @@
-import Link from "next/link";
-import { CheckCircle2, Clock3, SearchCheck } from "lucide-react";
+import Link from 'next/link';
+import { CheckCircle2, Clock3, SearchCheck } from 'lucide-react';
 
-import { createClient } from "@/utils/supabase/server";
-import SubmitForm from "@/components/SubmitForm";
-import { Button } from "@/components/ui/button";
-import { AnalyticsEvent } from "@/components/AnalyticsEvent";
+import { createClient } from '@/utils/supabase/server';
+import SubmitForm from '@/components/SubmitForm';
+import { Button } from '@/components/ui/button';
+import { AnalyticsEvent } from '@/components/AnalyticsEvent';
 
 async function getCategories() {
   const supabase = createClient();
-  const { data } = await supabase.from("categories").select("id, name").order("name");
+  const { data } = await supabase.from('categories').select('id, name').order('name');
   return data || [];
 }
 
@@ -20,7 +20,7 @@ export default async function SubmitPage({ searchParams }) {
   const categories = await getCategories();
   const { status, message } = await searchParams;
 
-  if (status === "success") {
+  if (status === 'success') {
     return (
       <div className="mx-auto max-w-2xl py-12 text-center sm:py-20">
         <AnalyticsEvent name="tool_submission_completed" />
@@ -29,32 +29,44 @@ export default async function SubmitPage({ searchParams }) {
         </div>
         <h1 className="mt-6 text-3xl font-bold">Öneriniz alındı</h1>
         <p className="mx-auto mt-3 max-w-lg leading-7 text-muted-foreground">
-          Teşekkürler! Araç editör incelemesine gönderildi. Uygun bulunursa platformda yayınlanacak ve e-posta ile bilgi verilecek.
+          Teşekkürler! Araç editör incelemesine gönderildi. Uygun bulunursa platformda yayınlanacak
+          ve e-posta ile bilgi verilecek.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <Button asChild><Link href="/">Araçları keşfet</Link></Button>
-          <Button asChild variant="outline"><Link href="/submit">Başka bir araç öner</Link></Button>
+          <Button asChild>
+            <Link href="/">Araçları keşfet</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/submit">Başka bir araç öner</Link>
+          </Button>
         </div>
       </div>
     );
   }
 
   const steps = [
-    { icon: Clock3, title: "2 dakikalık form", text: "Temel ürün bilgileri yeterli." },
-    { icon: SearchCheck, title: "Editör incelemesi", text: "Kalite ve uygunluk kontrol edilir." },
-    { icon: CheckCircle2, title: "Ücretsiz yayın", text: "Onaylanan araçlar dizine eklenir." },
+    { icon: Clock3, title: '2 dakikalık form', text: 'Temel ürün bilgileri yeterli.' },
+    { icon: SearchCheck, title: 'Editör incelemesi', text: 'Kalite ve uygunluk kontrol edilir.' },
+    { icon: CheckCircle2, title: 'Ücretsiz yayın', text: 'Onaylanan araçlar dizine eklenir.' },
   ];
 
   return (
     <div className="mx-auto max-w-4xl py-8 sm:py-12">
       <div className="mx-auto mb-8 max-w-2xl text-center">
         <p className="text-sm font-semibold text-primary">AI Keşif dizinine katkıda bulunun</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Yeni bir AI aracı öner</h1>
-        <p className="mt-3 leading-7 text-muted-foreground">Keşfettiğiniz faydalı bir aracı toplulukla paylaşın. Form yaklaşık iki dakika sürer.</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+          Yeni bir AI aracı öner
+        </h1>
+        <p className="mt-3 leading-7 text-muted-foreground">
+          Keşfettiğiniz faydalı bir aracı toplulukla paylaşın. Form yaklaşık iki dakika sürer.
+        </p>
       </div>
 
       {message && (
-        <div role="alert" className="mx-auto mb-5 max-w-2xl rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+        <div
+          role="alert"
+          className="mx-auto mb-5 max-w-2xl rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+        >
           {message}
         </div>
       )}

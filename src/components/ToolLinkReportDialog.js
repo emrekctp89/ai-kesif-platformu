@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
+import * as React from 'react';
+import { useTransition } from 'react';
 import {
   Dialog,
   DialogClose,
@@ -11,21 +11,21 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { submitToolLinkReport } from "@/app/actions";
-import { AlertTriangle, LoaderCircle } from "lucide-react";
-import toast from "react-hot-toast";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { submitToolLinkReport } from '@/app/actions';
+import { AlertTriangle, LoaderCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const reasonOptions = [
-  { value: "broken", label: "Site açılmıyor / kırık link" },
-  { value: "redirects_wrong", label: "Yanlış siteye yönlendiriyor" },
-  { value: "suspicious", label: "Şüpheli veya güvenli görünmüyor" },
-  { value: "outdated", label: "Link güncel değil" },
-  { value: "other", label: "Diğer" },
+  { value: 'broken', label: 'Site açılmıyor / kırık link' },
+  { value: 'redirects_wrong', label: 'Yanlış siteye yönlendiriyor' },
+  { value: 'suspicious', label: 'Şüpheli veya güvenli görünmüyor' },
+  { value: 'outdated', label: 'Link güncel değil' },
+  { value: 'other', label: 'Diğer' },
 ];
 
 export function ToolLinkReportDialog({ tool }) {
@@ -43,7 +43,7 @@ export function ToolLinkReportDialog({ tool }) {
         return;
       }
 
-      toast.success(result?.success || "Rapor alındı.");
+      toast.success(result?.success || 'Rapor alındı.');
       formRef.current?.reset();
       setDetailsLength(0);
       setIsOpen(false);
@@ -78,7 +78,10 @@ export function ToolLinkReportDialog({ tool }) {
           <input type="hidden" name="reportedUrl" value={tool.link} />
           <input type="hidden" name="started_at" value={startedAt} />
 
-          <div className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+          <div
+            className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden"
+            aria-hidden="true"
+          >
             <Label htmlFor={`tool-link-report-company-${tool.id}`}>Şirket web sitesi</Label>
             <input
               id={`tool-link-report-company-${tool.id}`}
@@ -113,7 +116,9 @@ export function ToolLinkReportDialog({ tool }) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor={`tool-link-report-email-${tool.id}`}>E-posta adresiniz (opsiyonel)</Label>
+            <Label htmlFor={`tool-link-report-email-${tool.id}`}>
+              E-posta adresiniz (opsiyonel)
+            </Label>
             <Input
               id={`tool-link-report-email-${tool.id}`}
               name="reporterEmail"
@@ -137,7 +142,10 @@ export function ToolLinkReportDialog({ tool }) {
               className="min-h-[120px]"
               aria-describedby={`tool-link-report-details-help-${tool.id}`}
             />
-            <div id={`tool-link-report-details-help-${tool.id}`} className="flex justify-between text-xs text-muted-foreground">
+            <div
+              id={`tool-link-report-details-help-${tool.id}`}
+              className="flex justify-between text-xs text-muted-foreground"
+            >
               <span>Ek bilgi incelemeyi hızlandırır.</span>
               <span>{detailsLength}/1000</span>
             </div>
@@ -156,7 +164,7 @@ export function ToolLinkReportDialog({ tool }) {
                   Gönderiliyor…
                 </>
               ) : (
-                "Rapor Gönder"
+                'Rapor Gönder'
               )}
             </Button>
           </DialogFooter>

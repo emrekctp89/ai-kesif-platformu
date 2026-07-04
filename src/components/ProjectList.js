@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import * as React from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,9 +14,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { deleteProject } from "@/app/actions";
-import toast from "react-hot-toast";
+} from '@/components/ui/alert-dialog';
+import { deleteProject } from '@/app/actions';
+import toast from 'react-hot-toast';
 
 function DeleteProjectButton({ projectId }) {
   const handleFormAction = async (formData) => {
@@ -24,7 +24,7 @@ function DeleteProjectButton({ projectId }) {
     if (result?.error) {
       toast.error(result.error);
     } else {
-      toast.success("Proje başarıyla silindi.");
+      toast.success('Proje başarıyla silindi.');
     }
   };
 
@@ -66,17 +66,12 @@ export function ProjectList({ projects }) {
   return (
     <div className="space-y-2">
       {projects.map((project) => (
-        <div
-          key={project.id}
-          className="p-3 rounded-lg border flex justify-between items-center"
-        >
+        <div key={project.id} className="p-3 rounded-lg border flex justify-between items-center">
           <div>
             <p className="font-medium">{project.title}</p>
             <p className="text-xs text-muted-foreground">
-              Son Güncelleme:{" "}
-              {new Date(
-                project.updated_at || project.created_at
-              ).toLocaleDateString("tr-TR")}
+              Son Güncelleme:{' '}
+              {new Date(project.updated_at || project.created_at).toLocaleDateString('tr-TR')}
             </p>
           </div>
           <div className="flex items-center gap-2">

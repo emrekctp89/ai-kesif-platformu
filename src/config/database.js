@@ -107,10 +107,7 @@ export function getDatabase() {
  * Check database connection status
  */
 export function isDatabaseConnected() {
-  return (
-    mongoConnection &&
-    mongoose.connection.readyState === 1
-  );
+  return mongoConnection && mongoose.connection.readyState === 1;
 }
 
 /**

@@ -1,24 +1,18 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from '@/utils/supabase/server';
 // DEĞİŞİKLİK: "Süper Admin" istemcisini import ediyoruz
-import { createAdminClient } from "@/utils/supabase/admin";
-import { redirect } from "next/navigation";
-import { DashboardClient } from "@/components/DashboardClient";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { UserManagementTable } from "@/components/UserManagementTable";
-import { AiBriefingCard } from "@/components/AiBriefingCard";
+import { createAdminClient } from '@/utils/supabase/admin';
+import { redirect } from 'next/navigation';
+import { DashboardClient } from '@/components/DashboardClient';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { UserManagementTable } from '@/components/UserManagementTable';
+import { AiBriefingCard } from '@/components/AiBriefingCard';
 
 // DEĞİŞİKLİK: Bu fonksiyonlar artık "Süper Admin" yetkileriyle çalışacak
 async function getDashboardData() {
   const supabaseAdmin = createAdminClient();
-  const { data, error } = await supabaseAdmin.rpc("get_dashboard_stats");
+  const { data, error } = await supabaseAdmin.rpc('get_dashboard_stats');
   if (error) {
-    console.error("Dashboard verileri çekilirken hata:", error);
+    console.error('Dashboard verileri çekilirken hata:', error);
     return null;
   }
   return data;
@@ -26,9 +20,9 @@ async function getDashboardData() {
 
 async function getAllUsersData() {
   const supabaseAdmin = createAdminClient();
-  const { data, error } = await supabaseAdmin.rpc("get_all_user_details");
+  const { data, error } = await supabaseAdmin.rpc('get_all_user_details');
   if (error) {
-    console.error("Kullanıcı detayları çekilirken hata:", error);
+    console.error('Kullanıcı detayları çekilirken hata:', error);
     return [];
   }
   return data;
@@ -37,12 +31,12 @@ async function getAllUsersData() {
 async function getLinkHealthStats() {
   const supabaseAdmin = createAdminClient();
   const { data, error } = await supabaseAdmin
-    .from("tools")
-    .select("id, link_check_status, link_checked_at")
-    .eq("is_approved", true);
+    .from('tools')
+    .select('id, link_check_status, link_checked_at')
+    .eq('is_approved', true);
 
   if (error) {
-    console.error("Link health verileri çekilirken hata:", error);
+    console.error('Link health verileri çekilirken hata:', error);
     return null;
   }
 
@@ -51,15 +45,12 @@ async function getLinkHealthStats() {
 
   return {
     total: tools.length,
-    valid: tools.filter((tool) => tool.link_check_status === "valid").length,
-    invalid: tools.filter((tool) => tool.link_check_status === "invalid")
-      .length,
-    review: tools.filter((tool) => tool.link_check_status === "review").length,
+    valid: tools.filter((tool) => tool.link_check_status === 'valid').length,
+    invalid: tools.filter((tool) => tool.link_check_status === 'invalid').length,
+    review: tools.filter((tool) => tool.link_check_status === 'review').length,
     unchecked: tools.filter((tool) => !tool.link_checked_at).length,
     stale: tools.filter(
-      (tool) =>
-        tool.link_checked_at &&
-        new Date(tool.link_checked_at).getTime() < staleBefore,
+      (tool) => tool.link_checked_at && new Date(tool.link_checked_at).getTime() < staleBefore
     ).length,
   };
 }
@@ -67,9 +58,9 @@ async function getLinkHealthStats() {
 async function getLatestBriefing() {
   const supabaseAdmin = createAdminClient();
   const { data, error } = await supabaseAdmin
-    .from("ai_briefings")
-    .select("*")
-    .order("created_at", { ascending: false })
+    .from('ai_briefings')
+    .select('*')
+    .order('created_at', { ascending: false })
     .limit(1)
     .single();
 
@@ -81,7 +72,7 @@ async function getLatestBriefing() {
 }
 
 export const metadata = {
-  title: "Admin Dashboard | AI Keşif Platformu",
+  title: 'Admin Dashboard | AI Keşif Platformu',
   robots: {
     index: false,
     follow: false,
@@ -94,7 +85,7 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user || user.email !== process.env.ADMIN_EMAIL) {
-    redirect("/");
+    redirect('/');
   }
 
   const [stats, allUsers, latestBriefing, linkHealthStats] = await Promise.all([
@@ -116,8 +107,7 @@ export default async function DashboardPage() {
         <CardHeader>
           <CardTitle>Kullanıcı Yönetimi</CardTitle>
           <CardDescription>
-            Platformdaki tüm kullanıcıları ve aktivitelerini buradan
-            yönetebilirsiniz.
+            Platformdaki tüm kullanıcıları ve aktivitelerini buradan yönetebilirsiniz.
           </CardDescription>
         </CardHeader>
         <CardContent>

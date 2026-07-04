@@ -5,22 +5,43 @@ import { useInView } from 'react-intersection-observer';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { fetchMoreTools } from '@/app/actions';
 import Link from 'next/link';
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import ToolIcon from "@/components/ToolIcon";
-import { ArrowRight, Star, Crown, Gem, Globe, Apple, Bot, Monitor, Pen, ShoppingCart, Eye, SearchX, WandSparkles, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import ToolIcon from '@/components/ToolIcon';
+import {
+  ArrowRight,
+  Star,
+  Crown,
+  Gem,
+  Globe,
+  Apple,
+  Bot,
+  Monitor,
+  Pen,
+  ShoppingCart,
+  Eye,
+  SearchX,
+  WandSparkles,
+  X,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolCardSkeleton } from './ToolCardSkeleton';
 import { trackEvent } from '@/utils/analytics';
 // import { ToolPreviewDialog } from './ToolPreviewDialog';
 
 const tierStyles = {
-  'Pro': { badge: "bg-purple-600 text-white hover:bg-purple-700", icon: <Crown className="w-4 h-4 mr-1.5" /> },
-  'Sponsorlu': { badge: "bg-amber-500 text-white hover:bg-amber-600", icon: <Gem className="w-4 h-4 mr-1.5" /> },
-  'default': { 
-    badge: "bg-blue-900 text-white hover:bg-blue-800", 
-    icon: null // default araçlarda ikon yok
-  }
+  Pro: {
+    badge: 'bg-purple-600 text-white hover:bg-purple-700',
+    icon: <Crown className="w-4 h-4 mr-1.5" />,
+  },
+  Sponsorlu: {
+    badge: 'bg-amber-500 text-white hover:bg-amber-600',
+    icon: <Gem className="w-4 h-4 mr-1.5" />,
+  },
+  default: {
+    badge: 'bg-blue-900 text-white hover:bg-blue-800',
+    icon: null, // default araçlarda ikon yok
+  },
 };
 
 const platformIcons = {
@@ -30,7 +51,7 @@ const platformIcons = {
   Windows: <Monitor className="w-4 h-4" />,
   macOS: <Monitor className="w-4 h-4" />,
   Linux: <Pen className="w-4 h-4" />,
-  'Chrome Uzantısı': <ShoppingCart className="w-4 h-4" />
+  'Chrome Uzantısı': <ShoppingCart className="w-4 h-4" />,
 };
 
 // -----------------------------
@@ -38,27 +59,31 @@ const platformIcons = {
 // -----------------------------
 export default function ToolCard({ tool }) {
   // router'a artık burada ihtiyacımız yok.
-  // const router = useRouter(); 
+  // const router = useRouter();
   if (!tool || !tool.name) return null;
 
-  const isPremium = tool.tier === "Pro" || tool.tier === "Sponsorlu";
+  const isPremium = tool.tier === 'Pro' || tool.tier === 'Sponsorlu';
 
   // DEĞİŞİKLİK 1: Ana sarmalayıcıyı <div onClick> yerine <Link> yapın.
   return (
     <article
       className={cn(
-        "relative block overflow-hidden rounded-xl border p-4 shadow-md transition-all duration-300 sm:p-6 md:hover:-translate-y-2 md:hover:shadow-xl",
+        'relative block overflow-hidden rounded-xl border p-4 shadow-md transition-all duration-300 sm:p-6 md:hover:-translate-y-2 md:hover:shadow-xl',
         {
-          "border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card": tool.tier === "Pro",
-          "border-amber-400/40 shadow-amber-400/20 hover:shadow-amber-500/40 bg-card": tool.tier === "Sponsorlu",
-          "bg-card": tool.tier === 'default' || !tool.tier
+          'border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card':
+            tool.tier === 'Pro',
+          'border-amber-400/40 shadow-amber-400/20 hover:shadow-amber-500/40 bg-card':
+            tool.tier === 'Sponsorlu',
+          'bg-card': tool.tier === 'default' || !tool.tier,
         }
       )}
     >
       <div className="flex flex-col h-full">
         {/* Premium Badge */}
         {isPremium && (
-         <Badge className={`mb-2 flex w-fit items-center px-3 py-1 rounded-full ${tierStyles[tool.tier]?.badge || "bg-gradient-to-r from-yellow-400 to-orange-500 text-white"}`}>
+          <Badge
+            className={`mb-2 flex w-fit items-center px-3 py-1 rounded-full ${tierStyles[tool.tier]?.badge || 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white'}`}
+          >
             {tierStyles[tool.tier]?.icon || <Star className="w-4 h-4 mr-1.5" />} {tool.tier}
           </Badge>
         )}
@@ -69,9 +94,9 @@ export default function ToolCard({ tool }) {
             href={`/tool/${tool.slug}`}
             prefetch={false}
             onClick={() =>
-              trackEvent("tool_detail_click", {
+              trackEvent('tool_detail_click', {
                 tool_slug: tool.slug,
-                source: "tool_card_title",
+                source: 'tool_card_title',
                 category: tool.category_slug,
               })
             }
@@ -85,13 +110,13 @@ export default function ToolCard({ tool }) {
         {/* Kategori */}
         <div className="my-2">
           {/* DEĞİŞİKLİK 2: İçteki Link'e tıklamanın dış Link'i tetiklemesini engellemek için stopPropagation ekleyin. */}
-          <Link 
+          <Link
             href={`/kategori/${tool.category_slug}`}
             prefetch={false}
             className="inline-block rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             onClick={(e) => e.stopPropagation()}
           >
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground w-fit hover:bg-primary hover:text-primary-foreground transition-colors"> 
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground w-fit hover:bg-primary hover:text-primary-foreground transition-colors">
               {tool.category_name}
             </span>
           </Link>
@@ -102,8 +127,8 @@ export default function ToolCard({ tool }) {
           <div className="my-2 flex flex-wrap gap-1 sm:my-3">
             {tool.tags.slice(0, 3).map((tag) => (
               // DEĞİŞİKLİK 3: Etiket Link'lerine de stopPropagation ekleyin.
-              <Link 
-                key={tag.id} 
+              <Link
+                key={tag.id}
                 href={`/?tags=${tag.id}`}
                 prefetch={false}
                 onClick={(e) => e.stopPropagation()}
@@ -112,7 +137,7 @@ export default function ToolCard({ tool }) {
                   variant="outline"
                   className="hover:bg-accent hover:border-primary transition-colors"
                 >
-                  {tag.name}  
+                  {tag.name}
                 </Badge>
               </Link>
             ))}
@@ -133,24 +158,29 @@ export default function ToolCard({ tool }) {
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3 sm:pt-4">
           <div className="flex items-center gap-2 text-muted-foreground">
             {/* platform ikonları */}
-            {tool.platforms && tool.platforms.slice(0, 3).map((platform) => (
-              <span key={platform} title={platform} aria-label={platform}>
-                {platformIcons[platform] || <Eye className="w-4 h-4" />}
-              </span>
-            ))}
+            {tool.platforms &&
+              tool.platforms.slice(0, 3).map((platform) => (
+                <span key={platform} title={platform} aria-label={platform}>
+                  {platformIcons[platform] || <Eye className="w-4 h-4" />}
+                </span>
+              ))}
             {tool.platforms && tool.platforms.length > 3 && (
               <span className="text-xs">+{tool.platforms.length - 3}</span>
             )}
           </div>
 
-          <Button asChild size="sm" className="h-8 shrink-0 px-3 text-xs transition-colors hover:bg-primary/80 sm:h-9 sm:text-sm">
+          <Button
+            asChild
+            size="sm"
+            className="h-8 shrink-0 px-3 text-xs transition-colors hover:bg-primary/80 sm:h-9 sm:text-sm"
+          >
             <Link
               href={`/tool/${tool.slug}`}
               prefetch={false}
               onClick={() =>
-                trackEvent("tool_detail_click", {
+                trackEvent('tool_detail_click', {
                   tool_slug: tool.slug,
-                  source: "tool_card_button",
+                  source: 'tool_card_button',
                   category: tool.category_slug,
                 })
               }
@@ -165,8 +195,6 @@ export default function ToolCard({ tool }) {
     </article>
   );
 }
-
-
 
 // -----------------------------
 // Sonsuz Kaydırma Listesi
@@ -200,10 +228,10 @@ export function InfiniteToolsList({
       const newTools = await fetchMoreTools({ page, searchParams: paramsAsObject });
 
       if (newTools?.length) {
-        setPage(prev => prev + 1);
-        setTools(prev => {
-          const existingIds = new Set(prev.map(t => t.id));
-          const uniqueNewTools = newTools.filter(t => !existingIds.has(t.id));
+        setPage((prev) => prev + 1);
+        setTools((prev) => {
+          const existingIds = new Set(prev.map((t) => t.id));
+          const uniqueNewTools = newTools.filter((t) => !existingIds.has(t.id));
           const mergedTools = [...prev, ...uniqueNewTools];
 
           // Popülerliğe göre yeniden sırala
@@ -238,13 +266,13 @@ export function InfiniteToolsList({
           </div>
           <h2 className="mt-5 text-xl font-bold tracking-tight">
             {hasUserFilters
-              ? "Bu ölçütlerle araç bulunamadı"
-              : "Henüz gösterilecek araç bulunmuyor"}
+              ? 'Bu ölçütlerle araç bulunamadı'
+              : 'Henüz gösterilecek araç bulunmuyor'}
           </h2>
           <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
             {hasUserFilters
-              ? "Arama ifadesini kısaltmayı veya bazı filtreleri kaldırmayı deneyebilirsin."
-              : "Araç listesi güncelleniyor. Biraz sonra tekrar kontrol edebilirsin."}
+              ? 'Arama ifadesini kısaltmayı veya bazı filtreleri kaldırmayı deneyebilirsin.'
+              : 'Araç listesi güncelleniyor. Biraz sonra tekrar kontrol edebilirsin.'}
           </p>
 
           {hasUserFilters && (
@@ -260,8 +288,8 @@ export function InfiniteToolsList({
                   href="/tavsiye"
                   prefetch={false}
                   onClick={() =>
-                    trackEvent("recommendation_cta_click", {
-                      source: "search_empty_state",
+                    trackEvent('recommendation_cta_click', {
+                      source: 'search_empty_state',
                     })
                   }
                 >
@@ -274,7 +302,7 @@ export function InfiniteToolsList({
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-8">
-          {tools.map(tool => (
+          {tools.map((tool) => (
             <ToolCard
               key={tool.id}
               tool={tool}
@@ -317,7 +345,7 @@ export function ToolsList({ tools, user, favoriteToolIds }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {sortedTools.map(tool => (
+      {sortedTools.map((tool) => (
         <ToolCard
           key={tool.id}
           tool={tool}

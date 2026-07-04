@@ -1,45 +1,39 @@
-"use client";
+'use client';
 
-import { useRef, useState, useTransition } from "react";
-import Link from "next/link";
-import toast from "react-hot-toast";
-import {
-  ArrowRight,
-  CheckCircle2,
-  LoaderCircle,
-  Search,
-  Sparkles,
-} from "lucide-react";
+import { useRef, useState, useTransition } from 'react';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
+import { ArrowRight, CheckCircle2, LoaderCircle, Search, Sparkles } from 'lucide-react';
 
-import { getAiRecommendation } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { trackEvent } from "@/utils/analytics";
+import { getAiRecommendation } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { trackEvent } from '@/utils/analytics';
 
 const examplePrompts = [
-  "Sosyal medya için hızlıca görsel ve kısa video üretmek istiyorum.",
-  "Kod yazarken hata bulmama ve açıklama üretmeme yardım edecek bir araç arıyorum.",
-  "Toplantı kayıtlarını Türkçe metne ve özetlere dönüştürmek istiyorum.",
+  'Sosyal medya için hızlıca görsel ve kısa video üretmek istiyorum.',
+  'Kod yazarken hata bulmama ve açıklama üretmeme yardım edecek bir araç arıyorum.',
+  'Toplantı kayıtlarını Türkçe metne ve özetlere dönüştürmek istiyorum.',
 ];
 
 export default function RecommendationPage() {
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState('');
   const [recommendations, setRecommendations] = useState([]);
-  const [submittedPrompt, setSubmittedPrompt] = useState("");
+  const [submittedPrompt, setSubmittedPrompt] = useState('');
   const [isPending, startTransition] = useTransition();
   const resultsRef = useRef(null);
 
   const handleFormSubmit = (formData) => {
-    const userPrompt = String(formData.get("prompt") || "").trim();
+    const userPrompt = String(formData.get('prompt') || '').trim();
 
     if (userPrompt.length < 10) {
-      toast.error("İhtiyacınızı en az 10 karakterle anlatın.");
+      toast.error('İhtiyacınızı en az 10 karakterle anlatın.');
       return;
     }
 
-    trackEvent("recommendation_started", {
+    trackEvent('recommendation_started', {
       prompt_length: userPrompt.length,
     });
 
@@ -48,24 +42,24 @@ export default function RecommendationPage() {
         const result = await getAiRecommendation(userPrompt);
 
         if (!result.success) {
-          toast.error(result.error || "Tavsiye alınırken bir hata oluştu.");
+          toast.error(result.error || 'Tavsiye alınırken bir hata oluştu.');
           setRecommendations([]);
           return;
         }
 
         setSubmittedPrompt(userPrompt);
         setRecommendations(result.data);
-        trackEvent("recommendation_completed", {
+        trackEvent('recommendation_completed', {
           result_count: result.data.length,
         });
         requestAnimationFrame(() => {
           resultsRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
+            behavior: 'smooth',
+            block: 'start',
           });
         });
       } catch {
-        toast.error("Sistem hatası oluştu. Lütfen tekrar deneyin.");
+        toast.error('Sistem hatası oluştu. Lütfen tekrar deneyin.');
         setRecommendations([]);
       }
     });
@@ -82,8 +76,8 @@ export default function RecommendationPage() {
           İhtiyacını anlat, doğru AI aracını bul
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-          Yapmak istediğin işi doğal bir dille yaz. Platformdaki araçları
-          inceleyip sana en uygun üç seçeneği ve nedenlerini sunalım.
+          Yapmak istediğin işi doğal bir dille yaz. Platformdaki araçları inceleyip sana en uygun üç
+          seçeneği ve nedenlerini sunalım.
         </p>
       </header>
 
@@ -93,15 +87,10 @@ export default function RecommendationPage() {
             <form action={handleFormSubmit} className="space-y-5">
               <div className="grid w-full gap-2">
                 <div className="flex items-end justify-between gap-3">
-                  <Label
-                    htmlFor="prompt-input"
-                    className="text-base font-semibold sm:text-lg"
-                  >
+                  <Label htmlFor="prompt-input" className="text-base font-semibold sm:text-lg">
                     Ne yapmak istiyorsun?
                   </Label>
-                  <span className="text-xs text-muted-foreground">
-                    {prompt.length}/800
-                  </span>
+                  <span className="text-xs text-muted-foreground">{prompt.length}/800</span>
                 </div>
                 <Textarea
                   id="prompt-input"
@@ -117,8 +106,8 @@ export default function RecommendationPage() {
                   aria-describedby="prompt-help"
                 />
                 <p id="prompt-help" className="text-xs text-muted-foreground">
-                  Kullanım amacı, deneyim seviyesi, bütçe veya platform gibi
-                  ayrıntılar daha isabetli sonuç verir.
+                  Kullanım amacı, deneyim seviyesi, bütçe veya platform gibi ayrıntılar daha
+                  isabetli sonuç verir.
                 </p>
               </div>
 
@@ -149,10 +138,7 @@ export default function RecommendationPage() {
               >
                 {isPending ? (
                   <>
-                    <LoaderCircle
-                      aria-hidden="true"
-                      className="mr-2 h-5 w-5 animate-spin"
-                    />
+                    <LoaderCircle aria-hidden="true" className="mr-2 h-5 w-5 animate-spin" />
                     Araçlar inceleniyor...
                   </>
                 ) : (
@@ -162,13 +148,10 @@ export default function RecommendationPage() {
                   </>
                 )}
               </Button>
-              <p
-                className="text-center text-xs text-muted-foreground"
-                aria-live="polite"
-              >
+              <p className="text-center text-xs text-muted-foreground" aria-live="polite">
                 {isPending
-                  ? "Platformdaki araçlar ihtiyacınıza göre karşılaştırılıyor."
-                  : "Sonuçlar genellikle birkaç saniye içinde hazırlanır."}
+                  ? 'Platformdaki araçlar ihtiyacınıza göre karşılaştırılıyor.'
+                  : 'Sonuçlar genellikle birkaç saniye içinde hazırlanır.'}
               </p>
             </form>
           </CardContent>
@@ -178,9 +161,9 @@ export default function RecommendationPage() {
           <h2 className="font-bold">Nasıl çalışır?</h2>
           <ol className="mt-4 space-y-4 text-sm text-muted-foreground">
             {[
-              "İhtiyacını ve önemli koşulları yaz.",
-              "AI Keşif uygun araçları karşılaştırsın.",
-              "Önerilerin detaylarını inceleyip karar ver.",
+              'İhtiyacını ve önemli koşulları yaz.',
+              'AI Keşif uygun araçları karşılaştırsın.',
+              'Önerilerin detaylarını inceleyip karar ver.',
             ].map((step, index) => (
               <li key={step} className="flex gap-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
@@ -191,8 +174,8 @@ export default function RecommendationPage() {
             ))}
           </ol>
           <p className="mt-5 border-t pt-4 text-xs leading-5 text-muted-foreground">
-            Tavsiyeler karar desteği sağlar. Fiyat ve özellikleri aracın resmî
-            sitesinden doğrulamanı öneririz.
+            Tavsiyeler karar desteği sağlar. Fiyat ve özellikleri aracın resmî sitesinden
+            doğrulamanı öneririz.
           </p>
         </aside>
       </div>
@@ -210,10 +193,7 @@ export default function RecommendationPage() {
                 <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
                 Eşleştirme tamamlandı
               </p>
-              <h2
-                id="recommendation-results-heading"
-                className="mt-2 text-2xl font-bold"
-              >
+              <h2 id="recommendation-results-heading" className="mt-2 text-2xl font-bold">
                 Sana uygun araçlar
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -234,25 +214,20 @@ export default function RecommendationPage() {
                     <CardTitle className="text-xl">{tool.name}</CardTitle>
                   </CardHeader>
                   <CardContent className="flex flex-1 flex-col">
-                    <p className="text-sm leading-6 text-muted-foreground">
-                      {tool.reason}
-                    </p>
+                    <p className="text-sm leading-6 text-muted-foreground">{tool.reason}</p>
                     <Button asChild className="mt-6 w-full">
                       <Link
                         href={`/tool/${tool.slug}`}
                         prefetch={false}
                         onClick={() =>
-                          trackEvent("recommendation_result_click", {
+                          trackEvent('recommendation_result_click', {
                             tool_slug: tool.slug,
                             result_position: index + 1,
                           })
                         }
                       >
                         Detayları incele
-                        <ArrowRight
-                          aria-hidden="true"
-                          className="ml-2 h-4 w-4"
-                        />
+                        <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
                   </CardContent>
@@ -266,9 +241,9 @@ export default function RecommendationPage() {
                 variant="outline"
                 onClick={() => {
                   setRecommendations([]);
-                  setSubmittedPrompt("");
-                  setPrompt("");
-                  document.getElementById("prompt-input")?.focus();
+                  setSubmittedPrompt('');
+                  setPrompt('');
+                  document.getElementById('prompt-input')?.focus();
                 }}
               >
                 Yeni bir ihtiyaç yaz

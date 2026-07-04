@@ -66,9 +66,7 @@ export function getRegisteredRoutes(app) {
     stack.forEach((middleware) => {
       if (middleware.route) {
         // Route
-        const methods = Object.keys(middleware.route.methods).map((m) =>
-          m.toUpperCase()
-        );
+        const methods = Object.keys(middleware.route.methods).map((m) => m.toUpperCase());
         routes.push({
           path: prefix + middleware.route.path,
           methods,

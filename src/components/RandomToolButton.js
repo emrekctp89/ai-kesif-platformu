@@ -1,17 +1,12 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Dice5 } from "lucide-react";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dice5 } from 'lucide-react';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 // DEĞİŞİKLİK: TooltipProvider'ı bu dosyaya geri import ediyoruz
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function RandomToolButton({ user }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -24,12 +19,7 @@ export function RandomToolButton({ user }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <span tabIndex={0}>
-              <Button
-                variant="ghost"
-                size="icon"
-                disabled
-                style={{ pointerEvents: "none" }}
-              >
+              <Button variant="ghost" size="icon" disabled style={{ pointerEvents: 'none' }}>
                 <Dice5 className="h-[1.2rem] w-[1.2rem]" />
               </Button>
             </span>
@@ -58,7 +48,7 @@ export function RandomToolButton({ user }) {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="mr-2 text-sm font-semibold"
             >
               Keşfet

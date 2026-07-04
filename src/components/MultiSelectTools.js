@@ -1,11 +1,7 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import * as React from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -13,17 +9,13 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/command';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function MultiSelectTools({
-  allTools,
-  selectedTools,
-  onSelectionChange,
-}) {
+export function MultiSelectTools({ allTools, selectedTools, onSelectionChange }) {
   const [open, setOpen] = React.useState(false);
 
   const handleSelect = (toolId) => {
@@ -36,9 +28,7 @@ export function MultiSelectTools({
     onSelectionChange(newSelection);
   };
 
-  const selectedToolObjects = allTools.filter((tool) =>
-    selectedTools.has(tool.id)
-  );
+  const selectedToolObjects = allTools.filter((tool) => selectedTools.has(tool.id));
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -56,7 +46,7 @@ export function MultiSelectTools({
                     {tool.name}
                   </Badge>
                 ))
-              : "İlişkili Araç Seç..."}
+              : 'İlişkili Araç Seç...'}
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -68,15 +58,11 @@ export function MultiSelectTools({
             <CommandEmpty>Araç bulunamadı.</CommandEmpty>
             <CommandGroup>
               {allTools.map((tool) => (
-                <CommandItem
-                  key={tool.id}
-                  value={tool.name}
-                  onSelect={() => handleSelect(tool.id)}
-                >
+                <CommandItem key={tool.id} value={tool.name} onSelect={() => handleSelect(tool.id)}>
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedTools.has(tool.id) ? "opacity-100" : "opacity-0"
+                      'mr-2 h-4 w-4',
+                      selectedTools.has(tool.id) ? 'opacity-100' : 'opacity-0'
                     )}
                   />
                   {tool.name}

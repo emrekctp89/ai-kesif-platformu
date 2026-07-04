@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { updateAvatar } from '@/app/actions'
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import toast from 'react-hot-toast'
+import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { updateAvatar } from '@/app/actions';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import toast from 'react-hot-toast';
 
 export function AvatarUploader({ userId, currentAvatarUrl }) {
   const router = useRouter();
@@ -18,7 +18,7 @@ export function AvatarUploader({ userId, currentAvatarUrl }) {
   const handleFormSubmit = (formData) => {
     const file = formData.get('avatar');
     if (!file || file.size === 0) {
-      toast.error("Lütfen bir resim dosyası seçin.");
+      toast.error('Lütfen bir resim dosyası seçin.');
       return;
     }
 
@@ -44,25 +44,25 @@ export function AvatarUploader({ userId, currentAvatarUrl }) {
       <form action={handleFormSubmit}>
         <Label htmlFor="avatar-upload" className="cursor-pointer">
           <Button asChild>
-            <span>{isPending ? "Yükleniyor..." : "Değiştir"}</span>
+            <span>{isPending ? 'Yükleniyor...' : 'Değiştir'}</span>
           </Button>
-          <input 
-            type="file" 
-            id="avatar-upload" 
+          <input
+            type="file"
+            id="avatar-upload"
             name="avatar"
             className="sr-only"
             accept="image/png, image/jpeg, image/webp"
             onChange={(e) => {
-                const form = e.target.closest('form');
-                if (form) {
-                    const formData = new FormData(form);
-                    handleFormSubmit(formData);
-                }
+              const form = e.target.closest('form');
+              if (form) {
+                const formData = new FormData(form);
+                handleFormSubmit(formData);
+              }
             }}
             disabled={isPending}
           />
         </Label>
       </form>
     </div>
-  )
+  );
 }

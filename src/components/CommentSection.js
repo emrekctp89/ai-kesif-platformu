@@ -1,6 +1,6 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from '@/utils/supabase/server';
 // Yeni UI bileşenimizi import ediyoruz
-import { CommentsUI } from "./CommentsUI";
+import { CommentsUI } from './CommentsUI';
 
 // Bu ana bileşen, bir Server Component olarak kalır.
 // Görevi: veritabanından veriyi çekmek ve Client Component'e aktarmak.
@@ -14,18 +14,11 @@ export default async function CommentSection({ toolId, toolSlug }) {
 
   // DEĞİŞİKLİK: Kullanıcı profillerini çekerken artık 'username'i de istiyoruz.
   const { data: comments } = await supabase
-    .from("comments")
+    .from('comments')
     .select(`*, profiles ( username, email, avatar_url )`) // 'username' eklendi
-    .eq("tool_id", toolId)
-    .order("created_at", { ascending: false });
+    .eq('tool_id', toolId)
+    .order('created_at', { ascending: false });
 
   // Veriyi, interaktif arayüzü yönetecek olan Client Component'e prop olarak iletiyoruz.
-  return (
-    <CommentsUI
-      user={user}
-      comments={comments || []}
-      toolId={toolId}
-      toolSlug={toolSlug}
-    />
-  );
+  return <CommentsUI user={user} comments={comments || []} toolId={toolId} toolSlug={toolSlug} />;
 }

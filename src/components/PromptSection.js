@@ -1,13 +1,7 @@
-import { createClient } from "@/utils/supabase/server";
-import { PromptList } from "./PromptList";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { AddPromptDialog } from "./AddPromptDialog";
+import { createClient } from '@/utils/supabase/server';
+import { PromptList } from './PromptList';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { AddPromptDialog } from './AddPromptDialog';
 
 export default async function PromptSection({ toolId, toolSlug }) {
   const supabase = createClient();
@@ -16,27 +10,22 @@ export default async function PromptSection({ toolId, toolSlug }) {
     data: { user },
   } = await supabase.auth.getUser();
   const { data: userVotes } = user
-    ? await supabase
-        .from("prompt_votes")
-        .select("prompt_id")
-        .eq("user_id", user.id)
+    ? await supabase.from('prompt_votes').select('prompt_id').eq('user_id', user.id)
     : { data: [] };
 
   // DEĞİŞİKLİK: 'profiles' tablosundan 'username'i de çekiyoruz.
   const { data: prompts } = await supabase
-    .from("prompts")
+    .from('prompts')
     .select(`*, profiles ( username, email, avatar_url )`)
-    .eq("tool_id", toolId)
-    .order("vote_count", { ascending: false });
+    .eq('tool_id', toolId)
+    .order('vote_count', { ascending: false });
 
   return (
     <Card className="rounded-xl shadow-xl">
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
           <CardTitle>Topluluk Prompt'ları</CardTitle>
-          <CardDescription>
-            Paylaşılan en iyi prompt'ları keşfedin ve oylayın.
-          </CardDescription>
+          <CardDescription>Paylaşılan en iyi prompt'ları keşfedin ve oylayın.</CardDescription>
         </div>
         {user && <AddPromptDialog toolId={toolId} toolSlug={toolSlug} />}
       </CardHeader>

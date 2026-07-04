@@ -1,36 +1,24 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import {
-  useOptimistic,
-  useTransition,
-  useEffect,
-  useState,
-  useRef,
-} from "react";
-import Link from "next/link";
-import Image from "next/image"; // Next.js'in Image bileşenini import ediyoruz
+import * as React from 'react';
+import { useOptimistic, useTransition, useEffect, useState, useRef } from 'react';
+import Link from 'next/link';
+import Image from 'next/image'; // Next.js'in Image bileşenini import ediyoruz
 import {
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowUp, ArrowLeftCircle, ArrowRightCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
-import toast from "react-hot-toast";
-import {
-  getShowcaseItemDetails,
-  addShowcaseComment,
-  toggleShowcaseVote,
-} from "@/app/actions";
-import { Lightbulb, Sparkles } from 'lucide-react'
-
-
+} from '@/components/ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { ArrowUp, ArrowLeftCircle, ArrowRightCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import toast from 'react-hot-toast';
+import { getShowcaseItemDetails, addShowcaseComment, toggleShowcaseVote } from '@/app/actions';
+import { Lightbulb, Sparkles } from 'lucide-react';
 
 // Oylama Butonu
 function VoteButton({ item, isInitiallyVoted, user, onVote }) {
@@ -45,7 +33,7 @@ function VoteButton({ item, isInitiallyVoted, user, onVote }) {
 
   const handleVoteAction = () => {
     if (!user) {
-      toast.error("Oylama yapmak için giriş yapmalısınız.");
+      toast.error('Oylama yapmak için giriş yapmalısınız.');
       return;
     }
 
@@ -53,8 +41,8 @@ function VoteButton({ item, isInitiallyVoted, user, onVote }) {
       const wasVoted = optimisticState.isVoted;
       toggleOptimisticState();
       const formData = new FormData();
-      formData.append("itemId", item.id);
-      formData.append("isVoted", wasVoted.toString());
+      formData.append('itemId', item.id);
+      formData.append('isVoted', wasVoted.toString());
 
       toggleShowcaseVote(formData).then((result) => {
         if (result?.error) {
@@ -73,12 +61,7 @@ function VoteButton({ item, isInitiallyVoted, user, onVote }) {
       className="flex items-center gap-2"
       disabled={isPending}
     >
-      <ArrowUp
-        className={cn(
-          "h-5 w-5",
-          optimisticState.isVoted && "text-primary fill-current"
-        )}
-      />
+      <ArrowUp className={cn('h-5 w-5', optimisticState.isVoted && 'text-primary fill-current')} />
       <span className="font-bold">{optimisticState.voteCount}</span>
     </Button>
   );
@@ -97,17 +80,13 @@ function CommentForm({ itemId, onCommentAdded }) {
         formRef.current?.reset();
         onCommentAdded();
       } else {
-        toast.error(result.error || "Bir hata oluştu.");
+        toast.error(result.error || 'Bir hata oluştu.');
       }
     });
   };
 
   return (
-    <form
-      ref={formRef}
-      action={handleFormSubmit}
-      className="flex items-start gap-2 pt-4 border-t"
-    >
+    <form ref={formRef} action={handleFormSubmit} className="flex items-start gap-2 pt-4 border-t">
       <input type="hidden" name="itemId" value={itemId} />
       <Textarea
         name="content"
@@ -117,22 +96,16 @@ function CommentForm({ itemId, onCommentAdded }) {
         disabled={isPending}
       />
       <Button type="submit" disabled={isPending}>
-        {isPending ? "..." : "Gönder"}
+        {isPending ? '...' : 'Gönder'}
       </Button>
     </form>
   );
 }
 
 // Ana Modal İçerik Bileşeni
-export function ShowcaseDetailModal({
-  item,
-  onNavigate,
-  hasNext,
-  hasPrev,
-  user,
-}) {
- const [details, setDetails] = useState({ comments: [], isVoted: false });
-const creativeProcess = details?.creativeProcess;
+export function ShowcaseDetailModal({ item, onNavigate, hasNext, hasPrev, user }) {
+  const [details, setDetails] = useState({ comments: [], isVoted: false });
+  const creativeProcess = details?.creativeProcess;
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -152,16 +125,16 @@ const creativeProcess = details?.creativeProcess;
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "ArrowRight" && hasNext) onNavigate("next");
-      else if (e.key === "ArrowLeft" && hasPrev) onNavigate("prev");
+      if (e.key === 'ArrowRight' && hasNext) onNavigate('next');
+      else if (e.key === 'ArrowLeft' && hasPrev) onNavigate('prev');
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [hasNext, hasPrev, onNavigate]);
 
   if (!item) return null;
 
-  const userEmail = item.author_email || "Anonim";
+  const userEmail = item.author_email || 'Anonim';
   const fallback = userEmail.substring(0, 2).toUpperCase();
 
   return (
@@ -172,7 +145,7 @@ const creativeProcess = details?.creativeProcess;
       </DialogHeader>
 
       <div className="relative bg-muted w-2/3 flex items-center justify-center">
-        {item.content_type === "Görsel" ? (
+        {item.content_type === 'Görsel' ? (
           // DEĞİŞİKLİK: <img> yerine <Image> kullanıyoruz
           <Image
             src={item.image_url}
@@ -190,7 +163,7 @@ const creativeProcess = details?.creativeProcess;
         )}
         {hasPrev && (
           <button
-            onClick={() => onNavigate("prev")}
+            onClick={() => onNavigate('prev')}
             className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/50 rounded-full p-1 transition hover:bg-black z-10"
           >
             <ArrowLeftCircle className="w-8 h-8" />
@@ -198,7 +171,7 @@ const creativeProcess = details?.creativeProcess;
         )}
         {hasNext && (
           <button
-            onClick={() => onNavigate("next")}
+            onClick={() => onNavigate('next')}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/50 rounded-full p-1 transition hover:bg-black z-10"
           >
             <ArrowRightCircle className="w-8 h-8" />
@@ -230,13 +203,9 @@ const creativeProcess = details?.creativeProcess;
         <p className="text-muted-foreground text-sm mb-4">{item.description}</p>
 
         <div className="flex-grow space-y-4 pt-4 mt-4 border-t">
-          <h3 className="text-sm font-semibold">
-            Yorumlar ({details.comments.length})
-          </h3>
+          <h3 className="text-sm font-semibold">Yorumlar ({details.comments.length})</h3>
           {isLoading ? (
-            <p className="text-xs text-muted-foreground">
-              Yorumlar yükleniyor...
-            </p>
+            <p className="text-xs text-muted-foreground">Yorumlar yükleniyor...</p>
           ) : details.comments.length > 0 ? (
             details.comments.map((comment) => (
               <div key={comment.id} className="flex items-start gap-3 text-sm">
@@ -259,25 +228,37 @@ const creativeProcess = details?.creativeProcess;
 
         {user && <CommentForm itemId={item.id} onCommentAdded={fetchDetails} />}
         {/* YENİ: Sahne Arkası (Yaratıcı Yolculuk) Bölümü */}
-                {creativeProcess && (
-                    <div className="space-y-4 pt-4 mt-4 border-t">
-                        <h3 className="text-sm font-semibold">Sahne Arkası</h3>
-                        <div className="space-y-3 text-xs">
-                            <div>
-                                <p className="font-medium text-muted-foreground">İlk Fikir:</p>
-                                <p className="italic p-2 bg-muted/50 rounded-md">&quot;{creativeProcess.initial_prompt}&quot;</p>
-                            </div>
-                            <div>
-                                <p className="font-medium text-muted-foreground flex items-center gap-1"><Lightbulb className="w-3 h-3" />AI Mentor Tavsiyesi:</p>
-                                <p className="italic p-2 bg-muted/50 rounded-md">&quot;{creativeProcess.mentor_feedback}&quot;</p>
-                            </div>
-                            <div>
-                                <p className="font-medium text-muted-foreground flex items-center gap-1"><Sparkles className="w-3 h-3" />Son Prompt:</p>
-                                <p className="italic p-2 bg-muted/50 rounded-md">&quot;{creativeProcess.final_prompt}&quot;</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
+        {creativeProcess && (
+          <div className="space-y-4 pt-4 mt-4 border-t">
+            <h3 className="text-sm font-semibold">Sahne Arkası</h3>
+            <div className="space-y-3 text-xs">
+              <div>
+                <p className="font-medium text-muted-foreground">İlk Fikir:</p>
+                <p className="italic p-2 bg-muted/50 rounded-md">
+                  &quot;{creativeProcess.initial_prompt}&quot;
+                </p>
+              </div>
+              <div>
+                <p className="font-medium text-muted-foreground flex items-center gap-1">
+                  <Lightbulb className="w-3 h-3" />
+                  AI Mentor Tavsiyesi:
+                </p>
+                <p className="italic p-2 bg-muted/50 rounded-md">
+                  &quot;{creativeProcess.mentor_feedback}&quot;
+                </p>
+              </div>
+              <div>
+                <p className="font-medium text-muted-foreground flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Son Prompt:
+                </p>
+                <p className="italic p-2 bg-muted/50 rounded-md">
+                  &quot;{creativeProcess.final_prompt}&quot;
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </DialogContent>
   );

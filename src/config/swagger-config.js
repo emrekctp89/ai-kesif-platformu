@@ -94,10 +94,7 @@ const swaggerDefinition = {
 /**
  * API documentation paths
  */
-const apiDocsPaths = [
-  './src/routes/**/*.js',
-  './src/controllers/**/*.js',
-];
+const apiDocsPaths = ['./src/routes/**/*.js', './src/controllers/**/*.js'];
 
 /**
  * Swagger options
@@ -133,11 +130,7 @@ export function setupSwagger(app, options = {}) {
   };
 
   try {
-    app.use(
-      basePath,
-      swaggerUi.serve,
-      swaggerUi.setup(swaggerSpecs, swaggerUIOptions)
-    );
+    app.use(basePath, swaggerUi.serve, swaggerUi.setup(swaggerSpecs, swaggerUIOptions));
 
     logger.info('Swagger UI setup', {
       path: basePath,

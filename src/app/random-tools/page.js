@@ -1,28 +1,27 @@
-import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { createClient } from '@/utils/supabase/server';
+import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 // Veritabanından 3 rastgele araç çeken fonksiyonu güncelliyoruz
 async function getThreeRandomTools() {
   const supabase = createClient();
 
   // DEĞİŞİKLİK: Artık RPC (Remote Procedure Call) ile özel fonksiyonumuzu çağırıyoruz.
-  const { data, error } = await supabase.rpc("get_random_tools", {
+  const { data, error } = await supabase.rpc('get_random_tools', {
     result_limit: 3,
   });
 
   if (error) {
-    console.error("Rastgele araçlar çekilirken hata:", error);
+    console.error('Rastgele araçlar çekilirken hata:', error);
     return [];
   }
   return data;
 }
 
 export const metadata = {
-  title: "Rastgele Araç Keşfi | AI Keşif Platformu",
-  description:
-    "Sizin için özel olarak seçilmiş rastgele yapay zeka araçlarını keşfedin.",
+  title: 'Rastgele Araç Keşfi | AI Keşif Platformu',
+  description: 'Sizin için özel olarak seçilmiş rastgele yapay zeka araçlarını keşfedin.',
 };
 
 export default async function RandomToolsPage() {

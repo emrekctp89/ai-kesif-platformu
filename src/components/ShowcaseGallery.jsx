@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image"; // Next.js'in Image bileşenini import ediyoruz
-import { Card, CardContent } from "@/components/ui/card";
-import { Dialog } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ShowcaseDetailModal } from "./ShowcaseDetailModal";
-import { FileText, Code } from "lucide-react";
+import * as React from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image'; // Next.js'in Image bileşenini import ediyoruz
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog } from '@/components/ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ShowcaseDetailModal } from './ShowcaseDetailModal';
+import { FileText, Code } from 'lucide-react';
 
 const contentTypeIcons = {
   Metin: <FileText className="w-8 h-8 text-muted-foreground" />,
@@ -19,16 +19,13 @@ export function ShowcaseGallery({ items, user }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const selectedId = searchParams.get("eserId");
+  const selectedId = searchParams.get('eserId');
 
-  const selectedItem = selectedId
-    ? items.find((item) => item.id.toString() === selectedId)
-    : null;
+  const selectedItem = selectedId ? items.find((item) => item.id.toString() === selectedId) : null;
   const selectedIndex = selectedItem ? items.indexOf(selectedItem) : -1;
 
   const handleNavigate = (direction) => {
-    const newIndex =
-      direction === "next" ? selectedIndex + 1 : selectedIndex - 1;
+    const newIndex = direction === 'next' ? selectedIndex + 1 : selectedIndex - 1;
     if (newIndex >= 0 && newIndex < items.length) {
       router.push(`${pathname}?eserId=${items[newIndex].id}`, {
         scroll: false,
@@ -49,8 +46,7 @@ export function ShowcaseGallery({ items, user }) {
             email: item.author_email,
             avatar_url: item.author_avatar_url,
           };
-          const fallback =
-            userProfile.email?.substring(0, 2).toUpperCase() || "??";
+          const fallback = userProfile.email?.substring(0, 2).toUpperCase() || '??';
 
           return (
             <div key={item.id} className="masonry-grid-item">
@@ -61,7 +57,7 @@ export function ShowcaseGallery({ items, user }) {
                     scroll={false}
                     className="block cursor-pointer"
                   >
-                    {item.content_type === "Görsel" && item.image_url ? (
+                    {item.content_type === 'Görsel' && item.image_url ? (
                       // DEĞİŞİKLİK: <Image> bileşeni doğru şekilde kullanıldı
                       <div className="aspect-square w-full overflow-hidden bg-muted relative">
                         <Image
@@ -107,9 +103,7 @@ export function ShowcaseGallery({ items, user }) {
                             <AvatarImage src={userProfile.avatar_url} />
                             <AvatarFallback>{fallback}</AvatarFallback>
                           </Avatar>
-                          <span className="text-xs text-muted-foreground">
-                            {userProfile.email}
-                          </span>
+                          <span className="text-xs text-muted-foreground">{userProfile.email}</span>
                         </div>
                       )}
                     </div>
@@ -121,10 +115,7 @@ export function ShowcaseGallery({ items, user }) {
         })}
       </div>
 
-      <Dialog
-        open={!!selectedItem}
-        onOpenChange={(open) => !open && handleModalClose()}
-      >
+      <Dialog open={!!selectedItem} onOpenChange={(open) => !open && handleModalClose()}>
         <ShowcaseDetailModal
           item={selectedItem}
           onNavigate={handleNavigate}

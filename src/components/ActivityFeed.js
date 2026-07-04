@@ -2,18 +2,18 @@
 // Mevcut ActivityFeedClient.js dosyasını silebilirsiniz,
 // çünkü artık tüm mantık burada birleşti.
 
-import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
-import Image from "next/image"; // Image bileşenini import ediyoruz
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageSquare, Star, ImageIcon, Users } from "lucide-react";
+import { createClient } from '@/utils/supabase/server';
+import Link from 'next/link';
+import Image from 'next/image'; // Image bileşenini import ediyoruz
+import { Card, CardContent } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Heart, MessageSquare, Star, ImageIcon, Users } from 'lucide-react';
 
 async function getActivityFeedData() {
   const supabase = createClient();
-  const { data, error } = await supabase.rpc("get_community_activity_feed");
+  const { data, error } = await supabase.rpc('get_community_activity_feed');
   if (error) {
-    console.error("Aktivite akışı çekilirken hata:", error);
+    console.error('Aktivite akışı çekilirken hata:', error);
     return [];
   }
   return data;
@@ -25,23 +25,20 @@ const eventComponents = {
       <Heart className="w-6 h-6 text-red-500" />
       <div>
         <p className="text-sm">
-          <Link
-            href={`/u/${event.username}`}
-            className="font-bold hover:underline"
-          >
-            {event.username || "Bir kullanıcı"}
+          <Link href={`/u/${event.username}`} className="font-bold hover:underline">
+            {event.username || 'Bir kullanıcı'}
           </Link>
-          ,{" "}
+          ,{' '}
           <Link
             href={`/tool/${event.details.tool_slug}`}
             className="font-semibold text-primary hover:underline"
           >
             {event.details.tool_name}
-          </Link>{" "}
+          </Link>{' '}
           aracını favorilerine ekledi.
         </p>
         <time className="text-xs text-muted-foreground">
-          {new Date(event.event_time).toLocaleDateString("tr-TR")}
+          {new Date(event.event_time).toLocaleDateString('tr-TR')}
         </time>
       </div>
     </CardContent>
@@ -51,19 +48,16 @@ const eventComponents = {
       <MessageSquare className="w-6 h-6 text-blue-500" />
       <div>
         <p className="text-sm">
-          <Link
-            href={`/u/${event.username}`}
-            className="font-bold hover:underline"
-          >
-            {event.username || "Bir kullanıcı"}
+          <Link href={`/u/${event.username}`} className="font-bold hover:underline">
+            {event.username || 'Bir kullanıcı'}
           </Link>
-          ,{" "}
+          ,{' '}
           <Link
             href={`/tool/${event.details.tool_slug}`}
             className="font-semibold text-primary hover:underline"
           >
             {event.details.tool_name}
-          </Link>{" "}
+          </Link>{' '}
           aracına yeni bir yorum yaptı.
         </p>
         {/* DÜZELTME: &quot; kullanıldı */}
@@ -71,7 +65,7 @@ const eventComponents = {
           &quot;{event.details.comment_content}&quot;
         </p>
         <time className="text-xs text-muted-foreground mt-2 block">
-          {new Date(event.event_time).toLocaleDateString("tr-TR")}
+          {new Date(event.event_time).toLocaleDateString('tr-TR')}
         </time>
       </div>
     </CardContent>
@@ -81,23 +75,20 @@ const eventComponents = {
       <ImageIcon className="w-6 h-6 text-green-500" />
       <div className="flex-1">
         <p className="text-sm">
-          <Link
-            href={`/u/${event.username}`}
-            className="font-bold hover:underline"
-          >
-            {event.username || "Bir kullanıcı"}
+          <Link href={`/u/${event.username}`} className="font-bold hover:underline">
+            {event.username || 'Bir kullanıcı'}
           </Link>
-          ,{" "}
+          ,{' '}
           <Link
             href={`/eserler?eserId=${event.details.item_id}`}
             className="font-semibold text-primary hover:underline"
           >
             {event.details.item_title}
-          </Link>{" "}
+          </Link>{' '}
           adlı yeni bir eser paylaştı.
         </p>
         <time className="text-xs text-muted-foreground">
-          {new Date(event.event_time).toLocaleDateString("tr-TR")}
+          {new Date(event.event_time).toLocaleDateString('tr-TR')}
         </time>
       </div>
       {/* DÜZELTME: <img> yerine <Image> kullanıyoruz */}
@@ -119,24 +110,21 @@ const eventComponents = {
       <Star className="w-6 h-6 text-yellow-500" />
       <div>
         <p className="text-sm">
-          <Link
-            href={`/u/${event.username}`}
-            className="font-bold hover:underline"
-          >
-            {event.username || "Bir kullanıcı"}
+          <Link href={`/u/${event.username}`} className="font-bold hover:underline">
+            {event.username || 'Bir kullanıcı'}
           </Link>
-          ,{" "}
+          ,{' '}
           <Link
             href={`/tool/${event.details.tool_slug}`}
             className="font-semibold text-primary hover:underline"
           >
             {event.details.tool_name}
-          </Link>{" "}
+          </Link>{' '}
           için yeni bir prompt paylaştı: &quot;{event.details.prompt_title}
           &quot;
         </p>
         <time className="text-xs text-muted-foreground">
-          {new Date(event.event_time).toLocaleDateString("tr-TR")}
+          {new Date(event.event_time).toLocaleDateString('tr-TR')}
         </time>
       </div>
     </CardContent>

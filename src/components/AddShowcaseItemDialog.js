@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
-import { submitShowcaseItem } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import * as React from 'react';
+import { useTransition } from 'react';
+import { submitShowcaseItem } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Dialog,
   DialogContent,
@@ -17,15 +17,15 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
-import { PlusCircle } from "lucide-react";
-import toast from "react-hot-toast";
+} from '@/components/ui/dialog';
+import { PlusCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export function AddShowcaseItemDialog() {
   const formRef = React.useRef(null);
   const [isOpen, setIsOpen] = React.useState(false);
   const [isPending, startTransition] = useTransition();
-  const [contentType, setContentType] = React.useState("Görsel");
+  const [contentType, setContentType] = React.useState('Görsel');
 
   const handleFormAction = (formData) => {
     startTransition(async () => {
@@ -52,15 +52,10 @@ export function AddShowcaseItemDialog() {
         <DialogHeader>
           <DialogTitle>Yeni Eser Paylaş</DialogTitle>
           <DialogDescription>
-            Yapay zeka araçlarını kullanarak yarattığınız bir eseri toplulukla
-            paylaşın.
+            Yapay zeka araçlarını kullanarak yarattığınız bir eseri toplulukla paylaşın.
           </DialogDescription>
         </DialogHeader>
-        <form
-          ref={formRef}
-          action={handleFormAction}
-          className="space-y-4 py-4"
-        >
+        <form ref={formRef} action={handleFormAction} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="title">Eser Başlığı *</Label>
             <Input
@@ -96,14 +91,14 @@ export function AddShowcaseItemDialog() {
           </div>
 
           {/* Dinamik İçerik Alanı */}
-          {contentType === "Görsel" ? (
+          {contentType === 'Görsel' ? (
             <div className="space-y-2">
               <Label htmlFor="image">Görsel Dosyası *</Label>
               <Input
                 id="image"
                 name="image"
                 type="file"
-                required={contentType === "Görsel"}
+                required={contentType === 'Görsel'}
                 disabled={isPending}
                 accept="image/*"
               />
@@ -115,7 +110,7 @@ export function AddShowcaseItemDialog() {
                 id="content_text"
                 name="content_text"
                 placeholder={`Paylaşmak istediğiniz ${contentType.toLowerCase()} içeriğini buraya yapıştırın...`}
-                required={contentType !== "Görsel"}
+                required={contentType !== 'Görsel'}
                 disabled={isPending}
                 className="min-h-[200px] font-mono"
               />
@@ -139,7 +134,7 @@ export function AddShowcaseItemDialog() {
               </Button>
             </DialogClose>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Gönderiliyor..." : "Gönder"}
+              {isPending ? 'Gönderiliyor...' : 'Gönder'}
             </Button>
           </DialogFooter>
         </form>

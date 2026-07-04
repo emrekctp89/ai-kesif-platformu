@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import * as React from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 
 function normalizeToolLink(link) {
   if (!link) return null;
@@ -22,7 +22,11 @@ function normalizeToolLink(link) {
 }
 
 export default function ToolIcon({ name, link, className }) {
-  const fallbackLetter = String(name || "?").trim().slice(0, 1).toUpperCase() || "?";
+  const fallbackLetter =
+    String(name || '?')
+      .trim()
+      .slice(0, 1)
+      .toUpperCase() || '?';
   const normalizedLink = React.useMemo(() => normalizeToolLink(link), [link]);
   const [hasError, setHasError] = React.useState(false);
 
@@ -35,11 +39,11 @@ export default function ToolIcon({ name, link, className }) {
     : null;
 
   return (
-    <Avatar className={cn("h-7 w-7 shrink-0 rounded-md border bg-background", className)}>
+    <Avatar className={cn('h-7 w-7 shrink-0 rounded-md border bg-background', className)}>
       {!hasError && iconSrc ? (
         <AvatarImage
           src={iconSrc}
-          alt={`${name || "Araç"} ikonu`}
+          alt={`${name || 'Araç'} ikonu`}
           loading="lazy"
           onError={() => setHasError(true)}
         />

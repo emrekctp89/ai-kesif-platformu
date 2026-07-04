@@ -1,23 +1,12 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator"; // Yeni bileşeni import ediyoruz
-import {
-  AlertTriangle,
-  Bell,
-  Star,
-  MessageSquare,
-  Trophy,
-  ImageIcon,
-} from "lucide-react";
-import { getNotifications, markNotificationsAsRead } from "@/app/actions";
+import * as React from 'react';
+import Link from 'next/link';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator'; // Yeni bileşeni import ediyoruz
+import { AlertTriangle, Bell, Star, MessageSquare, Trophy, ImageIcon } from 'lucide-react';
+import { getNotifications, markNotificationsAsRead } from '@/app/actions';
 
 // Hangi bildirim türünün hangi ikonu kullanacağını belirleyen yardımcı obje
 const eventIcons = {
@@ -29,13 +18,8 @@ const eventIcons = {
   tool_link_report: <AlertTriangle className="w-4 h-4 text-red-500" />,
 };
 
-export function NotificationCenter({
-  initialNotifications,
-  unreadCount,
-  user,
-}) {
-  const [notifications, setNotifications] =
-    React.useState(initialNotifications);
+export function NotificationCenter({ initialNotifications, unreadCount, user }) {
+  const [notifications, setNotifications] = React.useState(initialNotifications);
   const [hasUnread, setHasUnread] = React.useState(unreadCount > 0);
 
   const handleOpenChange = async (open) => {
@@ -70,21 +54,19 @@ export function NotificationCenter({
             notifications.map((notif) => (
               <Link
                 key={notif.id}
-                href={notif.link || "#"}
+                href={notif.link || '#'}
                 className="block p-3 rounded-lg hover:bg-muted"
               >
                 <div className="flex items-start gap-3">
                   <div className="mt-1">
-                    {eventIcons[notif.event_type] || (
-                      <Bell className="w-4 h-4 text-primary" />
-                    )}
+                    {eventIcons[notif.event_type] || <Bell className="w-4 h-4 text-primary" />}
                   </div>
                   <div>
                     <p className="text-sm">{notif.message}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(notif.created_at).toLocaleDateString("tr-TR", {
-                        day: "numeric",
-                        month: "long",
+                      {new Date(notif.created_at).toLocaleDateString('tr-TR', {
+                        day: 'numeric',
+                        month: 'long',
                       })}
                     </p>
                   </div>
@@ -92,9 +74,7 @@ export function NotificationCenter({
               </Link>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              Yeni bildiriminiz yok.
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-8">Yeni bildiriminiz yok.</p>
           )}
         </div>
       </PopoverContent>
@@ -103,4 +83,4 @@ export function NotificationCenter({
 }
 
 // Heart ikonunu da lucide-react'tan import edelim
-import { Heart } from "lucide-react";
+import { Heart } from 'lucide-react';

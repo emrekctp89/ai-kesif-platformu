@@ -1,22 +1,17 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useEffect, useState, useRef } from "react";
-import { createClient } from "@/utils/supabase/client";
-import { sendMessage, markConversationAsRead } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, ArrowLeft } from "lucide-react"; // ArrowLeft ikonunu import ediyoruz
-import { cn } from "@/lib/utils";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import * as React from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { createClient } from '@/utils/supabase/client';
+import { sendMessage, markConversationAsRead } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Send, ArrowLeft } from 'lucide-react'; // ArrowLeft ikonunu import ediyoruz
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // Paylaşılan içerik için özel bir kart oluşturan alt bileşen
 function SharedContentCard({ content }) {
@@ -24,7 +19,7 @@ function SharedContentCard({ content }) {
 
   // Paylaşılan içeriğin türüne göre farklı bir kart gösteriyoruz
   switch (content.type) {
-    case "tool":
+    case 'tool':
       return (
         <Link href={`/tool/${content.slug}`} target="_blank" className="block">
           <Card className="bg-background/50 hover:bg-background/80 transition-colors">
@@ -51,15 +46,10 @@ function MessageBubble({ message, isCurrentUser }) {
   const fallback =
     profile?.username?.substring(0, 2).toUpperCase() ||
     profile?.email?.substring(0, 2).toUpperCase() ||
-    "??";
+    '??';
 
   return (
-    <div
-      className={cn(
-        "flex items-end gap-2",
-        isCurrentUser ? "justify-end" : "justify-start"
-      )}
-    >
+    <div className={cn('flex items-end gap-2', isCurrentUser ? 'justify-end' : 'justify-start')}>
       {!isCurrentUser && (
         <Avatar className="h-8 w-8">
           <AvatarImage src={profile?.avatar_url} />
@@ -68,14 +58,12 @@ function MessageBubble({ message, isCurrentUser }) {
       )}
       <div
         className={cn(
-          "max-w-xs md:max-w-md rounded-2xl",
-          isCurrentUser ? "bg-primary text-primary-foreground" : "bg-muted"
+          'max-w-xs md:max-w-md rounded-2xl',
+          isCurrentUser ? 'bg-primary text-primary-foreground' : 'bg-muted'
         )}
       >
         {/* Eğer mesajda metin varsa, onu göster */}
-        {message.content && (
-          <p className="text-sm px-3 py-2">{message.content}</p>
-        )}
+        {message.content && <p className="text-sm px-3 py-2">{message.content}</p>}
 
         {/* Eğer mesajda paylaşılan içerik varsa, özel kartını göster */}
         {message.shared_content && (
@@ -94,19 +82,14 @@ function MessageBubble({ message, isCurrentUser }) {
   );
 }
 
-export function ChatWindow({
-  conversationId,
-  initialMessages,
-  otherParticipant,
-  currentUser,
-}) {
+export function ChatWindow({ conversationId, initialMessages, otherParticipant, currentUser }) {
   const supabase = createClient();
   const router = useRouter(); // Router'ı kullanıma hazırlıyoruz
   const [messages, setMessages] = useState(initialMessages);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -117,9 +100,9 @@ export function ChatWindow({
     const handleNewMessage = async (payload) => {
       const newMessage = payload.new;
       const { data: senderProfile } = await supabase
-        .from("profiles")
-        .select("username, avatar_url, email")
-        .eq("id", newMessage.sender_id)
+        .from('profiles')
+        .select('username, avatar_url, email')
+        .eq('id', newMessage.sender_id)
         .single();
       const messageWithSender = { ...newMessage, profiles: senderProfile };
       setMessages((currentMessages) => [...currentMessages, messageWithSender]);
@@ -128,11 +111,11 @@ export function ChatWindow({
     const channel = supabase
       .channel(`messages_for_${conversationId}`)
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
         handleNewMessage
@@ -148,10 +131,10 @@ export function ChatWindow({
   }, [supabase, conversationId]);
 
   const handleSendMessage = async (formData) => {
-    const content = formData.get("content");
+    const content = formData.get('content');
     if (!content.trim()) return;
 
-    const form = document.getElementById("message-form");
+    const form = document.getElementById('message-form');
     form.reset();
 
     const optimisticMessage = {
@@ -182,12 +165,10 @@ export function ChatWindow({
         <Avatar>
           <AvatarImage src={otherParticipant?.avatar_url} />
           <AvatarFallback>
-            {otherParticipant?.username?.substring(0, 2).toUpperCase() || "??"}
+            {otherParticipant?.username?.substring(0, 2).toUpperCase() || '??'}
           </AvatarFallback>
         </Avatar>
-        <h3 className="font-semibold">
-          {otherParticipant?.username || otherParticipant?.email}
-        </h3>
+        <h3 className="font-semibold">{otherParticipant?.username || otherParticipant?.email}</h3>
       </header>
       <div className="flex-1 p-4 overflow-y-auto">
         <div className="space-y-4">
@@ -202,11 +183,7 @@ export function ChatWindow({
         </div>
       </div>
       <footer className="p-4 border-t">
-        <form
-          id="message-form"
-          action={handleSendMessage}
-          className="flex items-center gap-2"
-        >
+        <form id="message-form" action={handleSendMessage} className="flex items-center gap-2">
           <input type="hidden" name="conversationId" value={conversationId} />
           <Textarea
             name="content"
@@ -214,9 +191,9 @@ export function ChatWindow({
             className="flex-1 resize-none"
             rows={1}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                e.currentTarget.closest("form").requestSubmit();
+                e.currentTarget.closest('form').requestSubmit();
               }
             }}
           />

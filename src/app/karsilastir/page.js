@@ -1,16 +1,10 @@
-import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Star } from "lucide-react";
-import { ToolSelectForComparison } from "@/components/ToolSelectForComparison";
-import { AiComparison } from "@/components/AiComparison";
+import { createClient } from '@/utils/supabase/server';
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Star } from 'lucide-react';
+import { ToolSelectForComparison } from '@/components/ToolSelectForComparison';
+import { AiComparison } from '@/components/AiComparison';
 
 // URL'den gelen araç slug'larına göre verileri çeken fonksiyon
 async function getComparisonData(toolSlugs) {
@@ -20,44 +14,42 @@ async function getComparisonData(toolSlugs) {
 
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("tools_with_ratings")
-    .select("*")
-    .in("slug", toolSlugs);
+    .from('tools_with_ratings')
+    .select('*')
+    .in('slug', toolSlugs);
 
   if (error) {
-    console.error("Karşılaştırma verisi çekilirken hata:", error);
+    console.error('Karşılaştırma verisi çekilirken hata:', error);
     return [];
   }
 
-  return toolSlugs
-    .map((slug) => data.find((tool) => tool.slug === slug))
-    .filter(Boolean);
+  return toolSlugs.map((slug) => data.find((tool) => tool.slug === slug)).filter(Boolean);
 }
 
 // Tüm araçları seçme menüsü için çeken fonksiyon
 async function getAllToolsForSelect() {
   const supabase = createClient();
   const { data, error } = await supabase
-    .from("tools")
-    .select("name, slug")
-    .eq("is_approved", true)
-    .order("name");
+    .from('tools')
+    .select('name, slug')
+    .eq('is_approved', true)
+    .order('name');
 
   if (error) {
-    console.error("Tüm araçlar çekilirken hata:", error);
+    console.error('Tüm araçlar çekilirken hata:', error);
     return [];
   }
   return data;
 }
 
 export const metadata = {
-  title: "Araçları Karşılaştır | AI Keşif Platformu",
+  title: 'Araçları Karşılaştır | AI Keşif Platformu',
   description:
-    "Yapay zeka araçlarını yan yana karşılaştırarak ihtiyaçlarınıza en uygun olanı bulun.",
+    'Yapay zeka araçlarını yan yana karşılaştırarak ihtiyaçlarınıza en uygun olanı bulun.',
 };
 
 export default async function ComparePage({ searchParams }) {
-  const toolSlugs = searchParams.tools ? searchParams.tools.split(",") : [];
+  const toolSlugs = searchParams.tools ? searchParams.tools.split(',') : [];
   const [comparedTools, allTools] = await Promise.all([
     getComparisonData(toolSlugs),
     getAllToolsForSelect(),
@@ -70,16 +62,13 @@ export default async function ComparePage({ searchParams }) {
           AI Karşılaştırma Arenası
         </h1>
         <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-          Karşılaştırmak istediğiniz araçları seçin ve özelliklerini, puanlarını
-          ve yapay zekanın analizini görün.
+          Karşılaştırmak istediğiniz araçları seçin ve özelliklerini, puanlarını ve yapay zekanın
+          analizini görün.
         </p>
       </div>
 
       <div className="mb-8 flex justify-center">
-        <ToolSelectForComparison
-          allTools={allTools}
-          selectedSlugs={toolSlugs}
-        />
+        <ToolSelectForComparison allTools={allTools} selectedSlugs={toolSlugs} />
       </div>
 
       {/* AI Karşılaştırma Bölümü */}
@@ -108,16 +97,10 @@ export default async function ComparePage({ searchParams }) {
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-2 text-sm">
                     <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-                    <span className="font-bold">
-                      {tool.average_rating.toFixed(1)}
-                    </span>
-                    <span className="text-muted-foreground">
-                      ({tool.total_ratings} oy)
-                    </span>
+                    <span className="font-bold">{tool.average_rating.toFixed(1)}</span>
+                    <span className="text-muted-foreground">({tool.total_ratings} oy)</span>
                   </div>
-                  <p className="text-sm text-muted-foreground min-h-[60px]">
-                    {tool.description}
-                  </p>
+                  <p className="text-sm text-muted-foreground min-h-[60px]">{tool.description}</p>
                   <div className="pt-4 border-t">
                     <h4 className="font-semibold mb-2">Etiketler</h4>
                     <div className="flex flex-wrap gap-2">
@@ -130,7 +113,7 @@ export default async function ComparePage({ searchParams }) {
                   </div>
                   <div className="pt-4 border-t">
                     <h4 className="font-semibold mb-2">Fiyatlandırma</h4>
-                    <p>{tool.pricing_model || "Belirtilmemiş"}</p>
+                    <p>{tool.pricing_model || 'Belirtilmemiş'}</p>
                   </div>
                   <div className="pt-4 border-t">
                     <h4 className="font-semibold mb-2">Platformlar</h4>
@@ -153,7 +136,6 @@ export default async function ComparePage({ searchParams }) {
             Lütfen karşılaştırmak için yukarıdan en az iki araç seçin.
           </p>
         </div>
-        
       )}
     </div>
   );

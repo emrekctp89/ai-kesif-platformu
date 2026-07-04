@@ -15,7 +15,7 @@ export function PublicHeader() {
             <span className="font-bold text-lg">AI Keşif</span>
           </Link>
         </div>
-        
+
         <div className="flex flex-1 items-center justify-end space-x-2">
           <Button asChild variant="secondary">
             <Link href="/submit">Araç Öner</Link>
@@ -26,4 +26,3 @@ export function PublicHeader() {
     </header>
   );
 }
-

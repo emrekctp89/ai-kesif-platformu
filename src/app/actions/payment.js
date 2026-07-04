@@ -1,57 +1,57 @@
-"use server";
+'use server';
 
-import { createClient } from "@/utils/supabase/actions";
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
-import Stripe from "stripe";
-import { logServerError } from "@/utils/serverLogger";
+import { createClient } from '@/utils/supabase/actions';
+import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import Stripe from 'stripe';
+import { logServerError } from '@/utils/serverLogger';
 
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("STRIPE_SECRET_KEY ortam değişkeni tanımlı değil.");
+    throw new Error('STRIPE_SECRET_KEY ortam değişkeni tanımlı değil.');
   }
 
   return new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2024-04-10",
+    apiVersion: '2024-04-10',
   });
 }
 
 export async function createCheckoutSession(formData) {
-  "use server";
+  'use server';
   const supabase = createClient(await cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return redirect("/login");
+    return redirect('/login');
   }
 
   let checkoutUrl;
 
   try {
     const { data: profile } = await supabase
-      .from("profiles")
-      .select("stripe_customer_id")
-      .eq("id", user.id)
+      .from('profiles')
+      .select('stripe_customer_id')
+      .eq('id', user.id)
       .single();
 
-    const priceId = formData.get("priceId");
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+    const priceId = formData.get('priceId');
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '');
 
     if (!priceId || !siteUrl) {
-      throw new Error("Stripe fiyatı veya site adresi yapılandırılmamış.");
+      throw new Error('Stripe fiyatı veya site adresi yapılandırılmamış.');
     }
 
     const { data: activePrice, error: priceError } = await supabase
-      .from("prices")
-      .select("id")
-      .eq("id", priceId)
-      .eq("active", true)
+      .from('prices')
+      .select('id')
+      .eq('id', priceId)
+      .eq('active', true)
       .maybeSingle();
 
     if (priceError || !activePrice) {
-      throw new Error("Geçersiz veya aktif olmayan Stripe fiyatı.");
+      throw new Error('Geçersiz veya aktif olmayan Stripe fiyatı.');
     }
 
     const stripe = getStripe();
@@ -65,18 +65,18 @@ export async function createCheckoutSession(formData) {
       customerId = customer.id;
 
       const { error: customerUpdateError } = await supabase
-        .from("profiles")
+        .from('profiles')
         .update({ stripe_customer_id: customerId })
-        .eq("id", user.id);
+        .eq('id', user.id);
 
       if (customerUpdateError) {
-        throw new Error("Stripe müşteri kaydı profile yazılamadı.");
+        throw new Error('Stripe müşteri kaydı profile yazılamadı.');
       }
     }
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      mode: "subscription",
+      payment_method_types: ['card'],
+      mode: 'subscription',
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
       client_reference_id: user.id,
@@ -93,8 +93,8 @@ export async function createCheckoutSession(formData) {
     });
     checkoutUrl = session.url;
   } catch (error) {
-    logServerError("checkout.create-session", error);
-    const errorMessage = "Ödeme sayfasına yönlendirilirken bir hata oluştu.";
+    logServerError('checkout.create-session', error);
+    const errorMessage = 'Ödeme sayfasına yönlendirilirken bir hata oluştu.';
     return redirect(`/uyelik?message=${encodeURIComponent(errorMessage)}`);
   }
 

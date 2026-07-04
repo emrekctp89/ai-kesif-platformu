@@ -6,11 +6,7 @@
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function LoadingSpinner({
-  size = 'md',
-  className = '',
-  label = 'Yükleniyor...',
-}) {
+export function LoadingSpinner({ size = 'md', className = '', label = 'Yükleniyor...' }) {
   const sizeClasses = {
     sm: 'w-4 h-4',
     md: 'w-6 h-6',
@@ -38,11 +34,7 @@ export function LoadingSpinner({
  * Loading Overlay Component
  * Full screen overlay with spinner
  */
-export function LoadingOverlay({
-  isVisible = true,
-  message = 'Yükleniyor...',
-  blur = true,
-}) {
+export function LoadingOverlay({ isVisible = true, message = 'Yükleniyor...', blur = true }) {
   if (!isVisible) return null;
 
   return (
@@ -67,11 +59,7 @@ export function LoadingOverlay({
  * Inline Loading Component
  * For use within containers
  */
-export function InlineLoading({
-  isLoading = true,
-  label = 'Yükleniyor...',
-  minHeight = '200px',
-}) {
+export function InlineLoading({ isLoading = true, label = 'Yükleniyor...', minHeight = '200px' }) {
   if (!isLoading) return null;
 
   return (
@@ -91,11 +79,7 @@ export function InlineLoading({
  * Button Loading State
  * For use in buttons with loading state
  */
-export function ButtonLoading({
-  isLoading = false,
-  children,
-  size = 'md',
-}) {
+export function ButtonLoading({ isLoading = false, children, size = 'md' }) {
   const sizeClasses = {
     sm: 'w-3 h-3',
     md: 'w-4 h-4',
@@ -106,10 +90,7 @@ export function ButtonLoading({
 
   return (
     <>
-      <Loader2
-        className={cn('animate-spin mr-2 inline', sizeClasses[size])}
-        aria-hidden="true"
-      />
+      <Loader2 className={cn('animate-spin mr-2 inline', sizeClasses[size])} aria-hidden="true" />
       {children}
     </>
   );
@@ -119,35 +100,20 @@ export function ButtonLoading({
  * Skeleton Loading Component
  * For structured content loading
  */
-export function SkeletonLine({
-  width = 'w-full',
-  height = 'h-4',
-  className = '',
-}) {
+export function SkeletonLine({ width = 'w-full', height = 'h-4', className = '' }) {
   return (
     <div
-      className={cn(
-        'rounded bg-primary/10 animate-pulse',
-        width,
-        height,
-        className
-      )}
+      className={cn('rounded bg-primary/10 animate-pulse', width, height, className)}
       aria-hidden="true"
     />
   );
 }
 
-export function SkeletonBlock({
-  lines = 3,
-  className = '',
-}) {
+export function SkeletonBlock({ lines = 3, className = '' }) {
   return (
     <div className={cn('space-y-2', className)}>
       {Array.from({ length: lines }).map((_, i) => (
-        <SkeletonLine
-          key={i}
-          width={i === lines - 1 ? 'w-5/6' : 'w-full'}
-        />
+        <SkeletonLine key={i} width={i === lines - 1 ? 'w-5/6' : 'w-full'} />
       ))}
     </div>
   );

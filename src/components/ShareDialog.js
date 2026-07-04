@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Label } from "@/components/ui/label"; // Eğer Shadcn UI kullanıyorsan
+import * as React from 'react';
+import { Label } from '@/components/ui/label'; // Eğer Shadcn UI kullanıyorsan
 
-import { useTransition } from "react";
+import { useTransition } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,12 +13,12 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import {
   Command,
   CommandEmpty,
@@ -26,14 +26,14 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from '@/components/ui/command';
 import {
   searchUsers,
   getRecentConversationsForShare,
   sendMessageWithSharedContent,
-} from "@/app/actions";
-import { useDebounce } from "use-debounce";
-import toast from "react-hot-toast";
+} from '@/app/actions';
+import { useDebounce } from 'use-debounce';
+import toast from 'react-hot-toast';
 
 // Arama sonuçlarını veya son sohbetleri gösteren liste
 function UserList({ users, selectedRecipients, onSelect }) {
@@ -68,7 +68,7 @@ function UserList({ users, selectedRecipients, onSelect }) {
 export function ShareDialog({ sharedContent, children }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isPending, startTransition] = useTransition();
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [searchTerm, setSearchTerm] = React.useState('');
   const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
   const [searchResults, setSearchResults] = React.useState([]);
   const [recentUsers, setRecentUsers] = React.useState([]);
@@ -101,8 +101,8 @@ export function ShareDialog({ sharedContent, children }) {
 
   // Formu gönder
   const handleFormAction = (formData) => {
-    formData.append("sharedContent", JSON.stringify(sharedContent));
-    selectedRecipients.forEach((r) => formData.append("recipients", r.id));
+    formData.append('sharedContent', JSON.stringify(sharedContent));
+    selectedRecipients.forEach((r) => formData.append('recipients', r.id));
 
     startTransition(async () => {
       const result = await sendMessageWithSharedContent(formData);
@@ -111,7 +111,7 @@ export function ShareDialog({ sharedContent, children }) {
         setIsOpen(false);
         setSelectedRecipients([]);
       } else {
-        toast.error(result.error || "Bir hata oluştu.");
+        toast.error(result.error || 'Bir hata oluştu.');
       }
     });
   };
@@ -134,10 +134,7 @@ export function ShareDialog({ sharedContent, children }) {
                 {selectedRecipients.map((user) => (
                   <Badge key={user.id} variant="secondary">
                     {user.username || user.email}
-                    <button
-                      onClick={() => handleSelectRecipient(user)}
-                      className="ml-1 font-bold"
-                    >
+                    <button onClick={() => handleSelectRecipient(user)} className="ml-1 font-bold">
                       ×
                     </button>
                   </Badge>
@@ -159,9 +156,7 @@ export function ShareDialog({ sharedContent, children }) {
             />
           ) : (
             <div>
-              <Label className="text-xs text-muted-foreground">
-                Son Sohbetler
-              </Label>
+              <Label className="text-xs text-muted-foreground">Son Sohbetler</Label>
               <UserList
                 users={recentUsers}
                 selectedRecipients={selectedRecipients}
@@ -173,13 +168,8 @@ export function ShareDialog({ sharedContent, children }) {
           <Textarea name="note" placeholder="Bir not ekle (isteğe bağlı)..." />
 
           <DialogFooter>
-            <Button
-              type="submit"
-              disabled={isPending || selectedRecipients.length === 0}
-            >
-              {isPending
-                ? "Gönderiliyor..."
-                : `Gönder (${selectedRecipients.length})`}
+            <Button type="submit" disabled={isPending || selectedRecipients.length === 0}>
+              {isPending ? 'Gönderiliyor...' : `Gönder (${selectedRecipients.length})`}
             </Button>
           </DialogFooter>
         </form>

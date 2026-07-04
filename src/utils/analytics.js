@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 function cleanParameters(parameters = {}) {
   return Object.fromEntries(
@@ -6,18 +6,18 @@ function cleanParameters(parameters = {}) {
       ([, value]) =>
         value !== undefined &&
         value !== null &&
-        ["string", "number", "boolean"].includes(typeof value)
+        ['string', 'number', 'boolean'].includes(typeof value)
     )
   );
 }
 
 export function trackEvent(name, parameters = {}) {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
 
   const cleanedParameters = cleanParameters(parameters);
 
-  if (typeof window.gtag === "function") {
-    window.gtag("event", name, cleanedParameters);
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', name, cleanedParameters);
     return;
   }
 

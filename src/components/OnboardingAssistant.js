@@ -1,57 +1,51 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { handleOnboardingStep } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, User, CornerDownLeft } from "lucide-react";
-import { motion } from "framer-motion";
+import * as React from 'react';
+import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { handleOnboardingStep } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Bot, User, CornerDownLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export function OnboardingAssistant() {
   const router = useRouter();
   const [messages, setMessages] = React.useState([
     {
-      role: "ai",
+      role: 'ai',
       content:
         "Merhaba! Ben AI Keşif Platformu'nun karşılama asistanıyım. Size en iyi deneyimi sunabilmem için ilgi alanlarınızı öğrenmek istiyorum. Hangi konularla daha çok ilgileniyorsunuz? (Örn: Görsel Üretimi, Metin Yazarlığı, Kodlama...)",
     },
   ]);
-  const [input, setInput] = React.useState("");
+  const [input, setInput] = React.useState('');
   const [isPending, startTransition] = useTransition();
   const chatContainerRef = React.useRef(null);
 
   React.useEffect(() => {
-    chatContainerRef.current?.scrollTo(
-      0,
-      chatContainerRef.current.scrollHeight
-    );
+    chatContainerRef.current?.scrollTo(0, chatContainerRef.current.scrollHeight);
   }, [messages]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!input.trim() || isPending) return;
 
-    const newUserMessage = { role: "user", content: input };
+    const newUserMessage = { role: 'user', content: input };
     const newMessages = [...messages, newUserMessage];
     setMessages(newMessages);
-    setInput("");
+    setInput('');
 
     startTransition(async () => {
       const result = await handleOnboardingStep(newMessages, input);
       if (result.error) {
         setMessages((prev) => [
           ...prev,
-          { role: "ai", content: `Bir hata oluştu: ${result.error}` },
+          { role: 'ai', content: `Bir hata oluştu: ${result.error}` },
         ]);
       } else {
-        setMessages((prev) => [
-          ...prev,
-          { role: "ai", content: result.data.response_text },
-        ]);
-        if (result.data.action === "complete") {
+        setMessages((prev) => [...prev, { role: 'ai', content: result.data.response_text }]);
+        if (result.data.action === 'complete') {
           // DEĞİŞİKLİK: Kullanıcıya son mesajı okuması için 3 saniye veriyoruz,
           // ardından sayfayı akıllı bir şekilde yeniliyoruz.
           setTimeout(() => {
@@ -71,21 +65,16 @@ export function OnboardingAssistant() {
       >
         <div className="p-4 border-b text-center">
           <h2 className="text-xl font-bold">Platforma Hoş Geldiniz!</h2>
-          <p className="text-sm text-muted-foreground">
-            Deneyiminizi kişiselleştirelim.
-          </p>
+          <p className="text-sm text-muted-foreground">Deneyiminizi kişiselleştirelim.</p>
         </div>
 
-        <div
-          ref={chatContainerRef}
-          className="flex-1 overflow-y-auto p-6 space-y-6"
-        >
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6">
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`flex items-start gap-4 ${msg.role === "user" ? "justify-end" : ""}`}
+              className={`flex items-start gap-4 ${msg.role === 'user' ? 'justify-end' : ''}`}
             >
-              {msg.role === "ai" && (
+              {msg.role === 'ai' && (
                 <Avatar className="h-9 w-9 border-2 border-primary">
                   <AvatarFallback>
                     <Bot />
@@ -93,11 +82,11 @@ export function OnboardingAssistant() {
                 </Avatar>
               )}
               <div
-                className={`max-w-md rounded-lg p-3 ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
+                className={`max-w-md rounded-lg p-3 ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
               >
                 <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
               </div>
-              {msg.role === "user" && (
+              {msg.role === 'user' && (
                 <Avatar className="h-9 w-9">
                   <AvatarFallback>
                     <User />

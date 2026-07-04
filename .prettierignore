@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+build/
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+
+# Misc
+.DS_Store
+*.pem
+
+# Vercel
+.vercel/
+
+# TypeScript
+*.tsbuildinfo
+
+# Ignore lockfiles and generated
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Env
+.env*

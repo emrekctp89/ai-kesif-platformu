@@ -1,9 +1,9 @@
-import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { createClient } from '@/utils/supabase/server';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export const metadata = {
   robots: {
@@ -15,12 +15,12 @@ export const metadata = {
 // Kullanıcının sohbetlerini, okunmamış mesaj sayılarıyla birlikte çeken fonksiyon
 async function getConversations(userId) {
   const supabase = createClient();
-  const { data, error } = await supabase.rpc("get_user_conversations", {
+  const { data, error } = await supabase.rpc('get_user_conversations', {
     p_user_id: userId,
   });
 
   if (error) {
-    console.error("Sohbetler çekilirken hata:", error);
+    console.error('Sohbetler çekilirken hata:', error);
     return [];
   }
   return data;
@@ -33,7 +33,7 @@ export default async function MessagesLayout({ children, params }) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login?message=Mesajları görmek için giriş yapmalısınız.");
+    redirect('/login?message=Mesajları görmek için giriş yapmalısınız.');
   }
 
   const conversations = await getConversations(user.id);
@@ -47,9 +47,9 @@ export default async function MessagesLayout({ children, params }) {
       {/* Sol Taraf: Sohbet Listesi */}
       <aside
         className={cn(
-          "w-full border-r flex-col h-full bg-background",
-          "md:w-[300px] lg:w-[350px] md:flex", // Masaüstünde her zaman görünür
-          activeConversationId ? "hidden md:flex" : "flex" // Bir sohbet seçiliyse mobilde gizle
+          'w-full border-r flex-col h-full bg-background',
+          'md:w-[300px] lg:w-[350px] md:flex', // Masaüstünde her zaman görünür
+          activeConversationId ? 'hidden md:flex' : 'flex' // Bir sohbet seçiliyse mobilde gizle
         )}
       >
         <div className="p-4 border-b">
@@ -66,19 +66,15 @@ export default async function MessagesLayout({ children, params }) {
               };
               const unreadCount = convo.unread_count;
               const fallback =
-                (otherUser.username || otherUser.email)
-                  ?.substring(0, 2)
-                  .toUpperCase() || "??";
+                (otherUser.username || otherUser.email)?.substring(0, 2).toUpperCase() || '??';
 
               return (
                 <Link
                   key={convo.conversation_id}
                   href={`/mesajlar/${convo.conversation_id}`}
                   className={cn(
-                    "flex items-center justify-between p-3 rounded-lg transition-colors",
-                    activeConversationId == convo.conversation_id
-                      ? "bg-muted"
-                      : "hover:bg-muted/50"
+                    'flex items-center justify-between p-3 rounded-lg transition-colors',
+                    activeConversationId == convo.conversation_id ? 'bg-muted' : 'hover:bg-muted/50'
                   )}
                 >
                   <div className="flex items-center gap-3">
@@ -105,8 +101,8 @@ export default async function MessagesLayout({ children, params }) {
       {/* Sağ Taraf: Aktif Sohbet Penceresi */}
       <main
         className={cn(
-          "flex-1 flex-col h-full",
-          activeConversationId ? "flex" : "hidden md:flex" // Bir sohbet seçili değilse mobilde gizle
+          'flex-1 flex-col h-full',
+          activeConversationId ? 'flex' : 'hidden md:flex' // Bir sohbet seçili değilse mobilde gizle
         )}
       >
         {children}

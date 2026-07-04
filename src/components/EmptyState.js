@@ -1,13 +1,7 @@
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  SearchX,
-  PackageOpen,
-  FileQuestion,
-  AlertCircle,
-  Home,
-} from "lucide-react";
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { SearchX, PackageOpen, FileQuestion, AlertCircle, Home } from 'lucide-react';
 
 /**
  * EmptyState — Veri bulunamadığında veya yüklenemediğinde gösterilen fallback bileşeni.
@@ -21,68 +15,58 @@ import {
  */
 
 const VARIANT_CONFIG = {
-  "no-results": {
+  'no-results': {
     icon: SearchX,
-    defaultTitle: "Sonuç bulunamadı",
+    defaultTitle: 'Sonuç bulunamadı',
     defaultDescription:
-      "Arama kriterlerinize uygun sonuç bulunamadı. Filtreleri değiştirmeyi deneyin.",
-    iconClassName: "text-muted-foreground",
-    bgClassName: "bg-muted/50",
+      'Arama kriterlerinize uygun sonuç bulunamadı. Filtreleri değiştirmeyi deneyin.',
+    iconClassName: 'text-muted-foreground',
+    bgClassName: 'bg-muted/50',
   },
-  "no-data": {
+  'no-data': {
     icon: PackageOpen,
-    defaultTitle: "Henüz içerik yok",
-    defaultDescription: "Bu alanda henüz içerik bulunmuyor.",
-    iconClassName: "text-muted-foreground",
-    bgClassName: "bg-muted/50",
+    defaultTitle: 'Henüz içerik yok',
+    defaultDescription: 'Bu alanda henüz içerik bulunmuyor.',
+    iconClassName: 'text-muted-foreground',
+    bgClassName: 'bg-muted/50',
   },
   error: {
     icon: AlertCircle,
-    defaultTitle: "Bir sorun oluştu",
+    defaultTitle: 'Bir sorun oluştu',
     defaultDescription:
-      "Veriler yüklenirken bir hata meydana geldi. Lütfen daha sonra tekrar deneyin.",
-    iconClassName: "text-destructive",
-    bgClassName: "bg-destructive/10",
+      'Veriler yüklenirken bir hata meydana geldi. Lütfen daha sonra tekrar deneyin.',
+    iconClassName: 'text-destructive',
+    bgClassName: 'bg-destructive/10',
   },
-  "not-found": {
+  'not-found': {
     icon: FileQuestion,
-    defaultTitle: "Sayfa bulunamadı",
-    defaultDescription: "Aradığınız içerik mevcut değil veya taşınmış olabilir.",
-    iconClassName: "text-muted-foreground",
-    bgClassName: "bg-muted/50",
+    defaultTitle: 'Sayfa bulunamadı',
+    defaultDescription: 'Aradığınız içerik mevcut değil veya taşınmış olabilir.',
+    iconClassName: 'text-muted-foreground',
+    bgClassName: 'bg-muted/50',
   },
 };
 
 export default function EmptyState({
-  variant = "no-results",
+  variant = 'no-results',
   title,
   description,
   icon: CustomIcon,
   action,
   className,
 }) {
-  const config = VARIANT_CONFIG[variant] || VARIANT_CONFIG["no-results"];
+  const config = VARIANT_CONFIG[variant] || VARIANT_CONFIG['no-results'];
   const Icon = CustomIcon || config.icon;
 
   return (
     <div
-      className={cn(
-        "flex flex-col items-center justify-center px-4 py-16 text-center",
-        className
-      )}
+      className={cn('flex flex-col items-center justify-center px-4 py-16 text-center', className)}
     >
-      <div
-        className={cn(
-          "mb-5 rounded-full p-4",
-          config.bgClassName
-        )}
-      >
-        <Icon className={cn("h-8 w-8", config.iconClassName)} />
+      <div className={cn('mb-5 rounded-full p-4', config.bgClassName)}>
+        <Icon className={cn('h-8 w-8', config.iconClassName)} />
       </div>
 
-      <h3 className="text-lg font-semibold text-foreground">
-        {title || config.defaultTitle}
-      </h3>
+      <h3 className="text-lg font-semibold text-foreground">{title || config.defaultTitle}</h3>
 
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">
         {description || config.defaultDescription}
@@ -91,17 +75,14 @@ export default function EmptyState({
       {action && (
         <div className="mt-6">
           {action.href ? (
-            <Button asChild variant={action.variant || "default"}>
+            <Button asChild variant={action.variant || 'default'}>
               <Link href={action.href}>
                 {action.icon && <span className="mr-2">{action.icon}</span>}
                 {action.label}
               </Link>
             </Button>
           ) : (
-            <Button
-              onClick={action.onClick}
-              variant={action.variant || "default"}
-            >
+            <Button onClick={action.onClick} variant={action.variant || 'default'}>
               {action.icon && <span className="mr-2">{action.icon}</span>}
               {action.label}
             </Button>
@@ -109,7 +90,7 @@ export default function EmptyState({
         </div>
       )}
 
-      {!action && variant !== "error" && (
+      {!action && variant !== 'error' && (
         <Button asChild variant="ghost" className="mt-6">
           <Link href="/">
             <Home className="mr-2 h-4 w-4" />

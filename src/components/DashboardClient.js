@@ -1,17 +1,9 @@
-"use client";
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
 // DEĞİŞİKLİK: Doğrudan 'recharts' kütüphanesinden import ediyoruz
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Sayı kartları için bir alt bileşen
 const StatCard = ({ title, value, icon }) => (
@@ -57,24 +49,19 @@ function LinkHealthWidget({ stats }) {
           </div>
           <div className="rounded-lg border bg-sky-500/10 p-3">
             <p className="text-xs text-muted-foreground">Eksik/Eski</p>
-            <p className="text-2xl font-bold text-sky-600">
-              {freshnessIssueCount}
-            </p>
+            <p className="text-2xl font-bold text-sky-600">{freshnessIssueCount}</p>
           </div>
         </div>
         <div className="flex flex-col gap-2 rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>
             {activeIssueCount > 0
               ? `${activeIssueCount} aktif link problemi admin incelemesi bekliyor.`
-              : "Aktif kırık link veya manuel inceleme kaydı yok."}
+              : 'Aktif kırık link veya manuel inceleme kaydı yok.'}
             {freshnessIssueCount > 0
               ? ` ${stats.unchecked} hiç taranmamış, ${stats.stale} eski kayıt var.`
-              : " Tüm kayıtlar güncel görünüyor."}
+              : ' Tüm kayıtlar güncel görünüyor.'}
           </p>
-          <Link
-            href="/admin"
-            className="font-medium text-primary hover:underline"
-          >
+          <Link href="/admin" className="font-medium text-primary hover:underline">
             Admin kuyruğuna git
           </Link>
         </div>
@@ -86,11 +73,7 @@ function LinkHealthWidget({ stats }) {
 // Ana Dashboard arayüz bileşeni
 export function DashboardClient({ stats, linkHealthStats }) {
   if (!stats) {
-    return (
-      <p className="text-center text-muted-foreground">
-        İstatistikler yüklenemedi.
-      </p>
-    );
+    return <p className="text-center text-muted-foreground">İstatistikler yüklenemedi.</p>;
   }
 
   // Grafik için veriyi formatlıyoruz
@@ -120,32 +103,18 @@ export function DashboardClient({ stats, linkHealthStats }) {
           <CardContent className="pl-2">
             {/* DEĞİŞİKLİK: Grafiği doğrudan recharts ile oluşturuyoruz */}
             <ResponsiveContainer width="100%" height={350}>
-              <BarChart
-                data={chartData}
-                margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
-                />
-                <XAxis
-                  dataKey="name"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                />
+              <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(var(--background))",
-                    borderColor: "hsl(var(--border))",
-                    color: "hsl(var(--foreground))",
+                    backgroundColor: 'hsl(var(--background))',
+                    borderColor: 'hsl(var(--border))',
+                    color: 'hsl(var(--foreground))',
                   }}
                 />
-                <Bar
-                  dataKey="total"
-                  fill="hsl(var(--primary))"
-                  radius={[4, 4, 0, 0]}
-                />
+                <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

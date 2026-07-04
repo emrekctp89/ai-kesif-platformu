@@ -62,7 +62,7 @@ export class EventEmitter {
     }
 
     const listeners = this.events.get(eventName);
-    const index = listeners.findIndex(l => l.id === listenerId);
+    const index = listeners.findIndex((l) => l.id === listenerId);
 
     if (index === -1) {
       return false;
@@ -174,7 +174,7 @@ export class EventEmitter {
       return [];
     }
 
-    return this.events.get(eventName).map(l => ({
+    return this.events.get(eventName).map((l) => ({
       id: l.id,
       priority: l.priority,
       once: l.once,

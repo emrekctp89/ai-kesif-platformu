@@ -1,14 +1,14 @@
-import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { Flame } from "lucide-react";
-import ToolIcon from "@/components/ToolIcon";
+import { createClient } from '@/utils/supabase/server';
+import Link from 'next/link';
+import { Card, CardContent } from '@/components/ui/card';
+import { Flame } from 'lucide-react';
+import ToolIcon from '@/components/ToolIcon';
 
 async function getTrendingData() {
   const supabase = createClient();
-  const { data, error } = await supabase.rpc("get_trending_tools");
+  const { data, error } = await supabase.rpc('get_trending_tools');
   if (error) {
-    console.error("Trend olan araçlar çekilirken hata:", error);
+    console.error('Trend olan araçlar çekilirken hata:', error);
     return [];
   }
   return data;
@@ -23,8 +23,7 @@ export async function TrendingTools() {
       <div className="my-12 p-4 text-center bg-muted rounded-lg">
         <p className="text-muted-foreground">
           Haftanın Trendleri bölümü için yeterli veri bulunamadı. <br />
-          (Veritabanınızda son 7 günde favoriye eklenmiş, en az 1 onaylanmış
-          araç olmalı)
+          (Veritabanınızda son 7 günde favoriye eklenmiş, en az 1 onaylanmış araç olmalı)
         </p>
       </div>
     );
@@ -45,14 +44,10 @@ export async function TrendingTools() {
                   <ToolIcon name={tool.name} link={tool.link} className="h-6 w-6" />
                   <span className="truncate">{tool.name}</span>
                 </h3>
-                <p className="text-xs text-muted-foreground">
-                  {tool.category_name}
-                </p>
+                <p className="text-xs text-muted-foreground">{tool.category_name}</p>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
                   <span className="text-orange-500">🔥</span>
-                  <span className="font-bold">
-                    {tool.favorite_count} favori
-                  </span>
+                  <span className="font-bold">{tool.favorite_count} favori</span>
                 </div>
               </CardContent>
             </Card>

@@ -1,6 +1,6 @@
-import { notFound } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
-import Link from "next/link";
+import { notFound } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
+import Link from 'next/link';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -12,21 +12,19 @@ import {
   MonitorSmartphone,
   ShieldCheck,
   WalletCards,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ShareButtons } from "@/components/ShareButtons";
-import { SimilarTools } from "@/components/SimilarTools";
-import { TrackedExternalLink } from "@/components/TrackedExternalLink";
-import { ToolLinkReportDialog } from "@/components/ToolLinkReportDialog";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ShareButtons } from '@/components/ShareButtons';
+import { SimilarTools } from '@/components/SimilarTools';
+import { TrackedExternalLink } from '@/components/TrackedExternalLink';
+import { ToolLinkReportDialog } from '@/components/ToolLinkReportDialog';
 
 export const revalidate = 3600;
 
-const siteUrl = new URL(
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.aikeşif.com",
-).origin;
+const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
 
 function createPublicClient() {
   return createClient(
@@ -37,119 +35,117 @@ function createPublicClient() {
         persistSession: false,
         autoRefreshToken: false,
       },
-    },
+    }
   );
 }
 
 async function getToolData(slug) {
   const supabase = createPublicClient();
   const { data: tool, error } = await supabase
-    .from("tools")
+    .from('tools')
     .select(
-      "id, name, description, link, category_id, slug, pricing_model, platforms, tier, created_at, updated_at, technical_details, link_check_status, link_check_error, link_check_http_status, link_checked_at",
+      'id, name, description, link, category_id, slug, pricing_model, platforms, tier, created_at, updated_at, technical_details, link_check_status, link_check_error, link_check_http_status, link_checked_at'
     )
-    .eq("slug", slug)
-    .eq("is_approved", true)
+    .eq('slug', slug)
+    .eq('is_approved', true)
     .maybeSingle();
 
   if (error || !tool) return null;
 
   const { data: category } = tool.category_id
     ? await supabase
-        .from("categories")
-        .select("name, slug")
-        .eq("id", tool.category_id)
+        .from('categories')
+        .select('name, slug')
+        .eq('id', tool.category_id)
         .maybeSingle()
     : { data: null };
 
   return {
     ...tool,
-    category_name: category?.name || "Yapay Zeka Aracı",
+    category_name: category?.name || 'Yapay Zeka Aracı',
     category_slug: category?.slug,
   };
 }
 
 function getHostname(link) {
   try {
-    return new URL(link).hostname.replace(/^www\./, "");
+    return new URL(link).hostname.replace(/^www\./, '');
   } catch {
-    return "Harici web sitesi";
+    return 'Harici web sitesi';
   }
 }
 
 function formatDate(value) {
   if (!value) return null;
 
-  return new Intl.DateTimeFormat("tr-TR", {
-    month: "long",
-    year: "numeric",
+  return new Intl.DateTimeFormat('tr-TR', {
+    month: 'long',
+    year: 'numeric',
   }).format(new Date(value));
 }
 
 function formatDateTime(value) {
   if (!value) return null;
 
-  return new Intl.DateTimeFormat("tr-TR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Europe/Istanbul",
+  return new Intl.DateTimeFormat('tr-TR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Europe/Istanbul',
   }).format(new Date(value));
 }
 
 function getLinkHealthMeta(tool) {
-  const status = String(tool.link_check_status || "").toLowerCase();
+  const status = String(tool.link_check_status || '').toLowerCase();
   const checkedAt = formatDateTime(tool.link_checked_at);
 
-  if (status === "valid") {
+  if (status === 'valid') {
     return {
       icon: ShieldCheck,
-      title: "Link son kontrolde çalışıyor",
+      title: 'Link son kontrolde çalışıyor',
       description: checkedAt
         ? `Son kontrol: ${checkedAt}`
-        : "Otomatik kontrolde bağlantı erişilebilir görünüyor.",
-      badge: "Çalışıyor",
-      className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-      iconClassName: "text-emerald-600 dark:text-emerald-300",
+        : 'Otomatik kontrolde bağlantı erişilebilir görünüyor.',
+      badge: 'Çalışıyor',
+      className: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+      iconClassName: 'text-emerald-600 dark:text-emerald-300',
     };
   }
 
-  if (status === "review") {
+  if (status === 'review') {
     return {
       icon: Clock3,
-      title: "Link manuel inceleme bekliyor",
+      title: 'Link manuel inceleme bekliyor',
       description:
         tool.link_check_error ||
         (checkedAt
           ? `Son kontrol: ${checkedAt}`
-          : "Bazı siteler bot koruması nedeniyle otomatik kontrolde uyarı verebilir."),
-      badge: "İncelenecek",
-      className: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-      iconClassName: "text-amber-600 dark:text-amber-300",
+          : 'Bazı siteler bot koruması nedeniyle otomatik kontrolde uyarı verebilir.'),
+      badge: 'İncelenecek',
+      className: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+      iconClassName: 'text-amber-600 dark:text-amber-300',
     };
   }
 
-  if (status === "invalid") {
+  if (status === 'invalid') {
     return {
       icon: AlertTriangle,
-      title: "Link sorunlu görünüyor",
+      title: 'Link sorunlu görünüyor',
       description:
         tool.link_check_error ||
-        (checkedAt
-          ? `Son kontrol: ${checkedAt}`
-          : "Otomatik kontrol bağlantıda sorun buldu."),
-      badge: "Sorunlu",
-      className: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
-      iconClassName: "text-red-600 dark:text-red-300",
+        (checkedAt ? `Son kontrol: ${checkedAt}` : 'Otomatik kontrol bağlantıda sorun buldu.'),
+      badge: 'Sorunlu',
+      className: 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300',
+      iconClassName: 'text-red-600 dark:text-red-300',
     };
   }
 
   return {
     icon: Clock3,
-    title: "Link henüz otomatik kontrol edilmedi",
-    description: "Bir sorun fark ederseniz link raporu gönderebilirsiniz.",
-    badge: "Kontrol bekliyor",
-    className: "border-muted bg-muted/40 text-muted-foreground",
-    iconClassName: "text-muted-foreground",
+    title: 'Link henüz otomatik kontrol edilmedi',
+    description: 'Bir sorun fark ederseniz link raporu gönderebilirsiniz.',
+    badge: 'Kontrol bekliyor',
+    className: 'border-muted bg-muted/40 text-muted-foreground',
+    iconClassName: 'text-muted-foreground',
   };
 }
 
@@ -164,7 +160,7 @@ export async function generateMetadata({ params }) {
 
   if (!tool) {
     return {
-      title: "Araç Bulunamadı",
+      title: 'Araç Bulunamadı',
       robots: { index: false, follow: false },
     };
   }
@@ -179,13 +175,13 @@ export async function generateMetadata({ params }) {
       canonical: `/tool/${tool.slug}`,
     },
     openGraph: {
-      type: "website",
+      type: 'website',
       title,
       description,
       url: `/tool/${tool.slug}`,
       images: [
         {
-          url: "/opengraph-image",
+          url: '/opengraph-image',
           width: 1200,
           height: 630,
           alt: `${tool.name} - AI Keşif`,
@@ -193,10 +189,10 @@ export async function generateMetadata({ params }) {
       ],
     },
     twitter: {
-      card: "summary_large_image",
+      card: 'summary_large_image',
       title,
       description,
-      images: ["/opengraph-image"],
+      images: ['/opengraph-image'],
     },
   };
 }
@@ -214,40 +210,38 @@ export default async function ToolDetailPage({ params }) {
   const addedDate = formatDate(tool.created_at);
   const updatedDate = formatDate(tool.updated_at);
   const platforms =
-    Array.isArray(tool.platforms) && tool.platforms.length > 0
-      ? tool.platforms
-      : ["Web"];
+    Array.isArray(tool.platforms) && tool.platforms.length > 0 ? tool.platforms : ['Web'];
 
   const structuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
+    '@context': 'https://schema.org',
+    '@graph': [
       {
-        "@type": "SoftwareApplication",
-        "@id": `${shareUrl}#software`,
+        '@type': 'SoftwareApplication',
+        '@id': `${shareUrl}#software`,
         name: tool.name,
         description: tool.description,
         url: shareUrl,
         sameAs: tool.link,
         applicationCategory: tool.category_name,
-        operatingSystem: platforms.join(", "),
+        operatingSystem: platforms.join(', '),
         datePublished: tool.created_at || undefined,
         dateModified: tool.updated_at || tool.created_at || undefined,
-        inLanguage: "tr-TR",
+        inLanguage: 'tr-TR',
       },
       {
-        "@type": "BreadcrumbList",
-        "@id": `${shareUrl}#breadcrumb`,
+        '@type': 'BreadcrumbList',
+        '@id': `${shareUrl}#breadcrumb`,
         itemListElement: [
           {
-            "@type": "ListItem",
+            '@type': 'ListItem',
             position: 1,
-            name: "Ana Sayfa",
+            name: 'Ana Sayfa',
             item: siteUrl,
           },
           ...(tool.category_slug
             ? [
                 {
-                  "@type": "ListItem",
+                  '@type': 'ListItem',
                   position: 2,
                   name: tool.category_name,
                   item: `${siteUrl}/kategori/${tool.category_slug}`,
@@ -255,7 +249,7 @@ export default async function ToolDetailPage({ params }) {
               ]
             : []),
           {
-            "@type": "ListItem",
+            '@type': 'ListItem',
             position: tool.category_slug ? 3 : 2,
             name: tool.name,
             item: shareUrl,
@@ -270,19 +264,17 @@ export default async function ToolDetailPage({ params }) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+          __html: JSON.stringify(structuredData).replace(/</g, '\\u003c'),
         }}
       />
 
       <div className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-10">
         <Link
-          href={tool.category_slug ? `/kategori/${tool.category_slug}` : "/"}
+          href={tool.category_slug ? `/kategori/${tool.category_slug}` : '/'}
           className="mb-4 inline-flex min-h-10 items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:mb-6 sm:min-h-11"
         >
           <ArrowLeft className="h-4 w-4" />
-          {tool.category_slug
-            ? `${tool.category_name} araçlarına dön`
-            : "Tüm araçlara dön"}
+          {tool.category_slug ? `${tool.category_name} araçlarına dön` : 'Tüm araçlara dön'}
         </Link>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
@@ -297,9 +289,7 @@ export default async function ToolDetailPage({ params }) {
                   <Badge variant="secondary">{tool.category_name}</Badge>
                 )}
                 {tool.tier && <Badge variant="outline">{tool.tier}</Badge>}
-                {tool.pricing_model && (
-                  <Badge variant="outline">{tool.pricing_model}</Badge>
-                )}
+                {tool.pricing_model && <Badge variant="outline">{tool.pricing_model}</Badge>}
                 {platforms.slice(0, 2).map((platform) => (
                   <Badge key={platform} variant="outline">
                     {platform}
@@ -323,7 +313,7 @@ export default async function ToolDetailPage({ params }) {
                     eventParameters={{
                       tool_slug: tool.slug,
                       category: tool.category_slug,
-                      placement: "hero",
+                      placement: 'hero',
                     }}
                   >
                     Resmî Siteyi İncele
@@ -342,42 +332,32 @@ export default async function ToolDetailPage({ params }) {
             </section>
 
             <section aria-labelledby="tool-overview-heading">
-              <h2
-                id="tool-overview-heading"
-                className="mb-4 text-2xl font-bold"
-              >
+              <h2 id="tool-overview-heading" className="mb-4 text-2xl font-bold">
                 Kısa Bakış
               </h2>
               <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-                <InfoCard
-                  icon={Layers3}
-                  label="Kategori"
-                  value={tool.category_name}
-                />
+                <InfoCard icon={Layers3} label="Kategori" value={tool.category_name} />
                 <InfoCard
                   icon={WalletCards}
                   label="Fiyatlandırma"
-                  value={tool.pricing_model || "Bilgi belirtilmemiş"}
+                  value={tool.pricing_model || 'Bilgi belirtilmemiş'}
                 />
                 <InfoCard
                   icon={MonitorSmartphone}
                   label="Platformlar"
-                  value={platforms.join(", ")}
+                  value={platforms.join(', ')}
                 />
                 <InfoCard
                   icon={CalendarDays}
-                  label={updatedDate ? "Son güncelleme" : "Platforma eklendi"}
-                  value={updatedDate || addedDate || "Yakın zamanda"}
+                  label={updatedDate ? 'Son güncelleme' : 'Platforma eklendi'}
+                  value={updatedDate || addedDate || 'Yakın zamanda'}
                 />
               </div>
             </section>
 
             {tool.technical_details && (
               <section aria-labelledby="technical-details-heading">
-                <h2
-                  id="technical-details-heading"
-                  className="mb-4 text-2xl font-bold"
-                >
+                <h2 id="technical-details-heading" className="mb-4 text-2xl font-bold">
                   Teknik Bilgiler
                 </h2>
                 <Card>
@@ -397,12 +377,9 @@ export default async function ToolDetailPage({ params }) {
             <Card>
               <CardContent className="space-y-4 p-4 sm:space-y-5 sm:p-5">
                 <div>
-                  <p className="text-sm font-semibold">
-                    Karar vermeye hazır mısın?
-                  </p>
+                  <p className="text-sm font-semibold">Karar vermeye hazır mısın?</p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Resmî siteyi açarak güncel özellikleri ve fiyatları
-                    inceleyebilirsin.
+                    Resmî siteyi açarak güncel özellikleri ve fiyatları inceleyebilirsin.
                   </p>
                 </div>
                 <Button asChild className="min-h-11 w-full">
@@ -413,7 +390,7 @@ export default async function ToolDetailPage({ params }) {
                     eventParameters={{
                       tool_slug: tool.slug,
                       category: tool.category_slug,
-                      placement: "sidebar",
+                      placement: 'sidebar',
                     }}
                   >
                     {tool.name} Sitesine Git
@@ -421,18 +398,16 @@ export default async function ToolDetailPage({ params }) {
                   </TrackedExternalLink>
                 </Button>
                 <div className="rounded-lg bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">
-                  <p className="font-semibold text-foreground">
-                    Hızlı karar özeti
-                  </p>
+                  <p className="font-semibold text-foreground">Hızlı karar özeti</p>
                   <p className="mt-1">
-                    {tool.pricing_model || "Fiyat bilgisi belirtilmemiş"} ·{" "}
-                    {platforms.slice(0, 2).join(", ")}
-                    {platforms.length > 2 ? ` +${platforms.length - 2}` : ""}
+                    {tool.pricing_model || 'Fiyat bilgisi belirtilmemiş'} ·{' '}
+                    {platforms.slice(0, 2).join(', ')}
+                    {platforms.length > 2 ? ` +${platforms.length - 2}` : ''}
                   </p>
                 </div>
                 <div
                   className={`rounded-lg border p-3 text-xs leading-5 ${linkHealth.className}`}
-                  role={tool.link_check_status === "invalid" ? "alert" : "status"}
+                  role={tool.link_check_status === 'invalid' ? 'alert' : 'status'}
                 >
                   <div className="flex items-start gap-2">
                     <LinkHealthIcon
@@ -441,9 +416,7 @@ export default async function ToolDetailPage({ params }) {
                     />
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-semibold text-foreground">
-                          {linkHealth.title}
-                        </p>
+                        <p className="font-semibold text-foreground">{linkHealth.title}</p>
                         <Badge variant="secondary">{linkHealth.badge}</Badge>
                       </div>
                       <p className="mt-1 break-words">{linkHealth.description}</p>
@@ -454,17 +427,14 @@ export default async function ToolDetailPage({ params }) {
                   <ToolLinkReportDialog tool={tool} />
                 </div>
                 <div className="border-t pt-4">
-                  <ShareButtons
-                    url={shareUrl}
-                    title={`${tool.name} aracını AI Keşif'te incele`}
-                  />
+                  <ShareButtons url={shareUrl} title={`${tool.name} aracını AI Keşif'te incele`} />
                 </div>
               </CardContent>
             </Card>
 
             <p className="px-2 text-xs leading-5 text-muted-foreground">
-              AI Keşif, araçların resmî sağlayıcısı değildir. Özellikler ve
-              fiyatlar zaman içinde değişebilir.
+              AI Keşif, araçların resmî sağlayıcısı değildir. Özellikler ve fiyatlar zaman içinde
+              değişebilir.
             </p>
           </aside>
         </div>

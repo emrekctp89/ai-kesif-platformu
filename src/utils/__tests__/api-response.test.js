@@ -1,15 +1,11 @@
-import {
-  successResponse,
-  errorResponse,
-  paginatedResponse,
-} from '../api-response';
+import { successResponse, errorResponse, paginatedResponse } from '../api-response';
 
 describe('api-response utility', () => {
   describe('successResponse', () => {
     it('returns a standard success structure with data', () => {
       const data = { id: 1, name: 'Test' };
       const response = successResponse(data);
-      
+
       expect(response).toEqual({
         success: true,
         statusCode: 200,
@@ -22,7 +18,7 @@ describe('api-response utility', () => {
     it('returns success structure with custom message if provided', () => {
       const data = { id: 1 };
       const response = successResponse(data, 'Operation successful');
-      
+
       expect(response).toEqual({
         success: true,
         statusCode: 200,
@@ -36,7 +32,7 @@ describe('api-response utility', () => {
   describe('errorResponse', () => {
     it('returns a standard error structure with default code', () => {
       const response = errorResponse('Something went wrong');
-      
+
       expect(response).toEqual({
         success: false,
         statusCode: 500,
@@ -47,7 +43,7 @@ describe('api-response utility', () => {
 
     it('returns error structure with custom error code', () => {
       const response = errorResponse('Not found', 404);
-      
+
       expect(response).toEqual({
         success: false,
         statusCode: 404,
@@ -61,7 +57,7 @@ describe('api-response utility', () => {
     it('returns a standard paginated response structure', () => {
       const items = [{ id: 1 }, { id: 2 }];
       const response = paginatedResponse(items, 1, 2, 10);
-      
+
       expect(response).toEqual({
         success: true,
         statusCode: 200,

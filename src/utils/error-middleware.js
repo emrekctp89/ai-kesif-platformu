@@ -3,12 +3,7 @@
  * Express/Next.js middleware for error handling
  */
 
-import {
-  AppError,
-  ErrorHandler,
-  ValidationError,
-  RateLimitError,
-} from './errors';
+import { AppError, ErrorHandler, ValidationError, RateLimitError } from './errors';
 import { logger } from './logger';
 
 /**
@@ -157,12 +152,7 @@ export const errorHandling = {
    * Retry with exponential backoff
    */
   async retry(fn, options = {}) {
-    const {
-      maxAttempts = 3,
-      delay = 1000,
-      backoff = 2,
-      onRetry = null,
-    } = options;
+    const { maxAttempts = 3, delay = 1000, backoff = 2, onRetry = null } = options;
 
     let lastError;
 
@@ -183,7 +173,7 @@ export const errorHandling = {
             error: error.message,
           });
 
-          await new Promise(resolve => setTimeout(resolve, waitTime));
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
     }
@@ -195,10 +185,7 @@ export const errorHandling = {
    * Circuit breaker pattern
    */
   createCircuitBreaker(fn, options = {}) {
-    const {
-      failureThreshold = 5,
-      resetTimeout = 60000,
-    } = options;
+    const { failureThreshold = 5, resetTimeout = 60000 } = options;
 
     let failureCount = 0;
     let lastFailureTime = null;
@@ -215,10 +202,9 @@ export const errorHandling = {
 
       if (state === 'OPEN') {
         const { RateLimitError } = require('./errors');
-        throw new RateLimitError(
-          Math.ceil((resetTimeout - (now - lastFailureTime)) / 1000),
-          { reason: 'Circuit breaker is OPEN' }
-        );
+        throw new RateLimitError(Math.ceil((resetTimeout - (now - lastFailureTime)) / 1000), {
+          reason: 'Circuit breaker is OPEN',
+        });
       }
 
       try {

@@ -1,18 +1,12 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useTransition } from "react";
-import { getAiComparison } from "@/app/actions";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { CheckCircle, XCircle, Bot } from "lucide-react";
-import toast from "react-hot-toast";
+import * as React from 'react';
+import { useTransition } from 'react';
+import { getAiComparison } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CheckCircle, XCircle, Bot } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export function AiComparison({ tools }) {
   // DEĞİŞİKLİK: Yükleme durumunu yönetmek için useTransition kullanıyoruz
@@ -36,18 +30,14 @@ export function AiComparison({ tools }) {
     <div className="space-y-8">
       <div className="text-center">
         {/* Buton artık kendi yükleme durumunu yönetiyor */}
-        <Button
-          onClick={handleCompareClick}
-          disabled={isPending || tools.length < 2}
-          size="lg"
-        >
+        <Button onClick={handleCompareClick} disabled={isPending || tools.length < 2} size="lg">
           {isPending ? (
             <>
               <Bot className="mr-2 h-4 w-4 animate-spin" />
               Analiz Ediliyor...
             </>
           ) : (
-            "Bu Araçları Yapay Zekaya Karşılaştır"
+            'Bu Araçları Yapay Zekaya Karşılaştır'
           )}
         </Button>
         {tools.length < 2 && (
@@ -61,17 +51,14 @@ export function AiComparison({ tools }) {
         <Card className="bg-muted/50">
           <CardHeader>
             <CardTitle>Yapay Zeka Analizi</CardTitle>
-            <CardDescription>
-              {analysisResult.comparison_summary}
-            </CardDescription>
+            <CardDescription>{analysisResult.comparison_summary}</CardDescription>
           </CardHeader>
           <CardContent className="grid md:grid-cols-2 gap-6">
             {analysisResult.detailed_analysis.map((tool) => (
               <div key={tool.tool_name} className="space-y-4">
                 <h3 className="font-bold text-lg">{tool.tool_name}</h3>
                 <p className="text-sm">
-                  <span className="font-semibold">En İyisi:</span>{" "}
-                  {tool.best_for}
+                  <span className="font-semibold">En İyisi:</span> {tool.best_for}
                 </p>
                 <div>
                   <h4 className="font-semibold mb-2">Artıları</h4>
