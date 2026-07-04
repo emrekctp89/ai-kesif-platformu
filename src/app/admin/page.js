@@ -2,7 +2,9 @@ import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { redirect } from "next/navigation";
 import { AdminPageClient } from "@/components/AdminPageClient";
-
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { TrendingUp } from "lucide-react";
 export const metadata = {
   title: "Operasyon Merkezi | AI Keşif Platformu",
   robots: {
@@ -94,9 +96,17 @@ export default async function AdminPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-3 py-5 sm:px-4 sm:py-8">
-      <h1 className="text-3xl font-bold text-foreground mb-8">
-        Operasyon Merkezi
-      </h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <h1 className="text-3xl font-bold text-foreground">
+          Operasyon Merkezi
+        </h1>
+        <Link href="/admin/analytics">
+          <Button variant="outline" className="gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Analytics & İzleme
+          </Button>
+        </Link>
+      </div>
       <AdminPageClient data={adminData} />
     </div>
   );

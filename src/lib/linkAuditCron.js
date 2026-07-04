@@ -190,6 +190,7 @@ async function validateToolLink(tool, timeoutMs) {
       httpStatus: null,
       finalUrl: null,
       errorDetail: normalized.reason,
+      responseTimeMs: null,
     });
   }
 
@@ -201,40 +202,51 @@ async function validateToolLink(tool, timeoutMs) {
       httpStatus: null,
       finalUrl: normalized.url.toString(),
       errorDetail: skippedReason,
+      responseTimeMs: null,
     });
   }
 
+  let headStartTime;
   try {
+    headStartTime = performance.now();
     const headResponse = await fetchForAudit(normalized.url, "HEAD", timeoutMs);
     const headClassification = classifyHttpResponse(headResponse, "HEAD");
 
     if (headClassification.status === "valid") {
       await closeResponse(headResponse);
-      return buildResult(tool, headClassification);
+      const responseTimeMs = Math.round(performance.now() - headStartTime);
+      return buildResult(tool, { ...headClassification, responseTimeMs });
     }
     await closeResponse(headResponse);
   } catch (error) {
     const classifiedError = classifyFetchError(error);
     if (classifiedError.status === "invalid") {
+      const responseTimeMs = Math.round(performance.now() - headStartTime);
       return buildResult(tool, {
         httpStatus: null,
         finalUrl: normalized.url.toString(),
         ...classifiedError,
+        responseTimeMs,
       });
     }
   }
 
+  let getStartTime;
   try {
+    getStartTime = performance.now();
     const getResponse = await fetchForAudit(normalized.url, "GET", timeoutMs);
     const classification = classifyHttpResponse(getResponse, "GET");
     await closeResponse(getResponse);
-    return buildResult(tool, classification);
+    const responseTimeMs = Math.round(performance.now() - getStartTime);
+    return buildResult(tool, { ...classification, responseTimeMs });
   } catch (error) {
     const classifiedError = classifyFetchError(error);
+    const responseTimeMs = Math.round(performance.now() - getStartTime);
     return buildResult(tool, {
       httpStatus: null,
       finalUrl: normalized.url.toString(),
       ...classifiedError,
+      responseTimeMs,
     });
   }
 }
@@ -270,6 +282,7 @@ async function updateAuditMetadata(supabaseAdmin, results, checkedAt) {
       link_check_status: result.status,
       link_check_error: result.errorDetail,
       link_check_http_status: result.httpStatus,
+      link_response_time_ms: result.responseTimeMs || null,
       link_checked_at: checkedAt,
       link_deactivated_at: null,
       link_deactivation_reason: null,

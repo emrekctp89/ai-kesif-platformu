@@ -1,5 +1,7 @@
 import { TOOL_ICON_OVERRIDES } from "@/lib/toolIconOverrides";
 
+import logger from '@/utils/logger';
+
 const ICON_LINK_REGEX =
   /<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
 const MANIFEST_LINK_REGEX =
@@ -312,7 +314,7 @@ export async function GET(request) {
     }
   } catch {}
 
-  console.warn(`[tool-icon] miss host=${normalizedUrl.hostname}`);
+  logger.warn(`[tool-icon] miss host=${normalizedUrl.hostname}`);
 
   return new Response("Not found", {
     status: 404,
