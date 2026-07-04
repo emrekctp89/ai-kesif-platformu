@@ -263,7 +263,7 @@ export const ResponseTypes = {
   },
 };
 
-export default {
+const defaultExport = {
   successResponse,
   errorResponse,
   paginatedResponse,
@@ -279,3 +279,5 @@ export default {
   HTTP_STATUS,
   ERROR_MESSAGES,
 };
+
+export default defaultExport;

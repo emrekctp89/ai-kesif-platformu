@@ -192,7 +192,7 @@ export function httpsRedirectMiddleware(req, res, next) {
   next();
 }
 
-export default {
+const defaultExport = {
   securityHeaders,
   corsConfig,
   isOriginAllowed,
@@ -202,3 +202,5 @@ export default {
   httpsRedirectMiddleware,
   getNextConfigHeaders,
 };
+
+export default defaultExport;

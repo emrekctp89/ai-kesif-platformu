@@ -33,6 +33,8 @@ export function setupDocumentation(app, options = {}) {
   }
 }
 
-export default {
+const defaultExport = {
   setupDocumentation,
 };
+
+export default defaultExport;

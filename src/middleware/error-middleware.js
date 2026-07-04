@@ -127,9 +127,11 @@ export function createErrorResponse(error, requestId = 'unknown') {
   };
 }
 
-export default {
+const defaultExport = {
   errorHandler,
   asyncHandler,
   errorConverter,
   createErrorResponse,
 };
+
+export default defaultExport;

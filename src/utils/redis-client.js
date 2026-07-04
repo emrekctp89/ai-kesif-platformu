@@ -419,7 +419,9 @@ export class RedisPool {
   }
 }
 
-export default {
+const defaultExport = {
   RedisClient,
   RedisPool,
 };
+
+export default defaultExport;

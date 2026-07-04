@@ -318,9 +318,11 @@ export class Serializer {
   }
 }
 
-export default {
+const defaultExport = {
   CompressionManager,
   Deduplicator,
   JSONCompressor,
   Serializer,
 };
+
+export default defaultExport;

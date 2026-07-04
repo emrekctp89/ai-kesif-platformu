@@ -361,6 +361,8 @@ export class StorageManager {
   }
 }
 
-export default {
+const defaultExport = {
   StorageManager,
 };
+
+export default defaultExport;

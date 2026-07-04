@@ -132,9 +132,11 @@ export function setup404Middleware(app) {
   });
 }
 
-export default {
+const defaultExport = {
   setupMiddleware,
   setupAuthMiddleware,
   setupErrorMiddleware,
   setup404Middleware,
 };
+
+export default defaultExport;

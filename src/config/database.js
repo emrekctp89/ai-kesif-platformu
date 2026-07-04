@@ -162,10 +162,12 @@ export async function checkDatabaseHealth() {
   }
 }
 
-export default {
+const defaultExport = {
   connectDatabase,
   disconnectDatabase,
   getDatabase,
   isDatabaseConnected,
   checkDatabaseHealth,
 };
+
+export default defaultExport;

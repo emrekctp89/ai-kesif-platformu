@@ -171,8 +171,10 @@ export function exportSwaggerSpecs(req, res) {
   }
 }
 
-export default {
+const defaultExport = {
   setupSwagger,
   getSwaggerSpecs,
   exportSwaggerSpecs,
 };
+
+export default defaultExport;

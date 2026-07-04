@@ -59,6 +59,15 @@ export async function middleware(request) {
   // Bu middleware, her istekten önce kullanıcının oturumunu yeniler.
   await supabase.auth.getUser();
 
+  // CORS ve Güvenlik Başlıkları (Phase 10: Security Hardening)
+  response.headers.set('Access-Control-Allow-Credentials', 'true');
+  response.headers.set('Access-Control-Allow-Origin', '*'); // İhtiyaca göre belirli bir domain yapılabilir
+  response.headers.set('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  response.headers.set(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
+
   return response;
 }
 

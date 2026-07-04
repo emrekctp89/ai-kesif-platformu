@@ -70,7 +70,9 @@ export const apiInfo = asyncHandler(async (req, res) => {
   logger.debug('API info requested');
 });
 
-export default {
+const defaultExport = {
   healthCheck,
   apiInfo,
 };
+
+export default defaultExport;

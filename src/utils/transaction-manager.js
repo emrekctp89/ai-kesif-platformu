@@ -319,8 +319,10 @@ export async function retryTransaction(database, fn, maxRetries = 3, name = null
   throw lastError;
 }
 
-export default {
+const defaultExport = {
   Transaction,
   TransactionManager,
   retryTransaction,
 };
+
+export default defaultExport;

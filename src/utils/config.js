@@ -243,7 +243,7 @@ export const envConfigs = {
   },
 };
 
-export default {
+const defaultExport = {
   AppConfig,
   appConfig,
   initializeConfig,
@@ -255,3 +255,5 @@ export default {
   isTesting,
   envConfigs,
 };
+
+export default defaultExport;

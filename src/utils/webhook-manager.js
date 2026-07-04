@@ -361,6 +361,8 @@ export class WebhookManager {
   }
 }
 
-export default {
+const defaultExport = {
   WebhookManager,
 };
+
+export default defaultExport;

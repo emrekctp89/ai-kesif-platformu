@@ -132,6 +132,8 @@ export class PasswordHasher {
   }
 }
 
-export default {
+const defaultExport = {
   PasswordHasher,
 };
+
+export default defaultExport;

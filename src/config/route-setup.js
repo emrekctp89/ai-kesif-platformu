@@ -102,8 +102,10 @@ export function logRegisteredRoutes(app) {
   return routes;
 }
 
-export default {
+const defaultExport = {
   setupRoutes,
   getRegisteredRoutes,
   logRegisteredRoutes,
 };
+
+export default defaultExport;

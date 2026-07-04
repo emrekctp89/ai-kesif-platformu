@@ -242,7 +242,9 @@ export class FileValidator {
   }
 }
 
-export default {
+const defaultExport = {
   FileUploadHandler,
   FileValidator,
 };
+
+export default defaultExport;

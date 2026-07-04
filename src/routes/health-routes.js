@@ -141,7 +141,7 @@ export function registerHealthRoutes(router) {
   router.get('/dependencies', dependencies);
 }
 
-export default {
+const defaultExport = {
   health,
   ready,
   status,
@@ -149,3 +149,5 @@ export default {
   dependencies,
   registerHealthRoutes,
 };
+
+export default defaultExport;

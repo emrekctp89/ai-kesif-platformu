@@ -432,9 +432,11 @@ export function withCache(key, ttl = 3600000) {
   };
 }
 
-export default {
+const defaultExport = {
   MemoryCache,
   CacheManager,
   CacheKeyBuilder,
   withCache,
 };
+
+export default defaultExport;

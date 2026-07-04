@@ -241,7 +241,7 @@ export function registerAuthRoutes(router) {
   router.post('/auth/verify', verifyToken);
 }
 
-export default {
+const defaultExport = {
   register,
   login,
   logout,
@@ -249,3 +249,5 @@ export default {
   verifyToken,
   registerAuthRoutes,
 };
+
+export default defaultExport;

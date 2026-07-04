@@ -428,9 +428,11 @@ export class DeleteBuilder {
   }
 }
 
-export default {
+const defaultExport = {
   QueryBuilder,
   InsertBuilder,
   UpdateBuilder,
   DeleteBuilder,
 };
+
+export default defaultExport;

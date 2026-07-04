@@ -234,7 +234,7 @@ export const errorHandling = {
   },
 };
 
-export default {
+const defaultExport = {
   errorHandlerMiddleware,
   asyncHandler,
   validationErrorHandler,
@@ -242,3 +242,5 @@ export default {
   ErrorBoundary,
   errorHandling,
 };
+
+export default defaultExport;

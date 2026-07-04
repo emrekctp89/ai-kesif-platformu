@@ -266,7 +266,9 @@ export class EventQueue {
  */
 export const globalEventQueue = new EventQueue();
 
-export default {
+const defaultExport = {
   EventQueue,
   globalEventQueue,
 };
+
+export default defaultExport;

@@ -141,10 +141,12 @@ export function stopServer(server, options = {}) {
   });
 }
 
-export default {
+const defaultExport = {
   createApp,
   getAppConfig,
   validateAppConfig,
   startServer,
   stopServer,
 };
+
+export default defaultExport;

@@ -302,7 +302,9 @@ export class SessionManager {
  */
 export const globalSessionManager = new SessionManager();
 
-export default {
+const defaultExport = {
   SessionManager,
   globalSessionManager,
 };
+
+export default defaultExport;

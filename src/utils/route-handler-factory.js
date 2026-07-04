@@ -171,6 +171,8 @@ export class RouteHandlerFactory {
   }
 }
 
-export default {
+const defaultExport = {
   RouteHandlerFactory,
 };
+
+export default defaultExport;

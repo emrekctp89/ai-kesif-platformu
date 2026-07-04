@@ -241,7 +241,7 @@ export function registerUserRoutes(router) {
   router.delete('/users/account', deleteAccount);
 }
 
-export default {
+const defaultExport = {
   getProfile,
   updateProfile,
   changePassword,
@@ -250,3 +250,5 @@ export default {
   deleteAccount,
   registerUserRoutes,
 };
+
+export default defaultExport;

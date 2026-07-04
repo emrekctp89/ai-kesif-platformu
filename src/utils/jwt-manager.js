@@ -273,6 +273,8 @@ export class JWTManager {
   }
 }
 
-export default {
+const defaultExport = {
   JWTManager,
 };
+
+export default defaultExport;

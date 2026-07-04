@@ -343,6 +343,8 @@ export class ImageOptimizer {
   }
 }
 
-export default {
+const defaultExport = {
   ImageOptimizer,
 };
+
+export default defaultExport;
