@@ -4,7 +4,10 @@ import * as React from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { trackEvent } from '@/utils/analytics';
-import { LoaderCircle, Search, X } from 'lucide-react';
+import { LoaderCircle, Search, X, ArrowRight } from 'lucide-react';
+import { getSearchSuggestions } from '@/app/actions/tools';
+import Link from 'next/link';
+import ToolIcon from '@/components/ToolIcon';
 
 export function SearchInput() {
   const searchParams = useSearchParams();
@@ -15,6 +18,10 @@ export function SearchInput() {
   const [searchTerm, setSearchTerm] = React.useState(searchParams.get('search') || '');
   const currentSearchInUrl = searchParams.get('search') || '';
   const isUpdating = searchTerm !== currentSearchInUrl;
+
+  const [suggestions, setSuggestions] = React.useState([]);
+  const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const containerRef = React.useRef(null);
 
   const applySearch = React.useCallback(
     (value) => {
@@ -42,7 +49,17 @@ export function SearchInput() {
 
   const scheduleSearch = (value) => {
     window.clearTimeout(timeoutRef.current);
-    timeoutRef.current = window.setTimeout(() => applySearch(value), 500);
+    timeoutRef.current = window.setTimeout(async () => {
+      applySearch(value);
+      if (value.length >= 2) {
+        const results = await getSearchSuggestions(value);
+        setSuggestions(results);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 400); // 500ms to 400ms for slightly faster feel
   };
 
   const handleChange = (event) => {
@@ -55,6 +72,8 @@ export function SearchInput() {
     window.clearTimeout(timeoutRef.current);
     setSearchTerm('');
     applySearch('');
+    setSuggestions([]);
+    setShowSuggestions(false);
     trackEvent('tool_search_clear', {
       page_path: pathname,
       preserved_filter_count: Array.from(searchParams.keys()).filter(
@@ -65,8 +84,19 @@ export function SearchInput() {
 
   React.useEffect(() => () => window.clearTimeout(timeoutRef.current), []);
 
+  // Kapanış tıkını yönetmek için (dışarı tıklandığında dropdown kapanır)
+  React.useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <search className="w-full" aria-label="Araçlarda ara">
+    <search className="w-full relative" aria-label="Araçlarda ara" ref={containerRef}>
       <label htmlFor="tool-search" className="sr-only">
         Yapay zeka aracı ara
       </label>
@@ -111,6 +141,40 @@ export function SearchInput() {
       <span id="tool-search-status" className="sr-only" aria-live="polite">
         {isUpdating ? 'Arama sonuçları güncelleniyor' : 'Arama sonuçları güncel'}
       </span>
+
+      {/* Akıllı Öneriler Dropdown */}
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-popover text-popover-foreground border rounded-lg shadow-lg overflow-hidden z-50">
+          <div className="p-2">
+            <h4 className="text-xs font-semibold text-muted-foreground mb-2 px-2 uppercase tracking-wide">
+              Önerilen Araçlar
+            </h4>
+            <div className="flex flex-col gap-1">
+              {suggestions.map((tool) => (
+                <Link
+                  key={tool.id}
+                  href={`/tool/${tool.slug}`}
+                  onClick={() => setShowSuggestions(false)}
+                  className="flex items-center gap-3 px-2 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors group"
+                >
+                  <ToolIcon
+                    name={tool.name}
+                    link={tool.link}
+                    className="w-8 h-8 rounded-md border bg-background"
+                  />
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="font-medium text-sm truncate">{tool.name}</span>
+                    <span className="text-xs text-muted-foreground truncate">
+                      {tool.category_name}
+                    </span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </search>
   );
 }

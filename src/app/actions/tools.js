@@ -1358,3 +1358,20 @@ export async function upsertRating(formData) {
   revalidatePath(`/tool/${toolSlug}`);
   return { success: 'Puanınız başarıyla kaydedildi.' };
 }
+
+export async function getSearchSuggestions(query) {
+  'use server';
+  if (!query || query.length < 2) return [];
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('tools')
+    .select('id, name, slug, link, tier, category_name')
+    .eq('is_approved', true)
+    .ilike('name', `%${query}%`)
+    .limit(5);
+  if (error) {
+    console.error('Arama önerileri hatası:', error);
+    return [];
+  }
+  return data || [];
+}
