@@ -2,8 +2,17 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-// DEĞİŞİKLİK: Doğrudan 'recharts' kütüphanesinden import ediyoruz
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import dynamic from 'next/dynamic';
+
+// DEĞİŞİKLİK: Recharts çok büyük olduğu için bundle boyutunu azaltmak amacıyla grafiği lazy load yapıyoruz
+const DashboardCategoryChart = dynamic(() => import('./DashboardCategoryChart'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[350px] items-center justify-center text-muted-foreground">
+      Grafik yükleniyor...
+    </div>
+  ),
+});
 
 // Sayı kartları için bir alt bileşen
 const StatCard = ({ title, value, icon }) => (
@@ -101,22 +110,8 @@ export function DashboardClient({ stats, linkHealthStats }) {
             <CardTitle>Kategoriye Göre Araç Dağılımı</CardTitle>
           </CardHeader>
           <CardContent className="pl-2">
-            {/* DEĞİŞİKLİK: Grafiği doğrudan recharts ile oluşturuyoruz */}
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    borderColor: 'hsl(var(--border))',
-                    color: 'hsl(var(--foreground))',
-                  }}
-                />
-                <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {/* DEĞİŞİKLİK: Grafiği lazy loaded component ile oluşturuyoruz */}
+            <DashboardCategoryChart data={chartData} />
           </CardContent>
         </Card>
 
