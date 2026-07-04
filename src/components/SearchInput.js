@@ -50,7 +50,7 @@ export function SearchInput() {
   const scheduleSearch = (value) => {
     window.clearTimeout(timeoutRef.current);
     timeoutRef.current = window.setTimeout(async () => {
-      applySearch(value);
+      // SADECE önerileri çekiyoruz, sayfayı (URL'yi) anında yenilemiyoruz!
       if (value.length >= 2) {
         const results = await getSearchSuggestions(value);
         setSuggestions(results);
@@ -59,7 +59,7 @@ export function SearchInput() {
         setSuggestions([]);
         setShowSuggestions(false);
       }
-    }, 400); // 500ms to 400ms for slightly faster feel
+    }, 300); // 300ms gecikme (daha akıcı his için)
   };
 
   const handleChange = (event) => {
@@ -115,6 +115,11 @@ export function SearchInput() {
           value={searchTerm}
           onChange={handleChange}
           onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              applySearch(searchTerm);
+              setShowSuggestions(false);
+            }
             if (event.key === 'Escape' && searchTerm) {
               event.preventDefault();
               handleClear();
