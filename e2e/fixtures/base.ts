@@ -1,22 +1,18 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect, Page } from '@playwright/test';
 
-// Extend basic test by providing page objects
 export const test = base.extend<{
   homePage: HomePage;
   discoverPage: DiscoverPage;
   toolDetailPage: ToolDetailPage;
 }>({
   homePage: async ({ page }, use) => {
-    const homePage = new HomePage(page);
-    await use(homePage);
+    await use(new HomePage(page));
   },
   discoverPage: async ({ page }, use) => {
-    const discoverPage = new DiscoverPage(page);
-    await use(discoverPage);
+    await use(new DiscoverPage(page));
   },
   toolDetailPage: async ({ page }, use) => {
-    const toolDetailPage = new ToolDetailPage(page);
-    await use(toolDetailPage);
+    await use(new ToolDetailPage(page));
   },
 });
 
@@ -25,14 +21,14 @@ export { expect } from '@playwright/test';
 // ==================== PAGE OBJECTS ====================
 
 class HomePage {
-  constructor(private page: any) {}
+  constructor(private page: Page) {}
 
   async goto() {
     await this.page.goto('/');
   }
 
   async getSearchInput() {
-    return this.page.getByPlaceholder(/AI aracı ara|araç ara/i);
+    return this.page.getByPlaceholder(/AI aracı ara|araç ara|Search/i);
   }
 
   async searchFor(term: string) {
@@ -43,34 +39,37 @@ class HomePage {
 }
 
 class DiscoverPage {
-  constructor(private page: any) {}
+  constructor(private page: Page) {}
 
   async goto() {
     await this.page.goto('/kesfet');
+    await this.page.waitForLoadState('networkidle');
   }
 
-  async getFirstToolCard() {
-    return this.page.locator('[data-testid="tool-card"], .tool-card, article').first();
+  // Daha güvenli tool card locator
+  getFirstToolCard() {
+    return this.page.locator('a[href*="/tool"], [data-testid="tool-card"], article').first();
   }
 
   async search(term: string) {
-    const searchInput = this.page.getByPlaceholder(/AI aracı ara|araç ara/i);
+    const searchInput = this.page.getByPlaceholder(/AI aracı ara|araç ara|Search/i);
     await searchInput.fill(term);
-    await this.page.waitForTimeout(600);
+    await this.page.waitForTimeout(700);
   }
 
   async getToolCount() {
-    return this.page.locator('[data-testid="tool-card"], .tool-card, article').count();
+    return this.page.locator('a[href*="/tool"], [data-testid="tool-card"], article').count();
   }
 }
 
 class ToolDetailPage {
-  constructor(private page: any) {}
+  constructor(private page: Page) {}
 
   async gotoFirstTool() {
     const discover = new DiscoverPage(this.page);
     await discover.goto();
-    const firstTool = await discover.getFirstToolCard();
+
+    const firstTool = discover.getFirstToolCard();
     await firstTool.click();
     await this.page.waitForLoadState('networkidle');
   }
@@ -80,6 +79,6 @@ class ToolDetailPage {
   }
 
   async getCompareButton() {
-    return this.page.getByRole('button', { name: /Karşılaştır|Compare/i });
+    return this.page.getByRole('button', { name: /Karşılaştır|Compare|karşıla/i });
   }
 }
