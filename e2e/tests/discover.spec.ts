@@ -1,26 +1,20 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/base';
 
 test.describe('Keşfet Sayfası', () => {
-  test('Keşfet sayfası yükleniyor ve araçlar görünüyor', async ({ page }) => {
-    await page.goto('/kesfet');
+  test('Keşfet sayfası yükleniyor ve araçlar görünüyor', async ({ discoverPage, page }) => {
+    await discoverPage.goto();
 
     await expect(page.getByText(/AI Araçları|Keşfet/i)).toBeVisible();
 
-    // En az bir tool card görünmeli
-    const toolCard = page.locator('[data-testid="tool-card"], .tool-card, article').first();
-    await expect(toolCard).toBeVisible({ timeout: 10000 });
+    const firstTool = await discoverPage.getFirstToolCard();
+    await expect(firstTool).toBeVisible({ timeout: 10000 });
   });
 
-  test('Arama ile filtreleme çalışıyor', async ({ page }) => {
-    await page.goto('/kesfet');
+  test('Arama ile filtreleme çalışıyor', async ({ discoverPage, page }) => {
+    await discoverPage.goto();
+    await discoverPage.search('ChatGPT');
 
-    const searchInput = page.getByPlaceholder(/AI aracı ara|araç ara/i);
-    await searchInput.fill('ChatGPT');
-
-    // Sonuçların değişmesini bekle
-    await page.waitForTimeout(800);
-
-    const results = page.locator('[data-testid="tool-card"], .tool-card');
-    await expect(results.first()).toBeVisible();
+    const count = await discoverPage.getToolCount();
+    expect(count).toBeGreaterThan(0);
   });
 });

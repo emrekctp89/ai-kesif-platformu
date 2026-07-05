@@ -1,24 +1,17 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/base';
 
 test.describe('Araç Detay Sayfası', () => {
-  test('Bir araç detay sayfasına gidilebiliyor', async ({ page }) => {
-    await page.goto('/kesfet');
+  test('Bir araç detay sayfasına gidilebiliyor', async ({ toolDetailPage, page }) => {
+    await toolDetailPage.gotoFirstTool();
 
-    // İlk tool card'a tıkla
-    const firstTool = page.locator('[data-testid="tool-card"], .tool-card, article').first();
-    await firstTool.click();
-
-    // Detay sayfasında başlık görünmeli
-    await expect(page.locator('h1').first()).toBeVisible({ timeout: 10000 });
+    const heading = await toolDetailPage.getHeading();
+    await expect(heading).toBeVisible();
   });
 
-  test('Karşılaştır butonu görünüyor', async ({ page }) => {
-    await page.goto('/kesfet');
+  test('Karşılaştır butonu görünüyor', async ({ toolDetailPage }) => {
+    await toolDetailPage.gotoFirstTool();
 
-    const firstTool = page.locator('[data-testid="tool-card"], .tool-card, article').first();
-    await firstTool.click();
-
-    const compareButton = page.getByRole('button', { name: /Karşılaştır|Compare/i });
-    await expect(compareButton).toBeVisible();
+    const compareBtn = await toolDetailPage.getCompareButton();
+    await expect(compareBtn).toBeVisible();
   });
 });
