@@ -6,6 +6,11 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 const createNextIntlPlugin = require('next-intl/plugin');
 const withNextIntl = createNextIntlPlugin('./src/i18n.js');
 
+const withSerwist = require('@serwist/next').default({
+  swSrc: 'src/app/sw.js',
+  swDest: 'public/sw.js',
+});
+
 const disabledRoutes = [
   '/register',
   '/profile/:path*',
@@ -87,7 +92,7 @@ const nextConfig = {
 
 module.exports = withBundleAnalyzer(
   withSentryConfig(
-    withNextIntl(nextConfig),
+    withSerwist(withNextIntl(nextConfig)),
     {
       silent: true,
       org: 'ai-kesif-platformu',

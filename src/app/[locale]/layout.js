@@ -42,7 +42,6 @@ export const metadata = {
     shortcut: '/icon.svg',
     apple: '/apple-icon.png',
   },
-  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
