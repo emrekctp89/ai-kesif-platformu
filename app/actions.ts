@@ -51,7 +51,3 @@ export const submitShowcaseToChallenge = async (...args: any[]) => {
   console.warn('submitShowcaseToChallenge henüz implemente edilmedi');
   return { error: 'Bu özellik henüz geliştirilmedi.' };
 };
-
-// Mevcut fonksiyonlar (daha önce eklediğimiz)
-export { getProjectSuggestions } from './actions/projects';
-export { generateChallenge } from './actions/challenge';
