@@ -1,0 +1,5 @@
+# E2E test klasörü (Playwright)
+e2e/
+
+# Playwright config
+playwright.config.ts
