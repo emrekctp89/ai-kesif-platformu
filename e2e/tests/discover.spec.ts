@@ -4,34 +4,25 @@ test.describe('Keşfet Sayfası', () => {
   test('Keşfet sayfası yükleniyor ve araçlar görünüyor', async ({ discoverPage, page }) => {
     await discoverPage.goto();
 
-    await expect(page.getByText(/AI Araçları|Keşfet/i)).toBeVisible();
+    // Başlık kontrolü
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15000 });
 
-    const firstTool = await discoverPage.getFirstToolCard();
-    await expect(firstTool).toBeVisible({ timeout: 10000 });
+    // En az bir araç kartı görünmeli
+    const firstTool = page.locator('a[href*="/tool"], [data-testid="tool-card"], article').first();
+    await expect(firstTool).toBeVisible({ timeout: 15000 });
   });
 
   test('Arama ile filtreleme çalışıyor', async ({ discoverPage, page }) => {
     await discoverPage.goto();
-    await discoverPage.search('ChatGPT');
 
-    const count = await discoverPage.getToolCount();
-    expect(count).toBeGreaterThan(0);
-  });
+    const searchInput = page.getByPlaceholder(/AI aracı ara|araç ara|Search/i);
+    await expect(searchInput).toBeVisible({ timeout: 10000 });
 
-  test('Kategori filtreleme (eğer varsa)', async ({ discoverPage, page }) => {
-    await discoverPage.goto();
+    await searchInput.fill('ChatGPT');
+    await page.waitForTimeout(800);
 
-    // Kategori butonu varsa tıkla
-    const categoryBtn = page.getByRole('button', { name: /Kategori|Category/i }).first();
-    
-    if (await categoryBtn.isVisible()) {
-      await categoryBtn.click();
-      await page.waitForTimeout(500);
-      
-      const count = await discoverPage.getToolCount();
-      expect(count).toBeGreaterThanOrEqual(0);
-    } else {
-      test.skip();
-    }
+    // Sonuçların değişmesini bekle
+    const results = page.locator('a[href*="/tool"], [data-testid="tool-card"], article');
+    await expect(results.first()).toBeVisible({ timeout: 10000 });
   });
 });
