@@ -9,7 +9,7 @@ import { addComment, deleteComment, getComments } from '@/app/actions/comments';
 import { Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 
 export function ToolComments({ toolId, toolSlug }) {
   const [comments, setComments] = useState([]);

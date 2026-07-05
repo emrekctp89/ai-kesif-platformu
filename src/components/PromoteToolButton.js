@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { createPromotionCheckout } from '@/app/actions/payment';
 import { Gem } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
