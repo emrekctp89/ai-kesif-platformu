@@ -86,7 +86,15 @@ const nextConfig = {
           },
         ],
       },
-    ];
+    ],
+  },
+  webpack: (config, { isServer }) => {
+    // Supabase Edge Functions klasörünü Next.js build'inden hariç tut
+    config.module.rules.push({
+      test: /supabase\/functions/,
+      loader: 'ignore-loader',
+    });
+    return config;
   },
 };
 
