@@ -31,10 +31,10 @@ const disabledRoutes = [
   '/launchpad/:path*',
   '/koleksiyonlar/:path*',
   '/kesfet',
-  '/karsilastir',
+  '/karsilastır',
   '/forgot-password',
   '/eserler/:path*',
-  '/arastirma',
+  '/arastırma',
   '/akis',
 ];
 
@@ -88,8 +88,7 @@ const nextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer }) => {
-    // Supabase Edge Functions klasörünü Next.js build'inden hariç tut
+  webpack: (config) => {
     config.module.rules.push({
       test: /supabase\/functions/,
       loader: 'ignore-loader',
