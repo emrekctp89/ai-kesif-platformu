@@ -1,5 +1,4 @@
 import { TOOL_ICON_OVERRIDES } from '@/lib/toolIconOverrides';
-
 import logger from '@/utils/logger';
 
 const ICON_LINK_REGEX = /<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
