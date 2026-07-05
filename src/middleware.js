@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import createMiddleware from 'next-intl/middleware';
+import createIntlMiddleware from 'next-intl/middleware';
+import { routing } from './i18n/routing';
 
-// 1. Initialize next-intl middleware
-const intlMiddleware = createMiddleware({
-  locales: ['tr', 'en'],
-  defaultLocale: 'tr',
-  localePrefix: 'as-needed', // Only prefix /en, keep / for tr
-});
+// 1. Initialize next-intl middleware with routing config
+const intlMiddleware = createIntlMiddleware(routing);
 
 export async function middleware(request) {
   // 2. Run next-intl middleware to handle locale routing
@@ -33,8 +30,6 @@ export async function middleware(request) {
               headers: request.headers,
             },
           });
-          // Re-apply intl middleware headers/cookies if we create a new response
-          // A safer way is to just append to the existing response cookies
           response.cookies.set({
             name,
             value,
@@ -54,7 +49,7 @@ export async function middleware(request) {
           });
           response.cookies.set({
             name,
-            value,
+            value: '',
             ...options,
           });
         },
@@ -80,6 +75,6 @@ export async function middleware(request) {
 export const config = {
   matcher: [
     // Ignore static files, api routes, and next internals
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };

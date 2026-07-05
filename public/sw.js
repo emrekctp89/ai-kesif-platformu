@@ -13,8 +13,8 @@
       t = new e.Error().stack;
     t &&
       ((e._sentryDebugIds = e._sentryDebugIds || {}),
-      (e._sentryDebugIds[t] = '4192b9f1-7cff-4f85-a9ca-812a845d14ac'),
-      (e._sentryDebugIdIdentifier = 'sentry-dbid-4192b9f1-7cff-4f85-a9ca-812a845d14ac'));
+      (e._sentryDebugIds[t] = '9c719b54-434f-46b3-957c-e0d2ba5b8ed3'),
+      (e._sentryDebugIdIdentifier = 'sentry-dbid-9c719b54-434f-46b3-957c-e0d2ba5b8ed3'));
   } catch (e) {}
 })(),
   (() => {
@@ -164,21 +164,21 @@
     }
     let x = (e) => g.get(e),
       y = ['get', 'getKey', 'getAll', 'getAllKeys', 'count'],
-      v = ['put', 'add', 'delete', 'clear'],
-      b = new Map();
+      b = ['put', 'add', 'delete', 'clear'],
+      v = new Map();
     function E(e, t) {
       if (!(e instanceof IDBDatabase && !(t in e) && 'string' == typeof t)) return;
-      if (b.get(t)) return b.get(t);
+      if (v.get(t)) return v.get(t);
       let a = t.replace(/FromIndex$/, ''),
         s = t !== a,
-        n = v.includes(a);
+        n = b.includes(a);
       if (!(a in (s ? IDBIndex : IDBObjectStore).prototype) || !(n || y.includes(a))) return;
       let r = async function (e, ...t) {
         let r = this.transaction(e, n ? 'readwrite' : 'readonly'),
           i = r.store;
         return (s && (i = i.index(t.shift())), (await Promise.all([i[a](...t), n && r.done]))[0]);
       };
-      return (b.set(t, r), r);
+      return (v.set(t, r), r);
     }
     w = ((e) => ({
       ...e,
@@ -959,20 +959,21 @@
       ];
     (new s.Serwist({
       precacheEntries: [
+        { revision: null, url: '/_next/static/chunks/1018-67f51d954c27f23e.js' },
         { revision: null, url: '/_next/static/chunks/1054.e22a783f2de83bf3.js' },
         { revision: null, url: '/_next/static/chunks/1356-90c2c76719b6a05c.js' },
         { revision: null, url: '/_next/static/chunks/1646.2c8c06db20d728b6.js' },
         { revision: null, url: '/_next/static/chunks/1668.2f2642c9ceec9507.js' },
         { revision: null, url: '/_next/static/chunks/1865-79b985ff1727f93e.js' },
         { revision: null, url: '/_next/static/chunks/1994-111a6da2d040c2c4.js' },
+        { revision: null, url: '/_next/static/chunks/2339-1ccee7fd567e4efa.js' },
         { revision: null, url: '/_next/static/chunks/2384-37b618fdfb18293a.js' },
         { revision: null, url: '/_next/static/chunks/2619-68b32589f89a3209.js' },
-        { revision: null, url: '/_next/static/chunks/4091-05701f423936f74b.js' },
+        { revision: null, url: '/_next/static/chunks/4091-c620dfe449f7166b.js' },
         { revision: null, url: '/_next/static/chunks/4127-28aa1ec02c4658bd.js' },
         { revision: null, url: '/_next/static/chunks/4200-6afc59f4e272d456.js' },
-        { revision: null, url: '/_next/static/chunks/4335-a483cbd9d9af723d.js' },
-        { revision: null, url: '/_next/static/chunks/4516-75679718626372b7.js' },
         { revision: null, url: '/_next/static/chunks/471-6cf2bff8263873bb.js' },
+        { revision: null, url: '/_next/static/chunks/4965-ff54d0f09a9f0879.js' },
         { revision: null, url: '/_next/static/chunks/4a7b0c69-c28b3c0d6d42b12c.js' },
         { revision: null, url: '/_next/static/chunks/4bd1b696-b34e69e7c8503bd5.js' },
         { revision: null, url: '/_next/static/chunks/501-c42190a5de5c088c.js' },
@@ -984,10 +985,10 @@
         { revision: null, url: '/_next/static/chunks/6265-62216bcee55723a6.js' },
         { revision: null, url: '/_next/static/chunks/6348-e38b6c57e89931d2.js' },
         { revision: null, url: '/_next/static/chunks/6678-42692ad7edb08596.js' },
-        { revision: null, url: '/_next/static/chunks/6851-886fa5198d68badf.js' },
         { revision: null, url: '/_next/static/chunks/7423.ba7d8a680cb0a5e6.js' },
         { revision: null, url: '/_next/static/chunks/8235-b74ecdefea236de9.js' },
-        { revision: null, url: '/_next/static/chunks/8783-560b4b0bfb053134.js' },
+        { revision: null, url: '/_next/static/chunks/8775-37daa33d0e88deb3.js' },
+        { revision: null, url: '/_next/static/chunks/8962-b91bc5bf584024dc.js' },
         { revision: null, url: '/_next/static/chunks/8971.e1d243d5eaceea12.js' },
         { revision: null, url: '/_next/static/chunks/8986.41e031cafb4f8e77.js' },
         { revision: null, url: '/_next/static/chunks/8b30ef62.2b25a563b88c9ae5.js' },
@@ -1017,7 +1018,7 @@
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/admin/page-c06241455ee50ab7.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/admin/page-aab77e6e6d9f4f13.js',
         },
         {
           revision: null,
@@ -1094,7 +1095,7 @@
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/kategori/%5Bslug%5D/page-44831f14a156e154.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/kategori/%5Bslug%5D/page-690df2aef433b973.js',
         },
         {
           revision: null,
@@ -1128,7 +1129,7 @@
           revision: null,
           url: '/_next/static/chunks/app/%5Blocale%5D/launchpad/submit/page-b623fc844b8516b0.js',
         },
-        { revision: null, url: '/_next/static/chunks/app/%5Blocale%5D/layout-40b3047a4fb4eedd.js' },
+        { revision: null, url: '/_next/static/chunks/app/%5Blocale%5D/layout-12ac9b9807dd3dcb.js' },
         {
           revision: null,
           url: '/_next/static/chunks/app/%5Blocale%5D/leaderboard/page-47f08738924ffa46.js',
@@ -1165,7 +1166,7 @@
           revision: null,
           url: '/_next/static/chunks/app/%5Blocale%5D/ogren/page-a1dd0f05da0f2dd9.js',
         },
-        { revision: null, url: '/_next/static/chunks/app/%5Blocale%5D/page-9f55935138dccfc1.js' },
+        { revision: null, url: '/_next/static/chunks/app/%5Blocale%5D/page-1dfb7348a40766c2.js' },
         {
           revision: null,
           url: '/_next/static/chunks/app/%5Blocale%5D/profile/collections/%5Bid%5D/edit/page-c79eb8a2a4310453.js',
@@ -1280,9 +1281,9 @@
         { revision: null, url: '/_next/static/chunks/app/robots.txt/route-2f6130c0b5b50d5e.js' },
         { revision: null, url: '/_next/static/chunks/app/sitemap.xml/route-2dafcb461f269db9.js' },
         { revision: null, url: '/_next/static/chunks/framework-e0082436dfdc054b.js' },
-        { revision: null, url: '/_next/static/chunks/main-06133df59be74b83.js' },
-        { revision: null, url: '/_next/static/chunks/main-app-0fb2a1f2e0e568d5.js' },
-        { revision: null, url: '/_next/static/chunks/pages/_app-b989d26e86ab5861.js' },
+        { revision: null, url: '/_next/static/chunks/main-8b186557b09af510.js' },
+        { revision: null, url: '/_next/static/chunks/main-app-50d9d1af5860d7f8.js' },
+        { revision: null, url: '/_next/static/chunks/pages/_app-442b3e8a65ee873c.js' },
         { revision: null, url: '/_next/static/chunks/pages/_error-02f391e37014e579.js' },
         {
           revision: '846118c33b2c0e922d7b3a7676f81f6f',
@@ -1293,11 +1294,11 @@
         { revision: null, url: '/_next/static/css/925cbc81caebf192.css' },
         {
           revision: '22e8a57a9bdbcec28f5596f245c1cd2b',
-          url: '/_next/static/i_2FWIFph90c6kM-VI-eK/_buildManifest.js',
+          url: '/_next/static/juswhvldoivkak31vMysA/_buildManifest.js',
         },
         {
           revision: 'b6652df95db52feb4daf4eca35380933',
-          url: '/_next/static/i_2FWIFph90c6kM-VI-eK/_ssgManifest.js',
+          url: '/_next/static/juswhvldoivkak31vMysA/_ssgManifest.js',
         },
         {
           revision: '2c6e370c5824bbc9e32cb1ba7e026e11',

@@ -1,25 +1,13 @@
 import { defaultCache } from '@serwist/next/worker';
-import { Serwist } from '@serwist/sw';
+import { installSerwist } from '@serwist/sw';
 
-const serwist = new Serwist({
+installSerwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: defaultCache,
-  fallbacks: {
-    entries: [
-      {
-        url: '/~offline',
-        matcher({ request }) {
-          return request.destination === 'document';
-        },
-      },
-    ],
-  },
 });
-
-serwist.addEventListeners();
 
 // Mevcut push notification yapısı
 self.addEventListener('push', function (event) {
@@ -38,7 +26,7 @@ self.addEventListener('push', function (event) {
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-192x192.png',
     data: {
-      url: data.url, // Bildirime tıklandığında gidilecek link
+      url: data.url,
     },
   };
 
