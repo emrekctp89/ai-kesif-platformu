@@ -21,6 +21,7 @@ import { ShareButtons } from '@/components/ShareButtons';
 import { SimilarTools } from '@/components/SimilarTools';
 import { TrackedExternalLink } from '@/components/TrackedExternalLink';
 import { ToolLinkReportDialog } from '@/components/ToolLinkReportDialog';
+import { ToolComments } from '@/components/ToolComments';
 
 export const revalidate = 3600;
 
@@ -370,6 +371,10 @@ export default async function ToolDetailPage({ params }) {
 
             <section className="border-t pt-8">
               <SimilarTools currentTool={tool} />
+            </section>
+
+            <section className="border-t pt-8">
+              <ToolComments toolId={tool.id} toolSlug={tool.slug} />
             </section>
           </div>
 
