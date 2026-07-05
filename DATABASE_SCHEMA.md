@@ -12,6 +12,7 @@ Aşağıda platformda bulunan ana tabloların bir listesi yer almaktadır:
 4. **notifications**: Kullanıcı bildirimlerini yönetir.
 5. **profiles**: Kullanıcı profil detaylarını saklar. (Supabase `auth.users` ile ilişkilidir)
 6. **badges**: Platformdaki ün ve ödül sistemi için tanımlanan rozetleri içerir.
+7. **api_keys**: Geliştiriciler için oluşturulan Public API anahtarlarını saklar.
 
 ---
 
@@ -114,6 +115,28 @@ Platform ün sistemi rozetleri.
 | `description` | text | Rozetin veriliş amacı                                    |
 | `icon_name`   | text | İlgili Lucide vb. ikon adı                               |
 | `tier`        | text | Seviye ('bronze', 'silver', 'gold')                      |
+
+### 6. `api_keys`
+
+Geliştiricilerin sistemden Public API ile araç çekebilmesi için oluşturdukları erişim anahtarları.
+
+| Sütun          | Tip         | Açıklama                      | Kısıtlamalar                                  |
+| -------------- | ----------- | ----------------------------- | --------------------------------------------- |
+| `id`           | uuid        | Birincil Anahtar              | `default gen_random_uuid()`                   |
+| `user_id`      | uuid        | Anahtarı oluşturan kullanıcı  | `references auth.users(id) on delete cascade` |
+| `name`         | text        | API Anahtarı adı/açıklaması   | `not null`                                    |
+| `key_hash`     | text        | Güvenlik için anahtarın özeti | `not null unique`                             |
+| `last_used_at` | timestamptz | Son kullanılma zamanı         |                                               |
+| `created_at`   | timestamptz | Oluşturulma tarihi            | `not null default now()`                      |
+
+**İndeksler:**
+
+- `api_keys_user_id_idx` on `(user_id)`
+- `api_keys_key_hash_idx` on `(key_hash)`
+
+**RLS Politikaları:**
+
+- Sadece oturum açmış kullanıcılar kendi API anahtarlarını görüntüleyebilir, ekleyebilir, güncelleyebilir ve silebilir.
 
 ---
 

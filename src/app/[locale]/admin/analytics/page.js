@@ -24,11 +24,13 @@ export default async function AnalyticsPage() {
     { count: totalUsers },
     { count: totalTools },
     { count: totalReports },
+    { count: totalApiKeys },
     { data: toolSubmissionsOverTime },
   ] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('tools').select('*', { count: 'exact', head: true }),
     supabase.from('tool_link_reports').select('*', { count: 'exact', head: true }),
+    supabase.from('api_keys').select('*', { count: 'exact', head: true }),
     // Fetch last 30 days of tools
     supabase
       .from('tools')
@@ -53,6 +55,7 @@ export default async function AnalyticsPage() {
     totalUsers: totalUsers || 0,
     totalTools: totalTools || 0,
     totalReports: totalReports || 0,
+    totalApiKeys: totalApiKeys || 0,
     chartData,
   };
 

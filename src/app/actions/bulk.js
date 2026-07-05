@@ -1,0 +1,82 @@
+'use server';
+
+import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
+import slugify from 'slugify';
+
+export async function bulkImportTools(jsonText) {
+  const supabase = createClient();
+  const supabaseAdmin = createAdminClient();
+
+  // 1. Yetki Kontrolü
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: 'Yetkisiz erişim.' };
+  }
+
+  // 2. Parse JSON
+  let toolsToImport = [];
+  try {
+    toolsToImport = JSON.parse(jsonText);
+    if (!Array.isArray(toolsToImport)) {
+      throw new Error('JSON array olmalıdır.');
+    }
+  } catch (err) {
+    return { error: 'Geçersiz JSON formatı. Lütfen array yapısında geçerli bir JSON girin.' };
+  }
+
+  if (toolsToImport.length === 0) {
+    return { error: 'Eklenecek araç bulunamadı (Boş liste).' };
+  }
+
+  let successCount = 0;
+  let errors = [];
+
+  // 3. Her aracı tek tek ekle
+  for (let i = 0; i < toolsToImport.length; i++) {
+    const rawTool = toolsToImport[i];
+    try {
+      // Temel zorunlu alanlar
+      if (!rawTool.name || !rawTool.website_url) {
+        errors.push(`Satır ${i + 1}: İsim ve web sitesi url si zorunludur.`);
+        continue;
+      }
+
+      const baseSlug = slugify(rawTool.name, { lower: true, strict: true, locale: 'tr' });
+      // UUID for unique slug
+      const slug = `${baseSlug}-${crypto.randomUUID().split('-')[0]}`;
+
+      // Insert into DB using admin client (bypasses RLS if needed, though admin has rights)
+      const { error: insertError } = await supabaseAdmin.from('tools').insert([
+        {
+          name: rawTool.name,
+          slug,
+          description: rawTool.description || '',
+          website_url: rawTool.website_url,
+          is_approved: rawTool.is_approved !== undefined ? rawTool.is_approved : true, // Varsayılan onaylı ekle
+          pricing_type: rawTool.pricing_type || 'free',
+          github_url: rawTool.github_url || null,
+        },
+      ]);
+
+      if (insertError) {
+        errors.push(`Satır ${i + 1} (${rawTool.name}): ${insertError.message}`);
+      } else {
+        successCount++;
+      }
+    } catch (err) {
+      errors.push(
+        `Satır ${i + 1} (${rawTool.name || 'Bilinmiyor'}): Beklenmeyen hata - ${err.message}`
+      );
+    }
+  }
+
+  return {
+    success: true,
+    message: `${successCount} araç başarıyla eklendi.`,
+    errors: errors.length > 0 ? errors : null,
+  };
+}
