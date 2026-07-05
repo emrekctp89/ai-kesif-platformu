@@ -86,7 +86,7 @@ const nextConfig = {
           },
         ],
       },
-    ],
+    ];
   },
   webpack: (config) => {
     // Supabase Edge Functions klasörünü Next.js build'inden hariç tut
