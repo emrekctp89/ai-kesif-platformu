@@ -1,0 +1,57 @@
+// Bu dosya @/app/actions import'larını düzeltmek için oluşturuldu.
+// Gerçek implementasyonlar daha sonra eklenecek.
+
+// Stub fonksiyonlar (build hatasını gidermek için)
+export const getAiProjectStrategy = async (...args: any[]) => {
+  console.warn('getAiProjectStrategy henüz implemente edilmedi');
+  return { error: 'Bu özellik henüz geliştirilmedi.' };
+};
+
+export const toggleChallengeVote = async (...args: any[]) => {
+  console.warn('toggleChallengeVote henüz implemente edilmedi');
+  return { error: 'Bu özellik henüz geliştirilmedi.' };
+};
+
+export const updateChallenge = async (...args: any[]) => {
+  console.warn('updateChallenge henüz implemente edilmedi');
+  return { error: 'Bu özellik henüz geliştirilmedi.' };
+};
+
+export const generateChallengeIdeasWithAi = async (...args: any[]) => {
+  console.warn('generateChallengeIdeasWithAi henüz implemente edilmedi');
+  return { error: 'Bu özellik henüz geliştirilmedi.' };
+};
+
+export const createChallengeManually = async (...args: any[]) => {
+  console.warn('createChallengeManually henüz implemente edilmedi');
+  return { error: 'Bu özellik henüz geliştirilmedi.' };
+};
+
+export const createProject = async (...args: any[]) => {
+  console.warn('createProject henüz implemente edilmedi');
+  return { error: 'Bu özellik henüz geliştirilmedi.' };
+};
+
+export const updateProject = async (...args: any[]) => {
+  console.warn('updateProject henüz implemente edilmedi');
+  return { error: 'Bu özellik henüz geliştirilmedi.' };
+};
+
+export const updateProjectItems = async (...args: any[]) => {
+  console.warn('updateProjectItems henüz implemente edilmedi');
+  return { error: 'Bu özellik henüz geliştirilmedi.' };
+};
+
+export const deleteProject = async (...args: any[]) => {
+  console.warn('deleteProject henüz implemente edilmedi');
+  return { error: 'Bu özellik henüz geliştirilmedi.' };
+};
+
+export const submitShowcaseToChallenge = async (...args: any[]) => {
+  console.warn('submitShowcaseToChallenge henüz implemente edilmedi');
+  return { error: 'Bu özellik henüz geliştirilmedi.' };
+};
+
+// Mevcut fonksiyonlar (daha önce eklediğimiz)
+export { getProjectSuggestions } from './actions/projects';
+export { generateChallenge } from './actions/challenge';
