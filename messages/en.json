@@ -4,16 +4,33 @@
     "discover": "Discover",
     "categories": "Categories",
     "community": "Community",
-    "about": "About Us"
+    "about": "About Us",
+    "addTool": "Add Tool",
+    "myTools": "My Tools"
   },
   "Hero": {
     "title": "Discover AI Tools",
-    "subtitle": "Find, review, and compare the best tools in the AI ecosystem."
+    "subtitle": "Find, review and compare the best tools in the AI ecosystem."
   },
   "Common": {
     "search": "Search...",
     "login": "Login",
     "signup": "Sign Up",
-    "logout": "Logout"
+    "logout": "Logout",
+    "promoted": "Promoted",
+    "pro": "Pro"
+  },
+  "Tool": {
+    "visitSite": "Visit Site",
+    "promoteTool": "Promote This Tool"
+  },
+  "Pricing": {
+    "free": "Free",
+    "freemium": "Freemium",
+    "paid": "Paid",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "credits": "Credits",
+    "oneTime": "One Time"
   }
 }

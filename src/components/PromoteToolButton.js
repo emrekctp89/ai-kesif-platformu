@@ -6,10 +6,12 @@ import { createPromotionCheckout } from '@/app/actions/payment';
 import { Gem } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export function PromoteToolButton({ toolId, toolSlug }) {
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
+  const t = useTranslations('Tool');
 
   useEffect(() => {
     if (searchParams.get('promoted') === 'success') {
@@ -37,7 +39,7 @@ export function PromoteToolButton({ toolId, toolSlug }) {
       className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 border-amber-500/30 font-semibold"
     >
       <Gem className="w-4 h-4 mr-2" />
-      {isLoading ? 'Yönlendiriliyor...' : 'Bu Aracı Öne Çıkar'}
+      {isLoading ? '...' : t('promoteTool')}
     </Button>
   );
 }

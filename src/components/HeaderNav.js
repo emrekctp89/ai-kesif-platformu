@@ -100,7 +100,7 @@ export function HeaderNav({
           </Button>
           <Button asChild variant="secondary">
             <Link href="/submit" prefetch={false}>
-              Araç Öner
+              {t('addTool')}
             </Link>
           </Button>
         </div>

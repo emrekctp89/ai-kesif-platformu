@@ -4,7 +4,9 @@
     "discover": "Keşfet",
     "categories": "Kategoriler",
     "community": "Topluluk",
-    "about": "Hakkımızda"
+    "about": "Hakkımızda",
+    "addTool": "Araç Ekle",
+    "myTools": "Araçlarım"
   },
   "Hero": {
     "title": "AI Araçlarını Keşfet",
@@ -14,6 +16,21 @@
     "search": "Ara...",
     "login": "Giriş Yap",
     "signup": "Kayıt Ol",
-    "logout": "Çıkış Yap"
+    "logout": "Çıkış Yap",
+    "promoted": "Sponsorlu",
+    "pro": "Pro"
+  },
+  "Tool": {
+    "visitSite": "Ziyaret Et",
+    "promoteTool": "Bu Aracı Öne Çıkar"
+  },
+  "Pricing": {
+    "free": "Ücretsiz",
+    "freemium": "Freemium",
+    "paid": "Ücretli",
+    "monthly": "Aylık",
+    "yearly": "Yıllık",
+    "credits": "Kredi",
+    "oneTime": "Tek Seferlik"
   }
 }

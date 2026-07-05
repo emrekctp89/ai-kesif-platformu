@@ -198,9 +198,9 @@
   - [x] Language selector
   - [x] Translation files (next-intl)
 - [x] URL structure (`/[locale]`)
-- [ ] Content translation
-- [ ] SEO for multiple languages
-  - [ ] Currency conversion
+- [x] Content translation
+- [x] SEO for multiple languages
+  - [x] Currency conversion
 
 ### **PHASE 14: Progressive Web App (PWA)** ✅ TAMAMLANDI
 

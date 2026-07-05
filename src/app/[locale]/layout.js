@@ -11,7 +11,7 @@ import { GoogleAnalytics } from '@/components/GoogleAnalytics';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { generatePageMetadata, generateStructuredData, siteConfig } from '@/utils/seo';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { getMessages, getTranslations } from 'next-intl/server';
 
 const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
 
@@ -20,37 +20,40 @@ const onest = Onest({
   weight: ['400', '500', '700', '900'],
 });
 
-// Generate metadata using SEO utilities
-const seoMetadata = generatePageMetadata({
-  title: null, // Will use default
-  description:
-    'İhtiyacınıza uygun yapay zeka araçlarını keşfedin, karşılaştırın ve doğru aracı daha hızlı bulun.',
-  path: '/',
-  type: 'website',
-});
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Hero' });
 
-export const metadata = {
-  metadataBase: new URL(siteUrl),
-  ...seoMetadata,
-  applicationName: 'AI Keşif Platformu',
-  title: {
-    default: 'AI Keşif | Yapay Zeka Araçları Rehberi',
-    template: '%s | AI Keşif',
-  },
-  icons: {
-    icon: '/icon.svg',
-    shortcut: '/icon.svg',
-    apple: '/apple-icon.png',
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'AI Keşif Platformu',
-  },
-  formatDetection: {
-    telephone: false,
-  },
-};
+  const seoMetadata = generatePageMetadata({
+    title: null,
+    description: t('subtitle'),
+    path: locale === 'en' ? '/en' : '/',
+    type: 'website',
+  });
+
+  return {
+    metadataBase: new URL(siteUrl),
+    ...seoMetadata,
+    applicationName: 'AI Keşif Platformu',
+    title: {
+      default: `AI Keşif | ${t('title')}`,
+      template: '%s | AI Keşif',
+    },
+    icons: {
+      icon: '/icon.svg',
+      shortcut: '/icon.svg',
+      apple: '/apple-icon.png',
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'default',
+      title: 'AI Keşif Platformu',
+    },
+    formatDetection: {
+      telephone: false,
+    },
+  };
+}
 
 export const viewport = {
   themeColor: [

@@ -23,6 +23,8 @@ import { TrackedExternalLink } from '@/components/TrackedExternalLink';
 import { ToolLinkReportDialog } from '@/components/ToolLinkReportDialog';
 import { ToolComments } from '@/components/ToolComments';
 import { PromoteToolButton } from '@/components/PromoteToolButton';
+import { getTranslations } from 'next-intl/server';
+import { formatPricing } from '@/utils/formatPricing';
 
 export const revalidate = 3600;
 
@@ -199,8 +201,10 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function ToolDetailPage({ params }) {
-  const { slug } = await params;
+export default async function ToolPage(props) {
+  const { params } = props;
+  const { slug, locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Pricing' });
   const tool = await getToolData(slug);
 
   if (!tool) notFound();
@@ -290,8 +294,11 @@ export default async function ToolDetailPage({ params }) {
                 ) : (
                   <Badge variant="secondary">{tool.category_name}</Badge>
                 )}
-                {tool.tier && <Badge variant="outline">{tool.tier}</Badge>}
-                {tool.pricing_model && <Badge variant="outline">{tool.pricing_model}</Badge>}
+                <div className="flex flex-wrap gap-2">
+                  {tool.pricing_model && (
+                    <Badge variant="outline">{formatPricing(tool.pricing_model, t)}</Badge>
+                  )}
+                </div>
                 {platforms.slice(0, 2).map((platform) => (
                   <Badge key={platform} variant="outline">
                     {platform}
@@ -342,7 +349,7 @@ export default async function ToolDetailPage({ params }) {
                 <InfoCard
                   icon={WalletCards}
                   label="Fiyatlandırma"
-                  value={tool.pricing_model || 'Bilgi belirtilmemiş'}
+                  value={formatPricing(tool.pricing_model, t) || 'Bilgi belirtilmemiş'}
                 />
                 <InfoCard
                   icon={MonitorSmartphone}
@@ -406,7 +413,7 @@ export default async function ToolDetailPage({ params }) {
                 <div className="rounded-lg bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">
                   <p className="font-semibold text-foreground">Hızlı karar özeti</p>
                   <p className="mt-1">
-                    {tool.pricing_model || 'Fiyat bilgisi belirtilmemiş'} ·{' '}
+                    {formatPricing(tool.pricing_model, t) || 'Fiyat bilgisi belirtilmemiş'} ·{' '}
                     {platforms.slice(0, 2).join(', ')}
                     {platforms.length > 2 ? ` +${platforms.length - 2}` : ''}
                   </p>

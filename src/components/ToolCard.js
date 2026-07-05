@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import ToolIcon from '@/components/ToolIcon';
 import { TrackedExternalLink } from '@/components/TrackedExternalLink';
+import { useTranslations } from 'next-intl';
 
 // Bu sabitleri de bileşenin kendi dosyasına taşıyoruz
 const tierStyles = {
@@ -52,8 +53,9 @@ const favoritesCache = new Map();
 // Tek bir araç kartı (DÜZELTİLMİŞ HALİ)
 // -----------------------------
 export default function ToolCard({ tool }) {
-  // router'a artık burada ihtiyacımız yok.
-  // const router = useRouter();
+  const tc = useTranslations('Common');
+  const tt = useTranslations('Tool');
+
   if (!tool || !tool.name) return null;
 
   const isPremium = tool.tier === 'Pro' || tool.tier === 'Sponsorlu' || tool.is_promoted;
@@ -68,7 +70,9 @@ export default function ToolCard({ tool }) {
   };
 
   const getBadgeText = () => {
-    if (tool.is_promoted) return 'Sponsorlu';
+    if (tool.is_promoted) return tc('promoted');
+    if (tool.tier === 'Sponsorlu') return tc('promoted');
+    if (tool.tier === 'Pro') return tc('pro');
     return tool.tier;
   };
 
@@ -175,7 +179,7 @@ export default function ToolCard({ tool }) {
                 }}
                 className="px-3 py-1 text-sm"
               >
-                Ziyaret Et
+                {tt('visitSite')}
               </TrackedExternalLink>
             </Button>
           )}
