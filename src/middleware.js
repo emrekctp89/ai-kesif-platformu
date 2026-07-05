@@ -74,7 +74,7 @@ export async function middleware(request) {
 
 export const config = {
   matcher: [
-    // Ignore static files, api routes, and next internals
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    // Ignore static files, api routes, next internals, PWA and SEO files
+    '/((?!api|_next/static|_next/image|favicon.ico|sw\\.js.*|workbox-.*|manifest\\.webmanifest|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };
