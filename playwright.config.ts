@@ -1,9 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/**
- * Playwright E2E Test Configuration
- * AI Keşif Platformu - Next.js 15 + i18n
- */
 export default defineConfig({
   testDir: './e2e/tests',
   fullyParallel: true,
@@ -30,13 +26,11 @@ export default defineConfig({
     },
   ],
 
-  // Sadece local'de webServer çalışsın, CI'da çalıştırma
-  webServer: process.env.CI
-    ? undefined
-    : {
-        command: 'npm run dev',
-        url: 'http://localhost:3005/tr',
-        reuseExistingServer: true,
-        timeout: 120 * 1000,
-      },
+  // Hem local hem CI'da webServer kullanacağız
+  webServer: {
+    command: process.env.CI ? 'npm run start' : 'npm run dev',
+    url: 'http://localhost:3005/tr',
+    reuseExistingServer: !process.env.CI,
+    timeout: 180 * 1000,
+  },
 });

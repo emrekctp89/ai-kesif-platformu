@@ -15,7 +15,7 @@ env:
 jobs:
   playwright:
     name: Playwright Tests
-    timeout-minutes: 90
+    timeout-minutes: 120
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,41 +32,10 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: Build Next.js app
+      - name: Build Next.js app (for production start)
         run: npm run build
-
-      - name: Start Next.js server in background
-        run: |
-          npm run start &
-          echo $! > server.pid
-
-      - name: Wait for server to be ready
-        run: |
-          echo "Waiting for server..."
-          for i in {1..40}; do
-            if curl -s -f http://localhost:3005/tr > /dev/null 2>&1; then
-              echo "Server is ready!"
-              break
-            fi
-            echo "Attempt $i/40 - Server not ready yet..."
-            sleep 3
-          done
 
       - name: Run Playwright tests
         run: npx playwright test
         env:
-          PLAYWRIGHT_TEST_BASE_URL: http://localhost:3005/tr
-
-      - name: Stop server
-        if: always()
-        run: |
-          if [ -f server.pid ]; then
-            kill $(cat server.pid) || true
-          fi
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 14
+          CI: true
