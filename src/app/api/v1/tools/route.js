@@ -1,14 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
-// We use the admin client because we need to query without RLS for API keys
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// Initialization moved inside the handler to prevent build-time errors
+export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
+    // We use the admin client because we need to query without RLS for API keys
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+    );
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Eksik veya geçersiz Authorization başlığı.' }), {
