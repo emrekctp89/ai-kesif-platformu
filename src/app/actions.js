@@ -21,3 +21,16 @@ export * from './actions/launch';
 export * from './actions/feedback';
 export * from './actions/reports';
 export * from './actions/admin';
+
+// Stub exports to satisfy imports from components that are not fully implemented yet
+export async function updateProjectItems() {
+  console.log('updateProjectItems not implemented');
+}
+
+export async function deleteProject() {
+  console.log('deleteProject not implemented');
+}
+
+export async function submitShowcaseToChallenge() {
+  console.log('submitShowcaseToChallenge not implemented');
+}
