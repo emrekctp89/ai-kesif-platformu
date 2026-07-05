@@ -1,42 +1,5 @@
 /** @type {import('next').NextConfig} */
 const { withSentryConfig } = require('@sentry/nextjs');
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-});
-const createNextIntlPlugin = require('next-intl/plugin');
-const withNextIntl = createNextIntlPlugin('./src/i18n.js');
-
-const withSerwist = require('@serwist/next').default({
-  swSrc: 'src/app/sw.js',
-  swDest: 'public/sw.js',
-});
-
-const disabledRoutes = [
-  '/register',
-  '/profile/:path*',
-  '/blog/:path*',
-  '/yarisma',
-  '/uyelik',
-  '/u/:path*',
-  '/topluluk',
-  '/studyo',
-  '/signup',
-  '/reset-password',
-  '/random-tools',
-  '/ogren',
-  '/odul-avciligi/:path*',
-  '/mesajlar/:path*',
-  '/leaderboard',
-  '/leaderbord',
-  '/launchpad/:path*',
-  '/koleksiyonlar/:path*',
-  '/kesfet',
-  '/karsilastır',
-  '/forgot-password',
-  '/eserler/:path*',
-  '/arastırma',
-  '/akis',
-];
 
 const nextConfig = {
   outputFileTracingRoot: __dirname,
@@ -56,54 +19,10 @@ const nextConfig = {
       },
     ],
   },
-  async redirects() {
-    return disabledRoutes.map((source) => ({
-      source,
-      destination: '/',
-      permanent: false,
-    }));
-  },
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload',
-          },
-          {
-            key: 'Content-Security-Policy',
-            value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://hhopgeupizlfkmvtsvkf.supabase.co https://avatars.githubusercontent.com https://lh3.googleusercontent.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; connect-src 'self' https://hhopgeupizlfkmvtsvkf.supabase.co;",
-          },
-        ],
-      },
-    ],
-  },
 };
 
-module.exports = withBundleAnalyzer(
-  withSentryConfig(
-    withSerwist(withNextIntl(nextConfig)),
-    {
-      silent: true,
-      org: 'ai-kesif-platformu',
-      project: 'ai-kesif-platformu',
-    },
-    {
-      widenClientFileUpload: true,
-      transpileClientSDK: true,
-      tunnelRoute: '/monitoring',
-      hideSourceMaps: true,
-      disableLogger: true,
-    }
-  )
-);
+module.exports = withSentryConfig(nextConfig, {
+  silent: true,
+  org: 'ai-kesif-platformu',
+  project: 'ai-kesif-platformu',
+});
