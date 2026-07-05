@@ -9,7 +9,7 @@ import * as cheerio from 'cheerio';
 const GEMINI_EMBEDDING_API_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent';
 
-async function getEmbedding(text) {
+export async function getEmbedding(text) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY bulunamadı.');
 
@@ -91,12 +91,28 @@ export async function getAiRecommendation(userPrompt) {
   }
 
   try {
-    const allTools = await getAllToolsForAI();
-    if (allTools.length === 0) {
-      return { success: false, error: 'Veritabanında hiç araç bulunamadı.' };
+    // 1. Kullanıcı isteğinin vektörünü (embedding) çıkar
+    const promptEmbedding = await getEmbedding(normalizedPrompt);
+    const embeddingString = `[${promptEmbedding.join(',')}]`;
+
+    // 2. Vektör araması ile en uygun 10 aracı bul (RAG)
+    const supabase = createClient();
+    const { data: matchedTools, error: matchError } = await supabase.rpc('match_tools', {
+      query_embedding: embeddingString,
+      match_threshold: 0.1, // Düşük bir eşik, Gemini eleme yapacak
+      match_count: 10,
+    });
+
+    if (matchError) {
+      console.error('Vektör arama hatası:', matchError);
+      return { success: false, error: 'Tavsiye motoru veritabanına erişemedi.' };
     }
 
-    const formattedTools = allTools
+    if (!matchedTools || matchedTools.length === 0) {
+      return { success: false, error: 'İsteğinize uygun araç bulunamadı.' };
+    }
+
+    const formattedTools = matchedTools
       .map((t) => `- ${t.name} (${t.slug}): ${t.description}`)
       .join('\n');
     const prompt = `

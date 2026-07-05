@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { slugify } from '@/utils/slugify';
 import { Resend } from 'resend';
+import { getEmbedding } from './ai';
 import { NewToolSuggestionEmail } from '@/components/emails/NewToolSuggestionEmail';
 import { cookies } from 'next/headers';
 import { logServerError } from '@/utils/serverLogger';
@@ -235,6 +236,14 @@ export async function submitTool(formData) {
     suggester_email: final_suggester_email,
     is_approved: false,
   };
+
+  try {
+    const textToEmbed = `${name}. ${description}.`;
+    const embedding = await getEmbedding(textToEmbed);
+    toolData.embedding = `[${embedding.join(',')}]`;
+  } catch (err) {
+    console.error('Embedding generation error on submit:', err);
+  }
 
   const { error } = await supabase.from('tools').insert([toolData]);
 
@@ -585,6 +594,14 @@ export async function updateTool(formData) {
     tier,
     updated_at: new Date().toISOString(),
   };
+
+  try {
+    const textToEmbed = `${name}. ${description}.`;
+    const embedding = await getEmbedding(textToEmbed);
+    updatedData.embedding = `[${embedding.join(',')}]`;
+  } catch (err) {
+    console.error('Embedding generation error on update:', err);
+  }
 
   const { error } = await supabase.from('tools').update(updatedData).eq('id', toolId);
 
