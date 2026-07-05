@@ -96,7 +96,20 @@ export async function POST(request) {
       case 'checkout.session.completed': {
         const session = event.data.object;
 
-        if (session.subscription) {
+        if (session.metadata?.promotion_tool_id) {
+          const toolId = session.metadata.promotion_tool_id;
+          const supabase = createAdminClient();
+          const thirtyDaysFromNow = new Date();
+          thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+
+          await supabase
+            .from('tools')
+            .update({
+              is_promoted: true,
+              promoted_until: thirtyDaysFromNow.toISOString(),
+            })
+            .eq('id', toolId);
+        } else if (session.subscription) {
           const subscription = await stripe.subscriptions.retrieve(session.subscription);
           await updateProfile(subscription);
         }

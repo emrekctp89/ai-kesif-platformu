@@ -1042,10 +1042,17 @@ export async function fetchMoreTools({ page = 0, searchParams }) {
     return [];
   }
 
-  return tools.map((tool) => ({
+  const mappedTools = tools.map((tool) => ({
     ...tool,
     popularity_score: Number(tool.popularity_score) || 0,
   }));
+
+  // Sponsorlu araçları üstte göstermek için sayfa içi sıralama (eğer varsa)
+  return mappedTools.sort((a, b) => {
+    if (a.is_promoted && !b.is_promoted) return -1;
+    if (!a.is_promoted && b.is_promoted) return 1;
+    return 0;
+  });
 }
 
 export async function recordVariantImpression(variantId) {

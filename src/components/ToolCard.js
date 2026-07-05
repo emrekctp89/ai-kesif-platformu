@@ -56,7 +56,21 @@ export default function ToolCard({ tool }) {
   // const router = useRouter();
   if (!tool || !tool.name) return null;
 
-  const isPremium = tool.tier === 'Pro' || tool.tier === 'Sponsorlu';
+  const isPremium = tool.tier === 'Pro' || tool.tier === 'Sponsorlu' || tool.is_promoted;
+
+  const getBadgeStyle = () => {
+    if (tool.is_promoted || tool.tier === 'Sponsorlu') return tierStyles['Sponsorlu'];
+    if (tool.tier === 'Pro') return tierStyles['Pro'];
+    return {
+      badge: 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white',
+      icon: <Star className="w-4 h-4 mr-1.5" />,
+    };
+  };
+
+  const getBadgeText = () => {
+    if (tool.is_promoted) return 'Sponsorlu';
+    return tool.tier;
+  };
 
   // DEĞİŞİKLİK 1: Ana sarmalayıcıyı <div onClick> yerine <Link> yapın.
   return (
@@ -66,10 +80,11 @@ export default function ToolCard({ tool }) {
         'relative block p-6 rounded-xl border shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden',
         {
           'border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card':
-            tool.tier === 'Pro',
+            tool.tier === 'Pro' && !tool.is_promoted,
           'border-amber-400/40 shadow-amber-400/20 hover:shadow-amber-500/40 bg-card':
-            tool.tier === 'Sponsorlu',
-          'border-blue-800/50 shadow-blue-900/30 hover:shadow-blue-700/50 bg-blue-950': !tool.tier,
+            tool.tier === 'Sponsorlu' || tool.is_promoted,
+          'border-blue-800/50 shadow-blue-900/30 hover:shadow-blue-700/50 bg-blue-950':
+            !tool.tier && !tool.is_promoted,
         }
       )}
     >
@@ -77,9 +92,9 @@ export default function ToolCard({ tool }) {
         {/* Premium Badge */}
         {isPremium && (
           <Badge
-            className={`mb-2 flex w-fit items-center px-3 py-1 rounded-full ${tierStyles[tool.tier]?.badge || 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white'}`}
+            className={`mb-2 flex w-fit items-center px-3 py-1 rounded-full ${getBadgeStyle().badge}`}
           >
-            {tierStyles[tool.tier]?.icon || <Star className="w-4 h-4 mr-1.5" />} {tool.tier}
+            {getBadgeStyle().icon} {getBadgeText()}
           </Badge>
         )}
 

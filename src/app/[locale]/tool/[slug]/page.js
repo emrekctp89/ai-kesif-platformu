@@ -22,6 +22,7 @@ import { SimilarTools } from '@/components/SimilarTools';
 import { TrackedExternalLink } from '@/components/TrackedExternalLink';
 import { ToolLinkReportDialog } from '@/components/ToolLinkReportDialog';
 import { ToolComments } from '@/components/ToolComments';
+import { PromoteToolButton } from '@/components/PromoteToolButton';
 
 export const revalidate = 3600;
 
@@ -431,6 +432,11 @@ export default async function ToolDetailPage({ params }) {
                 <div className="border-t pt-4">
                   <ToolLinkReportDialog tool={tool} />
                 </div>
+
+                <div className="border-t pt-4">
+                  <PromoteToolButton toolId={tool.id} toolSlug={tool.slug} />
+                </div>
+
                 <div className="border-t pt-4">
                   <ShareButtons url={shareUrl} title={`${tool.name} aracını AI Keşif'te incele`} />
                 </div>

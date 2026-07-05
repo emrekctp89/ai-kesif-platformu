@@ -98,5 +98,84 @@ export async function createCheckoutSession(formData) {
     return redirect(`/uyelik?message=${encodeURIComponent(errorMessage)}`);
   }
 
-  return redirect(checkoutUrl);
+  if (checkoutUrl) {
+    redirect(checkoutUrl);
+  }
+}
+
+export async function createPromotionCheckout(toolId, toolSlug) {
+  'use server';
+  const supabase = createClient(await cookies());
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect('/login');
+  }
+
+  let checkoutUrl;
+
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('stripe_customer_id')
+      .eq('id', user.id)
+      .single();
+
+    // Use an environment variable for the one-time promotion price ID.
+    // If not set, you must create a price in Stripe for "1 Month Promotion" and set NEXT_PUBLIC_STRIPE_PROMOTION_PRICE_ID
+    const priceId = process.env.NEXT_PUBLIC_STRIPE_PROMOTION_PRICE_ID;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '');
+
+    if (!priceId || !siteUrl) {
+      throw new Error(
+        'Sponsorluk fiyatı (NEXT_PUBLIC_STRIPE_PROMOTION_PRICE_ID) veya site adresi yapılandırılmamış.'
+      );
+    }
+
+    const stripe = getStripe();
+    let customerId = profile?.stripe_customer_id;
+
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: { supabaseUUID: user.id },
+      });
+      customerId = customer.id;
+
+      const { error: customerUpdateError } = await supabase
+        .from('profiles')
+        .update({ stripe_customer_id: customerId })
+        .eq('id', user.id);
+
+      if (customerUpdateError) {
+        throw new Error('Stripe müşteri kaydı profile yazılamadı.');
+      }
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment', // One-time payment for promotion
+      customer: customerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      client_reference_id: user.id,
+      metadata: {
+        supabase_user_id: user.id,
+        promotion_tool_id: toolId, // Critical: this tells the webhook which tool to promote
+      },
+      success_url: `${siteUrl}/tool/${toolSlug}?promoted=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/tool/${toolSlug}`,
+    });
+
+    checkoutUrl = session.url;
+  } catch (error) {
+    logServerError('checkout.create-promotion-session', error);
+    const errorMessage = 'Ödeme sayfasına yönlendirilirken bir hata oluştu: ' + error.message;
+    return redirect(`/tool/${toolSlug}?message=${encodeURIComponent(errorMessage)}`);
+  }
+
+  if (checkoutUrl) {
+    redirect(checkoutUrl);
+  }
 }
