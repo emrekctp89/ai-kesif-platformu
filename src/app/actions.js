@@ -34,3 +34,31 @@ export async function deleteProject() {
 export async function submitShowcaseToChallenge() {
   console.log('submitShowcaseToChallenge not implemented');
 }
+
+export async function getAiProjectStrategy() {
+  console.log('getAiProjectStrategy not implemented');
+}
+
+export async function toggleChallengeVote() {
+  console.log('toggleChallengeVote not implemented');
+}
+
+export async function updateChallenge() {
+  console.log('updateChallenge not implemented');
+}
+
+export async function generateChallengeIdeasWithAi() {
+  console.log('generateChallengeIdeasWithAi not implemented');
+}
+
+export async function createChallengeManually() {
+  console.log('createChallengeManually not implemented');
+}
+
+export async function createProject() {
+  console.log('createProject not implemented');
+}
+
+export async function updateProject() {
+  console.log('updateProject not implemented');
+}

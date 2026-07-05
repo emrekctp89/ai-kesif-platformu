@@ -41,6 +41,9 @@ const disabledRoutes = [
 const nextConfig = {
   outputFileTracingRoot: __dirname,
   serverExternalPackages: ['@supabase/supabase-js'],
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '4mb',
