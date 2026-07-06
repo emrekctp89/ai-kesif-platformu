@@ -13,7 +13,7 @@ import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from './ui/badge';
 import { signOut } from '@/app/actions';
-import { User, PlusCircle, LogOut, Sparkles, Crown } from 'lucide-react';
+import { User, PlusCircle, LogOut, Sparkles, Crown, Database } from 'lucide-react';
 
 // Bu bileşen, Header'dan gelen kullanıcı bilgilerini kullanarak menüyü oluşturur.
 export function UserNav({ user, profile, isProUser, isAdmin }) {
@@ -55,14 +55,40 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
             <span>Yeni Araç Öner</span>
           </Link>
         </DropdownMenuItem>
-        {/* DEĞİŞİKLİK: Pro olmayanlar için yükseltme linki geri geldi */}
+        {/* YENİ: Geliştirici Portalı (Tüm kullanıcılar için) */}
+        <DropdownMenuItem asChild>
+          <Link href="/developer">
+            <Sparkles className="mr-2 h-4 w-4" />
+            <span>Geliştirici Portalı</span>
+          </Link>
+        </DropdownMenuItem>
+
+        {/* DEĞİŞİKLİK: Pro olmayanlar için yükseltme linki */}
         {!isProUser && !isAdmin && (
           <DropdownMenuItem asChild>
             <Link href="/uyelik">
-              <Sparkles className="mr-2 h-4 w-4 text-purple-500" />
+              <Crown className="mr-2 h-4 w-4 text-purple-500" />
               <span>Pro'ya Yükselt</span>
             </Link>
           </DropdownMenuItem>
+        )}
+
+        {/* YENİ: Admin Paneli linki (Sadece yöneticiler) */}
+        {isAdmin && (
+          <>
+            <DropdownMenuItem asChild>
+              <Link href="/admin">
+                <User className="mr-2 h-4 w-4 text-red-500" />
+                <span className="text-red-500 font-medium">Admin Paneli</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/bulk-import">
+                <Database className="mr-2 h-4 w-4 text-orange-500" />
+                <span className="text-orange-500 font-medium">Toplu İçe Aktarım</span>
+              </Link>
+            </DropdownMenuItem>
+          </>
         )}
         <DropdownMenuSeparator />
         <form action={signOut} className="w-full">

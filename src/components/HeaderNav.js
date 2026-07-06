@@ -85,6 +85,17 @@ export function HeaderNav({
         {/* YENİ: Yarışma Sayfası Linki */}
 
         {/* YENİ: Ödül Avcılığı Sayfası Linki */}
+
+        <Link
+          href="/developer"
+          className="text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Geliştiriciler
+        </Link>
+
+        <Link href="/sso" className="text-muted-foreground transition-colors hover:text-foreground">
+          Kurumsal
+        </Link>
       </nav>
 
       {/* Sağ Taraftaki Butonlar */}
