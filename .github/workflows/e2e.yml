@@ -35,7 +35,27 @@ jobs:
       - name: Build Next.js app (for production start)
         run: npm run build
 
+      - name: Start Next.js server
+        run: |
+          npm run start -- -p 3005 -H 0.0.0.0 > next-server.log 2>&1 &
+          echo $! > next-server.pid
+          for i in {1..90}; do
+            if curl -fsS http://127.0.0.1:3005/tr >/dev/null; then
+              echo "Next.js server is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Next.js server did not become ready in time"
+          cat next-server.log
+          exit 1
+
       - name: Run Playwright tests
         run: npx playwright test
         env:
           CI: true
+          PLAYWRIGHT_SKIP_WEBSERVER: '1'
+
+      - name: Print Next.js server logs
+        if: always()
+        run: cat next-server.log || true
