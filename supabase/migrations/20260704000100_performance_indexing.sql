@@ -2,11 +2,25 @@
 -- Creating B-Tree indexes on frequently queried columns
 
 -- 1. Tools table
--- Often searched by name, slug, and status
+-- Often searched by name, slug, and category
 CREATE INDEX IF NOT EXISTS idx_tools_name ON tools (name);
 CREATE INDEX IF NOT EXISTS idx_tools_slug ON tools (slug);
-CREATE INDEX IF NOT EXISTS idx_tools_status ON tools (status);
 CREATE INDEX IF NOT EXISTS idx_tools_category_id ON tools (category_id);
+
+-- Some production schemas use is_approved without a generic status column.
+-- Keep this migration compatible with both shapes.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'tools'
+      AND column_name = 'status'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_tools_status ON tools (status);
+  END IF;
+END $$;
 
 -- 2. Profiles table
 -- Often searched by username
