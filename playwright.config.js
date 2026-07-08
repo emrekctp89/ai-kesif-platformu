@@ -1,6 +1,8 @@
 // @ts-check
 import { defineConfig, devices } from '@playwright/test';
 
+const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === '1';
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -71,10 +73,12 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npm run dev', // Uses the standard dev script (which runs on 3005)
-    url: 'http://localhost:3005',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  webServer: skipWebServer
+    ? undefined
+    : {
+        command: process.env.CI ? 'npm run start -- -p 3005' : 'npm run dev',
+        url: 'http://localhost:3005',
+        reuseExistingServer: !process.env.CI,
+        timeout: 180 * 1000,
+      },
 });

@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === '1';
+
 export default defineConfig({
   testDir: './e2e/tests',
   fullyParallel: true,
@@ -27,10 +29,12 @@ export default defineConfig({
   ],
 
   // Hem local hem CI'da webServer kullanacağız
-  webServer: {
-    command: process.env.CI ? 'npm run start' : 'npm run dev',
-    url: 'http://localhost:3005/tr',
-    reuseExistingServer: !process.env.CI,
-    timeout: 180 * 1000,
-  },
+  webServer: skipWebServer
+    ? undefined
+    : {
+        command: process.env.CI ? 'npm run start -- -p 3005' : 'npm run dev',
+        url: 'http://localhost:3005/tr',
+        reuseExistingServer: !process.env.CI,
+        timeout: 180 * 1000,
+      },
 });

@@ -27,15 +27,20 @@ create policy "Users can delete their own comments"
   on public.tool_comments for delete
   using (auth.uid() = user_id);
 
--- Enable realtime for tool_comments
-begin;
-  -- remove the supabase_realtime publication if it exists (it's built-in, but we just add our table to it)
-  -- The standard way to enable realtime for a table in Supabase is to add it to the supabase_realtime publication.
-  drop publication if exists supabase_realtime;
-  create publication supabase_realtime;
-commit;
-
-alter publication supabase_realtime add table public.tool_comments;
+-- Enable realtime for tool_comments without recreating the built-in Supabase publication.
+-- Recreating supabase_realtime would remove other tables already registered for realtime.
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'tool_comments'
+  ) then
+    alter publication supabase_realtime add table public.tool_comments;
+  end if;
+end $$;
 
 -- Also create a view with user profiles for easier querying
 create or replace view public.tool_comments_with_users as
