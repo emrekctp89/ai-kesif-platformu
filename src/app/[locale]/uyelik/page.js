@@ -8,11 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Check, Sparkles } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { createCheckoutSession } from '@/app/actions';
+import { ProUpgradeForm } from '@/components/ProUpgradeForm';
 
 // Veritabanından ürünleri ve fiyatları çeken fonksiyon
 async function getProducts() {
@@ -31,7 +30,7 @@ async function getProducts() {
   return data;
 }
 
-export default async function PricingPage() {
+export default async function PricingPage({ searchParams }) {
   const supabase = createClient();
   const {
     data: { user },
@@ -43,9 +42,16 @@ export default async function PricingPage() {
 
   const products = await getProducts();
   const proProduct = products.find((p) => p.id === 'prod_pro_membership');
+  const initialPromoCode = searchParams?.code || searchParams?.promo || '';
+  const message = searchParams?.message || '';
 
   return (
     <div className="container mx-auto max-w-5xl py-12 px-4">
+      {message && (
+        <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {message}
+        </div>
+      )}
       <div className="text-center mb-16">
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground">
           Potansiyelinizi Ortaya Çıkarın
@@ -134,14 +140,11 @@ export default async function PricingPage() {
               </ul>
             </CardContent>
             <CardFooter>
-              {/* DEĞİŞİKLİK: Formu ve aktif butonu geri getiriyoruz */}
-              <form action={createCheckoutSession} className="w-full">
-                <input type="hidden" name="priceId" value={proProduct.prices[0].id} />
-                <Button type="submit" className="w-full" size="lg">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Pro'ya Şimdi Yükselt
-                </Button>
-              </form>
+              <ProUpgradeForm
+                priceId={proProduct.prices[0].id}
+                unitAmount={proProduct.prices[0].unit_amount}
+                initialPromoCode={initialPromoCode}
+              />
             </CardFooter>
           </Card>
         )}

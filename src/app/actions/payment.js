@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import Stripe from 'stripe';
 import { logServerError } from '@/utils/serverLogger';
+import { getPromoCode, toStripeCouponId } from '@/lib/promoCodes';
 
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -14,6 +15,28 @@ function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY, {
     apiVersion: '2024-04-10',
   });
+}
+
+async function getOrCreateStripeCoupon(stripe, promo) {
+  const couponId = toStripeCouponId(promo.code);
+
+  try {
+    await stripe.coupons.retrieve(couponId);
+    return couponId;
+  } catch (error) {
+    if (error?.code !== 'resource_missing') {
+      throw error;
+    }
+  }
+
+  const coupon = await stripe.coupons.create({
+    id: couponId,
+    percent_off: promo.percentOff,
+    duration: promo.duration,
+    name: `${promo.label} (${promo.code})`,
+  });
+
+  return coupon.id;
 }
 
 export async function createCheckoutSession(formData) {
@@ -37,6 +60,8 @@ export async function createCheckoutSession(formData) {
       .single();
 
     const priceId = formData.get('priceId');
+    const promoCodeRaw = formData.get('promoCode');
+    const promo = getPromoCode(promoCodeRaw);
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '');
 
     if (!priceId || !siteUrl) {
@@ -74,18 +99,25 @@ export async function createCheckoutSession(formData) {
       }
     }
 
+    const discounts = promo
+      ? [{ coupon: await getOrCreateStripeCoupon(stripe, promo) }]
+      : undefined;
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
+      ...(discounts ? { discounts } : {}),
       client_reference_id: user.id,
       metadata: {
         supabase_user_id: user.id,
+        ...(promo ? { promo_code: promo.code } : {}),
       },
       subscription_data: {
         metadata: {
           supabase_user_id: user.id,
+          ...(promo ? { promo_code: promo.code } : {}),
         },
       },
       success_url: `${siteUrl}/profile?session_id={CHECKOUT_SESSION_ID}`,
