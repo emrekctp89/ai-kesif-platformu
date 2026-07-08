@@ -51,7 +51,7 @@ select
   tc.content,
   tc.created_at,
   tc.updated_at,
-  p.full_name,
+  p.username as full_name,
   p.avatar_url
 from public.tool_comments tc
 left join public.profiles p on tc.user_id = p.id;
