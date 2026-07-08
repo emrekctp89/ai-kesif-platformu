@@ -72,9 +72,9 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npm run dev', // Uses the standard dev script (which runs on 3005)
+    command: process.env.CI ? 'npm run start -- -p 3005' : 'npm run dev',
     url: 'http://localhost:3005',
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    timeout: 180 * 1000,
   },
 });
