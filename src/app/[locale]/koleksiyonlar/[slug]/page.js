@@ -7,7 +7,7 @@ import { Users, Star } from 'lucide-react';
 
 // DEĞİŞİKLİK: Veri çekme mantığını daha sağlam hale getiriyoruz.
 async function getCollectionDetails(slug) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // 1. ADIM: Koleksiyonun ana bilgilerini ve içindeki araç-not ilişkilerini çek.
   const { data: collection, error: collectionError } = await supabase
@@ -59,7 +59,8 @@ async function getCollectionDetails(slug) {
   return { collection, tools: toolsWithNotes };
 }
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const { collection } = await getCollectionDetails(params.slug);
   return {
     title: `${collection.title} | AI Keşif Platformu`,
@@ -67,7 +68,8 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function CollectionDetailPage({ params }) {
+export default async function CollectionDetailPage(props) {
+  const params = await props.params;
   const { collection, tools } = await getCollectionDetails(params.slug);
 
   return (

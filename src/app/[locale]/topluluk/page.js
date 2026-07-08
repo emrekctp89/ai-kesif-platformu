@@ -4,7 +4,7 @@ import { Users, Star, TrendingUp } from 'lucide-react';
 
 // Veritabanındaki RPC fonksiyonlarını çağıran fonksiyonlar
 async function getDiscoveryData(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const [
     { data: weeklyTop },
     { data: mostFollowed },
@@ -36,7 +36,7 @@ export const metadata = {
 };
 
 export default async function CommunityPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user: currentUser },
   } = await supabase.auth.getUser();

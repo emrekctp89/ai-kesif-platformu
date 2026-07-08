@@ -6,7 +6,7 @@ import { BookOpen, Map } from 'lucide-react';
 
 // "Rehber" tipindeki blog yazılarını çeken fonksiyon
 async function getGuides() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('posts')
     .select('title, slug, description, featured_image_url')
@@ -23,7 +23,7 @@ async function getGuides() {
 
 // "Öğrenme Yolu" tipindeki koleksiyonları çeken fonksiyon
 async function getLearningPaths() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('collections')
     .select('title, slug, description, profiles(username)')

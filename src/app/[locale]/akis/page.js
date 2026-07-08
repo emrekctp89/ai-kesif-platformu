@@ -8,7 +8,7 @@ import Image from 'next/image';
 
 // Veritabanındaki RPC fonksiyonunu, artık kullanıcı ID'si ile çağıran fonksiyon
 async function getActivityFeedData(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   // DEĞİŞİKLİK: Fonksiyona artık p_user_id'yi gönderiyoruz
   const { data, error } = await supabase.rpc('get_community_activity_feed', {
     p_user_id: userId,
@@ -138,7 +138,7 @@ export const metadata = {
 };
 
 export default async function ActivityFeedPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

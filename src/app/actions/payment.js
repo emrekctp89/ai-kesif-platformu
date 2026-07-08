@@ -41,7 +41,7 @@ async function getOrCreateStripeCoupon(stripe, promo) {
 
 export async function createCheckoutSession(formData) {
   'use server';
-  const supabase = createClient(await cookies());
+  const supabase = await createClient(await cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -137,7 +137,7 @@ export async function createCheckoutSession(formData) {
 
 export async function createPromotionCheckout(toolId, toolSlug) {
   'use server';
-  const supabase = createClient(await cookies());
+  const supabase = await createClient(await cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 
 // Veritabanından yayınlanmış tüm yazıları çeken fonksiyon
 async function getPublishedPosts() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('posts')
     .select('title, slug, description, featured_image_url, published_at')

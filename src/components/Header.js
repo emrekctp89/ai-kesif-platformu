@@ -19,7 +19,7 @@ async function getTotalUnreadMessages(supabase, userId) {
 
 // Bu, artık sadece veri çeken, sadeleşmiş bir "Server Component"tir.
 export default async function Header() {
-  const supabase = createClient(await cookies());
+  const supabase = await createClient(await cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();

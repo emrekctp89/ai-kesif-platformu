@@ -6,14 +6,15 @@ import Image from 'next/image';
 
 // Bu fonksiyon, durumu ne olursa olsun bir yazıyı ID'sine göre çeker.
 async function getPostForPreview(id) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.from('posts').select('*').eq('id', id).single();
   if (error || !data) notFound();
   return data;
 }
 
-export default async function PreviewPostPage({ params }) {
-  const supabase = createClient();
+export default async function PreviewPostPage(props) {
+  const params = await props.params;
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

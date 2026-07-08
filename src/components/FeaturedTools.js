@@ -8,7 +8,7 @@ import ToolIcon from '@/components/ToolIcon';
 import { TrackedExternalLink } from '@/components/TrackedExternalLink';
 
 async function getFeaturedTools() {
-  const supabase = createClient(await cookies());
+  const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from('tools_with_ratings')
     .select('id, name, slug, description, link, tier, category_name, category_slug')

@@ -9,7 +9,7 @@ import { ShowcaseFilters } from '@/components/ShowcaseFilters'; // Yeni filtre b
 
 // Fonksiyon artık filtre parametrelerini alıyor
 async function getPublicShowcaseItems(searchParams) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const contentType = searchParams.contentType || null;
   const toolId = searchParams.toolId || null;
   const sortBy = searchParams.sortBy || 'newest';
@@ -29,7 +29,7 @@ async function getPublicShowcaseItems(searchParams) {
 
 // Filtre menüsü için tüm araçları çeken fonksiyon
 async function getAllToolsForSelect() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('tools')
     .select('id, name')
@@ -48,12 +48,13 @@ export const metadata = {
     'Topluluğumuz tarafından yapay zeka araçları kullanılarak yaratılmış ilham verici eserleri keşfedin.',
 };
 
-export default async function ShowcasePage({ searchParams }) {
+export default async function ShowcasePage(props) {
+  const searchParams = await props.searchParams;
   const [items, allTools, user] = await Promise.all([
     getPublicShowcaseItems(searchParams),
     getAllToolsForSelect(),
-    createClient()
-      .auth.getUser()
+    await createClient()
+      .then((supabase) => supabase.auth.getUser())
       .then((res) => res.data.user),
   ]);
 

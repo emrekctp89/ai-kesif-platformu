@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 export async function submitToShowcaseChallenge(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -37,7 +37,7 @@ export async function submitToShowcaseChallenge(formData) {
 
 export async function toggleChallengeVote(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -71,7 +71,7 @@ export async function toggleChallengeVote(formData) {
 export async function createChallengeManually(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -162,7 +162,7 @@ export async function generateChallengeIdeasWithAi(topic) {
 export async function updateChallenge(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -198,7 +198,7 @@ export async function updateChallenge(formData) {
 
 export async function submitShowcaseToChallenge(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

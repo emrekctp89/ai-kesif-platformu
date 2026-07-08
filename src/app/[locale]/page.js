@@ -10,7 +10,7 @@ const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşi
 
 // Bu fonksiyon, sayfa için gerekli olan tüm verileri sunucuda tek seferde çeker.
 async function getPageData(searchParams) {
-  const supabase = createClient(await cookies());
+  const supabase = await createClient(await cookies());
 
   const { fetchMoreTools } = await import('@/app/actions');
   const [authResult, initialTools, categoriesResult, tagsResult] = await Promise.all([

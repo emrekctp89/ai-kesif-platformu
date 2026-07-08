@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 export async function submitLaunch(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -73,7 +73,7 @@ export async function submitLaunch(formData) {
 
 export async function toggleLaunchVote(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

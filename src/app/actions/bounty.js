@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 export async function createBounty(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -53,7 +53,7 @@ export async function createBounty(formData) {
 
 export async function submitToBounty(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -87,7 +87,7 @@ export async function submitToBounty(formData) {
 
 export async function acceptBountySubmission(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

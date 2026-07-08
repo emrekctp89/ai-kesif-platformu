@@ -47,7 +47,7 @@ export async function getEmbedding(text) {
 }
 
 async function getAllToolsForAI() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('tools')
     .select('name, slug, description')
@@ -96,7 +96,7 @@ export async function getAiRecommendation(userPrompt) {
     const embeddingString = `[${promptEmbedding.join(',')}]`;
 
     // 2. Vektör araması ile en uygun 10 aracı bul (RAG)
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: matchedTools, error: matchError } = await supabase.rpc('match_tools', {
       query_embedding: embeddingString,
       match_threshold: 0.1, // Düşük bir eşik, Gemini eleme yapacak
@@ -403,7 +403,7 @@ export async function generateImageWithImagen(userPrompt) {
 export async function getAdminCoPilotResponse(userPrompt, history) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -520,7 +520,7 @@ export async function runOmniSearch(query) {
   }
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const queryEmbedding = await getEmbedding(query);
 
@@ -552,7 +552,7 @@ export async function runAdvancedOmniSearch(query) {
   if (!query) return { results: [], suggestions: [], error: null };
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const queryEmbedding = await getEmbedding(query);
 
     const { data: searchResults, error: rpcError } = await supabase.rpc('advanced_omni_search', {
@@ -586,7 +586,7 @@ export async function runAdvancedOmniSearch(query) {
 export async function getAiCodeReview(codeToReview) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -820,7 +820,7 @@ Cevabını SADECE JSON formatında ver:
 export async function handleOnboardingStep(history, userAnswer) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -912,7 +912,7 @@ export async function getVoiceAgentResponse(userQuery) {
   }
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const queryEmbedding = await getEmbedding(userQuery);
 
@@ -980,7 +980,7 @@ export async function getAdvancedVoiceAgentResponse(userQuery, history) {
   }
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const queryEmbedding = await getEmbedding(userQuery);
 
@@ -1070,7 +1070,7 @@ export async function getAiConciergeResponse(userQuery, history) {
   if (!userQuery) return { error: 'Sorgu boş olamaz.' };
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const queryEmbedding = await getEmbedding(userQuery);
     const { data: context, error: contextError } = await supabase.rpc('get_full_context_for_ai', {
       p_query_text: userQuery,
@@ -1149,7 +1149,7 @@ export async function getAiConciergeResponse(userQuery, history) {
 export async function getAiMentorFeedback(userPrompt) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -8,7 +8,7 @@ import { slugify } from '@/utils/slugify';
 export async function addCategory(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -41,7 +41,7 @@ export async function addCategory(formData) {
 export async function updateCategory(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -73,7 +73,7 @@ export async function updateCategory(formData) {
 export async function deleteCategory(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -105,7 +105,7 @@ export async function deleteCategory(formData) {
 export async function addTag(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -137,7 +137,7 @@ export async function addTag(formData) {
 export async function deleteTag(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -166,7 +166,7 @@ export async function deleteTag(formData) {
 export async function assignTagsToTool(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

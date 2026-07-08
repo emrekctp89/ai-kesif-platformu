@@ -17,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 
 // DEĞİŞİKLİK: Bu fonksiyon artık bizim akıllı RPC fonksiyonumuzu çağırıyor.
 async function getBountyDetails(bountyId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc('get_bounty_details_with_submissions', {
     p_bounty_id: bountyId,
   });
@@ -31,7 +31,7 @@ async function getBountyDetails(bountyId) {
 
 // Seçim menüsü için tüm araçları çeken fonksiyon
 async function getAllToolsForSelect() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from('tools')
     .select('id, name')
@@ -40,12 +40,13 @@ async function getAllToolsForSelect() {
   return data || [];
 }
 
-export default async function BountyDetailPage({ params }) {
+export default async function BountyDetailPage(props) {
+  const params = await props.params;
   const bounty = await getBountyDetails(params.id);
   const allTools = await getAllToolsForSelect();
   const {
     data: { user },
-  } = await createClient().auth.getUser();
+  } = (await createClient()).auth.getUser();
 
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4">

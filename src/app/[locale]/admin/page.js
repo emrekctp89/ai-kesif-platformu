@@ -15,7 +15,7 @@ export const metadata = {
 
 // Tüm verileri tek bir yerden çeken fonksiyon
 async function getAdminData() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const supabaseAdmin = createAdminClient();
   const [
     { data: unapprovedTools },
@@ -88,7 +88,7 @@ async function getAdminData() {
 }
 
 export default async function AdminPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

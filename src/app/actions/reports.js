@@ -146,7 +146,7 @@ export async function submitToolLinkReport(formData) {
     return { error: 'Raporlanan bağlantı geçerli değil.' };
   }
 
-  const supabase = createClient(await cookies());
+  const supabase = await createClient(await cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -199,7 +199,7 @@ export async function submitToolLinkReport(formData) {
 export async function updateToolLinkReportStatus(formData) {
   'use server';
 
-  const supabase = createClient(await cookies());
+  const supabase = await createClient(await cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 
 // Veritabanından 3 rastgele araç çeken fonksiyonu güncelliyoruz
 async function getThreeRandomTools() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // DEĞİŞİKLİK: Artık RPC (Remote Procedure Call) ile özel fonksiyonumuzu çağırıyoruz.
   const { data, error } = await supabase.rpc('get_random_tools', {

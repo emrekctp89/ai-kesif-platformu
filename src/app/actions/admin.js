@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 export async function deleteUserFromAdmin(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -42,7 +42,7 @@ export async function deleteUserFromAdmin(formData) {
 export async function updateAdminAlertStatus(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

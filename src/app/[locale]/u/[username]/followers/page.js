@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Belirli bir kullanıcının takipçilerini çeken fonksiyon
 async function getFollowers(username) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('profiles')
     .select(
@@ -25,7 +25,8 @@ async function getFollowers(username) {
   return data.followers.map((f) => f.follower);
 }
 
-export default async function FollowersPage({ params }) {
+export default async function FollowersPage(props) {
+  const params = await props.params;
   const followers = await getFollowers(params.username);
 
   return (

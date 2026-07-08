@@ -14,7 +14,7 @@ export const metadata = {
 };
 
 export default async function BulkImportPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -7,7 +7,7 @@ import { SubmitToShowcaseChallengeDialog } from '@/components/SubmitToShowcaseCh
 
 // Aktif olan son yarışmayı ve tüm gönderimlerini çeken fonksiyon
 async function getActiveChallenge() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const today = new Date().toISOString().split('T')[0];
 
   const { data, error } = await supabase
@@ -47,7 +47,7 @@ export const metadata = {
 // YENİ: Bir kullanıcının yarışmaya gönderebileceği eserlerini çeken fonksiyon
 async function getUserShowcaseItems(userId) {
   if (!userId) return [];
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('showcase_items')
     .select('id, title, image_url')
@@ -58,7 +58,7 @@ async function getUserShowcaseItems(userId) {
 }
 
 export default async function ChallengePage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -6,7 +6,7 @@ import { HomepageClient } from '@/components/HomepageClient';
 const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
 
 async function getCategory(slug) {
-  const supabase = createClient(await cookies());
+  const supabase = await createClient(await cookies());
   const { data } = await supabase
     .from('categories')
     .select('name, slug')
@@ -17,7 +17,7 @@ async function getCategory(slug) {
 }
 
 async function getCategoryPageData(slug) {
-  const supabase = createClient(await cookies());
+  const supabase = await createClient(await cookies());
   const { fetchMoreTools } = await import('@/app/actions');
 
   const [category, authResult, initialTools, categoriesResult, tagsResult] = await Promise.all([

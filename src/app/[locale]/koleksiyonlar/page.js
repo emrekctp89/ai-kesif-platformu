@@ -5,7 +5,7 @@ import { Users } from 'lucide-react';
 
 // Veritabanından herkese açık tüm koleksiyonları çeken fonksiyon
 async function getPublicCollections() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('collections')
     .select(

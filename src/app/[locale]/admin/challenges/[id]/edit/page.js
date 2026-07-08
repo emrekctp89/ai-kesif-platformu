@@ -3,14 +3,15 @@ import { notFound, redirect } from 'next/navigation';
 import { ChallengeEditor } from '@/components/ChallengeEditor'; // Bu bileşeni bir sonraki adımda oluşturacağız
 
 async function getChallenge(id) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.from('challenges').select('*').eq('id', id).single();
   if (error || !data) notFound();
   return data;
 }
 
-export default async function EditChallengePage({ params }) {
-  const supabase = createClient();
+export default async function EditChallengePage(props) {
+  const params = await props.params;
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

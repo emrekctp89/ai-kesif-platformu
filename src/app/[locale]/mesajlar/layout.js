@@ -14,7 +14,7 @@ export const metadata = {
 
 // Kullanıcının sohbetlerini, okunmamış mesaj sayılarıyla birlikte çeken fonksiyon
 async function getConversations(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc('get_user_conversations', {
     p_user_id: userId,
   });
@@ -26,8 +26,12 @@ async function getConversations(userId) {
   return data;
 }
 
-export default async function MessagesLayout({ children, params }) {
-  const supabase = createClient();
+export default async function MessagesLayout(props) {
+  const params = await props.params;
+
+  const { children } = props;
+
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -97,7 +101,6 @@ export default async function MessagesLayout({ children, params }) {
           </div>
         </div>
       </aside>
-
       {/* Sağ Taraf: Aktif Sohbet Penceresi */}
       <main
         className={cn(

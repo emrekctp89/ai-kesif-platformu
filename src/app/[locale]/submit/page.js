@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { AnalyticsEvent } from '@/components/AnalyticsEvent';
 
 async function getCategories() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.from('categories').select('id, name').order('name');
   return data || [];
 }
 
 export default async function SubmitPage({ searchParams }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

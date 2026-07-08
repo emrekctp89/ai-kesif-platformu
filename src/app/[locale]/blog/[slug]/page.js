@@ -7,7 +7,7 @@ import Image from 'next/image';
 
 // Veritabanından belirli bir yazıyı slug'ına göre çeken fonksiyon
 async function getPost(slug) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('posts')
     .select('*')
@@ -22,7 +22,8 @@ async function getPost(slug) {
   return data;
 }
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const post = await getPost(params.slug);
   return {
     title: `${post.title} | AI Keşif Platformu`,
@@ -30,7 +31,8 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function PostPage({ params }) {
+export default async function PostPage(props0) {
+  const params = await props0.params;
   const post = await getPost(params.slug);
 
   return (

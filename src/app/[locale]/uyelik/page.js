@@ -15,7 +15,7 @@ import { ProUpgradeForm } from '@/components/ProUpgradeForm';
 
 // Veritabanından ürünleri ve fiyatları çeken fonksiyon
 async function getProducts() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('products')
     .select('*, prices(*)')
@@ -30,8 +30,9 @@ async function getProducts() {
   return data;
 }
 
-export default async function PricingPage({ searchParams }) {
-  const supabase = createClient();
+export default async function PricingPage(props) {
+  const searchParams = await props.searchParams;
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 export async function updateUserProfile(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -54,7 +54,7 @@ export async function updateUserProfile(formData) {
 export async function updateAvatar(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -101,7 +101,7 @@ export async function updateAvatar(formData) {
 
 export async function updateUserPapers(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

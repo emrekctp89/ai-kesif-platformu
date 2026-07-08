@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 export async function submitShowcaseItem(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -83,7 +83,7 @@ export async function submitShowcaseItem(formData) {
 export async function deleteShowcaseItem(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -128,7 +128,7 @@ export async function deleteShowcaseItem(formData) {
 export async function approveShowcaseItem(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -161,7 +161,7 @@ export async function approveShowcaseItem(formData) {
 export async function updateShowcaseItem(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -210,7 +210,7 @@ export async function assignTagsToShowcaseItem(formData) {
 export async function addShowcaseComment(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -247,7 +247,7 @@ export async function addShowcaseComment(formData) {
 export async function deleteShowcaseComment(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -279,7 +279,7 @@ export async function deleteShowcaseComment(formData) {
 export async function toggleShowcaseVote(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -342,7 +342,7 @@ export async function toggleShowcaseVote(formData) {
 export async function getShowcaseItemDetails(itemId) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

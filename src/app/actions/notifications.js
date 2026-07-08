@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 
 export async function getNotifications() {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -35,7 +35,7 @@ export async function getNotifications() {
 
 export async function markNotificationsAsRead() {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -54,7 +54,7 @@ export async function markNotificationsAsRead() {
 export async function savePushSubscription(subscriptionJSON) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -82,7 +82,7 @@ export async function savePushSubscription(subscriptionJSON) {
 export async function deletePushSubscription() {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -99,7 +99,7 @@ export async function deletePushSubscription() {
 export async function fetchActivityFeed() {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

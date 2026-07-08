@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation';
 export async function startConversation(recipientUserId) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -36,7 +36,7 @@ export async function startConversation(recipientUserId) {
 export async function sendMessage(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -76,7 +76,7 @@ export async function sendMessage(formData) {
 
 export async function searchUsers(searchTerm) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -98,7 +98,7 @@ export async function searchUsers(searchTerm) {
 
 export async function getRecentConversationsForShare() {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -141,7 +141,7 @@ export async function getRecentConversationsForShare() {
 
 export async function sendMessageWithSharedContent(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user: sender },
   } = await supabase.auth.getUser();
@@ -206,7 +206,7 @@ export async function sendMessageWithSharedContent(formData) {
 export async function markConversationAsRead(conversationId) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

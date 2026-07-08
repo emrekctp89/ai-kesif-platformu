@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Heart, MessageSquare, Star, ImageIcon, Users } from 'lucide-react';
 
 async function getActivityFeedData() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc('get_community_activity_feed');
   if (error) {
     console.error('Aktivite akışı çekilirken hata:', error);

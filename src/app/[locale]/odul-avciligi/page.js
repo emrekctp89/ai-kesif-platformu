@@ -20,7 +20,7 @@ import { Award, Clock } from 'lucide-react';
 
 // Veritabanından herkese açık tüm ödül ilanlarını çeken fonksiyon
 async function getActiveBounties() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('bounties')
     .select(
@@ -53,7 +53,7 @@ export default async function BountiesPage() {
   const bounties = await getActiveBounties();
   const {
     data: { user },
-  } = await createClient().auth.getUser();
+  } = (await createClient()).auth.getUser();
 
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4">

@@ -5,7 +5,7 @@ import { Book, Users, Building } from 'lucide-react';
 
 // Veritabanındaki yeni RPC fonksiyonunu çağıran fonksiyon
 async function getResearchPapers() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc('get_all_published_papers');
 
   if (error) {

@@ -21,7 +21,7 @@ const tierColors = {
 };
 // Veri çeken fonksiyonu, takipçi sayılarını da alacak şekilde güncelliyoruz
 async function getProfileData(username, currentUserId) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -55,7 +55,8 @@ async function getProfileData(username, currentUserId) {
   };
 }
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const profile = await getProfileData(params.username);
   return {
     title: `${profile.username}'in Profili | AI Keşif Platformu`,
@@ -64,8 +65,9 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function UserProfilePage({ params }) {
-  const supabase = createClient();
+export default async function UserProfilePage(props) {
+  const params = await props.params;
+  const supabase = await createClient();
   const {
     data: { user: currentUser },
   } = await supabase.auth.getUser();
@@ -136,7 +138,6 @@ export default async function UserProfilePage({ params }) {
           </div>
         )}
       </header>
-
       {/* YENİ: ROZETLER BÖLÜMÜ */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold mb-4">Kazanılan Rozetler</h2>
@@ -146,7 +147,6 @@ export default async function UserProfilePage({ params }) {
           </CardContent>
         </Card>
       </section>
-
       {/* Aktivite Akışı */}
       <div className="space-y-8">
         {/* Son Yorumlar */}

@@ -5,7 +5,7 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import slugify from 'slugify';
 
 export async function bulkImportTools(jsonText) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const supabaseAdmin = createAdminClient();
 
   // 1. Yetki Kontrolü

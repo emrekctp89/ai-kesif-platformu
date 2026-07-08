@@ -5,7 +5,7 @@ import { CommentsUI } from './CommentsUI';
 // Bu ana bileşen, bir Server Component olarak kalır.
 // Görevi: veritabanından veriyi çekmek ve Client Component'e aktarmak.
 export default async function CommentSection({ toolId, toolSlug }) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Veriyi çekiyoruz
   const {

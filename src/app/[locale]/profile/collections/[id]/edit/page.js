@@ -4,7 +4,7 @@ import { CollectionEditor } from '@/components/CollectionEditor';
 
 // Koleksiyonu, içindeki araçlar ve notlarla birlikte çeken fonksiyon
 async function getCollection(id, userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('collections')
     .select(
@@ -25,7 +25,7 @@ async function getCollection(id, userId) {
 
 // Tüm onaylanmış araçları çeken fonksiyon
 async function getAllTools() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('tools')
     .select('id, name')
@@ -38,8 +38,9 @@ async function getAllTools() {
   return data;
 }
 
-export default async function EditCollectionPage({ params }) {
-  const supabase = createClient();
+export default async function EditCollectionPage(props) {
+  const params = await props.params;
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

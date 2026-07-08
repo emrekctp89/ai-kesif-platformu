@@ -8,7 +8,7 @@ const MAX_COMMENT_LENGTH = 1000;
 
 export async function addComment(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -50,7 +50,7 @@ export async function addComment(formData) {
 export async function deleteComment(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -83,7 +83,7 @@ export async function deleteComment(formData) {
 
 export async function submitPrompt(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -137,7 +137,7 @@ export async function submitPrompt(formData) {
 
 export async function togglePromptVote(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -165,7 +165,7 @@ export async function togglePromptVote(formData) {
 export async function deletePrompt(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -202,7 +202,7 @@ export async function deletePrompt(formData) {
 export async function toggleFollowUser(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user: currentUser },
   } = await supabase.auth.getUser();
@@ -281,7 +281,7 @@ export async function toggleFollowUser(formData) {
 export async function reportComment(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

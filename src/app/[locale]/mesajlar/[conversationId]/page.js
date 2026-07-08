@@ -4,7 +4,7 @@ import { ChatWindow } from '@/components/ChatWindow';
 
 // Belirli bir sohbete ait ilk mesajları çeken fonksiyon
 async function getMessages(conversationId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   // DEĞİŞİKLİK: 'profiles' tablosundan doğru şekilde veri çekiyoruz
   const { data, error } = await supabase
     .from('messages')
@@ -26,7 +26,7 @@ async function getMessages(conversationId) {
 
 // Sohbetteki diğer kullanıcının bilgilerini çeken fonksiyon
 async function getOtherParticipant(conversationId, currentUserId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('conversation_participants')
     .select(`profiles(id, username, email, avatar_url)`)
@@ -41,8 +41,9 @@ async function getOtherParticipant(conversationId, currentUserId) {
   return data.profiles;
 }
 
-export default async function ConversationPage({ params }) {
-  const supabase = createClient();
+export default async function ConversationPage(props) {
+  const params = await props.params;
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

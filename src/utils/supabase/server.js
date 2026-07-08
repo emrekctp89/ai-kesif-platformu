@@ -4,18 +4,20 @@ import process from 'node:process';
 // Bu istemci, sunucu bileşenlerinde kullanılmak üzere tasarlanmıştır.
 // Tarayıcı bileşenlerinde kullanılmamalıdır, çünkü tarayıcıda cookies erişimi yoktur.
 
-export const createClient = (cookieStore = cookies()) => {
+export const createClient = async (cookieStore) => {
+  const store = cookieStore ?? (await cookies());
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name) {
-          return cookieStore.get(name)?.value;
+          return store.get(name)?.value;
         },
         set(name, value, options) {
           try {
-            cookieStore.set({ name, value, ...options });
+            store.set({ name, value, ...options });
           } catch (_error) {
             // Server Component'ten çağrıldığında bu hata olabilir,
             // middleware oturumu tazelediği için güvenle görmezden gelinebilir.
@@ -23,7 +25,7 @@ export const createClient = (cookieStore = cookies()) => {
         },
         remove(name, options) {
           try {
-            cookieStore.delete({ name, ...options });
+            store.delete({ name, ...options });
           } catch (_error) {
             // Server Component'ten çağrıldığında bu hata olabilir,
             // middleware oturumu tazelediği için güvenle görmezden gelinebilir.

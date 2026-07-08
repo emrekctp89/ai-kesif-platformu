@@ -10,7 +10,7 @@ import { GoodbyeEmail } from '@/components/emails/GoodbyeEmail';
 import { enforceRateLimit } from '@/utils/antiAbuse';
 
 export async function signOut() {
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.auth.signOut();
   revalidatePath('/', 'layout');
   redirect('/login');
@@ -29,7 +29,7 @@ export async function signIn(formData) {
     return redirect(`/login?message=${encodeURIComponent(errorMessage)}`);
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -52,7 +52,7 @@ export async function signIn(formData) {
 
 export async function oAuthSignIn(provider) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: provider,
     options: {
@@ -79,7 +79,7 @@ export async function signUp(formData) {
     return redirect(`/signup?message=${encodeURIComponent(errorMessage)}`);
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -126,7 +126,7 @@ export async function requestPasswordReset(formData) {
     return redirect(`/forgot-password?message=${encodeURIComponent(errorMessage)}`);
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
@@ -145,7 +145,7 @@ export async function updatePassword(formData) {
   'use server';
 
   const password = formData.get('password');
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { error } = await supabase.auth.updateUser({
     password: password,
@@ -162,7 +162,7 @@ export async function updatePassword(formData) {
 
 export async function deleteUser() {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

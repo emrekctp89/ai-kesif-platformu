@@ -4,7 +4,7 @@ import { LaunchForm } from '@/components/LaunchForm';
 
 // Kullanıcının, daha önce lansmanını yapmadığı, onaylanmış araçlarını çeken fonksiyon
 async function getLaunchableTools(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // DEĞİŞİKLİK: 'launches' tablosunda zaten var olan tool_id'leri bir alt sorguyla buluyoruz.
   const { data: launchedToolIds, error: launchedError } = await supabase
@@ -45,7 +45,7 @@ export const metadata = {
 };
 
 export default async function SubmitLaunchPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

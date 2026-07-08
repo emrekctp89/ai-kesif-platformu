@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { AddPromptDialog } from './AddPromptDialog';
 
 export default async function PromptSection({ toolId, toolSlug }) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },

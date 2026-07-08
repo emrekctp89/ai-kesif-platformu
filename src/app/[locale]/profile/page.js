@@ -20,7 +20,7 @@ import { DailyQuests } from '@/components/DailyQuests'; // Yeni bileşeni import
 
 async function getUserProfile(userId) {
   if (!userId) return null;
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('profiles')
     .select('avatar_url, reputation_points, username, bio')
@@ -35,7 +35,7 @@ async function getUserProfile(userId) {
 }
 
 async function getUserReputationEvents(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('reputation_events')
     .select('*')
@@ -51,7 +51,7 @@ async function getUserReputationEvents(userId) {
 }
 
 async function getUserCollections(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('collections')
     .select('id, title, is_public')
@@ -65,7 +65,7 @@ async function getUserCollections(userId) {
 }
 
 async function getUserShowcaseItems(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc('get_user_showcase_items', {
     p_user_id: userId,
   });
@@ -77,7 +77,7 @@ async function getUserShowcaseItems(userId) {
 }
 
 async function getUserPrompts(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('prompts')
     .select(`id, title, vote_count, tools ( name, slug )`)
@@ -91,7 +91,7 @@ async function getUserPrompts(userId) {
 }
 
 async function getUserComments(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('comments')
     .select(`id, content, created_at, tools ( name, slug )`)
@@ -105,7 +105,7 @@ async function getUserComments(userId) {
 }
 
 async function getUserFavoriteTools(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('favorites')
     .select(`tools (id, name, slug, description, categories (name))`)
@@ -119,7 +119,7 @@ async function getUserFavoriteTools(userId) {
 }
 
 async function getUserRatedTools(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('ratings')
     .select(`rating, tools (id, name, slug, description)`)
@@ -134,7 +134,7 @@ async function getUserRatedTools(userId) {
 
 // YENİ: Kullanıcının projelerini çeken fonksiyon
 async function getUserProjects(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('projects')
     .select('id, title, created_at, updated_at')
@@ -150,7 +150,7 @@ async function getUserProjects(userId) {
 
 // YENİ: Kullanıcının o günkü görevlerini çeken fonksiyon
 async function getUserDailyQuests(userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const today = new Date().toISOString().split('T')[0];
 
   const { data, error } = await supabase
@@ -177,7 +177,7 @@ async function getUserDailyQuests(userId) {
 }
 
 export default async function ProfilePage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

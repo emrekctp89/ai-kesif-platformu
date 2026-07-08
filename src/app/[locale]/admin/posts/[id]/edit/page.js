@@ -4,7 +4,7 @@ import { PostEditor } from '@/components/PostEditor';
 
 // Tüm gerekli verileri çeken fonksiyonlar
 async function getPost(id) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('posts')
     .select(`*, post_tools(tools(id, name)), post_tags(tags(id, name))`)
@@ -15,7 +15,7 @@ async function getPost(id) {
 }
 
 async function getAllTools() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from('tools')
     .select('id, name')
@@ -25,19 +25,20 @@ async function getAllTools() {
 }
 
 async function getAllTags() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.from('tags').select('*').order('name', { ascending: true });
   return data || [];
 }
 
 async function getAllCategories() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.from('categories').select('*').order('name', { ascending: true });
   return data || [];
 }
 
-export default async function EditPostPage({ params }) {
-  const supabase = createClient();
+export default async function EditPostPage(props) {
+  const params = await props.params;
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -6,7 +6,7 @@ import { Trophy } from 'lucide-react';
 
 // Veritabanından en yüksek puanlı kullanıcıları çeken fonksiyon
 async function getTopUsers() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('profiles')
     .select('email, avatar_url, reputation_points')

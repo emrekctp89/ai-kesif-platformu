@@ -5,7 +5,7 @@ import { Flame } from 'lucide-react';
 import ToolIcon from '@/components/ToolIcon';
 
 async function getTrendingData() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc('get_trending_tools');
   if (error) {
     console.error('Trend olan araçlar çekilirken hata:', error);

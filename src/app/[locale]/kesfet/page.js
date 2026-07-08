@@ -19,7 +19,7 @@ import {
 
 // Veritabanındaki RPC fonksiyonlarını çağıran ana fonksiyon
 async function getDiscoverData() {
-  const supabase = createClient();
+  const supabase = await createClient();
   // DEĞİŞİKLİK: Artık 3 farklı RPC'yi tek seferde çağırıyoruz
   const [
     { data: mainData, error: mainError },

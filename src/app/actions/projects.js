@@ -8,7 +8,7 @@ import { slugify } from '@/utils/slugify';
 
 export async function createProject(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -40,7 +40,7 @@ export async function createProject(formData) {
 
 export async function updateProject(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const id = formData.get('id');
   const title = formData.get('title');
@@ -63,7 +63,7 @@ export async function updateProject(formData) {
 
 export async function deleteProject(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const id = formData.get('id');
 
   const { error } = await supabase.from('projects').delete().eq('id', id);
@@ -78,7 +78,7 @@ export async function deleteProject(formData) {
 
 export async function updateProjectItems(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const projectId = formData.get('projectId');
   const items = JSON.parse(formData.get('items') || '[]');
@@ -119,7 +119,7 @@ export async function updateProjectItems(formData) {
 export async function getAiProjectStrategy(projectId) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

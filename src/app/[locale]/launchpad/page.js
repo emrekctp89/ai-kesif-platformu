@@ -13,7 +13,7 @@ import Link from 'next/link'; // Link'i import ediyoruz
 
 // Veritabanındaki RPC fonksiyonunu çağıran fonksiyon
 async function getLaunches(startDate, endDate, userId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc('get_launches', {
     p_start_date: startDate,
     p_end_date: endDate,
@@ -34,7 +34,7 @@ export const metadata = {
 };
 
 export default async function LaunchpadPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -4,7 +4,7 @@ import { signOut } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 
 export default async function AuthButton() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

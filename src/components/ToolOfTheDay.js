@@ -10,7 +10,7 @@ import { TrackedExternalLink } from '@/components/TrackedExternalLink';
 
 // Veritabanındaki RPC fonksiyonunu çağıran fonksiyon
 async function getToolOfTheDayData() {
-  const supabase = createClient(await cookies());
+  const supabase = await createClient(await cookies());
   // RPC ile özel fonksiyonumuzu çağırıyoruz ve tek bir sonuç bekliyoruz.
   const { data, error } = await supabase.rpc('get_tool_of_the_day').single();
 

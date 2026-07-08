@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Belirli bir kullanıcının takip ettiklerini çeken fonksiyon
 async function getFollowing(username) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('profiles')
     .select(
@@ -25,7 +25,8 @@ async function getFollowing(username) {
   return data.following.map((f) => f.followed);
 }
 
-export default async function FollowingPage({ params }) {
+export default async function FollowingPage(props) {
+  const params = await props.params;
   const following = await getFollowing(params.username);
 
   return (

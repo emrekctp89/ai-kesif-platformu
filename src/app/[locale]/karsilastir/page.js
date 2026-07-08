@@ -12,7 +12,7 @@ async function getComparisonData(toolSlugs) {
     return [];
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('tools_with_ratings')
     .select('*')
@@ -28,7 +28,7 @@ async function getComparisonData(toolSlugs) {
 
 // Tüm araçları seçme menüsü için çeken fonksiyon
 async function getAllToolsForSelect() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('tools')
     .select('name, slug')
@@ -48,7 +48,8 @@ export const metadata = {
     'Yapay zeka araçlarını yan yana karşılaştırarak ihtiyaçlarınıza en uygun olanı bulun.',
 };
 
-export default async function ComparePage({ searchParams }) {
+export default async function ComparePage(props) {
+  const searchParams = await props.searchParams;
   const toolSlugs = searchParams.tools ? searchParams.tools.split(',') : [];
   const [comparedTools, allTools] = await Promise.all([
     getComparisonData(toolSlugs),
@@ -66,18 +67,15 @@ export default async function ComparePage({ searchParams }) {
           analizini görün.
         </p>
       </div>
-
       <div className="mb-8 flex justify-center">
         <ToolSelectForComparison allTools={allTools} selectedSlugs={toolSlugs} />
       </div>
-
       {/* AI Karşılaştırma Bölümü */}
       {comparedTools.length > 1 && (
         <div className="mb-12">
           <AiComparison tools={comparedTools} />
         </div>
       )}
-
       {/* Karşılaştırma Tablosu */}
       {comparedTools.length > 0 ? (
         // DEĞİŞİKLİK: Mobil için dikey, masaüstü için yatay grid yapısı

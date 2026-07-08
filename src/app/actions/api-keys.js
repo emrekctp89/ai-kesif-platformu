@@ -8,7 +8,7 @@ import crypto from 'crypto';
  * Returns the raw key (to be shown once) and stores the hash in the database.
  */
 export async function generateApiKey(name) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -48,7 +48,7 @@ export async function generateApiKey(name) {
  * Fetches all API keys for the current user.
  */
 export async function getApiKeys() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -74,7 +74,7 @@ export async function getApiKeys() {
  * Revokes (deletes) an API key.
  */
 export async function revokeApiKey(id) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

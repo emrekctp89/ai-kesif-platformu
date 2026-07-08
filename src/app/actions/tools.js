@@ -58,7 +58,7 @@ function buildFallbackToolDescription({ name, description, link }) {
 
 // Araçları çeken yardımcı (getSimilarTools için)
 async function getOtherToolsForAI(currentToolId) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('tools')
     .select('name, slug, description')
@@ -161,7 +161,7 @@ export async function submitTool(formData) {
     );
   }
 
-  const supabase = createClient(await cookies());
+  const supabase = await createClient(await cookies());
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   const {
@@ -277,7 +277,7 @@ export async function submitTool(formData) {
 
 export async function approveTool(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -354,7 +354,7 @@ export async function approveTool(formData) {
 
 export async function rejectTool(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -392,7 +392,7 @@ export async function rejectTool(formData) {
 
 export async function rateTool(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -420,7 +420,7 @@ export async function rateTool(formData) {
 export async function toggleFavorite(toolId, toolSlug, isFavorited) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -466,7 +466,7 @@ export async function toggleFavorite(toolId, toolSlug, isFavorited) {
 export async function toggleFeatured(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -503,7 +503,7 @@ export async function toggleFeatured(formData) {
 export async function updateTool(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -624,7 +624,7 @@ export async function updateTool(formData) {
 export async function runToolQualityAutomation() {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -852,7 +852,7 @@ export async function runToolQualityAutomation() {
 export async function deleteTool(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -984,7 +984,7 @@ export async function getSimilarTools(currentTool) {
 export async function getRandomTool() {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from('tools')
@@ -1005,7 +1005,7 @@ export async function getRandomTool() {
 export async function fetchMoreTools({ page = 0, searchParams }) {
   'use server';
 
-  const supabase = createClient(await cookies());
+  const supabase = await createClient(await cookies());
 
   const {
     data: { user },
@@ -1058,21 +1058,21 @@ export async function fetchMoreTools({ page = 0, searchParams }) {
 export async function recordVariantImpression(variantId) {
   'use server';
   if (!variantId) return;
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.rpc('increment_variant_impression', { p_variant_id: variantId });
 }
 
 export async function recordVariantClick(variantId) {
   'use server';
   if (!variantId) return;
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.rpc('increment_variant_click', { p_variant_id: variantId });
 }
 
 export async function generateToolVariants(toolId) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -1166,7 +1166,7 @@ export async function generateToolVariants(toolId) {
 export async function updateToolVariants(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -1220,7 +1220,7 @@ export async function updateToolVariants(formData) {
 export async function applyWinningVariant(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -1263,7 +1263,7 @@ export async function getToolPreviewData(toolSlug) {
     return { error: 'Araç kimliği bulunamadı.' };
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: tool, error } = await supabase
     .from('tools_with_ratings')
     .select(
@@ -1283,7 +1283,7 @@ export async function getToolPreviewData(toolSlug) {
 export async function recordToolVisit(toolId) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -1309,7 +1309,7 @@ export async function getToolDetailsForPreview(toolId) {
   }
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const { data: tool, error: toolError } = await supabase
       .from('tools_with_ratings')
@@ -1351,7 +1351,7 @@ export async function getToolDetailsForPreview(toolId) {
 
 export async function upsertRating(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -1386,7 +1386,7 @@ export async function upsertRating(formData) {
 export async function getSearchSuggestions(query) {
   'use server';
   if (!query || query.length < 2) return [];
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('tools')
     .select('id, name, slug, link, tier, category_name')

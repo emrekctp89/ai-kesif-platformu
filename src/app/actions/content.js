@@ -8,7 +8,7 @@ import { slugify } from '@/utils/slugify';
 
 export async function createPost(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -49,7 +49,7 @@ export async function createPost(formData) {
 
 export async function updatePost(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -98,7 +98,7 @@ export async function updatePost(formData) {
 
 export async function deletePost(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -130,7 +130,7 @@ export async function deletePost(formData) {
 
 export async function assignTagsToPost(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -160,7 +160,7 @@ export async function assignTagsToPost(formData) {
 export async function togglePostPublish(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -200,7 +200,7 @@ export async function togglePostPublish(formData) {
 
 export async function createCollection(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -228,7 +228,7 @@ export async function createCollection(formData) {
 
 export async function updateCollection(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const id = formData.get('id');
   const title = formData.get('title');
@@ -259,7 +259,7 @@ export async function updateCollection(formData) {
 
 export async function deleteCollection(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const id = formData.get('id');
 
   const { error } = await supabase.from('collections').delete().eq('id', id);
@@ -275,7 +275,7 @@ export async function deleteCollection(formData) {
 
 export async function updateCollectionTools(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const collectionId = formData.get('collectionId');
   const toolData = JSON.parse(formData.get('tools'));
@@ -315,7 +315,7 @@ export async function updateCollectionTools(formData) {
 export async function uploadBlogImage(formData) {
   'use server';
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -346,7 +346,7 @@ export async function uploadBlogImage(formData) {
 
 export async function assignToolsToPost(formData) {
   'use server';
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
