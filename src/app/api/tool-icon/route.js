@@ -184,9 +184,21 @@ function extractIconLinksFromManifest(manifest, manifestUrl) {
   return [...deduped.values()];
 }
 
+const FETCH_TIMEOUT_MS = 5000;
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 async function fetchAsImage(candidate) {
   try {
-    const response = await fetch(candidate.url, {
+    const response = await fetchWithTimeout(candidate.url, {
       headers: {
         Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
         'User-Agent': 'Mozilla/5.0 (compatible; AIKesifIconBot/1.0)',
@@ -234,7 +246,7 @@ export async function GET(request) {
   }
 
   try {
-    const htmlResponse = await fetch(normalizedUrl.toString(), {
+    const htmlResponse = await fetchWithTimeout(normalizedUrl.toString(), {
       headers: {
         Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'User-Agent': 'Mozilla/5.0 (compatible; AIKesifIconBot/1.0)',
@@ -258,7 +270,7 @@ export async function GET(request) {
       const manifestLinks = extractManifestLinksFromHtml(html, normalizedUrl);
       for (const manifestLink of manifestLinks) {
         try {
-          const manifestResponse = await fetch(manifestLink, {
+          const manifestResponse = await fetchWithTimeout(manifestLink, {
             headers: {
               Accept: 'application/manifest+json,application/json,text/plain,*/*',
               'User-Agent': 'Mozilla/5.0 (compatible; AIKesifIconBot/1.0)',

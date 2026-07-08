@@ -29,8 +29,8 @@ const REJECTED_HOSTS = new Set([
 
 function clampInteger(value, { fallback, min, max }) {
   const parsed = Number.parseInt(String(value || ''), 10);
-  if (!Number.isInteger(parsed)) return fallback;
-  return Math.min(max, Math.max(min, parsed));
+  const base = Number.isInteger(parsed) ? parsed : fallback;
+  return Math.min(max, Math.max(min, base));
 }
 
 function isRejectedHost(link) {
@@ -283,7 +283,13 @@ async function generateCandidatesWithGemini({ categories, existingTools, candida
       continue;
     }
 
-    const parsed = JSON.parse(text);
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (parseError) {
+      lastError = `${modelName}: geçersiz JSON döndürdü (${parseError.message})`;
+      continue;
+    }
     return Array.isArray(parsed.tools) ? parsed.tools : [];
   }
 

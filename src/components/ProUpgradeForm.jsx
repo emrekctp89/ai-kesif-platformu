@@ -36,7 +36,7 @@ export function ProUpgradeForm({ priceId, unitAmount, initialPromoCode = '' }) {
             name="promoCodeDisplay"
             value={promoCode}
             onChange={(event) => setPromoCode(normalizePromoCode(event.target.value))}
-            placeholder="Örn: FM9R-YXTR"
+            placeholder="XXXX-XXXX"
             className="pl-9 uppercase"
             autoComplete="off"
           />

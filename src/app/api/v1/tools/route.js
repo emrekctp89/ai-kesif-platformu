@@ -48,7 +48,14 @@ export async function GET(request) {
       .from('api_keys')
       .update({ last_used_at: new Date().toISOString() })
       .eq('id', apiKey.id)
-      .then();
+      .then(({ error: updateError }) => {
+        if (updateError) {
+          console.error('API v1 tools: last_used_at update failed:', updateError);
+        }
+      })
+      .catch((updateError) => {
+        console.error('API v1 tools: last_used_at update failed:', updateError);
+      });
 
     // Fetch approved tools
     const url = new URL(request.url);
