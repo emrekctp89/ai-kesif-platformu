@@ -42,6 +42,14 @@ async function getAllToolsForSelect() {
   return data;
 }
 
+async function getCurrentUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+}
+
 export const metadata = {
   title: 'Topluluk Eserleri | AI Keşif Platformu',
   description:
@@ -53,9 +61,7 @@ export default async function ShowcasePage(props) {
   const [items, allTools, user] = await Promise.all([
     getPublicShowcaseItems(searchParams),
     getAllToolsForSelect(),
-    await createClient()
-      .then((supabase) => supabase.auth.getUser())
-      .then((res) => res.data.user),
+    getCurrentUser(),
   ]);
 
   return (
