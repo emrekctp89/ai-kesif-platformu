@@ -60,7 +60,10 @@ export default function EmptyState({
 
   return (
     <div
-      className={cn('flex flex-col items-center justify-center px-4 py-16 text-center', className)}
+      className={cn(
+        'flex flex-col items-center justify-center px-4 py-16 text-center rounded-2xl glass-panel glow-effect m-4',
+        className
+      )}
     >
       <div className={cn('mb-5 rounded-full p-4', config.bgClassName)}>
         <Icon className={cn('h-8 w-8', config.iconClassName)} />
