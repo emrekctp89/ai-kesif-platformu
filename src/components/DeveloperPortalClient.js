@@ -28,13 +28,19 @@ export function DeveloperPortalClient() {
 
   const fetchKeys = async () => {
     setLoading(true);
-    const { data, error } = await getApiKeys();
-    if (error) {
-      toast.error(error);
-    } else if (data) {
-      setKeys(data);
+    try {
+      const { data, error } = await getApiKeys();
+      if (error) {
+        toast.error(error);
+      } else if (data) {
+        setKeys(data);
+      }
+    } catch (err) {
+      console.error('fetchKeys failed:', err);
+      toast.error('Beklenmeyen bir hata oluştu: ' + (err.message || ''));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleGenerate = async (e) => {
@@ -44,27 +50,37 @@ export function DeveloperPortalClient() {
       return;
     }
     setGenerating(true);
-    const { data, rawKey, error } = await generateApiKey(newKeyName.trim());
-    setGenerating(false);
-
-    if (error) {
-      toast.error(error);
-    } else if (data && rawKey) {
-      setNewRawKey(rawKey);
-      setNewKeyName('');
-      setKeys([data, ...keys]);
+    try {
+      const { data, rawKey, error } = await generateApiKey(newKeyName.trim());
+      if (error) {
+        toast.error(error);
+      } else if (data && rawKey) {
+        setNewRawKey(rawKey);
+        setNewKeyName('');
+        setKeys([data, ...keys]);
+      }
+    } catch (err) {
+      console.error('handleGenerate failed:', err);
+      toast.error('Sunucu hatası: ' + (err.message || ''));
+    } finally {
+      setGenerating(false);
     }
   };
 
   const handleRevoke = async (id) => {
     if (!confirm('Bu API anahtarını iptal etmek istediğinize emin misiniz?')) return;
 
-    const { success, error } = await revokeApiKey(id);
-    if (error) {
-      toast.error(error);
-    } else if (success) {
-      toast.success('API anahtarı iptal edildi.');
-      setKeys(keys.filter((k) => k.id !== id));
+    try {
+      const { success, error } = await revokeApiKey(id);
+      if (error) {
+        toast.error(error);
+      } else if (success) {
+        toast.success('API anahtarı iptal edildi.');
+        setKeys(keys.filter((k) => k.id !== id));
+      }
+    } catch (err) {
+      console.error('handleRevoke failed:', err);
+      toast.error('Sunucu hatası: ' + (err.message || ''));
     }
   };
 
