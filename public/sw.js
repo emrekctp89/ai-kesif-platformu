@@ -1872,18 +1872,26 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         p && (self.__WB_DISABLE_DEV_LOGS = !0));
     })({
       precacheEntries: [
+        {
+          revision: 'a9496efe1b79b923b0f6ed3c9cc4743a',
+          url: '/_next/static/N10H7-nXRkH4VDAUNE_Gx/_buildManifest.js',
+        },
+        {
+          revision: 'b6652df95db52feb4daf4eca35380933',
+          url: '/_next/static/N10H7-nXRkH4VDAUNE_Gx/_ssgManifest.js',
+        },
         { revision: null, url: '/_next/static/chunks/1013-802e61b5b36b81bc.js' },
         { revision: null, url: '/_next/static/chunks/1054.e22a783f2de83bf3.js' },
         { revision: null, url: '/_next/static/chunks/1234-6afba6641e7edcc9.js' },
         { revision: null, url: '/_next/static/chunks/1356-19e7918800082da5.js' },
+        { revision: null, url: '/_next/static/chunks/1489-49d353fa7a32fcfe.js' },
         { revision: null, url: '/_next/static/chunks/1646.f2190c861e7df9ed.js' },
         { revision: null, url: '/_next/static/chunks/1668.2f2642c9ceec9507.js' },
         { revision: null, url: '/_next/static/chunks/1865-79b985ff1727f93e.js' },
         { revision: null, url: '/_next/static/chunks/2384-37b618fdfb18293a.js' },
-        { revision: null, url: '/_next/static/chunks/2541-c769d3c0be2e6ad9.js' },
+        { revision: null, url: '/_next/static/chunks/2541-714a58dfc573724f.js' },
         { revision: null, url: '/_next/static/chunks/2619-68b32589f89a3209.js' },
-        { revision: null, url: '/_next/static/chunks/3585-103308980c283657.js' },
-        { revision: null, url: '/_next/static/chunks/4091-f9ea1ccce4ddf506.js' },
+        { revision: null, url: '/_next/static/chunks/4091-21d4796d605313b3.js' },
         { revision: null, url: '/_next/static/chunks/4127-28aa1ec02c4658bd.js' },
         { revision: null, url: '/_next/static/chunks/4289-4766efcba824eb1e.js' },
         { revision: null, url: '/_next/static/chunks/4516-75679718626372b7.js' },
@@ -1928,11 +1936,11 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/admin/error-fff04a434489e9cb.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/admin/error-ed2c6d66088a5758.js',
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/admin/loading-79ab4ca365aae737.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/admin/loading-224072f5d77163e9.js',
         },
         {
           revision: null,
@@ -1956,7 +1964,7 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/auth/callback/route-9a7d21f9e337574b.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/auth/callback/route-bb8f0d52f13cfe56.js',
         },
         {
           revision: null,
@@ -1964,15 +1972,15 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/blog/page-082df33c8b080e72.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/blog/page-d8eeb4735c8c0159.js',
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/dashboard/error-ab98121223d67176.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/dashboard/error-ce9727849b02beab.js',
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/dashboard/loading-1d6eae60d8e8ee2d.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/dashboard/loading-2814dac1365e51a9.js',
         },
         {
           revision: null,
@@ -2001,11 +2009,11 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/gizlilik/page-3e086e08b9b28f1e.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/gizlilik/page-3ede7d195b97fe9c.js',
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/hakkimizda/page-9a324234f6db2eb7.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/hakkimizda/page-b878c3b1fe186760.js',
         },
         {
           revision: null,
@@ -2017,7 +2025,7 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/kategori/%5Bslug%5D/page-15f37771eddd3920.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/kategori/%5Bslug%5D/page-56aab5e42f36e4b1.js',
         },
         {
           revision: null,
@@ -2025,7 +2033,7 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/kesfet/loading-4a7f17cedb098ce9.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/kesfet/loading-274c2320e61f8d1d.js',
         },
         {
           revision: null,
@@ -2041,7 +2049,7 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/kullanim-kosullari/page-1d658d1ab83df1ed.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/kullanim-kosullari/page-047a38b3975433b5.js',
         },
         {
           revision: null,
@@ -2070,7 +2078,7 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/mesajlar/page-cf53bdae75ee3c37.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/mesajlar/page-f632142ed79e9218.js',
         },
         {
           revision: null,
@@ -2086,20 +2094,20 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/ogren/page-a1dd0f05da0f2dd9.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/ogren/page-4f61a428bc84c9d7.js',
         },
-        { revision: null, url: '/_next/static/chunks/app/%5Blocale%5D/page-29e7194c1b311d47.js' },
+        { revision: null, url: '/_next/static/chunks/app/%5Blocale%5D/page-2c5cf009ac263124.js' },
         {
           revision: null,
           url: '/_next/static/chunks/app/%5Blocale%5D/profile/collections/%5Bid%5D/edit/page-9b5d59c37814679e.js',
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/profile/error-21f373247bfc3bb0.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/profile/error-a467cd1ab2ac66a1.js',
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/profile/loading-1c58a8c0046abd3b.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/profile/loading-13bb77e9258d4127.js',
         },
         {
           revision: null,
@@ -2131,7 +2139,7 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/studyo/loading-9051d68cc2fa9203.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/studyo/loading-2afca1c3c920022a.js',
         },
         {
           revision: null,
@@ -2147,11 +2155,11 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/tool/%5Bslug%5D/error-d7795434a3100a89.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/tool/%5Bslug%5D/error-b9f651dc87477ad7.js',
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/%5Blocale%5D/tool/%5Bslug%5D/loading-89a025d702dc05ec.js',
+          url: '/_next/static/chunks/app/%5Blocale%5D/tool/%5Bslug%5D/loading-1e9531fc383e0b7f.js',
         },
         {
           revision: null,
@@ -2188,33 +2196,34 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         { revision: null, url: '/_next/static/chunks/app/_not-found/page-3199e217aa70bba7.js' },
         {
           revision: null,
-          url: '/_next/static/chunks/app/api/cron/link-audit/route-34689dea5ce02d48.js',
+          url: '/_next/static/chunks/app/api/cron/link-audit/route-b7352afb3f54846d.js',
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/api/cron/tool-discovery/route-a7fc437617a71786.js',
+          url: '/_next/static/chunks/app/api/cron/tool-discovery/route-66f9ba6e25358947.js',
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/api/stripe-webhook/route-fa67f28a84570a18.js',
+          url: '/_next/static/chunks/app/api/stripe-webhook/route-601d5f0b31282c3d.js',
         },
-        { revision: null, url: '/_next/static/chunks/app/api/tool-icon/route-efc46f903421bb46.js' },
-        { revision: null, url: '/_next/static/chunks/app/api/v1/tools/route-323ce03434b35890.js' },
+        { revision: null, url: '/_next/static/chunks/app/api/tool-icon/route-1d0028cb072e3121.js' },
+        { revision: null, url: '/_next/static/chunks/app/api/v1/tools/route-071b9f510002c3a9.js' },
         { revision: null, url: '/_next/static/chunks/app/global-error-d05d931083e36acf.js' },
         {
           revision: null,
-          url: '/_next/static/chunks/app/manifest.webmanifest/route-e2bb742826dce746.js',
+          url: '/_next/static/chunks/app/manifest.webmanifest/route-18f984c1215283bc.js',
         },
         {
           revision: null,
-          url: '/_next/static/chunks/app/opengraph-image/route-6fd5342bcd871712.js',
+          url: '/_next/static/chunks/app/opengraph-image/route-132f38312d5361c6.js',
         },
-        { revision: null, url: '/_next/static/chunks/app/robots.txt/route-904751d6fb30287c.js' },
-        { revision: null, url: '/_next/static/chunks/app/sitemap.xml/route-b845650a3988a189.js' },
+        { revision: null, url: '/_next/static/chunks/app/robots.txt/route-e542396c68f7528a.js' },
+        { revision: null, url: '/_next/static/chunks/app/rss.xml/route-0783a81c541841cc.js' },
+        { revision: null, url: '/_next/static/chunks/app/sitemap.xml/route-881e390f1e1ddb1d.js' },
         { revision: null, url: '/_next/static/chunks/framework-e0082436dfdc054b.js' },
-        { revision: null, url: '/_next/static/chunks/main-19b4c068cedbc172.js' },
-        { revision: null, url: '/_next/static/chunks/main-app-db3628eeed809b5f.js' },
-        { revision: null, url: '/_next/static/chunks/pages/_app-fe563f69f7a19e5b.js' },
+        { revision: null, url: '/_next/static/chunks/main-5b07888566672453.js' },
+        { revision: null, url: '/_next/static/chunks/main-app-4952fce95393d3f9.js' },
+        { revision: null, url: '/_next/static/chunks/pages/_app-4158b7056ec17609.js' },
         { revision: null, url: '/_next/static/chunks/pages/_error-7401ecd8a348c5dc.js' },
         {
           revision: '846118c33b2c0e922d7b3a7676f81f6f',
@@ -2222,16 +2231,8 @@ This is generally NOT safe. Learn more at https://bit.ly/wb-precache`));
         },
         { revision: null, url: '/_next/static/chunks/webpack-efab7855e5408d6c.js' },
         { revision: null, url: '/_next/static/css/2312b98d0fe3d079.css' },
+        { revision: null, url: '/_next/static/css/3700d7bd9d5ae5d6.css' },
         { revision: null, url: '/_next/static/css/7175dd42fb51c043.css' },
-        { revision: null, url: '/_next/static/css/a8c106629354c398.css' },
-        {
-          revision: 'd403768bc0f3afb927533c1b4bc2c912',
-          url: '/_next/static/fX6T_u2ju0CEO9KeZm2sj/_buildManifest.js',
-        },
-        {
-          revision: 'b6652df95db52feb4daf4eca35380933',
-          url: '/_next/static/fX6T_u2ju0CEO9KeZm2sj/_ssgManifest.js',
-        },
         {
           revision: '2c6e370c5824bbc9e32cb1ba7e026e11',
           url: '/_next/static/media/4c4943bfceab8361-s.woff2',

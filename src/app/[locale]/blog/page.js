@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { NewsletterSignup } from '@/components/NewsletterSignup';
 
 // Veritabanından yayınlanmış tüm yazıları çeken fonksiyon
 async function getPublishedPosts() {
@@ -78,6 +79,11 @@ export default async function BlogPage() {
       ) : (
         <p className="text-center text-muted-foreground">Henüz yayınlanmış bir yazı bulunmuyor.</p>
       )}
+
+      {/* Newsletter Signup Section */}
+      <section className="mt-16 sm:mt-20">
+        <NewsletterSignup />
+      </section>
     </div>
   );
 }

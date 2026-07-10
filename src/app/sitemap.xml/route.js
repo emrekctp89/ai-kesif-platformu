@@ -44,31 +44,42 @@ export async function GET() {
     }
   );
 
-  const [toolsResult, categoriesResult] = await Promise.all([
-    supabase
-      .from('tools')
-      .select('slug, updated_at')
-      .eq('is_approved', true)
-      .not('slug', 'is', null),
-    supabase.from('categories').select('slug').not('slug', 'is', null),
-  ]);
+  let toolsData = [];
+  let categoriesData = [];
 
-  if (toolsResult.error) {
-    console.error('Araçlar alınamadı:', toolsResult.error);
+  try {
+    const [toolsResult, categoriesResult] = await Promise.all([
+      supabase
+        .from('tools')
+        .select('slug, updated_at')
+        .eq('is_approved', true)
+        .not('slug', 'is', null),
+      supabase.from('categories').select('slug').not('slug', 'is', null),
+    ]);
+
+    if (toolsResult.error) {
+      console.error('Araçlar alınamadı:', toolsResult.error);
+    } else {
+      toolsData = toolsResult.data || [];
+    }
+
+    if (categoriesResult.error) {
+      console.error('Kategoriler alınamadı:', categoriesResult.error);
+    } else {
+      categoriesData = categoriesResult.data || [];
+    }
+  } catch (error) {
+    console.error('Sitemap fetch failed (likely during build):', error);
   }
 
-  if (categoriesResult.error) {
-    console.error('Kategoriler alınamadı:', categoriesResult.error);
-  }
-
-  categoriesResult.data?.forEach((category) => {
+  categoriesData.forEach((category) => {
     urls.push({
       url: withBase(`/kategori/${category.slug}`),
       lastModified: generatedAt,
     });
   });
 
-  toolsResult.data?.forEach((tool) => {
+  toolsData.forEach((tool) => {
     urls.push({
       url: withBase(`/tool/${tool.slug}`),
       lastModified: tool.updated_at || generatedAt,

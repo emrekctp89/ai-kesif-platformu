@@ -9,6 +9,7 @@ import { InfiniteToolsList } from '@/components/InfiniteToolsList';
 import { ToolsGridSkeleton } from '@/components/ToolsGridSkeleton';
 import { Button } from '@/components/ui/button';
 import { trackEvent } from '@/utils/analytics';
+import { NewsletterSignup } from '@/components/NewsletterSignup';
 import { ArrowRight, Code2, ImageIcon, Megaphone, Sparkles, WandSparkles, X } from 'lucide-react';
 
 const quickStarts = [
@@ -342,6 +343,11 @@ export function HomepageClient({
             hasUserFilters={hasUserFilters}
           />
         </Suspense>
+      </section>
+
+      {/* Newsletter Signup Section */}
+      <section className="mt-16 sm:mt-24 border-t pt-12 sm:pt-16">
+        <NewsletterSignup />
       </section>
     </div>
   );
