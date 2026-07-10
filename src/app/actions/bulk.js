@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
 import slugify from 'slugify';
 

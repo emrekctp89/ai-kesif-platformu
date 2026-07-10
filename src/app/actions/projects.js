@@ -26,7 +26,7 @@ export async function createProject(formData) {
 
   const { data: newProject, error } = await supabase
     .from('projects')
-    .insert({ title, user_id: user.id, description: '' })
+    .insert({ title, slug, user_id: user.id, description: '' })
     .select('id')
     .single();
 
