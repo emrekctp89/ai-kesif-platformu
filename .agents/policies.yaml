@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "branch_pattern": "^agent/(antigravity|codex|grok|verifier)/[A-Z][A-Z0-9]+-[0-9]+$",
+  "single_writer_role": "implementer",
+  "risks": {
+    "low": { "human_approvals": 0, "verifier_required": false },
+    "medium": { "human_approvals": 1, "verifier_required": false },
+    "high": { "human_approvals": 2, "verifier_required": true }
+  },
+  "high_risk_paths": [
+    "src/**/auth/**",
+    "src/**/stripe/**",
+    "src/**/payment/**",
+    "supabase/migrations/**",
+    ".github/workflows/**",
+    "vercel.json"
+  ],
+  "always_denied": [".env*", "**/.env*", "**/*secret*", "**/*credential*"]
+}
+
