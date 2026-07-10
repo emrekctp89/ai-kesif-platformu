@@ -30,26 +30,32 @@ export async function ToolOfTheDay() {
   }
 
   return (
-    <div className="mb-12">
-      <Card className="w-full bg-gradient-to-br from-primary/10 via-background to-background border-2 border-primary/50 shadow-lg">
-        <CardContent className="grid items-center gap-6 p-5 sm:p-6 md:grid-cols-2 md:gap-8 md:p-8">
+    <div className="mb-12 relative group">
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-purple-500/20 to-pink-500/20 blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl" />
+      <Card className="relative w-full glass-panel border-2 border-primary/30 shadow-2xl overflow-hidden rounded-3xl">
+        <div className="absolute top-0 right-0 p-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse" />
+        <CardContent className="relative grid items-center gap-6 p-6 sm:p-8 md:grid-cols-2 md:gap-10 md:p-10 z-10">
           {/* Sol Taraf: Açıklamalar */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-base font-bold text-primary sm:text-lg">
-              <Zap className="h-5 w-5 sm:h-6 sm:w-6" />
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm font-bold text-primary shadow-inner">
+              <Zap className="h-4 w-4 animate-bounce" />
               <span>GÜNÜN ARACI</span>
             </div>
-            <h2 className="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl md:text-4xl">
-              <ToolIcon name={tool.name} link={tool.link} className="h-8 w-8 sm:h-9 sm:w-9" />
-              {tool.name}
+            <h2 className="flex items-center gap-4 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+              <div className="p-3 bg-background rounded-2xl shadow-lg border border-border/50 animate-float">
+                <ToolIcon name={tool.name} link={tool.link} className="h-10 w-10 sm:h-12 sm:w-12" />
+              </div>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+                {tool.name}
+              </span>
             </h2>
-            <p className="text-sm leading-6 text-muted-foreground sm:text-base md:text-lg">
+            <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">
               {tool.description}
             </p>
-            <div className="flex items-center gap-4 pt-2">
+            <div className="flex flex-wrap items-center gap-4 pt-4">
               <Button
                 asChild
-                className="w-full bg-green-600 hover:bg-green-700 sm:w-auto"
+                className="w-full sm:w-auto shadow-xl hover:shadow-primary/25 transition-all duration-300 hover:-translate-y-1 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
                 size="lg"
               >
                 <TrackedExternalLink
@@ -62,28 +68,43 @@ export async function ToolOfTheDay() {
                     tool_slug: tool.slug,
                     category: tool.category_slug,
                   }}
+                  className="font-semibold px-8"
                 >
                   İncele & Keşfet
                 </TrackedExternalLink>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="w-full sm:w-auto glass-button">
+                <Link href={`/tool/${tool.slug}`}>Detayları Gör</Link>
               </Button>
             </div>
           </div>
           {/* Sağ Taraf: Etiketler ve Kategori */}
           <div className="hidden md:flex flex-col items-end justify-center">
-            <div className="bg-card/50 p-6 rounded-lg border">
-              <p className="font-semibold mb-3 text-foreground">Kategori:</p>
-              <Badge variant="secondary" className="text-md">
-                {tool.category_name}
-              </Badge>
+            <div className="glass-panel p-6 rounded-2xl w-full max-w-sm backdrop-blur-xl">
+              <p className="text-sm font-semibold mb-2 text-muted-foreground uppercase tracking-wider">
+                Kategori
+              </p>
+              <Link href={`/kategori/${tool.category_slug}`}>
+                <Badge className="text-sm py-1.5 px-3 bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer text-secondary-foreground">
+                  {tool.category_name}
+                </Badge>
+              </Link>
 
               {tool.tags && tool.tags.length > 0 && (
                 <>
-                  <p className="font-semibold mt-6 mb-3 text-foreground">Etiketler:</p>
-                  <div className="flex flex-wrap gap-2 justify-end">
-                    {tool.tags.map((tag) => (
-                      <Badge key={tag.id} variant="outline">
-                        {tag.name}
-                      </Badge>
+                  <p className="text-sm font-semibold mt-6 mb-2 text-muted-foreground uppercase tracking-wider">
+                    Öne Çıkan Etiketler
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-start">
+                    {tool.tags.slice(0, 5).map((tag) => (
+                      <Link key={tag.id} href={`/?tags=${tag.id}`}>
+                        <Badge
+                          variant="outline"
+                          className="hover:bg-accent hover:border-primary transition-all cursor-pointer bg-background/50"
+                        >
+                          {tag.name}
+                        </Badge>
+                      </Link>
                     ))}
                   </div>
                 </>

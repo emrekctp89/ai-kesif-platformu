@@ -23,6 +23,7 @@ module.exports = {
         'accordion-up': 'accordion-up 0.2s ease-out',
         'breathing-glow': 'breathing-glow 4s ease-in-out infinite',
         roll: 'roll 6s ease-in-out infinite',
+        float: 'float 6s ease-in-out infinite',
       },
       keyframes: {
         gradientShift: {
@@ -55,6 +56,10 @@ module.exports = {
           '45%': { transform: 'rotate(20deg)' },
           '60%': { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(0deg)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
         },
       },
       colors: {

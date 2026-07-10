@@ -111,7 +111,7 @@ export function SearchInput() {
           autoComplete="off"
           enterKeyHint="search"
           placeholder="Ne yapmak istiyorsunuz? Örn. video oluşturma"
-          className="block h-9 w-full rounded-lg border border-input py-1.5 pl-9 pr-10 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring sm:h-10 sm:py-2"
+          className="block h-10 w-full rounded-xl border border-input py-2 pl-10 pr-10 text-sm shadow-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary focus:shadow-[0_0_15px_rgba(var(--primary),0.3)] bg-background/80 backdrop-blur-sm sm:h-12 sm:text-base sm:py-3 sm:pl-11"
           value={searchTerm}
           onChange={handleChange}
           onKeyDown={(event) => {
@@ -130,7 +130,7 @@ export function SearchInput() {
         {isUpdating ? (
           <LoaderCircle
             aria-hidden="true"
-            className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground"
+            className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-muted-foreground"
           />
         ) : searchTerm ? (
           <button
@@ -139,7 +139,7 @@ export function SearchInput() {
             className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Aramayı temizle"
           >
-            <X aria-hidden="true" className="h-4 w-4" />
+            <X aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         ) : null}
       </div>
@@ -149,9 +149,9 @@ export function SearchInput() {
 
       {/* Akıllı Öneriler Dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-popover text-popover-foreground border rounded-lg shadow-lg overflow-hidden z-50">
-          <div className="p-2">
-            <h4 className="text-xs font-semibold text-muted-foreground mb-2 px-2 uppercase tracking-wide">
+        <div className="absolute top-full left-0 right-0 mt-2 glass-panel text-popover-foreground rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 border-primary/20">
+          <div className="p-3">
+            <h4 className="text-xs font-bold text-primary mb-2 px-2 uppercase tracking-wider">
               Önerilen Araçlar
             </h4>
             <div className="flex flex-col gap-1">
@@ -160,20 +160,20 @@ export function SearchInput() {
                   key={tool.id}
                   href={`/tool/${tool.slug}`}
                   onClick={() => setShowSuggestions(false)}
-                  className="flex items-center gap-3 px-2 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors group"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200 group"
                 >
                   <ToolIcon
                     name={tool.name}
                     link={tool.link}
-                    className="w-8 h-8 rounded-md border bg-background"
+                    className="w-10 h-10 rounded-lg border border-border/50 bg-background shadow-sm group-hover:shadow group-hover:scale-105 transition-all"
                   />
                   <div className="flex flex-col overflow-hidden">
-                    <span className="font-medium text-sm truncate">{tool.name}</span>
+                    <span className="font-semibold text-sm sm:text-base truncate">{tool.name}</span>
                     <span className="text-xs text-muted-foreground truncate">
                       {tool.category_name}
                     </span>
                   </div>
-                  <ArrowRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity translate-x-[-10px] group-hover:translate-x-0 duration-300" />
                 </Link>
               ))}
             </div>

@@ -252,27 +252,34 @@ export function HomepageClient({
       {!fixedSearchParams && !hasActiveFilters && (
         <section
           aria-labelledby="quick-start-heading"
-          className="rounded-2xl border bg-gradient-to-br from-primary/5 via-background to-purple-500/5 p-4 shadow-sm sm:p-6"
+          className="relative rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 via-background to-purple-500/5 p-6 sm:p-8 shadow-xl overflow-hidden glass-panel"
         >
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-xl">
-              <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-                <WandSparkles aria-hidden="true" className="h-4 w-4" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-sm font-bold text-primary mb-3 shadow-inner border border-primary/10">
+                <WandSparkles aria-hidden="true" className="h-4 w-4 animate-pulse" />
                 Hızlı başlangıç
               </div>
               <h2
                 id="quick-start-heading"
-                className="mt-2 text-xl font-bold tracking-tight sm:text-2xl"
+                className="text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-4xl"
               >
                 Nereden başlayacağını bilmiyor musun?
               </h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                İhtiyacını birkaç cümleyle anlat; AI Tavsiye sana uygun araçları kısa bir liste
-                halinde sunsun.
+              <p className="mt-3 text-base leading-relaxed text-muted-foreground sm:text-lg">
+                İhtiyacını birkaç cümleyle anlat; AI Tavsiye asistanı sana en uygun araçları kısa
+                bir liste halinde sunsun.
               </p>
             </div>
 
-            <Button asChild size="lg" className="min-h-12 shrink-0">
+            <Button
+              asChild
+              size="lg"
+              className="min-h-14 shrink-0 shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-1 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 rounded-2xl px-8"
+            >
               <Link
                 href="/tavsiye"
                 prefetch={false}
@@ -281,16 +288,18 @@ export function HomepageClient({
                     source: 'homepage_quick_start',
                   })
                 }
+                className="text-lg font-semibold"
               >
+                <Sparkles className="mr-2 h-5 w-5" />
                 AI ile araç bul
-                <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" />
+                <ArrowRight aria-hidden="true" className="ml-2 h-5 w-5" />
               </Link>
             </Button>
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
-            <span className="mr-1 self-center text-xs font-medium text-muted-foreground">
-              Popüler amaçlar:
+          <div className="relative z-10 mt-8 flex flex-wrap gap-3 border-t border-border/50 pt-6">
+            <span className="mr-2 self-center text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              Popüler Amaçlar:
             </span>
             {quickStarts.map(({ href, label, icon: Icon }) => (
               <Link
@@ -303,7 +312,7 @@ export function HomepageClient({
                     label,
                   })
                 }
-                className="inline-flex min-h-10 items-center gap-2 rounded-full border bg-background px-3 py-2 text-xs font-semibold transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
+                className="inline-flex min-h-10 items-center gap-2.5 rounded-full border border-border/50 bg-background/50 backdrop-blur-sm px-4 py-2 text-sm font-semibold transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:-translate-y-0.5"
               >
                 <Icon aria-hidden="true" className="h-4 w-4" />
                 {label}

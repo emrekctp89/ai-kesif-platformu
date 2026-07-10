@@ -92,3 +92,44 @@
   margin-bottom: 1.5rem;
   break-inside: avoid;
 }
+
+/* Custom UI Utilities */
+.glass-panel {
+  @apply bg-background/60 backdrop-blur-md border border-border/50 shadow-sm;
+}
+
+.dark .glass-panel {
+  @apply bg-background/40 border-border/30 shadow-[0_4px_30px_rgba(0,0,0,0.1)];
+}
+
+.glass-button {
+  @apply bg-primary/10 hover:bg-primary/20 backdrop-blur-sm border border-primary/20 text-primary transition-all duration-300;
+}
+
+.glow-effect {
+  position: relative;
+}
+
+.glow-effect::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(
+    to right,
+    theme('colors.primary.DEFAULT'),
+    theme('colors.purple.500'),
+    theme('colors.pink.500')
+  );
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.glow-effect:hover::before {
+  opacity: 0.5;
+}
+
+.dark .glow-effect:hover::before {
+  opacity: 0.8;
+}

@@ -81,18 +81,19 @@ export default function ToolCard({ tool }) {
     <Link
       href={`/tool/${tool.slug}`}
       className={cn(
-        'relative block p-6 rounded-xl border shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 cursor-pointer overflow-hidden',
+        'glow-effect relative block p-6 rounded-xl border shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden group',
         {
-          'border-purple-400/40 shadow-purple-400/20 hover:shadow-purple-500/40 bg-card':
+          'border-purple-500/40 shadow-purple-500/20 hover:border-purple-400/60 bg-card':
             tool.tier === 'Pro' && !tool.is_promoted,
-          'border-amber-400/40 shadow-amber-400/20 hover:shadow-amber-500/40 bg-card':
+          'border-amber-500/40 shadow-amber-500/20 hover:border-amber-400/60 bg-card':
             tool.tier === 'Sponsorlu' || tool.is_promoted,
-          'border-blue-800/50 shadow-blue-900/30 hover:shadow-blue-700/50 bg-blue-950':
+          'border-border/50 shadow-sm glass-panel hover:border-primary/30':
             !tool.tier && !tool.is_promoted,
         }
       )}
     >
-      <div className="flex flex-col h-full">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <div className="relative flex flex-col h-full z-10">
         {/* Premium Badge */}
         {isPremium && (
           <Badge
