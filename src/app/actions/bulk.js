@@ -55,9 +55,9 @@ export async function bulkImportTools(jsonText) {
           name: rawTool.name,
           slug,
           description: rawTool.description || '',
-          website_url: rawTool.website_url,
+          link: rawTool.website_url,
           is_approved: rawTool.is_approved !== undefined ? rawTool.is_approved : true, // Varsayılan onaylı ekle
-          pricing_type: rawTool.pricing_type || 'free',
+          pricing_model: rawTool.pricing_type || 'free',
         },
       ]);
 
