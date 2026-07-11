@@ -44,10 +44,36 @@ export async function bulkImportTools(jsonText) {
         errors.push(`Satır ${i + 1}: İsim ve web sitesi url si zorunludur.`);
         continue;
       }
+      if (!rawTool.category_name && !rawTool.category_id) {
+        errors.push(`Satır ${i + 1} (${rawTool.name}): category_name veya category_id zorunludur.`);
+        continue;
+      }
 
       const baseSlug = slugify(rawTool.name, { lower: true, strict: true, locale: 'tr' });
       // UUID for unique slug
       const slug = `${baseSlug}-${crypto.randomUUID().split('-')[0]}`;
+
+      let finalCategoryId = rawTool.category_id;
+      if (!finalCategoryId && rawTool.category_name) {
+        // Kategori adını veritabanında ara (büyük/küçük harf duyarsız veya ilike ile yapılabilir)
+        // Performans için veritabanına tek tek sorgu atmak yerine yukarıda toplu çekilebilir, ama şimdilik en temizi tek sorgu.
+        const { data: catData } = await supabase
+          .from('categories')
+          .select('id')
+          .ilike('name', rawTool.category_name)
+          .maybeSingle();
+
+        if (catData) {
+          finalCategoryId = catData.id;
+        } else {
+          // Bulunamadıysa ilk kategoriyi veya 'Diğer' kategorisini alabilirsiniz
+          // Burada katı davranıp hata fırlatalım
+          errors.push(
+            `Satır ${i + 1} (${rawTool.name}): '${rawTool.category_name}' kategorisi bulunamadı.`
+          );
+          continue;
+        }
+      }
 
       // Insert into DB using admin client (bypasses RLS if needed, though admin has rights)
       const { error: insertError } = await supabaseAdmin.from('tools').insert([
@@ -56,6 +82,7 @@ export async function bulkImportTools(jsonText) {
           slug,
           description: rawTool.description || '',
           link: rawTool.website_url,
+          category_id: finalCategoryId,
           is_approved: rawTool.is_approved !== undefined ? rawTool.is_approved : true, // Varsayılan onaylı ekle
           pricing_model: rawTool.pricing_type || 'free',
         },
