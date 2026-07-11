@@ -1,22 +1,25 @@
 import { test, expect } from '../fixtures/base';
 
 test.describe('Ana Sayfa', () => {
-  test('Ana sayfa başarıyla yükleniyor', async ({ homePage, page }) => {
+  test('ana sayfa temel kullanıcı kontrolleriyle yükleniyor', async ({ homePage, page }) => {
     await homePage.goto();
 
-    await expect(page).toHaveTitle(/AI Keşif Platformu|AI Araçları/i);
-    await expect(
-      page.getByRole('heading', { name: /AI Araçlarını Keşfet|Keşfet/i })
-    ).toBeVisible();
+    await expect(page).toHaveTitle(/AI Keşif/i);
+    await expect(page.getByRole('heading', { name: /AI Araçlarını Keşfet|Discover/i })).toBeVisible();
+    await expect(homePage.getSearchInput()).toBeVisible();
+    await expect(page.getByRole('button', { name: /Filtrele|Filter/i })).toBeVisible();
   });
 
-  test('Arama inputu görünüyor ve çalışabiliyor', async ({ homePage, page }) => {
+  test('arama aynı sayfada araçları filtreliyor', async ({ homePage, page }) => {
+    await homePage.goto();
+    await homePage.searchFor('ChatGPT');
+
+    await expect(page.locator('main article').filter({ hasText: 'ChatGPT' })).toBeVisible();
+  });
+
+  test('geri bildirim kontrolü mobil ve masaüstünde erişilebilir', async ({ homePage, page }) => {
     await homePage.goto();
 
-    const searchInput = await homePage.getSearchInput();
-    await expect(searchInput).toBeVisible();
-
-    await homePage.searchFor('ChatGPT');
-    await expect(page).toHaveURL(/kesfet|search/i);
+    await expect(page.getByRole('button', { name: /Geri Bildirim Gönder/i })).toBeVisible();
   });
 });

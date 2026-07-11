@@ -20,7 +20,6 @@ const disabledRoutes = [
   '/u/:path*',
   '/topluluk',
   '/studyo',
-  '/signup',
   '/reset-password',
   '/random-tools',
   '/ogren',

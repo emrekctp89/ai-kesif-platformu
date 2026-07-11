@@ -1,25 +1,21 @@
 import { test, expect } from '../fixtures/base';
 
 test.describe('Araç Detay Sayfası', () => {
-  test('Bir araç detay sayfasına gidilebiliyor', async ({ page }) => {
-    await page.goto('/kesfet');
-
-    // İlk araç kartına tıkla
-    const firstTool = page.locator('a[href*="/tool"], [data-testid="tool-card"], article').first();
-    await firstTool.click();
-
-    // Detay sayfasında başlık görünmeli
-    await expect(page.locator('h1').first()).toBeVisible({ timeout: 15000 });
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/tool/slack', { waitUntil: 'domcontentloaded' });
   });
 
-  test('Karşılaştır butonu görünüyor', async ({ page }) => {
-    await page.goto('/kesfet');
+  test('araç bilgileri ve resmî site bağlantısı görünüyor', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'Slack', exact: true })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole('link', { name: /Resmî Siteyi İncele/i })).toBeVisible();
+  });
 
-    const firstTool = page.locator('a[href*="/tool"], [data-testid="tool-card"], article').first();
-    await firstTool.click();
-
-    // Karşılaştırma butonu görünmeli
-    const compareButton = page.getByRole('button', { name: /Karşılaştır|Compare|karşıla/i });
-    await expect(compareButton).toBeVisible({ timeout: 15000 });
+  test('benzer araçlar ve link bildirme kontrolü görünüyor', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: /Bunları da Beğenebilirsiniz/i })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole('button', { name: /Link Hatalı Bildir/i })).toBeVisible();
   });
 });

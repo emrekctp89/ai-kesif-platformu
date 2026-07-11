@@ -1,29 +1,12 @@
 import { test, expect } from '../fixtures/base';
 
-test.describe('Tool Karşılaştırma', () => {
-  test('İki aracı karşılaştırma akışı', async ({ discoverPage, page }) => {
-    await discoverPage.goto();
+test.describe('Araç karşılaştırma', () => {
+  test('karşılaştırma sayfası araç seçim kontrolleriyle yükleniyor', async ({ page }) => {
+    await page.goto('/karsilastir', { waitUntil: 'domcontentloaded' });
 
-    // İlk aracı seç
-    const firstTool = await discoverPage.getFirstToolCard();
-    await firstTool.click();
-
-    // Karşılaştır butonuna tıkla (eğer varsa)
-    const compareButton = page.getByRole('button', { name: /Karşılaştır|Compare/i });
-    
-    if (await compareButton.isVisible()) {
-      await compareButton.click();
-      
-      // İkinci aracı seçmek için keşfet sayfasına dön
-      await page.goto('/kesfet');
-      const secondTool = await discoverPage.getFirstToolCard();
-      await secondTool.click();
-
-      // Karşılaştırma sayfasında iki araç görünmeli
-      await expect(page.getByText(/Karşılaştırma|Comparison/i)).toBeVisible();
-    } else {
-      // Karşılaştırma özelliği yoksa testi atla
-      test.skip();
-    }
+    await expect(page.getByRole('heading', { name: /Karşılaştırma|Compare/i })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByText(/Karşılaştırmak istediğiniz araçları seçin/i)).toBeVisible();
   });
 });
