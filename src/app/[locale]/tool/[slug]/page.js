@@ -71,14 +71,6 @@ async function getToolData(slug) {
   };
 }
 
-function getHostname(link) {
-  try {
-    return new URL(link).hostname.replace(/^www\./, '');
-  } catch {
-    return 'Harici web sitesi';
-  }
-}
-
 function formatDate(value) {
   if (!value) return null;
 
@@ -210,7 +202,6 @@ export default async function ToolPage(props) {
   if (!tool) notFound();
 
   const shareUrl = `${siteUrl}/tool/${tool.slug}`;
-  const hostname = getHostname(tool.link);
   const linkHealth = getLinkHealthMeta(tool);
   const LinkHealthIcon = linkHealth.icon;
   const addedDate = formatDate(tool.created_at);
@@ -329,10 +320,6 @@ export default async function ToolPage(props) {
                     <ExternalLink className="ml-2 h-4 w-4" />
                   </TrackedExternalLink>
                 </Button>
-                <p className="flex items-center gap-2 text-xs leading-5 text-muted-foreground">
-                  <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  {hostname} adresi yeni sekmede açılır.
-                </p>
               </div>
               <div className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
                 <TrustNote text="Fiyat ve özellikler sağlayıcıda doğrulanmalı" />
