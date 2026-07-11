@@ -27,7 +27,13 @@ export function AnnouncementBanner() {
     localStorage.setItem(ANNOUNCEMENT_ID, 'true');
   };
 
-  if (!isVisible) return null;
+  if (!isVisible) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50 max-w-[calc(100vw-2rem)] sm:bottom-6 sm:right-6">
+        <FeedbackDialog />
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300 p-2 sm:p-4">
