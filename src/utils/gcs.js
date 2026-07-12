@@ -1,10 +1,13 @@
 import { Storage } from '@google-cloud/storage';
 import path from 'path';
 
-// Google Cloud Storage istemcisini başlat
-const storage = new Storage({
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-});
+let storageOptions = {};
+if (process.env.GOOGLE_CREDENTIALS_JSON) {
+  storageOptions.credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  storageOptions.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+}
+const storage = new Storage(storageOptions);
 
 const bucketName = process.env.GCS_BUCKET_NAME || 'aikesif-media';
 const bucket = storage.bucket(bucketName);

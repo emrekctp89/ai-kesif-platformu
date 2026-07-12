@@ -86,6 +86,12 @@ const nextConfig = {
         port: '',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   async redirects() {
@@ -110,7 +116,7 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://hhopgeupizlfkmvtsvkf.supabase.co https://avatars.githubusercontent.com https://lh3.googleusercontent.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; connect-src 'self' https://hhopgeupizlfkmvtsvkf.supabase.co;",
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://hhopgeupizlfkmvtsvkf.supabase.co https://avatars.githubusercontent.com https://lh3.googleusercontent.com https://storage.googleapis.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; connect-src 'self' https://hhopgeupizlfkmvtsvkf.supabase.co https://storage.googleapis.com;",
           },
         ],
       },

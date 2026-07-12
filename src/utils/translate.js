@@ -1,11 +1,13 @@
 import { v2 } from '@google-cloud/translate';
 import path from 'path';
 
-// Google Cloud Translation istemcisini başlat
-// google-credentials.json dosyası daha önce GCS için ayarlanmıştı, aynı yetkiyi kullanacak.
-const translate = new v2.Translate({
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-});
+let translateOptions = {};
+if (process.env.GOOGLE_CREDENTIALS_JSON) {
+  translateOptions.credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  translateOptions.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+}
+const translate = new v2.Translate(translateOptions);
 
 /**
  * Verilen metni hedef dile çevirir.
