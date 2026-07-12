@@ -1,3 +1,5 @@
+import dns from 'node:dns/promises';
+import net from 'node:net';
 import { TOOL_ICON_OVERRIDES } from '@/lib/toolIconOverrides';
 import logger from '@/utils/logger';
 
@@ -7,6 +9,7 @@ const MANIFEST_LINK_REGEX =
 const META_IMAGE_REGEX =
   /<meta[^>]+(?:property|name)=["'](?:og:image|twitter:image)["'][^>]+content=["']([^"']+)["'][^>]*>/gi;
 const COMMON_SECOND_LEVEL_LABELS = new Set(['ac', 'co', 'com', 'edu', 'gov', 'net', 'org']);
+const MAX_REDIRECTS = 3;
 
 function isPrivateIpv4(hostname) {
   if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return false;
@@ -22,12 +25,31 @@ function isPrivateIpv4(hostname) {
   return false;
 }
 
-function isDisallowedHost(hostname) {
+function isPrivateIpv6(hostname) {
+  const normalized = String(hostname || '')
+    .toLowerCase()
+    .replace(/^\[|\]$/g, '');
+
+  if (normalized === '::1') return true;
+  if (normalized === '::') return true;
+  if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true;
+  if (normalized.startsWith('fe80:')) return true;
+  if (normalized.startsWith('::ffff:')) {
+    return isPrivateIpv4(normalized.replace('::ffff:', ''));
+  }
+
+  return false;
+}
+
+export function isDisallowedHost(hostname) {
   const normalized = String(hostname || '').toLowerCase();
   if (!normalized) return true;
   if (normalized === 'localhost') return true;
   if (normalized.endsWith('.local')) return true;
+  if (normalized.endsWith('.localhost')) return true;
+  if (net.isIP(normalized) === 6) return isPrivateIpv6(normalized);
   if (isPrivateIpv4(normalized)) return true;
+  if (isPrivateIpv6(normalized)) return true;
   return false;
 }
 
@@ -187,13 +209,60 @@ function extractIconLinksFromManifest(manifest, manifestUrl) {
 const FETCH_TIMEOUT_MS = 5000;
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = FETCH_TIMEOUT_MS) {
+  const safeUrl = await assertSafeFetchUrl(url);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
-    return await fetch(url, { ...options, signal: controller.signal });
+    return await fetchWithSafeRedirects(safeUrl, { ...options, signal: controller.signal });
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+export async function assertSafeFetchUrl(input) {
+  const url = input instanceof URL ? input : new URL(String(input));
+
+  if (!['http:', 'https:'].includes(url.protocol) || isDisallowedHost(url.hostname)) {
+    throw new Error('Unsafe URL');
+  }
+
+  const resolvedAddresses = await dns.lookup(url.hostname, { all: true, verbatim: true });
+  if (
+    resolvedAddresses.some(({ address, family }) =>
+      family === 6 ? isPrivateIpv6(address) : isPrivateIpv4(address)
+    )
+  ) {
+    throw new Error('Unsafe resolved address');
+  }
+
+  return url;
+}
+
+async function fetchWithSafeRedirects(url, options, redirectCount = 0) {
+  const response = await fetch(url, { ...options, redirect: 'manual' });
+
+  if (![301, 302, 303, 307, 308].includes(response.status)) {
+    return response;
+  }
+
+  if (redirectCount >= MAX_REDIRECTS) {
+    await response.body?.cancel();
+    throw new Error('Too many redirects');
+  }
+
+  const location = response.headers.get('location');
+  await response.body?.cancel();
+
+  if (!location) {
+    return response;
+  }
+
+  const nextUrl = await assertSafeFetchUrl(new URL(location, url));
+  const nextOptions =
+    response.status === 303 ? { ...options, method: 'GET', body: undefined } : options;
+
+  return fetchWithSafeRedirects(nextUrl, nextOptions, redirectCount + 1);
 }
 
 async function fetchAsImage(candidate) {
