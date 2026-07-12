@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { addComment, deleteComment, getComments } from '@/app/actions/comments';
 import { Trash2 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
 
@@ -126,7 +126,7 @@ export function ToolComments({ toolId, toolSlug }) {
                     {comment.full_name || 'Anonim Kullanıcı'}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(comment.created_at), {
+                    {formatDistanceToNow(parseISO(comment.created_at), {
                       addSuffix: true,
                       locale: tr,
                     })}
