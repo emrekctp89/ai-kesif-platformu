@@ -1,16 +1,29 @@
 import { Storage } from '@google-cloud/storage';
 import path from 'path';
 
-let storageOptions = {};
-if (process.env.GOOGLE_CREDENTIALS_JSON) {
-  storageOptions.credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
-} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-  storageOptions.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-}
-const storage = new Storage(storageOptions);
+let storageInstance = null;
+let bucketInstance = null;
 
-const bucketName = process.env.GCS_BUCKET_NAME || 'aikesif-media';
-const bucket = storage.bucket(bucketName);
+function getBucket() {
+  if (bucketInstance) return bucketInstance;
+
+  try {
+    let storageOptions = {};
+    if (process.env.GOOGLE_CREDENTIALS_JSON) {
+      storageOptions.credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      storageOptions.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    }
+    storageInstance = new Storage(storageOptions);
+
+    const bucketName = process.env.GCS_BUCKET_NAME || 'aikesif-media';
+    bucketInstance = storageInstance.bucket(bucketName);
+    return bucketInstance;
+  } catch (error) {
+    console.error('GCS Başlatma Hatası (JSON formatı veya yetki hatalı olabilir):', error);
+    throw new Error('Google Cloud Storage başlatılamadı. Lütfen JSON değişkenini kontrol edin.');
+  }
+}
 
 /**
  * Dosyayı Google Cloud Storage'a yükler
@@ -22,7 +35,6 @@ const bucket = storage.bucket(bucketName);
 export const uploadToGCS = async (destination, file, contentType) => {
   let buffer;
 
-  // File veya Blob objesiyse ArrayBuffer'a çevirip Buffer yapıyoruz
   if (file instanceof Blob || typeof file.arrayBuffer === 'function') {
     const arrayBuffer = await file.arrayBuffer();
     buffer = Buffer.from(arrayBuffer);
@@ -32,18 +44,17 @@ export const uploadToGCS = async (destination, file, contentType) => {
     throw new Error('Geçersiz dosya formatı. File, Blob veya Buffer bekleniyor.');
   }
 
+  const bucket = getBucket();
   const fileRef = bucket.file(destination);
 
   await fileRef.save(buffer, {
     metadata: {
       contentType: contentType,
-      // CDN ve önbellek kontrolü için:
       cacheControl: 'public, max-age=31536000',
     },
   });
 
-  // Public URL oluşturma
-  return `https://storage.googleapis.com/${bucketName}/${destination}`;
+  return `https://storage.googleapis.com/${bucket.name}/${destination}`;
 };
 
 /**
@@ -54,6 +65,7 @@ export const deleteFromGCS = async (filePath) => {
   if (!filePath) return;
 
   try {
+    const bucket = getBucket();
     const fileRef = bucket.file(filePath);
     await fileRef.delete();
   } catch (error) {

@@ -1,13 +1,27 @@
 import { v2 } from '@google-cloud/translate';
 import path from 'path';
 
-let translateOptions = {};
-if (process.env.GOOGLE_CREDENTIALS_JSON) {
-  translateOptions.credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
-} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-  translateOptions.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+let translateInstance = null;
+
+function getTranslateClient() {
+  if (translateInstance) return translateInstance;
+
+  try {
+    let translateOptions = {};
+    if (process.env.GOOGLE_CREDENTIALS_JSON) {
+      translateOptions.credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      translateOptions.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    }
+    translateInstance = new v2.Translate(translateOptions);
+    return translateInstance;
+  } catch (error) {
+    console.error('Translation Başlatma Hatası:', error);
+    throw new Error(
+      'Google Cloud Translation başlatılamadı. Lütfen JSON değişkenini kontrol edin.'
+    );
+  }
 }
-const translate = new v2.Translate(translateOptions);
 
 /**
  * Verilen metni hedef dile çevirir.
@@ -19,6 +33,7 @@ export async function translateText(text, targetLanguage = 'tr') {
   if (!text) return text;
 
   try {
+    const translate = getTranslateClient();
     const [translations] = await translate.translate(text, targetLanguage);
 
     // Eğer dizi geldiyse diziyi, tek metin geldiyse tek metni döndür.
