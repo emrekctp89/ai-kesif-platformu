@@ -43,7 +43,19 @@ export function HomepageClient({
   pageDescription = 'Ne yapmak istediğini ara, kategorileri keşfet veya AI tavsiyesiyle doğru araca daha hızlı ulaş.',
   fixedSearchParams,
 }) {
-  const { user, favoriteToolIds, initialTools, categories, allTags } = initialData;
+  const {
+    user,
+    favoriteToolIds: favoriteToolIdsProp,
+    initialTools,
+    categories,
+    allTags,
+  } = initialData;
+  // Accept array (RSC-safe) or Set for backward compatibility
+  const favoriteToolIds = useMemo(() => {
+    if (favoriteToolIdsProp instanceof Set) return favoriteToolIdsProp;
+    if (Array.isArray(favoriteToolIdsProp)) return new Set(favoriteToolIdsProp);
+    return new Set();
+  }, [favoriteToolIdsProp]);
 
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -323,13 +335,16 @@ export function HomepageClient({
         </section>
       )}
 
-      {/* Keşif Bölümü */}
-      {showDiscovery && (
-        <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+      {/* Keşif Bölümü (Server Component slot from HomePage) */}
+      {showDiscovery && discoverySections ? (
+        <div
+          key="homepage-discovery"
+          className="animate-in fade-in slide-in-from-top-4 duration-300"
+        >
           {discoverySections}
-          <div className="w-full border-t border-dashed mt-12"></div>
+          <div key="discovery-divider" className="mt-12 w-full border-t border-dashed" />
         </div>
-      )}
+      ) : null}
 
       {/* Sonsuz Kaydırma Listesi */}
       <section className="mt-12" aria-labelledby="tools-page-title">

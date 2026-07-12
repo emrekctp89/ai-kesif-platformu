@@ -5,6 +5,7 @@ import { AdminMenu } from './AdminMenu';
 import { getNotifications } from '@/app/actions';
 import { HeaderNav } from './HeaderNav';
 import { FutureAiGlyph } from './FutureAiGlyph';
+import { safeGetUser } from '@/utils/supabase/auth-session';
 
 // Toplam okunmamış mesaj sayısını çeken fonksiyon
 async function getTotalUnreadMessages(supabase, userId) {
@@ -20,9 +21,7 @@ async function getTotalUnreadMessages(supabase, userId) {
 // Bu, artık sadece veri çeken, sadeleşmiş bir "Server Component"tir.
 export default async function Header() {
   const supabase = await createClient(await cookies());
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await safeGetUser(supabase);
   const isAdmin = user && user.email === process.env.ADMIN_EMAIL;
 
   // Gerekli tüm verileri sunucuda çekiyoruz

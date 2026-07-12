@@ -51,7 +51,7 @@ export default async function SubmitLaunchPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login?message=Lansman yapmak için giriş yapmalısınız.');
+    redirect(`/login?message=${encodeURIComponent('Lansman yapmak için giriş yapmalısınız.')}`);
   }
 
   const userTools = await getLaunchableTools(user.id);

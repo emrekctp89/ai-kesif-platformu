@@ -4,18 +4,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import {
-  ArrowRight,
-  Zap,
-  Rss,
-  Bot,
-  Library,
-  Map,
-  Users,
-  Sparkles,
-  collections,
-  learningPaths,
-} from 'lucide-react';
+import { Zap, Rss, Library, Map, Users, Sparkles } from 'lucide-react';
 
 // Veritabanındaki RPC fonksiyonlarını çağıran ana fonksiyon
 async function getDiscoverData() {

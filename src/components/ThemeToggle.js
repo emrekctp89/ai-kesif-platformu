@@ -54,16 +54,26 @@ function MoonIcon(props) {
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  // Avoid SSR/client mismatch: theme is only known after mount (localStorage / system).
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && resolvedTheme === 'dark';
+  // Neutral label on server + first client paint; theme-specific after hydrate.
+  const label = !mounted ? 'Tema değiştir' : isDark ? 'Açık temaya geç' : 'Koyu temaya geç';
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      aria-label={isDark ? 'Açık temaya geç' : 'Koyu temaya geç'}
-      title={isDark ? 'Açık temaya geç' : 'Koyu temaya geç'}
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      aria-label={label}
+      title={label}
+      onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
     >
+      {/* Icons use CSS `dark:` so they track <html class> without JS theme state */}
       <SunIcon
         aria-hidden="true"
         className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"

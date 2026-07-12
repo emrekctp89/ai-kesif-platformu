@@ -9,18 +9,18 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.js');
 const withSerwist = require('@serwist/next').default({
   swSrc: 'src/app/sw.js',
   swDest: 'public/sw.js',
+  // Turbopack (`next dev --turbopack`) is not supported by @serwist/next yet.
+  disable: process.env.NODE_ENV === 'development',
 });
 
+// Feature-flag style kill switch for incomplete / high-risk surfaces.
+// Enabled product surfaces (not listed): home, tools, kesfet, karsilastir,
+// blog, profile, public user pages, eserler, koleksiyonlar, uyelik, auth flows.
 const disabledRoutes = [
   '/register',
-  '/profile/:path*',
-  '/blog/:path*',
   '/yarisma',
-  '/uyelik',
-  '/u/:path*',
   '/topluluk',
   '/studyo',
-  '/reset-password',
   '/random-tools',
   '/ogren',
   '/odul-avciligi/:path*',
@@ -28,14 +28,44 @@ const disabledRoutes = [
   '/leaderboard',
   '/leaderbord',
   '/launchpad/:path*',
-  '/koleksiyonlar/:path*',
-  '/kesfet',
-  '/karsilastır',
-  '/forgot-password',
-  '/eserler/:path*',
-  '/arastırma',
   '/akis',
 ];
+
+/**
+ * Build redirect entries for default locale (no prefix) and English (/en).
+ * localePrefix is "as-needed", so TR uses bare paths and EN uses /en/*.
+ */
+function buildDisabledRedirects(routes) {
+  return routes.flatMap((source) => {
+    const hasPathWildcard = source.includes('/:path*');
+    const base = hasPathWildcard ? source.replace('/:path*', '') : source;
+
+    const entries = [
+      {
+        source,
+        destination: '/',
+        permanent: false,
+      },
+      {
+        source: `/en${source}`,
+        destination: '/en',
+        permanent: false,
+      },
+    ];
+
+    // Also cover the bare EN base path when only "/foo/:path*" is listed
+    // e.g. /en/blog should redirect even without a slug.
+    if (hasPathWildcard) {
+      entries.push({
+        source: `/en${base}`,
+        destination: '/en',
+        permanent: false,
+      });
+    }
+
+    return entries;
+  });
+}
 
 const nextConfig = {
   outputFileTracingRoot: __dirname,
@@ -59,11 +89,7 @@ const nextConfig = {
     ],
   },
   async redirects() {
-    return disabledRoutes.map((source) => ({
-      source,
-      destination: '/',
-      permanent: false,
-    }));
+    return buildDisabledRedirects(disabledRoutes);
   },
   async headers() {
     return [

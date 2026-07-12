@@ -8,10 +8,16 @@ import { Resend } from 'resend';
 import { WelcomeEmail } from '@/components/emails/WelcomeEmail';
 import { GoodbyeEmail } from '@/components/emails/GoodbyeEmail';
 import { enforceRateLimit } from '@/utils/antiAbuse';
+import { getAuthCallbackUrl, getPasswordResetUrl } from '@/utils/siteUrl';
+import { safeGetUser } from '@/utils/supabase/auth-session';
 
 export async function signOut() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  try {
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.error('[signOut] failed:', error?.message || error);
+  }
   revalidatePath('/', 'layout');
   redirect('/login');
 }
@@ -19,8 +25,14 @@ export async function signOut() {
 export async function signIn(formData) {
   'use server';
 
-  const email = formData.get('email');
-  const password = formData.get('password');
+  const email = String(formData.get('email') || '')
+    .trim()
+    .toLowerCase();
+  const password = String(formData.get('password') || '');
+
+  if (!email || !password) {
+    return redirect(`/login?message=${encodeURIComponent('E-posta ve şifre gereklidir.')}`);
+  }
 
   // Rate Limiting: 5 deneme / 1 dakika
   const rateLimit = await enforceRateLimit('auth-login', { limit: 5, windowMs: 60 * 1000 });
@@ -31,14 +43,40 @@ export async function signIn(formData) {
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  let data;
+  let error;
+  try {
+    ({ data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    }));
+  } catch (err) {
+    console.error('[signIn] unexpected:', err?.message || err);
+    return redirect(
+      `/login?message=${encodeURIComponent(
+        'Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.'
+      )}`
+    );
+  }
 
-  if (error || !data.user) {
-    const errorMessage = 'Giriş bilgileri hatalı veya kullanıcı bulunamadı.';
+  if (error || !data?.user) {
+    console.error('[signIn] auth error:', error?.message || 'no user');
+    const errorMessage =
+      error?.message === 'Email not confirmed'
+        ? 'E-posta adresiniz henüz doğrulanmamış. Lütfen gelen kutunuzu kontrol edin.'
+        : 'Giriş bilgileri hatalı veya kullanıcı bulunamadı.';
     return redirect(`/login?message=${encodeURIComponent(errorMessage)}`);
+  }
+
+  // Ensure session cookie was actually written (getAll/setAll path)
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData?.session) {
+    console.error('[signIn] session missing after successful password auth');
+    return redirect(
+      `/login?message=${encodeURIComponent(
+        'Oturum kaydedilemedi. Çerezleri etkinleştirip tekrar deneyin.'
+      )}`
+    );
   }
 
   revalidatePath('/', 'layout');
@@ -53,15 +91,26 @@ export async function signIn(formData) {
 export async function oAuthSignIn(provider) {
   'use server';
   const supabase = await createClient();
+  const redirectTo = await getAuthCallbackUrl();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: provider,
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      // Use the host the user is on (prod custom domain vs preview).
+      redirectTo,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
     },
   });
 
-  if (error) {
-    return redirect('/login?message=Could not authenticate with provider');
+  if (error || !data?.url) {
+    console.error('[oAuthSignIn] error:', error?.message || 'no url');
+    return redirect(
+      `/login?message=${encodeURIComponent(
+        'Sağlayıcı ile giriş yapılamadı. Lütfen tekrar deneyin.'
+      )}`
+    );
   }
 
   return redirect(data.url);
@@ -69,8 +118,10 @@ export async function oAuthSignIn(provider) {
 
 export async function signUp(formData) {
   'use server';
-  const email = formData.get('email');
-  const password = formData.get('password');
+  const email = String(formData.get('email') || '')
+    .trim()
+    .toLowerCase();
+  const password = String(formData.get('password') || '');
 
   // Rate Limiting: 3 hesap / 1 saat
   const rateLimit = await enforceRateLimit('auth-signup', { limit: 3, windowMs: 60 * 60 * 1000 });
@@ -81,28 +132,42 @@ export async function signUp(formData) {
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-    },
-  });
+  let data;
+  let error;
+  try {
+    const emailRedirectTo = await getAuthCallbackUrl();
+    ({ data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo,
+      },
+    }));
+  } catch (err) {
+    console.error('[signUp] unexpected:', err?.message || err);
+    return redirect(
+      `/signup?message=${encodeURIComponent(
+        'Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.'
+      )}`
+    );
+  }
 
-  if (error || !data.user) {
+  if (error || !data?.user) {
     const errorMessage =
       'Kullanıcı oluşturulamadı. Şifre en az 6 karakter olmalı veya e-posta zaten kullanımda olabilir.';
     return redirect(`/signup?message=${encodeURIComponent(errorMessage)}`);
   }
 
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
-      from: process.env.ADMIN_NOTIF_EMAIL_FROM,
-      to: email,
-      subject: "AI Keşif Platformu'na Hoş Geldiniz!",
-      react: WelcomeEmail({ userEmail: email }),
-    });
+    if (process.env.RESEND_API_KEY && process.env.ADMIN_NOTIF_EMAIL_FROM) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: process.env.ADMIN_NOTIF_EMAIL_FROM,
+        to: email,
+        subject: "AI Keşif Platformu'na Hoş Geldiniz!",
+        react: WelcomeEmail({ userEmail: email }),
+      });
+    }
   } catch (emailError) {
     console.error('Hoş geldiniz e-postası gönderme hatası:', emailError);
   }
@@ -114,7 +179,9 @@ export async function signUp(formData) {
 export async function requestPasswordReset(formData) {
   'use server';
 
-  const email = formData.get('email');
+  const email = String(formData.get('email') || '')
+    .trim()
+    .toLowerCase();
 
   // Rate Limiting: 3 sıfırlama isteği / 1 saat
   const rateLimit = await enforceRateLimit('auth-reset-password', {
@@ -129,7 +196,7 @@ export async function requestPasswordReset(formData) {
   const supabase = await createClient();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
+    redirectTo: await getPasswordResetUrl(),
   });
 
   if (error) {
@@ -163,17 +230,26 @@ export async function updatePassword(formData) {
 export async function deleteUser() {
   'use server';
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await safeGetUser(supabase);
 
   if (!user) {
     return redirect(`/login?message=${encodeURIComponent('Bu işlem için giriş yapmalısınız.')}`);
   }
 
   const userEmail = user.email;
-  const supabaseAdmin = createAdminClient();
-  const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+
+  let deleteError;
+  try {
+    const supabaseAdmin = createAdminClient();
+    ({ error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id));
+  } catch (err) {
+    console.error('Hesap silme hatası (admin client):', err?.message || err);
+    return redirect(
+      `/profile?message=${encodeURIComponent(
+        'Hesap silme şu an kullanılamıyor. Lütfen daha sonra tekrar deneyin.'
+      )}`
+    );
+  }
 
   if (deleteError) {
     console.error('Hesap silme hatası:', deleteError);
@@ -182,15 +258,23 @@ export async function deleteUser() {
   }
 
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
-      from: process.env.ADMIN_NOTIF_EMAIL_FROM,
-      to: userEmail,
-      subject: 'Hesabınız Silindi | AI Keşif Platformu',
-      react: GoodbyeEmail({ userEmail: userEmail }),
-    });
+    if (process.env.RESEND_API_KEY && process.env.ADMIN_NOTIF_EMAIL_FROM) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: process.env.ADMIN_NOTIF_EMAIL_FROM,
+        to: userEmail,
+        subject: 'Hesabınız Silindi | AI Keşif Platformu',
+        react: GoodbyeEmail({ userEmail: userEmail }),
+      });
+    }
   } catch (emailError) {
     console.error('Veda e-postası gönderme hatası:', emailError);
+  }
+
+  try {
+    await supabase.auth.signOut();
+  } catch {
+    // ignore
   }
 
   const successMessage = 'Hesabınız başarıyla silindi. Gidişinize üzüldük.';

@@ -125,10 +125,10 @@ export default function ToolCard({ tool }) {
         {/* Etiketler */}
         {tool.tags && tool.tags.length > 0 && (
           <div className="my-2 flex flex-wrap gap-1 sm:my-3">
-            {tool.tags.slice(0, 3).map((tag) => (
+            {tool.tags.slice(0, 3).map((tag, tagIndex) => (
               // DEĞİŞİKLİK 3: Etiket Link'lerine de stopPropagation ekleyin.
               <Link
-                key={tag.id}
+                key={tag.id ?? tag.slug ?? `tag-${tagIndex}`}
                 href={`/?tags=${tag.id}`}
                 prefetch={false}
                 onClick={(e) => e.stopPropagation()}
@@ -302,12 +302,12 @@ export function InfiniteToolsList({
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-8">
-          {tools.map((tool) => (
+          {tools.map((tool, index) => (
             <ToolCard
-              key={tool.id}
+              key={tool.id ?? tool.slug ?? `tool-${index}`}
               tool={tool}
               user={user}
-              isFavorited={favoriteToolIds?.has(tool.id)}
+              isFavorited={favoriteToolIds?.has?.(tool.id)}
               onPreviewClick={setPreviewTool}
             />
           ))}
@@ -318,9 +318,9 @@ export function InfiniteToolsList({
         <div ref={ref} className="col-span-full mt-8" role="status" aria-live="polite">
           <span className="sr-only">Daha fazla araç yükleniyor</span>
           <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-8">
-            <ToolCardSkeleton />
-            <ToolCardSkeleton />
-            <ToolCardSkeleton />
+            <ToolCardSkeleton key="skeleton-1" />
+            <ToolCardSkeleton key="skeleton-2" />
+            <ToolCardSkeleton key="skeleton-3" />
           </div>
         </div>
       )}
@@ -345,12 +345,18 @@ export function ToolsList({ tools, user, favoriteToolIds }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {sortedTools.map((tool) => (
+      {sortedTools.map((tool, index) => (
         <ToolCard
-          key={tool.id}
+          key={tool.id ?? tool.slug ?? `tool-${index}`}
           tool={tool}
           user={user}
-          isFavorited={favoriteToolIds.has(tool.id)}
+          isFavorited={
+            favoriteToolIds instanceof Set
+              ? favoriteToolIds.has(tool.id)
+              : Array.isArray(favoriteToolIds)
+                ? favoriteToolIds.includes(tool.id)
+                : false
+          }
         />
       ))}
     </div>

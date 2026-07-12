@@ -39,9 +39,9 @@ export async function FeaturedTools() {
         Öne Çıkan Araçlar
       </h2>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {featuredTools.map((tool) => (
+        {featuredTools.map((tool, index) => (
           <Card
-            key={tool.id}
+            key={tool.id ?? tool.slug ?? `featured-${index}`}
             className="h-full border-none bg-gradient-to-r from-[#7F00FF] via-[#00BFFF] to-[#FF1493] text-white shadow-lg"
           >
             <CardContent className="flex h-full flex-col p-6">

@@ -25,7 +25,8 @@ async function getPageData(searchParams) {
     ? await supabase.from('favorites').select('tool_id').eq('user_id', user.id)
     : { data: [] };
 
-  const favoriteToolIds = new Set(favorites?.map((f) => f.tool_id) || []);
+  // Client Component props must be serializable — pass an array, not a Set.
+  const favoriteToolIds = favorites?.map((f) => f.tool_id).filter(Boolean) || [];
 
   return {
     user,
@@ -46,12 +47,13 @@ export default async function HomePage(props) {
   // Tüm verileri sunucuda çekiyoruz
   const initialData = await getPageData(resolvedSearchParams);
 
-  // Keşif bölümlerini burada, bir Server Component olarak oluşturuyoruz
+  // Keşif bölümlerini Server Component olarak oluşturuyoruz.
+  // Keys: RSC → Client prop geçişinde React list uyarısını önler.
   const discoverySections = (
-    <div className="space-y-12">
-      <ToolOfTheDay />
-      <FeaturedTools />
-      <SpeedInsights />
+    <div key="discovery-sections" className="space-y-12">
+      <ToolOfTheDay key="tool-of-the-day" />
+      <FeaturedTools key="featured-tools" />
+      <SpeedInsights key="speed-insights" />
     </div>
   );
 

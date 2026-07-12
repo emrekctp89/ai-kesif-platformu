@@ -11,10 +11,37 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from './ui/button';
-import { Menu, Bot, Lightbulb, PlusCircle, Info, Mail } from 'lucide-react';
+import {
+  Menu,
+  Bot,
+  Lightbulb,
+  PlusCircle,
+  Info,
+  Mail,
+  Compass,
+  GitCompareArrows,
+  Newspaper,
+  Images,
+  Crown,
+  LogIn,
+} from 'lucide-react';
 
 export function MobileNav({ user, isProUser }) {
   const [open, setOpen] = React.useState(false);
+
+  const links = [
+    { href: '/', label: 'Tüm Araçlar', icon: Bot },
+    { href: '/kesfet', label: 'Keşfet', icon: Compass },
+    { href: '/karsilastir', label: 'Karşılaştır', icon: GitCompareArrows },
+    { href: '/blog', label: 'Blog', icon: Newspaper },
+    { href: '/eserler', label: 'Eserler', icon: Images },
+    { href: '/tavsiye', label: 'AI Tavsiye', icon: Lightbulb },
+    { href: '/submit', label: 'Araç Öner', icon: PlusCircle },
+    ...(user && !isProUser ? [{ href: '/uyelik', label: "Pro'ya Yükselt", icon: Crown }] : []),
+    ...(!user ? [{ href: '/login', label: 'Giriş Yap', icon: LogIn }] : []),
+    { href: '/hakkimizda', label: 'Hakkımızda', icon: Info },
+    { href: '/iletisim', label: 'İletişim', icon: Mail },
+  ];
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -39,13 +66,7 @@ export function MobileNav({ user, isProUser }) {
           <span className="font-bold">AI Keşif</span>
         </Link>
         <div className="flex flex-col gap-2">
-          {[
-            { href: '/', label: 'Tüm Araçlar', icon: Bot },
-            { href: '/tavsiye', label: 'AI Tavsiye', icon: Lightbulb },
-            { href: '/submit', label: 'Araç Öner', icon: PlusCircle },
-            { href: '/hakkimizda', label: 'Hakkımızda', icon: Info },
-            { href: '/iletisim', label: 'İletişim', icon: Mail },
-          ].map(({ href, label, icon: Icon }) => (
+          {links.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}

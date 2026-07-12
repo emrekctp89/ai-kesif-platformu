@@ -2,6 +2,9 @@
   "Navigation": {
     "home": "Home",
     "discover": "Discover",
+    "compare": "Compare",
+    "blog": "Blog",
+    "showcase": "Showcase",
     "categories": "Categories",
     "community": "Community",
     "about": "About Us",

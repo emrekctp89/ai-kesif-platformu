@@ -13,7 +13,9 @@ export async function startConversation(recipientUserId) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return redirect('/login?message=Mesaj göndermek için giriş yapmalısınız.');
+    return redirect(
+      `/login?message=${encodeURIComponent('Mesaj göndermek için giriş yapmalısınız.')}`
+    );
   }
 
   if (user.id === recipientUserId) {
@@ -27,7 +29,7 @@ export async function startConversation(recipientUserId) {
 
   if (error) {
     console.error('Sohbet başlatma hatası:', error);
-    return redirect('/profile?message=Sohbet başlatılamadı.');
+    return redirect(`/profile?message=${encodeURIComponent('Sohbet başlatılamadı.')}`);
   }
 
   redirect(`/mesajlar/${conversationId}`);

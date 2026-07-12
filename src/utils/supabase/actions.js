@@ -1,36 +1,33 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { installSafeAuthGetUser } from './auth-session';
+import { getSupabaseCookieOptions } from '@/utils/siteUrl';
 
-export const createClient = async (cookieStore) => {
-  const store = cookieStore ?? (await cookies());
+// Optional cookieStore arg is ignored (kept for call-site compatibility).
+export const createClient = async (_cookieStore) => {
+  const cookieStore = await cookies();
 
-  return createServerClient(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
+      cookieOptions: getSupabaseCookieOptions(),
       cookies: {
-        get(name) {
-          return store.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name, value, options) {
+        setAll(cookiesToSet) {
           try {
-            store.set({ name, value, ...options });
-          } catch (error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-        remove(name, options) {
-          try {
-            store.set({ name, value: '', ...options });
-          } catch (error) {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Server Component — middleware will refresh session.
           }
         },
       },
     }
   );
+
+  return installSafeAuthGetUser(supabase);
 };

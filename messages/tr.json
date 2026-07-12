@@ -2,6 +2,9 @@
   "Navigation": {
     "home": "Ana Sayfa",
     "discover": "Keşfet",
+    "compare": "Karşılaştır",
+    "blog": "Blog",
+    "showcase": "Eserler",
     "categories": "Kategoriler",
     "community": "Topluluk",
     "about": "Hakkımızda",

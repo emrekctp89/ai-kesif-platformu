@@ -144,7 +144,9 @@ export default async function ActivityFeedPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login?message=Akış sayfasını görmek için giriş yapmalısınız.');
+    redirect(
+      `/login?message=${encodeURIComponent('Akış sayfasını görmek için giriş yapmalısınız.')}`
+    );
   }
 
   const feedItems = await getActivityFeedData(user.id);

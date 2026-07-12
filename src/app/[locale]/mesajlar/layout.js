@@ -37,7 +37,7 @@ export default async function MessagesLayout(props) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login?message=Mesajları görmek için giriş yapmalısınız.');
+    redirect(`/login?message=${encodeURIComponent('Mesajları görmek için giriş yapmalısınız.')}`);
   }
 
   const conversations = await getConversations(user.id);

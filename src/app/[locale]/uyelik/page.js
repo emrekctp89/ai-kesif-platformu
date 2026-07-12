@@ -38,7 +38,9 @@ export default async function PricingPage(props) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return redirect('/login?message=Üyelik sayfasını görmek için giriş yapmalısınız.');
+    return redirect(
+      `/login?message=${encodeURIComponent('Üyelik sayfasını görmek için giriş yapmalısınız.')}`
+    );
   }
 
   const products = await getProducts();
