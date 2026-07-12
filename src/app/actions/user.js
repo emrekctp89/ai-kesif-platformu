@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
+import { uploadToGCS, deleteFromGCS } from '@/utils/gcs';
 
 export async function updateUserProfile(formData) {
   'use server';
@@ -72,16 +73,14 @@ export async function updateAvatar(formData) {
   const fileName = `${Date.now()}.${fileExt}`;
   const filePath = `${user.id}/${fileName}`;
 
-  const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
-
-  if (uploadError) {
-    console.error('Avatar yükleme hatası:', uploadError);
+  const gcsPath = `avatars/${filePath}`;
+  let publicUrl;
+  try {
+    publicUrl = await uploadToGCS(gcsPath, file, file.type || 'image/jpeg');
+  } catch (uploadError) {
+    console.error('Avatar yükleme hatası (GCS):', uploadError);
     return { error: 'Avatar yüklenirken bir hata oluştu.' };
   }
-
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from('avatars').getPublicUrl(filePath);
 
   const { error: profileError } = await supabase
     .from('profiles')
@@ -90,7 +89,7 @@ export async function updateAvatar(formData) {
 
   if (profileError) {
     console.error('Profil güncelleme hatası:', profileError);
-    await supabase.storage.from('avatars').remove([filePath]);
+    await deleteFromGCS(gcsPath);
     return { error: 'Profil fotoğrafı güncellenirken bir hata oluştu.' };
   }
 

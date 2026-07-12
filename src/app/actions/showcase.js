@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { revalidatePath } from 'next/cache';
+import { uploadToGCS, deleteFromGCS } from '@/utils/gcs';
 
 export async function submitShowcaseItem(formData) {
   'use server';
@@ -36,17 +37,14 @@ export async function submitShowcaseItem(formData) {
 
     const fileExt = imageFile.name.split('.').pop();
     const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+    const gcsPath = `showcase-images/${filePath}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('showcase-images')
-      .upload(filePath, imageFile);
-
-    if (uploadError) {
-      console.error('Eser görseli yükleme hatası:', uploadError);
+    try {
+      imageUrl = await uploadToGCS(gcsPath, imageFile, imageFile.type || 'image/jpeg');
+    } catch (uploadError) {
+      console.error('Eser görseli yükleme hatası (GCS):', uploadError);
       return { error: 'Görsel yüklenirken bir hata oluştu.' };
     }
-
-    imageUrl = supabase.storage.from('showcase-images').getPublicUrl(filePath).data.publicUrl;
   }
 
   const showcaseData = {
@@ -65,9 +63,9 @@ export async function submitShowcaseItem(formData) {
   if (insertError) {
     console.error('Eser kaydetme hatası:', insertError);
     if (imageUrl) {
-      await supabase.storage
-        .from('showcase-images')
-        .remove([imageUrl.split('/').slice(-2).join('/')]);
+      const parts = imageUrl.split('/');
+      const filePath = parts.slice(-3).join('/'); // showcase-images/user_id/file.ext
+      await deleteFromGCS(filePath);
     }
     return { error: 'Eseriniz kaydedilirken bir hata oluştu.' };
   }
@@ -112,10 +110,10 @@ export async function deleteShowcaseItem(formData) {
 
   if (imageUrl) {
     try {
-      const filePath = new URL(imageUrl).pathname.split('/showcase-images/')[1];
-      await supabase.storage.from('showcase-images').remove([filePath]);
+      const filePath = `showcase-images/${new URL(imageUrl).pathname.split('/showcase-images/')[1]}`;
+      await deleteFromGCS(filePath);
     } catch (storageError) {
-      console.error('Eser görseli silme hatası:', storageError);
+      console.error('Eser görseli silme hatası (GCS):', storageError);
     }
   }
 

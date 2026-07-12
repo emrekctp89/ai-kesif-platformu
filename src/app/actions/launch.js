@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
+import { uploadToGCS } from '@/utils/gcs';
 
 export async function submitLaunch(formData) {
   'use server';
@@ -29,17 +30,14 @@ export async function submitLaunch(formData) {
       const fileExt = imageFile.name.split('.').pop();
       const filePath = `${user.id}/launches/${toolId}-${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('launch-gallery-images')
-        .upload(filePath, imageFile);
-
-      if (uploadError) {
-        console.error('Lansman görseli yükleme hatası:', uploadError);
+      const gcsPath = `launch-gallery-images/${filePath}`;
+      try {
+        const publicUrl = await uploadToGCS(gcsPath, imageFile, imageFile.type || 'image/jpeg');
+        imageUrls.push(publicUrl);
+      } catch (uploadError) {
+        console.error('Lansman görseli yükleme hatası (GCS):', uploadError);
         return { error: 'Görseller yüklenirken bir hata oluştu.' };
       }
-
-      const { data } = supabase.storage.from('launch-gallery-images').getPublicUrl(filePath);
-      imageUrls.push(data.publicUrl);
     }
   }
 

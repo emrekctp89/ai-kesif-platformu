@@ -20,9 +20,7 @@ export async function GET(request) {
       if (error) {
         console.error('[auth/callback] exchangeCodeForSession failed:', error.message);
         return NextResponse.redirect(
-          `${origin}/login?message=${encodeURIComponent(
-            'Giriş tamamlanamadı. Lütfen tekrar deneyin.'
-          )}`
+          `${origin}/login?message=${encodeURIComponent('Giriş yapılamadı: ' + error.message)}`
         );
       }
 

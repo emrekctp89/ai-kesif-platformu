@@ -5,6 +5,7 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { slugify } from '@/utils/slugify';
+import { uploadToGCS } from '@/utils/gcs';
 
 export async function createPost(formData) {
   'use server';
@@ -331,17 +332,17 @@ export async function uploadBlogImage(formData) {
 
   const fileExt = file.name.split('.').pop();
   const filePath = `public/${user.id}/${Date.now()}.${fileExt}`;
+  const gcsPath = `blog-images/${filePath}`;
 
-  const { error: uploadError } = await supabase.storage.from('blog-images').upload(filePath, file);
-
-  if (uploadError) {
-    console.error('Blog görseli yükleme hatası:', uploadError);
+  let publicUrl;
+  try {
+    publicUrl = await uploadToGCS(gcsPath, file, file.type || 'image/jpeg');
+  } catch (uploadError) {
+    console.error('Blog görseli yükleme hatası (GCS):', uploadError);
     return { error: 'Görsel yüklenirken bir hata oluştu.' };
   }
 
-  const { data } = supabase.storage.from('blog-images').getPublicUrl(filePath);
-
-  return { success: true, url: data.publicUrl };
+  return { success: true, url: publicUrl };
 }
 
 export async function assignToolsToPost(formData) {
