@@ -25,11 +25,6 @@ export async function middleware(request) {
             value,
             ...options,
           });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
           response.cookies.set({
             name,
             value,
@@ -41,11 +36,6 @@ export async function middleware(request) {
             name,
             value: '',
             ...options,
-          });
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
           });
           response.cookies.set({
             name,
