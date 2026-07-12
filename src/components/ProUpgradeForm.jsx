@@ -6,13 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sparkles, Tag } from 'lucide-react';
 import { createCheckoutSession } from '@/app/actions';
-import { applyPromoDiscount, getPromoCode, normalizePromoCode } from '@/lib/promoCodes';
+
+function normalizePromoCode(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw.trim().toUpperCase();
+}
 
 export function ProUpgradeForm({ priceId, unitAmount, initialPromoCode = '' }) {
   const [promoCode, setPromoCode] = React.useState(normalizePromoCode(initialPromoCode));
-
-  const promo = getPromoCode(promoCode);
-  const discountedAmount = applyPromoDiscount(unitAmount, promo);
 
   const formatPrice = (amount) =>
     (amount / 100).toLocaleString('tr-TR', {
@@ -41,26 +42,21 @@ export function ProUpgradeForm({ priceId, unitAmount, initialPromoCode = '' }) {
             autoComplete="off"
           />
         </div>
-        {promoCode && !promo && <p className="text-xs text-destructive">Geçersiz promo kodu.</p>}
-        {promo && (
-          <p className="text-xs text-primary">
-            {promo.label}: İlk ödemede %{promo.percentOff} indirim uygulanır.
+        {promoCode && (
+          <p className="text-xs text-muted-foreground">
+            Kodunuz ödeme sayfası oluşturulurken güvenli şekilde doğrulanır.
           </p>
         )}
       </div>
 
-      {promo && (
-        <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
-          <span className="text-muted-foreground line-through mr-2">{formatPrice(unitAmount)}</span>
-          <span className="font-semibold text-primary">
-            {formatPrice(discountedAmount)} / ilk ay
-          </span>
-        </div>
-      )}
+      <div className="rounded-lg border bg-muted/40 px-3 py-2 text-sm">
+        <span className="text-muted-foreground">Pro üyelik: </span>
+        <span className="font-semibold">{formatPrice(unitAmount)} / ay</span>
+      </div>
 
       <Button type="submit" className="w-full" size="lg">
         <Sparkles className="w-4 h-4 mr-2" />
-        {promo ? "İndirimli Pro'ya Yükselt" : "Pro'ya Şimdi Yükselt"}
+        Pro&apos;ya Şimdi Yükselt
       </Button>
     </form>
   );
