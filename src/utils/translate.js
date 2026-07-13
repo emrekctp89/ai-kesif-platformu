@@ -1,42 +1,31 @@
 import { v2 } from '@google-cloud/translate';
-import path from 'path';
+import { getGoogleClientOptions } from '@/utils/googleCredentials';
 
-let translateInstance = null;
+let translateClient = null;
 
 function getTranslateClient() {
-  if (translateInstance) return translateInstance;
-
-  try {
-    let translateOptions = {};
-    if (process.env.GOOGLE_CREDENTIALS_JSON) {
-      translateOptions.credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
-    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      translateOptions.keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    }
-    translateInstance = new v2.Translate(translateOptions);
-    return translateInstance;
-  } catch (error) {
-    console.error('Translation Başlatma Hatası:', error);
-    throw new Error(
-      'Google Cloud Translation başlatılamadı. Lütfen JSON değişkenini kontrol edin.'
-    );
+  if (!translateClient) {
+    translateClient = new v2.Translate(getGoogleClientOptions());
   }
+  return translateClient;
 }
 
 /**
- * Verilen metni hedef dile çevirir.
- * @param {string|string[]} text - Çevrilecek metin veya metin dizisi
- * @param {string} targetLanguage - Hedef dil kodu (örn: 'tr' Türkçe için, 'en' İngilizce için)
- * @returns {Promise<string|string[]>} Çevrilmiş metin(ler)
+ * Translates text into the requested target language using Google Cloud Translation.
+ *
+ * @param {string} text
+ * @param {string} targetLanguage
+ * @returns {Promise<string>}
  */
 export async function translateText(text, targetLanguage = 'tr') {
   if (!text) return text;
+  if (!targetLanguage) {
+    throw new Error('Hedef dil kodu zorunludur.');
+  }
 
   try {
     const translate = getTranslateClient();
     const [translations] = await translate.translate(text, targetLanguage);
-
-    // Eğer dizi geldiyse diziyi, tek metin geldiyse tek metni döndür.
     return translations;
   } catch (error) {
     console.error('Google Cloud Translation Hatası:', error);

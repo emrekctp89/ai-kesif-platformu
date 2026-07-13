@@ -1,22 +1,36 @@
 import { NextResponse } from 'next/server';
 import { runToolQualityAutomation } from '@/app/actions/tools';
 
-// Sadece Vercel Cron veya Google Cloud Scheduler tarafından tetiklenebilen uç nokta
+/**
+ * Quality automation endpoint.
+ * Triggered by Vercel Cron and/or Google Cloud Scheduler.
+ * Auth: Authorization: Bearer <CRON_SECRET> or ?secret=
+ */
 export async function GET(request) {
-  const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    console.error('[cron/quality] CRON_SECRET is not configured');
+    return NextResponse.json({ error: 'Sunucu yapılandırması eksik.' }, { status: 500 });
+  }
 
-  // URL parametresinden veya Header'dan secret kontrolü
-  const requestUrl = new URL(request.url);
-  const secretParam = requestUrl.searchParams.get('secret');
+  const authHeader = request.headers.get('authorization');
+  const secretParam = new URL(request.url).searchParams.get('secret');
+  const authorized = authHeader === `Bearer ${cronSecret}` || secretParam === cronSecret;
 
-  if (authHeader !== `Bearer ${cronSecret}` && secretParam !== cronSecret) {
+  if (!authorized) {
     return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
   }
 
   try {
-    // Mevcut Server Action'ı çağır
-    const result = await runToolQualityAutomation();
+    // Pass secret so the action can run without an admin browser session.
+    const result = await runToolQualityAutomation({ cronSecret });
+
+    if (result?.error) {
+      return NextResponse.json(
+        { success: false, error: result.error, details: result },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
@@ -27,7 +41,7 @@ export async function GET(request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Cron job hatası:', error);
+    console.error('[cron/quality] failed:', error);
     return NextResponse.json({ error: 'İşlem sırasında bir hata oluştu.' }, { status: 500 });
   }
 }

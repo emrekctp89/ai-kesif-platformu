@@ -5,43 +5,16 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { enforceRateLimit } from '@/utils/antiAbuse';
 import * as cheerio from 'cheerio';
-
-const GEMINI_EMBEDDING_API_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent';
+import { embedGeminiText } from '@/utils/gemini';
 
 export async function getEmbedding(text) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_API_KEY bulunamadı.');
-
-  const payload = {
-    model: 'models/text-embedding-004',
-    content: { parts: [{ text }] },
-  };
-
-  const response = await fetch(`${GEMINI_EMBEDDING_API_URL}?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    console.error('Gemini Embedding API Hatası:', JSON.stringify(result, null, 2));
-    const errorMessage = result.error?.message || 'Bilinmeyen bir API hatası.';
-    throw new Error(`Embedding API Hatası: ${errorMessage}`);
-  }
-
-  if (result.embedding?.values) {
-    return result.embedding.values;
-  } else {
-    const finishReason = result.candidates?.[0]?.finishReason;
-    if (finishReason === 'SAFETY') {
-      throw new Error('İsteğiniz güvenlik politikalarını ihlal ettiği için işlenemedi.');
-    }
-    console.error('Beklenmedik API Cevabı:', JSON.stringify(result, null, 2));
+  try {
+    return await embedGeminiText(text);
+  } catch (error) {
+    console.error('Gemini Embedding Hatası:', error);
     throw new Error(
-      "API'den geçerli bir embedding vektörü alınamadı. Lütfen API yapılandırmanızı (faturalandırma, aktif API'ler) kontrol edin."
+      error?.message ||
+        "API'den geçerli bir embedding vektörü alınamadı. Lütfen API yapılandırmanızı kontrol edin."
     );
   }
 }

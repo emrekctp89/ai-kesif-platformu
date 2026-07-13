@@ -621,16 +621,29 @@ export async function updateTool(formData) {
   return { success: 'Araç başarıyla güncellendi.' };
 }
 
-export async function runToolQualityAutomation() {
+/**
+ * Tool quality automation.
+ * - Admin UI: no options (requires logged-in ADMIN_EMAIL)
+ * - Cron: pass { cronSecret: process.env.CRON_SECRET } from trusted server routes only
+ */
+export async function runToolQualityAutomation(options = {}) {
   'use server';
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const cronSecret = process.env.CRON_SECRET;
+  const isTrustedCron =
+    Boolean(cronSecret) &&
+    typeof options?.cronSecret === 'string' &&
+    options.cronSecret === cronSecret;
 
-  if (!user || user.email !== process.env.ADMIN_EMAIL) {
-    return { error: 'Yetkiniz yok.' };
+  if (!isTrustedCron) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || user.email !== process.env.ADMIN_EMAIL) {
+      return { error: 'Yetkiniz yok.' };
+    }
   }
 
   const supabaseAdmin = createAdminClient();

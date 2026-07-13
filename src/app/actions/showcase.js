@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { revalidatePath } from 'next/cache';
-import { uploadToGCS, deleteFromGCS } from '@/utils/gcs';
+import { uploadToGCS, deleteFromGCS, gcsPathFromUrl } from '@/utils/gcs';
 
 export async function submitShowcaseItem(formData) {
   'use server';
@@ -63,9 +63,7 @@ export async function submitShowcaseItem(formData) {
   if (insertError) {
     console.error('Eser kaydetme hatası:', insertError);
     if (imageUrl) {
-      const parts = imageUrl.split('/');
-      const filePath = parts.slice(-3).join('/'); // showcase-images/user_id/file.ext
-      await deleteFromGCS(filePath);
+      await deleteFromGCS(gcsPathFromUrl(imageUrl) || imageUrl);
     }
     return { error: 'Eseriniz kaydedilirken bir hata oluştu.' };
   }
@@ -110,8 +108,7 @@ export async function deleteShowcaseItem(formData) {
 
   if (imageUrl) {
     try {
-      const filePath = `showcase-images/${new URL(imageUrl).pathname.split('/showcase-images/')[1]}`;
-      await deleteFromGCS(filePath);
+      await deleteFromGCS(gcsPathFromUrl(imageUrl) || imageUrl);
     } catch (storageError) {
       console.error('Eser görseli silme hatası (GCS):', storageError);
     }
