@@ -33,6 +33,7 @@ import toast from 'react-hot-toast';
 import { AlertTriangle, Check, CheckCircle2, ChevronsUpDown, LoaderCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolVariantManager } from './ToolVariantManager';
+import { TranslateButton } from '@/components/TranslateButton';
 import { useRouter } from 'next/navigation';
 
 // Fiyatlandırma ve Platform seçeneklerini tanımlıyoruz
@@ -116,6 +117,8 @@ export function EditToolDialog({ tool, categories, allTags }) {
   const [name, setName] = useState(tool.name || '');
   const [link, setLink] = useState(tool.link || '');
   const [description, setDescription] = useState(tool.description || '');
+  const [nameEn, setNameEn] = useState(tool.name_en || '');
+  const [descriptionEn, setDescriptionEn] = useState(tool.description_en || '');
   const [pricingModel, setPricingModel] = useState(tool.pricing_model || '');
   const [selectedPlatforms, setSelectedPlatforms] = useState(new Set(tool.platforms || []));
 
@@ -144,6 +147,8 @@ export function EditToolDialog({ tool, categories, allTags }) {
       setName(tool.name || '');
       setLink(tool.link || '');
       setDescription(tool.description || '');
+      setNameEn(tool.name_en || '');
+      setDescriptionEn(tool.description_en || '');
       setPricingModel(tool.pricing_model || '');
       setSelectedPlatforms(new Set(tool.platforms || []));
     }
@@ -271,6 +276,14 @@ export function EditToolDialog({ tool, categories, allTags }) {
               Açıklama
             </Label>
             <div className="col-span-3">
+              <div className="mb-2 flex justify-end">
+                <TranslateButton
+                  size="sm"
+                  getText={() => description}
+                  onTranslated={setDescription}
+                  label="Açıklamayı çevir"
+                />
+              </div>
               <Textarea
                 id={`description-${tool.id}`}
                 name="description"
@@ -287,6 +300,55 @@ export function EditToolDialog({ tool, categories, allTags }) {
                 </span>
                 <span>{description.length}/1200</span>
               </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor={`name-en-${tool.id}`} className="text-right">
+              İsim (EN)
+            </Label>
+            <div className="col-span-3 space-y-2">
+              <div className="flex justify-end">
+                <TranslateButton
+                  size="sm"
+                  targetLanguage="en"
+                  getText={() => name}
+                  onTranslated={setNameEn}
+                  label="İsmi EN'ye çevir"
+                />
+              </div>
+              <Input
+                id={`name-en-${tool.id}`}
+                name="name_en"
+                value={nameEn}
+                onChange={(event) => setNameEn(event.target.value)}
+                maxLength={100}
+                placeholder="English name (optional)"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor={`description-en-${tool.id}`} className="pt-2 text-right">
+              Açıklama (EN)
+            </Label>
+            <div className="col-span-3">
+              <div className="mb-2 flex justify-end">
+                <TranslateButton
+                  size="sm"
+                  targetLanguage="en"
+                  getText={() => description}
+                  onTranslated={setDescriptionEn}
+                  label="Açıklamayı EN'ye çevir"
+                />
+              </div>
+              <Textarea
+                id={`description-en-${tool.id}`}
+                name="description_en"
+                value={descriptionEn}
+                onChange={(event) => setDescriptionEn(event.target.value)}
+                className="min-h-24"
+                maxLength={1200}
+                placeholder="English description (optional)"
+              />
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">

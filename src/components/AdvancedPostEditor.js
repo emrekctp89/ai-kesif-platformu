@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MultiSelectTools } from './MultiSelectTools'; // Yardımcı bileşen
 import { MultiSelectTags } from './MultiSelectTags'; // Yardımcı bileşen
+import { TranslateButton } from '@/components/TranslateButton';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 
@@ -20,6 +21,8 @@ const SimpleMDE = dynamic(() => import('react-simplemde-editor'), {
 import 'easymde/dist/easymde.min.css';
 
 export function AdvancedPostEditor({ post, allTools, allTags, categories }) {
+  const [title, setTitle] = useState(post.title || '');
+  const [description, setDescription] = useState(post.description || '');
   const [content, setContent] = useState(post.content || '');
   const [selectedTools, setSelectedTools] = useState(
     new Set(post.post_tools.map((pt) => pt.tools.id))
@@ -29,6 +32,8 @@ export function AdvancedPostEditor({ post, allTools, allTags, categories }) {
   const editorOptions = useMemo(() => ({ spellChecker: false }), []);
 
   const handleFormSubmit = async (formData) => {
+    formData.set('title', title);
+    formData.set('description', description);
     formData.set('content', content);
 
     const toolsFormData = new FormData();
@@ -60,20 +65,51 @@ export function AdvancedPostEditor({ post, allTools, allTags, categories }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title">Başlık</Label>
-            <Input id="title" name="title" defaultValue={post.title} required />
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="title">Başlık</Label>
+              <TranslateButton
+                size="sm"
+                getText={() => title}
+                onTranslated={setTitle}
+                label="Başlığı çevir"
+              />
+            </div>
+            <Input
+              id="title"
+              name="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Kısa Açıklama</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="description">Kısa Açıklama</Label>
+              <TranslateButton
+                size="sm"
+                getText={() => description}
+                onTranslated={setDescription}
+                label="Açıklamayı çevir"
+              />
+            </div>
             <Textarea
               id="description"
               name="description"
-              defaultValue={post.description}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="min-h-[120px]"
             />
           </div>
           <div className="space-y-2">
-            <Label>İçerik (Markdown)</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label>İçerik (Markdown)</Label>
+              <TranslateButton
+                size="sm"
+                getText={() => content}
+                onTranslated={setContent}
+                label="İçeriği çevir"
+              />
+            </div>
             <SimpleMDE options={editorOptions} value={content} onChange={setContent} />
           </div>
         </div>

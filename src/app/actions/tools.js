@@ -516,6 +516,8 @@ export async function updateTool(formData) {
   const name = String(formData.get('name') || '').trim();
   const rawLink = String(formData.get('link') || '').trim();
   const description = String(formData.get('description') || '').trim();
+  const name_en = String(formData.get('name_en') || '').trim();
+  const description_en = String(formData.get('description_en') || '').trim();
   const category_id = String(formData.get('category_id') || '').trim();
   const pricing_model = String(formData.get('pricing_model') || '').trim();
   const platforms = formData.getAll('platforms').map((platform) => String(platform));
@@ -542,6 +544,14 @@ export async function updateTool(formData) {
 
   if (description.length > 1200) {
     return { error: 'Açıklama en fazla 1200 karakter olabilir.' };
+  }
+
+  if (name_en && (name_en.length < 2 || name_en.length > 100)) {
+    return { error: 'İngilizce araç adı 2 ile 100 karakter arasında olmalıdır.' };
+  }
+
+  if (description_en.length > 1200) {
+    return { error: 'İngilizce açıklama en fazla 1200 karakter olabilir.' };
   }
 
   let normalizedLink;
@@ -588,6 +598,8 @@ export async function updateTool(formData) {
     name,
     link: normalizedLink,
     description,
+    name_en: name_en || null,
+    description_en: description_en || null,
     category_id,
     pricing_model: pricing_model || null,
     platforms,
@@ -619,6 +631,134 @@ export async function updateTool(formData) {
   }
 
   return { success: 'Araç başarıyla güncellendi.' };
+}
+
+/**
+ * Admin-triggered tool discovery (Gemini pipeline).
+ * Prefer dryRun=true from the UI; live insert is opt-in.
+ */
+export async function runToolDiscoveryAdmin(options = {}) {
+  'use server';
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: 'Yetkiniz yok.' };
+  }
+
+  try {
+    const { runScheduledToolDiscovery } = await import('@/lib/toolDiscoveryCron');
+    const report = await runScheduledToolDiscovery({
+      dryRun: options.dryRun !== false,
+      limit: options.limit || 5,
+      candidateCount: options.candidateCount || 12,
+      autoApprove: Boolean(options.autoApprove),
+    });
+    return { success: true, report };
+  } catch (error) {
+    console.error('Admin tool discovery failed:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Keşif çalıştırılamadı.',
+    };
+  }
+}
+
+/**
+ * Bulk-fill English name/description for approved tools missing EN fields.
+ * Uses Cloud Translation API (admin-only, rate-limited batch).
+ */
+export async function bulkTranslateToolsToEnglish(options = {}) {
+  'use server';
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: 'Yetkiniz yok.' };
+  }
+
+  const limit = Math.min(Math.max(Number(options.limit) || 8, 1), 25);
+  const supabaseAdmin = createAdminClient();
+
+  const { data: tools, error: toolsError } = await supabaseAdmin
+    .from('tools')
+    .select('id, name, description, name_en, description_en, slug')
+    .eq('is_approved', true)
+    .or('name_en.is.null,name_en.eq.,description_en.is.null,description_en.eq.')
+    .order('updated_at', { ascending: true })
+    .limit(limit);
+
+  if (toolsError) {
+    console.error('bulkTranslateToolsToEnglish load error:', toolsError);
+    return { error: 'Araçlar okunamadı.' };
+  }
+
+  if (!tools?.length) {
+    return {
+      success: true,
+      scannedCount: 0,
+      updatedCount: 0,
+      failedCount: 0,
+      message: 'EN alanı eksik onaylı araç bulunamadı.',
+    };
+  }
+
+  const { translateText } = await import('@/utils/translate');
+  let updatedCount = 0;
+  let failedCount = 0;
+  const updatedSlugs = [];
+
+  for (const tool of tools) {
+    try {
+      const updates = {};
+      if (!String(tool.name_en || '').trim() && tool.name) {
+        updates.name_en = await translateText(tool.name, 'en');
+      }
+      if (!String(tool.description_en || '').trim() && tool.description) {
+        updates.description_en = await translateText(tool.description, 'en');
+      }
+
+      if (Object.keys(updates).length === 0) continue;
+
+      updates.updated_at = new Date().toISOString();
+      const { error: updateError } = await supabaseAdmin
+        .from('tools')
+        .update(updates)
+        .eq('id', tool.id);
+
+      if (updateError) {
+        failedCount += 1;
+        console.error('bulk EN update failed', tool.id, updateError);
+        continue;
+      }
+
+      updatedCount += 1;
+      if (tool.slug) {
+        updatedSlugs.push(tool.slug);
+        revalidatePath(`/tool/${tool.slug}`);
+        revalidatePath(`/en/tool/${tool.slug}`);
+      }
+    } catch (error) {
+      failedCount += 1;
+      console.error('bulk EN translate failed', tool.id, error);
+    }
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/');
+
+  return {
+    success: true,
+    scannedCount: tools.length,
+    updatedCount,
+    failedCount,
+    updatedSlugs,
+  };
 }
 
 /**
