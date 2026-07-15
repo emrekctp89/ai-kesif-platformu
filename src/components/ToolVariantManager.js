@@ -18,16 +18,19 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CheckCircle } from 'lucide-react';
+import { getEditableToolVariants, getOriginalToolVariant } from '@/utils/toolVariants';
 
 export function ToolVariantManager({ tool }) {
-  const [variants, setVariants] = React.useState(tool.tool_variants.filter((v) => !v.is_original));
+  // Admin tool lists often omit tool_variants relation — default to [].
+  const [variants, setVariants] = React.useState(() => getEditableToolVariants(tool));
   const [isGenerating, startGeneratingTransition] = useTransition();
   const [isSaving, startSavingTransition] = useTransition();
 
-  const originalVariant = tool.tool_variants.find((v) => v.is_original) || {
-    title: tool.name,
-    description: tool.description,
-  };
+  React.useEffect(() => {
+    setVariants(getEditableToolVariants(tool));
+  }, [tool]);
+
+  const originalVariant = getOriginalToolVariant(tool);
 
   // AI ile yeni varyantlar üreten fonksiyon
   const handleGenerateVariants = () => {
