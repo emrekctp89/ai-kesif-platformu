@@ -63,6 +63,15 @@ describe('googleCredentials utility', () => {
     expect(getGoogleClientOptions()).toEqual({ keyFilename: './google-credentials.json' });
   });
 
+  it('falls back to key file when inline JSON is corrupt', async () => {
+    process.env.GCP_SERVICE_ACCOUNT_JSON = 'GCS_BUCKET_NAME=aikesif-media';
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = './google-credentials.json';
+
+    const { getGoogleClientOptions } = await import('../googleCredentials');
+
+    expect(getGoogleClientOptions()).toEqual({ keyFilename: './google-credentials.json' });
+  });
+
   it('uses the configured GCS bucket name or default bucket', async () => {
     const { getGcsBucketName } = await import('../googleCredentials');
 

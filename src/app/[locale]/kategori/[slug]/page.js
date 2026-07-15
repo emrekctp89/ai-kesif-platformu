@@ -62,6 +62,7 @@ export async function generateMetadata({ params }) {
   const description = `${category.name} kategorisindeki güncel yapay zeka araçlarını keşfedin, özelliklerini inceleyin ve ihtiyacınıza uygun çözümü bulun.`;
 
   return {
+    metadataBase: new URL(siteUrl),
     title,
     description,
     alternates: {

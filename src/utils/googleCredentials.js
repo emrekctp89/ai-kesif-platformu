@@ -24,7 +24,10 @@ function parseServiceAccountJson(raw) {
     }
     return JSON.parse(trimmed);
   } catch (error) {
-    console.error('[googleCredentials] Failed to parse Google service-account JSON:', error.message);
+    console.error(
+      '[googleCredentials] Failed to parse Google service-account JSON:',
+      error.message
+    );
     return null;
   }
 }
@@ -41,12 +44,14 @@ export function getGoogleClientOptions() {
   const rawServiceAccount =
     process.env.GCP_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_CREDENTIALS_JSON;
   const fromJson = parseServiceAccountJson(rawServiceAccount);
-  if (fromJson) {
+  // Accept parsed service-account objects; reject empty / non-objects.
+  if (fromJson && typeof fromJson === 'object' && Object.keys(fromJson).length > 0) {
     cachedCredentials = { credentials: fromJson };
     return cachedCredentials;
   }
 
-  const keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  // Prefer explicit key file for local dev (and as fallback if JSON env is corrupt)
+  const keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim();
   if (keyFilename) {
     cachedCredentials = { keyFilename };
     return cachedCredentials;

@@ -165,6 +165,7 @@ export async function generateMetadata({ params }) {
   const description = createMetaDescription(tool.description);
 
   return {
+    metadataBase: new URL(siteUrl),
     title,
     description,
     alternates: {
