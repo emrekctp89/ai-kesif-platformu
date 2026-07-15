@@ -15,16 +15,9 @@ const customJestConfig = {
     // Alias'lar (eğer tsconfig.json'da varsa)
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testPathIgnorePatterns: [
-    '<rootDir>/node_modules/',
-    '<rootDir>/.next/',
-    '<rootDir>/e2e/',
-  ],
-  collectCoverageFrom: [
-    'src/**/*.{js,jsx,ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/index.ts',
-  ],
+  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/e2e/'],
+  modulePathIgnorePatterns: ['<rootDir>/e2e/'],
+  collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}', '!src/**/*.d.ts', '!src/**/index.ts'],
 };
 
 module.exports = createJestConfig(customJestConfig);

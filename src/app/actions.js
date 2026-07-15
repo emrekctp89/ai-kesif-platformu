@@ -20,3 +20,4 @@ export * from './actions/admin';
 export * from './actions/bulk';
 export * from './actions/api-keys';
 export * from './actions/translationActions';
+export * from './actions/moderation';

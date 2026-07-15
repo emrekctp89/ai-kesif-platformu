@@ -36,6 +36,7 @@ import {
   bulkTranslateToolsToEnglish,
   updateToolLinkReportStatus,
 } from '@/app/actions';
+import { deleteReportedComment, dismissAlert } from '@/app/actions/moderation';
 import { AiToolFactory } from './AiToolFactory';
 import { BlogManager } from './BlogManager';
 import { ChallengeManager } from './ChallengeManager';
@@ -1369,6 +1370,20 @@ function ReportedLinksTab({ reports }) {
 // YENİ: Sistem Uyarıları & Şikayetler Sekmesi
 function AdminAlertsTab({ alerts }) {
   const [statusFilter, setStatusFilter] = React.useState('Açık');
+  const [isPending, startTransition] = React.useTransition();
+  const router = useRouter();
+
+  const handleAction = (action, successMsg) => {
+    startTransition(async () => {
+      const res = await action();
+      if (res?.error) {
+        toast.error(res.error);
+      } else {
+        toast.success(successMsg || res.success);
+        router.refresh();
+      }
+    });
+  };
 
   const filteredAlerts = alerts.filter((alert) => alert.status === statusFilter);
 
@@ -1414,7 +1429,33 @@ function AdminAlertsTab({ alerts }) {
                     Yorum ID: {alert.metadata.comment_id}
                   </p>
                 )}
-                {/* Note: Gerçek bir sistemde burada "Yorumu Sil", "Kapat" vb. actionlar olmalı */}
+                {statusFilter === 'Açık' || statusFilter === 'İnceleniyor' ? (
+                  <div className="flex gap-2 mt-2">
+                    {alert.alert_type === 'reported_comment' && alert.metadata?.comment_id && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={isPending}
+                        onClick={() =>
+                          handleAction(
+                            () => deleteReportedComment(alert.id, alert.metadata.comment_id),
+                            'Yorum silindi.'
+                          )
+                        }
+                      >
+                        Yorumu Sil
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isPending}
+                      onClick={() => handleAction(() => dismissAlert(alert.id), 'Uyarı kapatıldı.')}
+                    >
+                      Uyarıyı Kapat (Geçersiz)
+                    </Button>
+                  </div>
+                ) : null}
               </div>
             ))
           ) : (
