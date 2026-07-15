@@ -1,52 +1,69 @@
-# 🚀 AI Keşif Platformu - Geliştirici Kılavuzu (Developer Guide)
+# AI Keşif Platformu - Geliştirici Rehberi (Developer Guide)
 
-Bu kılavuz, projeye yeni katılan veya mevcut kodu anlamak isteyen geliştiriciler için temel kuralları, proje yapısını ve en iyi pratikleri içerir.
+Bu rehber, projeye yeni katılan geliştiricilerin veya AI kodlama asistanlarının kod tabanını hızlıca anlaması için hazırlanmıştır.
 
 ## 1. Mimari Genel Bakış
 
-Proje **Next.js 15 (App Router)** altyapısı üzerine inşa edilmiştir. React'in **Server Components (RSC)** ve **Client Components** özellikleri yoğun şekilde kullanılmaktadır.
+Proje **Next.js (App Router)** üzerine inşa edilmiştir. React Server Components (RSC) varsayılan olarak kullanılır.
 
-### Server Components vs. Client Components
+### Teknoloji Yığını
 
-- Varsayılan olarak her şey bir **Server Component'tir**.
-- Sadece etkileşim (interaktivite), state (\useState\), hook (\useEffect\) veya tarayıcı API'leri gereken yerlerde \use client\ direktifi kullanılır.
-- **ÖNEMLİ KURAL:** Server Component'ler doğrudan event handler (ör: \onClick\) kabul edemez. Örneğin; standart bir HTML \<button>\ elementi veya etkileşimli bir UI elementi, olay dinleyici alacaksa mutlaka Client Component olmalıdır veya onu sarmalayan bileşen bir Client Component olmak zorundadır.
+- **Framework:** Next.js 14+ (App Router)
+- **Veritabanı ve Auth:** Supabase
+- **Stil:** Tailwind CSS + shadcn/ui
+- **Çoklu Dil (i18n):** `next-intl` (Middleware destekli)
+- **Ödeme Altyapısı:** Stripe
 
-## 2. Veri Çekme ve Yönetimi
+## 2. Klasör Yapısı
 
-Uygulama, frontend ile doğrudan konuşan dış API'ler yerine **Server Actions** (Sunucu Eylemleri) kullanımını tercih etmektedir. \src/app/actions/\ dizininde kategorize edilmiş fonksiyonlar mevcuttur.
+```text
+ai-kesif-platformu/
+├── src/
+│   ├── app/
+│   │   ├── [locale]/        # Tüm sayfalar dil prefixi ile çalışır (örn: /tr/admin, /en/admin)
+│   │   ├── actions/         # Server Actions (Veritabanı işlemleri)
+│   │   └── api/             # API rotaları (Webhooklar vb.)
+│   ├── components/          # Yeniden kullanılabilir React bileşenleri
+│   ├── lib/                 # Harici API ayarları (Stripe vb.) ve utility fonksiyonları
+│   └── utils/               # Supabase SSR client ve formating fonksiyonları
+├── supabase/
+│   ├── migrations/          # Veritabanı şema değişiklikleri
+│   └── seed.sql             # Başlangıç verileri
+├── messages/                # Çeviri dosyaları (tr.json, en.json)
+└── e2e/                     # Playwright Uçtan Uca (E2E) Testleri
+```
 
-### Server Actions Kuralları
+## 3. Temel Standartlar
 
-- İstemci tarafından çağrılabilmesi için action dosyasının en başında \use server\ direktifi bulunmalıdır.
-- Veritabanı sorguları (Supabase) her zaman yetkilendirme (RLS - Row Level Security) dikkate alınarak sunucuda yapılmalıdır.
-- Hata durumları her zaman tek bir yapıda (standart JSON veya Throw Error) döndürülmelidir. Standart bir format için \src/utils/api-response.js\ kullanılmaktadır.
+### Server Components vs Client Components
 
-## 3. Stil Yönetimi ve UI
+- Tüm bileşenler varsayılan olarak **Server Component**'tir. Hook kullanılması (useState, useEffect vb.) gerekiyorsa veya event listener (onClick) eklenecekse dosyanın en üstüne `'use client';` eklenmelidir.
+- Veri çekme (Data Fetching) işlemleri mümkün olduğunca Server Component'lerde doğrudan (async/await ile) yapılmalıdır.
 
-- Projede stil çözümü olarak **Tailwind CSS** kullanılmaktadır.
-- UI bileşen kütüphanesi olarak **Shadcn UI** \src/components/ui/\ dizininde kuruludur.
-- Tasarım estetiği, Glassmorphism, ince (subtle) animasyonlar, degraded (gradient) renk paletleri ve pürüzsüz arayüzlerden oluşmalıdır.
-- Birden çok sınıfı birleştirmek veya Tailwind sınıflarını güvenli bir şekilde koşullandırmak için her zaman \cn()\ utility fonksiyonu (\src/lib/utils.js\) kullanılmalıdır.
+### Supabase Kullanımı
 
-## 4. Kimlik Doğrulama (Auth)
+Supabase bağlantısı SSR (Server-Side Rendering) kurallarına uygun yapılmalıdır.
 
-Kimlik doğrulama, **Supabase Auth** üzerinden sağlanmaktadır.
+- Server Component'lerde: `import { createClient } from '@/utils/supabase/server'`
+- Client Component'lerde: `import { createClient } from '@/utils/supabase/client'`
+- Server Action'larda: `import { createClient } from '@/utils/supabase/actions'`
 
-- İstemci (Client) tarafı için \createClient()\ (browser) (\src/utils/supabase/client.js\) kullanılır.
-- Sunucu (Server) bileşenleri, Action'lar veya Route Handler'lar için \createClient(await cookies())\ (\src/utils/supabase/server.js\) kullanılmalıdır.
-- Rol bazlı yetkilendirme (Admin vs Normal User) sunucu tarafında veri çekilirken (\uth.getUser()\) kontrol edilmelidir.
+### Server Actions
 
-## 5. Test Altyapısı
+- Güvenlik kritik işlemler (`src/app/actions/`) her zaman `user.id` kontrolü veya rol bazlı (admin) yetki doğrulama içermelidir.
+- Action'lardan başarılı veya hata mesajı döndürülürken standart format kullanılmalıdır: `{ error: '...' }` veya `{ success: '...' }`.
 
-- **Birim (Unit) Testleri:** Jest kütüphanesi ile yapılandırılmıştır.
-- **Uçtan Uca (E2E) Testleri:** Playwright ile çalışır (\e2e/\ dizini).
-- Test komutu: \
-  pm run test:e2e\`n- **Önemli:** Yerel e2e testlerini çalıştırmak için geliştirme sunucusu (Next.js \dev\ komutu ile) kullanılır. Testler çalıştırılmadan önce \.env.local\ içinde gerekli Supabase ortam değişkenlerinin bulunması gerekir.
+## 4. Geliştirme Akışı (Development Flow)
 
-## 6. Hata Yönetimi
+1. Local Geliştirme: `npm run dev`
+2. Testleri Çalıştırma: `npm test` (Unit testler Jest ile çalışır)
+3. E2E Testleri Çalıştırma: `npx playwright test`
+4. Yeni Veritabanı Tablosu Eklerken: Önce `supabase/migrations/` altında migration dosyası oluşturulmalı, ardından `supabase db push` veya lokalde uygulanmalıdır.
 
-- \console.log\ gibi doğrudan debug çağrıları yerine projeye dahil edilmiş olan \logger\ (src/utils/logger.js) aracını kullanın.
-- React tarafında çökme yaşamamak için uygun yerlere (route bazlı) \error.js\ ve kök dizinde \global-error.js\ konulmuştur.
-- 404 sayfaları için varsayılan bir \
-  ot-found.js\ şablonu özelleştirilmiştir.
+## 5. Çeviri Sistemi (i18n)
+
+Yeni bir metin eklendiğinde doğrudan sayfaya gömülmemelidir.
+
+- Metinler `messages/tr.json` ve `messages/en.json` dosyalarına eklenir.
+- Bileşen içinde `const t = useTranslations('Namespace');` ile çağrılır.
+- Server bileşenlerinde `const t = await getTranslations('Namespace');` kullanılır.
