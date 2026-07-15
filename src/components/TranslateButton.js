@@ -29,7 +29,7 @@ const LANGUAGE_OPTIONS = [
 
 /**
  * Admin helper: translate text via Cloud Translation and push result to parent.
- * @param {{ getText: () => string, onTranslated: (text: string) => void, label?: string, size?: string, variant?: string }} props
+ * @param {{ getText: () => string, onTranslated: (text: string) => void, label?: string, size?: string, variant?: string, targetLanguage?: string }} props
  */
 export function TranslateButton({
   getText,
@@ -38,10 +38,11 @@ export function TranslateButton({
   size = 'sm',
   variant = 'outline',
   className,
+  targetLanguage,
 }) {
   const [isTranslating, setIsTranslating] = useState(false);
 
-  const runTranslate = async (targetLanguage) => {
+  const runTranslate = async (langCode) => {
     const text = String(getText?.() || '').trim();
     if (!text) {
       toast.error('Önce çevrilecek metni yazın.');
@@ -50,14 +51,14 @@ export function TranslateButton({
 
     setIsTranslating(true);
     try {
-      const result = await autoTranslateAction({ text, targetLanguage });
+      const result = await autoTranslateAction({ text, targetLanguage: langCode });
       if (result?.error) {
         toast.error(result.error);
         return;
       }
       onTranslated?.(result.translatedText);
-      const lang = LANGUAGE_OPTIONS.find((item) => item.code === targetLanguage)?.label;
-      toast.success(`Metin ${lang || targetLanguage} diline çevrildi.`);
+      const lang = LANGUAGE_OPTIONS.find((item) => item.code === langCode)?.label;
+      toast.success(`Metin ${lang || langCode} diline çevrildi.`);
     } catch (error) {
       console.error(error);
       toast.error('Çeviri sırasında bir hata oluştu.');
@@ -65,6 +66,27 @@ export function TranslateButton({
       setIsTranslating(false);
     }
   };
+
+  // Fixed target language → simple button (no menu)
+  if (targetLanguage) {
+    return (
+      <Button
+        type="button"
+        size={size}
+        variant={variant}
+        disabled={isTranslating}
+        className={className}
+        onClick={() => runTranslate(targetLanguage)}
+      >
+        {isTranslating ? (
+          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Languages className="mr-2 h-4 w-4" />
+        )}
+        {isTranslating ? 'Çevriliyor…' : label}
+      </Button>
+    );
+  }
 
   return (
     <DropdownMenu>

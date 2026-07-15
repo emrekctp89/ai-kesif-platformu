@@ -48,7 +48,7 @@ async function getToolData(slug) {
   const { data: tool, error } = await supabase
     .from('tools')
     .select(
-      'id, name, description, link, category_id, slug, pricing_model, platforms, tier, created_at, updated_at, technical_details, link_check_status, link_check_error, link_check_http_status, link_checked_at'
+      'id, name, name_en, description, description_en, link, category_id, slug, pricing_model, platforms, tier, created_at, updated_at, technical_details, link_check_status, link_check_error, link_check_http_status, link_checked_at'
     )
     .eq('slug', slug)
     .eq('is_approved', true)
@@ -150,9 +150,19 @@ function createMetaDescription(description) {
   return `${description.slice(0, 157).trimEnd()}...`;
 }
 
+function localizeTool(tool, locale) {
+  if (!tool) return tool;
+  const useEn = locale === 'en';
+  return {
+    ...tool,
+    displayName: useEn && tool.name_en ? tool.name_en : tool.name,
+    displayDescription: useEn && tool.description_en ? tool.description_en : tool.description,
+  };
+}
+
 export async function generateMetadata({ params }) {
-  const { slug } = await params;
-  const tool = await getToolData(slug);
+  const { slug, locale } = await params;
+  const tool = localizeTool(await getToolData(slug), locale);
 
   if (!tool) {
     return {
@@ -161,8 +171,11 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  const title = `${tool.name} Nedir? Özellikleri ve Kullanımı`;
-  const description = createMetaDescription(tool.description);
+  const title =
+    locale === 'en'
+      ? `${tool.displayName} — Features & Overview`
+      : `${tool.displayName} Nedir? Özellikleri ve Kullanımı`;
+  const description = createMetaDescription(tool.displayDescription);
   const pageUrl = `${siteUrl}/tool/${tool.slug}`;
   const ogImageUrl = `${siteUrl}/opengraph-image`;
 
@@ -183,7 +196,7 @@ export async function generateMetadata({ params }) {
           url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: `${tool.name} - AI Keşif`,
+          alt: `${tool.displayName} - AI Keşif`,
         },
       ],
     },
@@ -200,7 +213,7 @@ export default async function ToolPage(props) {
   const { params } = props;
   const { slug, locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Pricing' });
-  const tool = await getToolData(slug);
+  const tool = localizeTool(await getToolData(slug), locale);
 
   if (!tool) notFound();
 
@@ -218,15 +231,15 @@ export default async function ToolPage(props) {
       {
         '@type': 'SoftwareApplication',
         '@id': `${shareUrl}#software`,
-        name: tool.name,
-        description: tool.description,
+        name: tool.displayName,
+        description: tool.displayDescription,
         url: shareUrl,
         sameAs: tool.link,
         applicationCategory: tool.category_name,
         operatingSystem: platforms.join(', '),
         datePublished: tool.created_at || undefined,
         dateModified: tool.updated_at || tool.created_at || undefined,
-        inLanguage: 'tr-TR',
+        inLanguage: locale === 'en' ? 'en-US' : 'tr-TR',
       },
       {
         '@type': 'BreadcrumbList',
@@ -235,7 +248,7 @@ export default async function ToolPage(props) {
           {
             '@type': 'ListItem',
             position: 1,
-            name: 'Ana Sayfa',
+            name: locale === 'en' ? 'Home' : 'Ana Sayfa',
             item: siteUrl,
           },
           ...(tool.category_slug
@@ -251,7 +264,7 @@ export default async function ToolPage(props) {
           {
             '@type': 'ListItem',
             position: tool.category_slug ? 3 : 2,
-            name: tool.name,
+            name: tool.displayName,
             item: shareUrl,
           },
         ],
@@ -301,10 +314,10 @@ export default async function ToolPage(props) {
               </div>
 
               <h1 className="mt-4 text-2xl font-extrabold tracking-tight sm:mt-5 sm:text-4xl lg:text-5xl">
-                {tool.name}
+                {tool.displayName}
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:mt-5 sm:text-lg sm:leading-8">
-                {tool.description}
+                {tool.displayDescription}
               </p>
 
               <div className="mt-5 flex flex-col gap-2 sm:mt-7 sm:flex-row sm:items-center sm:gap-3">
@@ -396,7 +409,7 @@ export default async function ToolPage(props) {
                       placement: 'sidebar',
                     }}
                   >
-                    {tool.name} Sitesine Git
+                    {tool.displayName} Sitesine Git
                     <ExternalLink className="ml-2 h-4 w-4" />
                   </TrackedExternalLink>
                 </Button>
@@ -435,7 +448,10 @@ export default async function ToolPage(props) {
                 </div>
 
                 <div className="border-t pt-4">
-                  <ShareButtons url={shareUrl} title={`${tool.name} aracını AI Keşif'te incele`} />
+                  <ShareButtons
+                    url={shareUrl}
+                    title={`${tool.displayName} aracını AI Keşif'te incele`}
+                  />
                 </div>
               </CardContent>
             </Card>

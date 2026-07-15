@@ -32,6 +32,7 @@ import {
   approveShowcaseItem,
   rejectTool,
   runToolQualityAutomation,
+  runToolDiscoveryAdmin,
   updateToolLinkReportStatus,
 } from '@/app/actions';
 import { AiToolFactory } from './AiToolFactory';
@@ -725,6 +726,9 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
           ))
     )
   );
+  const [discoveryReport, setDiscoveryReport] = React.useState(null);
+  const [isDiscoveryPending, startDiscoveryTransition] = React.useTransition();
+
   const runAutomation = () => {
     startAutomationTransition(async () => {
       const result = await runToolQualityAutomation();
@@ -757,6 +761,25 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
     });
   };
 
+  const runDiscovery = (dryRun = true) => {
+    startDiscoveryTransition(async () => {
+      const result = await runToolDiscoveryAdmin({ dryRun, limit: 5 });
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+      setDiscoveryReport(result.report);
+      const accepted = result.report?.accepted?.length || result.report?.insertedTools?.length || 0;
+      const skipped = result.report?.skipped?.length || result.report?.skippedCount || 0;
+      toast.success(
+        dryRun
+          ? `Keşif dry-run: ${accepted} aday, ${skipped} atlandı`
+          : `Keşif tamam: ${accepted} eklendi, ${skipped} atlandı`
+      );
+      if (!dryRun) router.refresh();
+    });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -773,14 +796,19 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
             <p className="mt-1 text-xs text-muted-foreground">
               Düzeltme gerektiren kayıt; sorunsuz kayıt sayısı {qualityCounts.ready}.
             </p>
-            <Button
-              className="mt-3"
-              size="sm"
-              onClick={runAutomation}
-              disabled={isAutomationPending}
-            >
-              {isAutomationPending ? 'Otomasyon çalışıyor...' : 'Akıllı düzeltmeyi çalıştır'}
-            </Button>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button size="sm" onClick={runAutomation} disabled={isAutomationPending}>
+                {isAutomationPending ? 'Otomasyon çalışıyor...' : 'Akıllı düzeltmeyi çalıştır'}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => runDiscovery(true)}
+                disabled={isDiscoveryPending}
+              >
+                {isDiscoveryPending ? 'Keşif çalışıyor...' : 'AI keşif (dry-run)'}
+              </Button>
+            </div>
             {automationReport && (
               <p className="mt-2 text-xs text-muted-foreground">
                 Son çalışma: {automationReport.updatedCount} güncellendi,{' '}
@@ -791,6 +819,17 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                 {automationReport.aiRateLimitHitCount > 0
                   ? `, ${automationReport.aiRateLimitHitCount} kayıt AI limitine takıldı.`
                   : '.'}
+              </p>
+            )}
+            {discoveryReport && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Son keşif: aday{' '}
+                {discoveryReport.accepted?.length ??
+                  discoveryReport.insertedTools?.length ??
+                  discoveryReport.acceptedCount ??
+                  0}
+                , atlanan {discoveryReport.skipped?.length ?? discoveryReport.skippedCount ?? 0}
+                {discoveryReport.dryRun ? ' (dry-run)' : ''}.
               </p>
             )}
             <div className="mt-3 flex flex-wrap gap-1.5">
