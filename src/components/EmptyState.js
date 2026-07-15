@@ -60,8 +60,9 @@ export default function EmptyState({
 
   return (
     <div
+      role="status"
       className={cn(
-        'flex flex-col items-center justify-center px-4 py-16 text-center rounded-2xl glass-panel glow-effect m-4',
+        'm-4 flex flex-col items-center justify-center rounded-2xl px-4 py-16 text-center glass-panel glow-effect',
         className
       )}
     >

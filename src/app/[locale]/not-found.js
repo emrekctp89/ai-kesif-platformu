@@ -35,7 +35,7 @@ export default function NotFound() {
             Aradığınız sayfa silinmiş, taşınmış veya hiç var olmamış olabilir.
           </p>
           <p className="text-sm text-muted-foreground">
-            URL'i kontrol ettiğten sonra yeniden deneyin veya aşağıdaki seçeneklerden birini
+            URL&apos;i kontrol ettikten sonra yeniden deneyin veya aşağıdaki seçeneklerden birini
             kullanın.
           </p>
         </div>

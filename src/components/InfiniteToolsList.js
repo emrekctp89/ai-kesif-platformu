@@ -54,6 +54,11 @@ const platformIcons = {
   'Chrome Uzantısı': <ShoppingCart className="w-4 h-4" />,
 };
 
+function getPopularityScore(tool) {
+  const score = Number(tool?.popularity_score);
+  return Number.isFinite(score) ? score : 0;
+}
+
 // -----------------------------
 // Tek bir araç kartı (DÜZELTİLMİŞ HALİ)
 // -----------------------------
@@ -235,11 +240,15 @@ export function InfiniteToolsList({
           const mergedTools = [...prev, ...uniqueNewTools];
 
           // Popülerliğe göre yeniden sırala
-          return mergedTools.sort((a, b) => b.popularity_score - a.popularity_score);
+          return mergedTools.sort((a, b) => getPopularityScore(b) - getPopularityScore(a));
         });
       } else {
         setHasMore(false);
       }
+    } catch (error) {
+      console.error('Daha fazla araç yüklenemedi:', error);
+      // Avoid infinite retry loops when the network/action fails.
+      setHasMore(false);
     } finally {
       setIsLoading(false);
     }
@@ -260,7 +269,10 @@ export function InfiniteToolsList({
   return (
     <>
       {tools.length === 0 ? (
-        <div className="rounded-2xl border border-dashed bg-muted/20 px-5 py-12 text-center sm:px-8 sm:py-16">
+        <div
+          role="status"
+          className="rounded-2xl border border-dashed bg-muted/20 px-5 py-12 text-center sm:px-8 sm:py-16"
+        >
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-muted">
             <SearchX aria-hidden="true" className="h-7 w-7 text-muted-foreground" />
           </div>
@@ -340,8 +352,8 @@ export function InfiniteToolsList({
 // Bu bileşen artık bir Server Component değil, Client Component olmalı.
 // Bu yüzden, veri çekme mantığını bir üst bileşene (page.js) taşımamız gerekecek.
 // ToolsList
-export function ToolsList({ tools, user, favoriteToolIds }) {
-  const sortedTools = [...tools].sort((a, b) => b.popularity_score - a.popularity_score);
+export function ToolsList({ tools = [], user, favoriteToolIds }) {
+  const sortedTools = [...tools].sort((a, b) => getPopularityScore(b) - getPopularityScore(a));
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
