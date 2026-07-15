@@ -67,8 +67,10 @@ export function NewsletterSignup({ className = '' }) {
                 required
                 className="h-12 min-w-0 flex-auto rounded-xl border-primary/20 bg-background/50 focus-visible:ring-primary/30"
                 disabled={isPending}
-                aria-describedby="newsletter-help newsletter-error"
-                aria-invalid={status.type === 'error'}
+                aria-describedby={
+                  status.type === 'error' ? 'newsletter-help newsletter-error' : 'newsletter-help'
+                }
+                aria-invalid={status.type === 'error' ? true : undefined}
               />
               <Button
                 type="submit"

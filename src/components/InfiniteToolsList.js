@@ -215,6 +215,7 @@ export function InfiniteToolsList({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialTools?.length > 0);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const { ref, inView } = useInView({ threshold: 0.5 });
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -223,6 +224,7 @@ export function InfiniteToolsList({
 
   const loadMoreTools = useCallback(async () => {
     setIsLoading(true);
+    setLoadError(false);
 
     const paramsAsObject = {
       ...Object.fromEntries(searchParams.entries()),
@@ -247,23 +249,24 @@ export function InfiniteToolsList({
       }
     } catch (error) {
       console.error('Daha fazla araç yüklenemedi:', error);
-      // Avoid infinite retry loops when the network/action fails.
-      setHasMore(false);
+      // Pause auto-load; user can retry without an infinite error loop.
+      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
   }, [fixedSearchParams, page, searchParams]);
 
   useEffect(() => {
-    if (inView && hasMore && !isLoading) {
+    if (inView && hasMore && !isLoading && !loadError) {
       loadMoreTools();
     }
-  }, [inView, hasMore, isLoading, loadMoreTools]);
+  }, [inView, hasMore, isLoading, loadError, loadMoreTools]);
 
   useEffect(() => {
     setTools(initialTools || []);
     setPage(1);
     setHasMore(initialTools?.length > 0);
+    setLoadError(false);
   }, [searchParamsString, initialTools]);
 
   return (
@@ -326,7 +329,7 @@ export function InfiniteToolsList({
         </div>
       )}
 
-      {hasMore && (
+      {hasMore && !loadError && (
         <div ref={ref} className="col-span-full mt-8" role="status" aria-live="polite">
           <span className="sr-only">Daha fazla araç yükleniyor</span>
           <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-8">
@@ -334,6 +337,28 @@ export function InfiniteToolsList({
             <ToolCardSkeleton key="skeleton-2" />
             <ToolCardSkeleton key="skeleton-3" />
           </div>
+        </div>
+      )}
+
+      {loadError && (
+        <div
+          role="alert"
+          className="col-span-full mt-8 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed bg-muted/20 px-5 py-8 text-center"
+        >
+          <p className="text-sm text-muted-foreground">
+            Daha fazla araç yüklenirken bir sorun oluştu.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setLoadError(false);
+              loadMoreTools();
+            }}
+            disabled={isLoading}
+          >
+            Tekrar dene
+          </Button>
         </div>
       )}
 

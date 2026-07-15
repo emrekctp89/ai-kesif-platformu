@@ -35,6 +35,9 @@ export default function ErrorPage({ error, reset }) {
             Ana Sayfa
           </Link>
         </Button>
+        <Button asChild variant="ghost">
+          <Link href="/kesfet">Keşfet</Link>
+        </Button>
       </div>
     </div>
   );
