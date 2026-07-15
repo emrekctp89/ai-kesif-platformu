@@ -1,5 +1,3 @@
-import '../globals.css';
-import { Onest } from 'next/font/google';
 import { cookies } from 'next/headers';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -9,16 +7,11 @@ import { TopLoader } from '@/components/TopLoader';
 import { Analytics } from '@vercel/analytics/react';
 import { GoogleAnalytics } from '@/components/GoogleAnalytics';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
-import { generatePageMetadata, generateStructuredData, siteConfig } from '@/utils/seo';
+import { generatePageMetadata } from '@/utils/seo';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 
 const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
-
-const onest = Onest({
-  subsets: ['latin'],
-  weight: ['400', '500', '700', '900'],
-});
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -55,99 +48,40 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export const viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
-    { media: '(prefers-color-scheme: dark)', color: '#020817' },
-  ],
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
-  viewportFit: 'cover',
-};
-
-export default async function RootLayout(props) {
+export default async function LocaleLayout(props) {
   const { children, params } = props;
-  const { locale } = await params;
+  await params;
 
   await cookies();
   const messages = await getMessages();
 
-  // Generate structured data for the organization
-  const organizationSchema = generateStructuredData('Organization', {});
-  const websiteSchema = generateStructuredData('WebSite', {});
-
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <head>
-        {/* Structured Data (JSON-LD) */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-        />
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <GoogleAnalytics />
+      <TopLoader />
+      <Toaster position="top-center" />
 
-        {/* Search Engine Verification Tags */}
-        <meta
-          name="google-site-verification"
-          content={process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION}
-        />
-        <meta name="msvalidate.01" content={process.env.NEXT_PUBLIC_MSVALIDATE} />
-
-        {/* Additional SEO Tags */}
-        <meta name="theme-color" content="#020817" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="AI Keşif" />
-
-        {/* Preconnect to external resources */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="https://www.google-analytics.com" />
-
-        {/* RSS Feed */}
-        <link rel="alternate" type="application/rss+xml" href="/rss.xml" />
-      </head>
-      <body className={`${onest.className} bg-background text-foreground`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+      <div className="relative flex min-h-screen flex-col">
+        <a
+          href="#main-content"
+          className="sr-only fixed left-4 top-4 z-[100] rounded-md bg-background px-4 py-2 font-semibold text-foreground shadow-lg focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
-          <GoogleAnalytics />
-          <TopLoader />
-          <Toaster position="top-center" />
+          İçeriğe geç
+        </a>
 
-          <div className="relative flex min-h-screen flex-col">
-            {/* Skip to main content link */}
-            <a
-              href="#main-content"
-              className="sr-only fixed left-4 top-4 z-[100] rounded-md bg-background px-4 py-2 font-semibold text-foreground shadow-lg focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              İçeriğe geç
-            </a>
+        <NextIntlClientProvider messages={messages}>
+          <Header />
 
-            <NextIntlClientProvider messages={messages}>
-              <Header />
+          <main id="main-content" tabIndex={-1} className="flex-1">
+            <div className="container mx-auto p-4 md:p-6">{children}</div>
+          </main>
 
-              <main id="main-content" tabIndex={-1} className="flex-1">
-                <div className="container mx-auto p-4 md:p-6">{children}</div>
-              </main>
+          <Footer />
+        </NextIntlClientProvider>
+      </div>
 
-              <Footer />
-            </NextIntlClientProvider>
-          </div>
-
-          <AnnouncementBanner />
-          <Analytics />
-        </ThemeProvider>
-      </body>
-    </html>
+      <AnnouncementBanner />
+      <Analytics />
+    </ThemeProvider>
   );
 }
