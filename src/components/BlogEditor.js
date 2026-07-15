@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { TranslateButton } from '@/components/TranslateButton';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
 
@@ -17,6 +18,8 @@ const SimpleMDE = dynamic(() => import('react-simplemde-editor'), {
 import 'easymde/dist/easymde.min.css';
 
 export function BlogEditor({ post }) {
+  const [title, setTitle] = useState(post.title || '');
+  const [description, setDescription] = useState(post.description || '');
   const [content, setContent] = useState(post.content || '');
   const [isPending, startTransition] = useTransition();
 
@@ -44,6 +47,8 @@ export function BlogEditor({ post }) {
   );
 
   const handleFormSubmit = (formData) => {
+    formData.set('title', title);
+    formData.set('description', description);
     formData.set('content', content);
     startTransition(async () => {
       const result = await updatePost(formData);
@@ -64,26 +69,52 @@ export function BlogEditor({ post }) {
       <input type="hidden" name="status" value={post.status} />
 
       <div className="space-y-2">
-        <Label htmlFor="title">Başlık</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="title">Başlık</Label>
+          <TranslateButton
+            size="sm"
+            getText={() => title}
+            onTranslated={setTitle}
+            label="Başlığı çevir"
+          />
+        </div>
         <Input
           id="title"
           name="title"
-          defaultValue={post.title}
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
           required
           className="text-2xl h-12"
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="description">Kısa Açıklama</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label htmlFor="description">Kısa Açıklama</Label>
+          <TranslateButton
+            size="sm"
+            getText={() => description}
+            onTranslated={setDescription}
+            label="Açıklamayı çevir"
+          />
+        </div>
         <Textarea
           id="description"
           name="description"
-          defaultValue={post.description}
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
           className="min-h-[100px]"
         />
       </div>
       <div className="space-y-2">
-        <Label>İçerik</Label>
+        <div className="flex items-center justify-between gap-2">
+          <Label>İçerik</Label>
+          <TranslateButton
+            size="sm"
+            getText={() => content}
+            onTranslated={setContent}
+            label="İçeriği çevir"
+          />
+        </div>
         <SimpleMDE options={editorOptions} value={content} onChange={setContent} />
       </div>
 

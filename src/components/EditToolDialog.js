@@ -33,6 +33,7 @@ import toast from 'react-hot-toast';
 import { AlertTriangle, Check, CheckCircle2, ChevronsUpDown, LoaderCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolVariantManager } from './ToolVariantManager';
+import { TranslateButton } from '@/components/TranslateButton';
 import { useRouter } from 'next/navigation';
 
 // Fiyatlandırma ve Platform seçeneklerini tanımlıyoruz
@@ -271,6 +272,14 @@ export function EditToolDialog({ tool, categories, allTags }) {
               Açıklama
             </Label>
             <div className="col-span-3">
+              <div className="mb-2 flex justify-end">
+                <TranslateButton
+                  size="sm"
+                  getText={() => description}
+                  onTranslated={setDescription}
+                  label="Açıklamayı çevir"
+                />
+              </div>
               <Textarea
                 id={`description-${tool.id}`}
                 name="description"

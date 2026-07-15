@@ -78,14 +78,25 @@ export function gcsPathFromUrl(urlOrPath) {
   return null;
 }
 
+function shouldMakePublic() {
+  const raw = process.env.GCS_MAKE_PUBLIC;
+  if (raw === undefined || raw === null || raw === '') {
+    // Default on: public avatar/blog/showcase URLs need world-readable objects
+    // unless the bucket uses uniform public access.
+    return true;
+  }
+  return ['1', 'true', 'yes', 'on'].includes(String(raw).trim().toLowerCase());
+}
+
 /**
  * Upload a file to Google Cloud Storage.
  * @param {string} destination - Object path (e.g. avatars/uid/file.jpg)
  * @param {Buffer|Blob|File} file
  * @param {string} contentType
+ * @param {{ makePublic?: boolean }} [options]
  * @returns {Promise<string>} Public URL
  */
-export const uploadToGCS = async (destination, file, contentType) => {
+export const uploadToGCS = async (destination, file, contentType, options = {}) => {
   const buffer = await toBuffer(file);
   const objectPath = String(destination || '').replace(/^\/+/, '');
   if (!objectPath) {
@@ -93,6 +104,7 @@ export const uploadToGCS = async (destination, file, contentType) => {
   }
 
   const fileRef = getBucket().file(objectPath);
+  const makePublic = options.makePublic ?? shouldMakePublic();
 
   await fileRef.save(buffer, {
     resumable: false,
@@ -100,7 +112,23 @@ export const uploadToGCS = async (destination, file, contentType) => {
       contentType: contentType || 'application/octet-stream',
       cacheControl: 'public, max-age=31536000',
     },
+    // Fine-grained ACL buckets; ignored/fails safely under uniform bucket-level access
+    ...(makePublic ? { predefinedAcl: 'publicRead' } : null),
   });
+
+  if (makePublic) {
+    try {
+      await fileRef.makePublic();
+    } catch (error) {
+      // Uniform bucket-level access disallows per-object ACLs — bucket policy must allow public read.
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(
+          '[gcs] makePublic skipped (bucket may use uniform access):',
+          error?.message || error
+        );
+      }
+    }
+  }
 
   return getPublicGcsUrl(objectPath);
 };

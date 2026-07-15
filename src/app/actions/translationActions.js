@@ -3,11 +3,17 @@
 import { createClient } from '@/utils/supabase/actions';
 import { translateText } from '@/utils/translate';
 
+function readField(input, key) {
+  if (!input) return undefined;
+  if (typeof input.get === 'function') return input.get(key);
+  return input[key];
+}
+
 /**
- * Server Action: Kullanıcının girdiği metni belirtilen dile çevirir.
- * Genellikle Admin panellerinde buton tetiklemesiyle kullanılır.
+ * Admin-only Cloud Translation helper.
+ * Accepts FormData or a plain object: { text, targetLanguage }.
  */
-export async function autoTranslateAction(formData) {
+export async function autoTranslateAction(input) {
   'use server';
 
   const supabase = await createClient();
@@ -15,23 +21,30 @@ export async function autoTranslateAction(formData) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Sadece yetkili kullanıcılar/admin çeviri API'sini tetikleyebilir (maliyetleri korumak için)
   if (!user || user.email !== process.env.ADMIN_EMAIL) {
     return { error: 'Yetkiniz yok.' };
   }
 
-  const textToTranslate = formData.get('text');
-  const targetLanguage = formData.get('targetLanguage') || 'tr'; // Varsayılan: Türkçe
+  const textToTranslate = String(readField(input, 'text') || '').trim();
+  const targetLanguage = String(readField(input, 'targetLanguage') || 'tr').trim() || 'tr';
 
-  if (!textToTranslate || textToTranslate.trim() === '') {
+  if (!textToTranslate) {
     return { error: 'Çevrilecek metin bulunamadı.' };
+  }
+
+  if (textToTranslate.length > 8000) {
+    return { error: 'Metin çok uzun (maks. 8000 karakter).' };
   }
 
   try {
     const translatedText = await translateText(textToTranslate, targetLanguage);
-    return { success: true, translatedText };
+    return {
+      success: true,
+      translatedText: Array.isArray(translatedText) ? translatedText.join('\n') : translatedText,
+      targetLanguage,
+    };
   } catch (err) {
     console.error('Action çeviri hatası:', err);
-    return { error: 'Çeviri başarısız oldu.' };
+    return { error: 'Çeviri başarısız oldu. GCP Translation API ve yetkileri kontrol edin.' };
   }
 }
