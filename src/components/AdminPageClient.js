@@ -33,6 +33,7 @@ import {
   rejectTool,
   runToolQualityAutomation,
   runToolDiscoveryAdmin,
+  bulkTranslateToolsToEnglish,
   updateToolLinkReportStatus,
 } from '@/app/actions';
 import { AiToolFactory } from './AiToolFactory';
@@ -728,6 +729,8 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
   );
   const [discoveryReport, setDiscoveryReport] = React.useState(null);
   const [isDiscoveryPending, startDiscoveryTransition] = React.useTransition();
+  const [enBulkReport, setEnBulkReport] = React.useState(null);
+  const [isEnBulkPending, startEnBulkTransition] = React.useTransition();
 
   const runAutomation = () => {
     startAutomationTransition(async () => {
@@ -763,20 +766,46 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
 
   const runDiscovery = (dryRun = true) => {
     startDiscoveryTransition(async () => {
-      const result = await runToolDiscoveryAdmin({ dryRun, limit: 5 });
+      const result = await runToolDiscoveryAdmin({ dryRun, limit: 5, autoApprove: false });
       if (result?.error) {
         toast.error(result.error);
         return;
       }
       setDiscoveryReport(result.report);
-      const accepted = result.report?.accepted?.length || result.report?.insertedTools?.length || 0;
-      const skipped = result.report?.skipped?.length || result.report?.skippedCount || 0;
+      const accepted =
+        result.report?.acceptedCount ??
+        result.report?.acceptedCandidates?.length ??
+        result.report?.accepted?.length ??
+        result.report?.insertedCount ??
+        0;
+      const skipped = result.report?.skippedCount ?? result.report?.skipped?.length ?? 0;
       toast.success(
         dryRun
           ? `Keşif dry-run: ${accepted} aday, ${skipped} atlandı`
-          : `Keşif tamam: ${accepted} eklendi, ${skipped} atlandı`
+          : `Keşif tamam: ${accepted} eklendi (onay kuyruğu), ${skipped} atlandı`
       );
       if (!dryRun) router.refresh();
+    });
+  };
+
+  const runEnBulk = () => {
+    startEnBulkTransition(async () => {
+      const result = await bulkTranslateToolsToEnglish({ limit: 8 });
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+      setEnBulkReport(result);
+      if (result.updatedCount > 0) {
+        toast.success(
+          `${result.updatedCount} araç EN alanları dolduruldu${
+            result.failedCount ? `, ${result.failedCount} hata` : ''
+          }.`
+        );
+      } else {
+        toast(result.message || 'Güncellenecek EN eksik araç yok.');
+      }
+      router.refresh();
     });
   };
 
@@ -808,6 +837,31 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
               >
                 {isDiscoveryPending ? 'Keşif çalışıyor...' : 'AI keşif (dry-run)'}
               </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="secondary" disabled={isDiscoveryPending}>
+                    Keşfi kaydet (onay kuyruğu)
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Keşfi veritabanına yaz?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Gemini adayları onaylanmamış araç olarak eklenecek (is_approved=false).
+                      Dry-run değil; gerçek insert yapılır. Devam edilsin mi?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => runDiscovery(false)}>
+                      Evet, kaydet
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button size="sm" variant="outline" onClick={runEnBulk} disabled={isEnBulkPending}>
+                {isEnBulkPending ? 'EN çeviri…' : 'Toplu EN çevir (8)'}
+              </Button>
             </div>
             {automationReport && (
               <p className="mt-2 text-xs text-muted-foreground">
@@ -822,14 +876,32 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
               </p>
             )}
             {discoveryReport && (
+              <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                <p>
+                  Son keşif: aday{' '}
+                  {discoveryReport.acceptedCount ??
+                    discoveryReport.acceptedCandidates?.length ??
+                    discoveryReport.accepted?.length ??
+                    discoveryReport.insertedCount ??
+                    0}
+                  , atlanan {discoveryReport.skippedCount ?? discoveryReport.skipped?.length ?? 0}
+                  {discoveryReport.dryRun ? ' (dry-run)' : ' (kayıtlı)'}.
+                </p>
+                {(discoveryReport.acceptedCandidates || discoveryReport.accepted || [])
+                  .slice(0, 5)
+                  .map((item) => (
+                    <p key={item.slug || item.name} className="truncate pl-2">
+                      • {item.name}
+                      {item.link ? ` — ${item.link}` : ''}
+                    </p>
+                  ))}
+              </div>
+            )}
+            {enBulkReport && (
               <p className="mt-1 text-xs text-muted-foreground">
-                Son keşif: aday{' '}
-                {discoveryReport.accepted?.length ??
-                  discoveryReport.insertedTools?.length ??
-                  discoveryReport.acceptedCount ??
-                  0}
-                , atlanan {discoveryReport.skipped?.length ?? discoveryReport.skippedCount ?? 0}
-                {discoveryReport.dryRun ? ' (dry-run)' : ''}.
+                Son EN toplu çeviri: {enBulkReport.updatedCount}/{enBulkReport.scannedCount}{' '}
+                güncellendi
+                {enBulkReport.failedCount ? `, ${enBulkReport.failedCount} hata` : ''}.
               </p>
             )}
             <div className="mt-3 flex flex-wrap gap-1.5">

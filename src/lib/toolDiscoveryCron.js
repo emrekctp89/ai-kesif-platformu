@@ -121,6 +121,25 @@ function buildTechnicalDetails(candidate) {
   return sections.join('\n\n').slice(0, 1600) || null;
 }
 
+function getDetailReadiness(candidate) {
+  const features = normalizeList(candidate.features, 5);
+  const useCases = normalizeList(candidate.use_cases, 5);
+  const targetUsers = normalizeList(candidate.target_users, 4);
+  const limitations = normalizeList(candidate.limitations, 3);
+  const sectionCount = [features, useCases, targetUsers, limitations].filter(
+    (items) => items.length > 0
+  ).length;
+
+  return {
+    features,
+    useCases,
+    targetUsers,
+    limitations,
+    sectionCount,
+    isReady: features.length >= 2 && useCases.length >= 2 && targetUsers.length >= 1,
+  };
+}
+
 function isRejectedHost(link) {
   try {
     const hostname = new URL(link).hostname.toLowerCase().replace(/^www\./, '');
@@ -191,6 +210,15 @@ function normalizeCandidate(rawCandidate, categoriesByName) {
     normalizedLink
   );
   const tier = normalizeTier(rawCandidate?.tier);
+  const detailReadiness = getDetailReadiness(rawCandidate);
+
+  if (!detailReadiness.isReady) {
+    return {
+      error:
+        'Kart/detay sayfası için yeterli metadata yok. En az 2 özellik, 2 kullanım alanı ve 1 hedef kullanıcı gerekli.',
+    };
+  }
+
   const technicalDetails = buildTechnicalDetails(rawCandidate);
 
   return {
@@ -203,6 +231,13 @@ function normalizeCandidate(rawCandidate, categoriesByName) {
       platforms,
       tier,
       technical_details: technicalDetails,
+      detail_readiness: {
+        section_count: detailReadiness.sectionCount,
+        feature_count: detailReadiness.features.length,
+        use_case_count: detailReadiness.useCases.length,
+        target_user_count: detailReadiness.targetUsers.length,
+        limitation_count: detailReadiness.limitations.length,
+      },
       source_reason: normalizeTextField(rawCandidate?.source_reason || '').slice(0, 300),
     },
   };
@@ -572,6 +607,7 @@ export async function runScheduledToolDiscovery(options = {}) {
       is_approved: shouldAutoApprove,
       suggester_email: DISCOVERY_BOT_EMAIL,
       technical_details: candidate.technical_details,
+      __detail_readiness: candidate.detail_readiness,
       link_check_status: linkCheck.status,
       link_check_error: linkCheck.error,
       link_check_http_status: linkCheck.httpStatus,
@@ -587,9 +623,10 @@ export async function runScheduledToolDiscovery(options = {}) {
 
   let insertedTools = [];
   if (!dryRun && accepted.length > 0) {
+    const insertPayload = accepted.map(({ __detail_readiness, ...tool }) => tool);
     const { data, error } = await supabaseAdmin
       .from('tools')
-      .insert(accepted)
+      .insert(insertPayload)
       .select('id, name, slug, link, is_approved');
 
     if (error) {
@@ -622,6 +659,7 @@ export async function runScheduledToolDiscovery(options = {}) {
             platforms,
             tier,
             technical_details,
+            __detail_readiness,
             link_check_status,
             is_approved,
           }) => ({
@@ -632,7 +670,8 @@ export async function runScheduledToolDiscovery(options = {}) {
             pricing_model,
             platforms,
             tier,
-            has_technical_details: Boolean(technical_details),
+            technical_details,
+            detail_readiness: __detail_readiness,
             link_check_status,
             is_approved,
           })
