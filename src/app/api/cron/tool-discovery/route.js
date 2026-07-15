@@ -16,8 +16,9 @@ function isAuthorized(request) {
   const bearerToken = authorization.startsWith('Bearer ')
     ? authorization.slice('Bearer '.length)
     : '';
+  const secretParam = new URL(request.url).searchParams.get('secret');
 
-  return bearerToken === secret;
+  return bearerToken === secret || secretParam === secret;
 }
 
 function getIntegerParam(searchParams, name) {
@@ -45,6 +46,7 @@ export async function GET(request) {
       candidateCount: getIntegerParam(searchParams, 'candidateCount'),
       timeoutMs: getIntegerParam(searchParams, 'timeoutMs'),
       dryRun: getBooleanParam(searchParams, 'dryRun'),
+      autoApprove: getBooleanParam(searchParams, 'autoApprove'),
     });
 
     return NextResponse.json({ success: true, report });

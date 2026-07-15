@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { slugify } from '@/utils/slugify';
+import { embedGeminiText } from '@/utils/gemini';
 import {
   inferPlatformsFromLink,
   inferPricingModel,
@@ -31,6 +32,11 @@ function clampInteger(value, { fallback, min, max }) {
   const parsed = Number.parseInt(String(value || ''), 10);
   const base = Number.isInteger(parsed) ? parsed : fallback;
   return Math.min(max, Math.max(min, base));
+}
+
+function resolveBoolean(value, fallback = false) {
+  if (value === undefined || value === null || value === '') return fallback;
+  return ['1', 'true', 'yes', 'on'].includes(String(value).trim().toLowerCase());
 }
 
 function isRejectedHost(link) {
@@ -196,6 +202,16 @@ async function checkCandidateLink(link, timeoutMs) {
   }
 }
 
+async function buildEmbeddingValue({ name, description }) {
+  try {
+    const values = await embedGeminiText(`${name}. ${description}`);
+    return `[${values.join(',')}]`;
+  } catch (error) {
+    console.error('Tool discovery embedding üretilemedi:', error?.message || error);
+    return null;
+  }
+}
+
 function buildDiscoveryPrompt({ categories, existingTools, candidateCount }) {
   const categoryNames = categories.map((category) => category.name).join(', ');
   const existingNames = existingTools
@@ -299,8 +315,11 @@ async function generateCandidatesWithGemini({ categories, existingTools, candida
 async function notifyAdmin({ insertedTools, skippedCount }) {
   if (insertedTools.length === 0) return;
 
+  const autoApprovedCount = insertedTools.filter((tool) => tool.is_approved).length;
+  const pendingCount = insertedTools.length - autoApprovedCount;
   const description =
-    `${insertedTools.length} yeni araç keşfedildi ve onay kuyruğuna eklendi.` +
+    `${insertedTools.length} yeni araç keşfedildi. ` +
+    `${pendingCount} aday onay kuyruğuna eklendi, ${autoApprovedCount} aday otomatik yayına alındı.` +
     (skippedCount > 0 ? ` ${skippedCount} aday duplicate/kalite kontrolünden elendi.` : '');
 
   try {
@@ -313,6 +332,10 @@ async function notifyAdmin({ insertedTools, skippedCount }) {
       metadata: {
         tool_ids: insertedTools.map((tool) => tool.id).filter(Boolean),
         tool_names: insertedTools.map((tool) => tool.name),
+        auto_approved_tool_ids: insertedTools
+          .filter((tool) => tool.is_approved)
+          .map((tool) => tool.id)
+          .filter(Boolean),
       },
     });
   } catch (error) {
@@ -351,17 +374,24 @@ async function notifyAdmin({ insertedTools, skippedCount }) {
 
 export async function runScheduledToolDiscovery(options = {}) {
   const dryRun = Boolean(options.dryRun);
-  const limit = clampInteger(options.limit, {
+  const autoApprove = resolveBoolean(
+    options.autoApprove ?? process.env.TOOL_DISCOVERY_AUTO_APPROVE,
+    false
+  );
+  const limit = clampInteger(options.limit || process.env.TOOL_DISCOVERY_LIMIT, {
     fallback: DEFAULT_LIMIT,
     min: 1,
     max: MAX_LIMIT,
   });
-  const candidateCount = clampInteger(options.candidateCount, {
-    fallback: DEFAULT_CANDIDATE_COUNT,
-    min: limit,
-    max: MAX_CANDIDATE_COUNT,
-  });
-  const timeoutMs = clampInteger(options.timeoutMs, {
+  const candidateCount = clampInteger(
+    options.candidateCount || process.env.TOOL_DISCOVERY_CANDIDATE_COUNT,
+    {
+      fallback: DEFAULT_CANDIDATE_COUNT,
+      min: limit,
+      max: MAX_CANDIDATE_COUNT,
+    }
+  );
+  const timeoutMs = clampInteger(options.timeoutMs || process.env.TOOL_DISCOVERY_TIMEOUT_MS, {
     fallback: DEFAULT_TIMEOUT_MS,
     min: 3000,
     max: 12000,
@@ -435,8 +465,13 @@ export async function runScheduledToolDiscovery(options = {}) {
     const slug = buildUniqueSlug(candidate.name, existingSlugs);
     existingNames.add(nameKey);
     existingLinks.add(linkKey);
+    const shouldAutoApprove = autoApprove && linkCheck.status === 'valid';
+    const embedding = await buildEmbeddingValue({
+      name: candidate.name,
+      description: candidate.description,
+    });
 
-    accepted.push({
+    const acceptedCandidate = {
       name: candidate.name,
       slug,
       description: candidate.description,
@@ -444,14 +479,20 @@ export async function runScheduledToolDiscovery(options = {}) {
       category_id: candidate.category.id,
       pricing_model: candidate.pricing_model,
       platforms: candidate.platforms,
-      is_approved: false,
+      is_approved: shouldAutoApprove,
       suggester_email: DISCOVERY_BOT_EMAIL,
       technical_details: candidate.source_reason || null,
       link_check_status: linkCheck.status,
       link_check_error: linkCheck.error,
       link_check_http_status: linkCheck.httpStatus,
       link_checked_at: new Date().toISOString(),
-    });
+    };
+
+    if (embedding) {
+      acceptedCandidate.embedding = embedding;
+    }
+
+    accepted.push(acceptedCandidate);
   }
 
   let insertedTools = [];
@@ -459,7 +500,7 @@ export async function runScheduledToolDiscovery(options = {}) {
     const { data, error } = await supabaseAdmin
       .from('tools')
       .insert(accepted)
-      .select('id, name, slug, link');
+      .select('id, name, slug, link, is_approved');
 
     if (error) {
       throw new Error(`Araç adayları eklenemedi: ${error.message}`);
@@ -473,18 +514,21 @@ export async function runScheduledToolDiscovery(options = {}) {
 
   return {
     dryRun,
+    autoApprove,
     generatedCount: rawCandidates.length,
     acceptedCount: accepted.length,
     insertedCount: insertedTools.length,
+    autoApprovedCount: accepted.filter((tool) => tool.is_approved).length,
     skippedCount: skipped.length,
     insertedTools,
     acceptedCandidates: dryRun
-      ? accepted.map(({ name, slug, link, category_id, link_check_status }) => ({
+      ? accepted.map(({ name, slug, link, category_id, link_check_status, is_approved }) => ({
           name,
           slug,
           link,
           category_id,
           link_check_status,
+          is_approved,
         }))
       : [],
     skipped: skipped.slice(0, 20),

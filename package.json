@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "verify": "npm run lint && npm run build",
+    "tools:discover": "node ./scripts/tool-discovery.mjs",
+    "tools:discover:dry-run": "node ./scripts/tool-discovery.mjs --dry-run",
     "tools:audit-links": "node ./scripts/tool-link-audit.mjs",
     "tools:audit-links:dry-run": "node ./scripts/tool-link-audit.mjs --dry-run",
     "tools:audit-links:deactivate": "node ./scripts/tool-link-audit.mjs --deactivate --confirm=DEACTIVATE_INVALID_TOOLS",
