@@ -24,7 +24,13 @@ import { getBlockedToolHost } from '@/lib/toolLinkPolicy';
 const ITEMS_PER_PAGE = 12;
 const GEMINI_RETRY_BASE_DELAY_MS = 2500;
 const GEMINI_MAX_RETRY_PER_MODEL = 2;
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+const GEMINI_MODELS = [
+  process.env.GEMINI_TEXT_MODEL,
+  'gemini-flash-latest',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+].filter(Boolean);
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

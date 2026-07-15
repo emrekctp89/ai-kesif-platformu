@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const DEFAULT_TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-2.0-flash';
+const DEFAULT_TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-flash-latest';
 const DEFAULT_EMBED_MODEL = process.env.GEMINI_EMBED_MODEL || 'text-embedding-004';
 
 function requireApiKey() {
