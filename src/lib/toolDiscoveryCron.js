@@ -18,7 +18,14 @@ const MAX_CANDIDATE_COUNT = 40;
 const DEFAULT_TIMEOUT_MS = 7000;
 const ADMIN_NOTIFICATION_LINK = '/admin';
 const DISCOVERY_BOT_EMAIL = 'tool-discovery-bot@aikesif.com';
-const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+// Prefer stable aliases; older 1.5/2.0 flash ids may return 404 for new API keys.
+const GEMINI_MODELS = [
+  process.env.GEMINI_TEXT_MODEL,
+  'gemini-flash-latest',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+].filter(Boolean);
 const ALLOWED_PRICING_MODELS = new Set([
   'Ücretsiz',
   'Freemium',
