@@ -19,6 +19,23 @@ const DEFAULT_TIMEOUT_MS = 7000;
 const ADMIN_NOTIFICATION_LINK = '/admin';
 const DISCOVERY_BOT_EMAIL = 'tool-discovery-bot@aikesif.com';
 const GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+const ALLOWED_PRICING_MODELS = new Set([
+  'Ücretsiz',
+  'Freemium',
+  'Abonelik',
+  'Tek Seferlik Ödeme',
+  'Bilinmiyor',
+]);
+const ALLOWED_PLATFORMS = new Set([
+  'Web',
+  'iOS',
+  'Android',
+  'Windows',
+  'macOS',
+  'Linux',
+  'Chrome Uzantısı',
+]);
+const ALLOWED_TIERS = new Set(['Normal', 'Pro', 'Sponsorlu']);
 
 const REJECTED_HOSTS = new Set([
   'example.com',
@@ -37,6 +54,71 @@ function clampInteger(value, { fallback, min, max }) {
 function resolveBoolean(value, fallback = false) {
   if (value === undefined || value === null || value === '') return fallback;
   return ['1', 'true', 'yes', 'on'].includes(String(value).trim().toLowerCase());
+}
+
+function normalizePricingModel(value, description, link) {
+  const normalized = normalizeTextField(value || '');
+  if (ALLOWED_PRICING_MODELS.has(normalized)) return normalized;
+  return inferPricingModel(description, link) || 'Bilinmiyor';
+}
+
+function normalizePlatforms(value, link) {
+  const platforms = Array.isArray(value)
+    ? value.map((item) => normalizeTextField(item)).filter(Boolean)
+    : [];
+  const accepted = platforms.filter((platform) => ALLOWED_PLATFORMS.has(platform));
+
+  if (accepted.length > 0) {
+    return [...new Set(accepted)].slice(0, 5);
+  }
+
+  return inferPlatformsFromLink(link) || ['Web'];
+}
+
+function normalizeTier(value) {
+  const normalized = normalizeTextField(value || '');
+  return ALLOWED_TIERS.has(normalized) ? normalized : 'Normal';
+}
+
+function normalizeList(value, maxItems = 5) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => normalizeTextField(item))
+    .filter(Boolean)
+    .slice(0, maxItems);
+}
+
+function buildTechnicalDetails(candidate) {
+  const sections = [];
+  const featureBullets = normalizeList(candidate.features, 5);
+  const useCaseBullets = normalizeList(candidate.use_cases, 5);
+  const audienceBullets = normalizeList(candidate.target_users, 4);
+  const limitations = normalizeList(candidate.limitations, 3);
+  const sourceReason = normalizeTextField(candidate.source_reason || '');
+
+  if (featureBullets.length > 0) {
+    sections.push(`Öne çıkan özellikler:\n${featureBullets.map((item) => `- ${item}`).join('\n')}`);
+  }
+
+  if (useCaseBullets.length > 0) {
+    sections.push(`Kullanım alanları:\n${useCaseBullets.map((item) => `- ${item}`).join('\n')}`);
+  }
+
+  if (audienceBullets.length > 0) {
+    sections.push(`Kimler için uygun:\n${audienceBullets.map((item) => `- ${item}`).join('\n')}`);
+  }
+
+  if (limitations.length > 0) {
+    sections.push(
+      `Dikkat edilmesi gerekenler:\n${limitations.map((item) => `- ${item}`).join('\n')}`
+    );
+  }
+
+  if (sourceReason) {
+    sections.push(`Keşif notu:\n${sourceReason}`);
+  }
+
+  return sections.join('\n\n').slice(0, 1600) || null;
 }
 
 function isRejectedHost(link) {
@@ -102,16 +184,14 @@ function normalizeCandidate(rawCandidate, categoriesByName) {
     return { error: 'Kategori bulunamadı.' };
   }
 
-  const platforms = Array.isArray(rawCandidate?.platforms)
-    ? rawCandidate.platforms
-        .map((item) => normalizeTextField(item))
-        .filter(Boolean)
-        .slice(0, 5)
-    : inferPlatformsFromLink(normalizedLink) || ['Web'];
-
-  const pricingModel =
-    normalizeTextField(rawCandidate?.pricing_model || '') ||
-    inferPricingModel(description, normalizedLink);
+  const platforms = normalizePlatforms(rawCandidate?.platforms, normalizedLink);
+  const pricingModel = normalizePricingModel(
+    rawCandidate?.pricing_model,
+    description,
+    normalizedLink
+  );
+  const tier = normalizeTier(rawCandidate?.tier);
+  const technicalDetails = buildTechnicalDetails(rawCandidate);
 
   return {
     value: {
@@ -119,9 +199,11 @@ function normalizeCandidate(rawCandidate, categoriesByName) {
       description,
       link: normalizedLink,
       category,
-      pricing_model: pricingModel || null,
+      pricing_model: pricingModel,
       platforms,
-      source_reason: normalizeTextField(rawCandidate?.source_reason || '').slice(0, 240),
+      tier,
+      technical_details: technicalDetails,
+      source_reason: normalizeTextField(rawCandidate?.source_reason || '').slice(0, 300),
     },
   };
 }
@@ -227,6 +309,8 @@ Görev:
 - Dizin/aggregator siteleri, blog yazıları, sahte/example linkler ve tekrarları önerme.
 - Link mutlaka aracın resmî ana sayfası veya resmî ürün sayfası olmalı.
 - Açıklamalar Türkçe, net ve kullanıcı faydasına odaklı olmalı.
+- Araç kartı ve detay sayfası için fiyat türü, platform, seviye ve teknik detayları hazır doldur.
+- Bilmediğin fiyat bilgisini uydurma; emin değilsen "Bilinmiyor" yaz.
 - Mevcut araç listesindeki ürünleri tekrar önerme.
 
 Platform kategorileri:
@@ -244,8 +328,13 @@ ${candidateCount} aday üret. Sadece JSON döndür:
       "link": "https://official-site.example",
       "category": "Platform kategorilerinden en uygunu",
       "pricing_model": "Ücretsiz | Freemium | Abonelik | Tek Seferlik Ödeme | Bilinmiyor",
-      "platforms": ["Web"],
-      "source_reason": "Bu aracın neden eklendiğine dair kısa not"
+      "platforms": ["Web | iOS | Android | Windows | macOS | Linux | Chrome Uzantısı"],
+      "tier": "Normal",
+      "features": ["Kart ve detay sayfasında gösterilecek 3-5 temel özellik"],
+      "use_cases": ["Aracın uygun olduğu 3-5 kullanım senaryosu"],
+      "target_users": ["Kimler için uygun olduğuna dair 2-4 kısa madde"],
+      "limitations": ["Varsa dikkat edilmesi gereken 1-3 nokta"],
+      "source_reason": "Bu aracın neden eklendiğine dair kısa editör notu"
     }
   ]
 }
@@ -479,9 +568,10 @@ export async function runScheduledToolDiscovery(options = {}) {
       category_id: candidate.category.id,
       pricing_model: candidate.pricing_model,
       platforms: candidate.platforms,
+      tier: candidate.tier,
       is_approved: shouldAutoApprove,
       suggester_email: DISCOVERY_BOT_EMAIL,
-      technical_details: candidate.source_reason || null,
+      technical_details: candidate.technical_details,
       link_check_status: linkCheck.status,
       link_check_error: linkCheck.error,
       link_check_http_status: linkCheck.httpStatus,
@@ -522,14 +612,31 @@ export async function runScheduledToolDiscovery(options = {}) {
     skippedCount: skipped.length,
     insertedTools,
     acceptedCandidates: dryRun
-      ? accepted.map(({ name, slug, link, category_id, link_check_status, is_approved }) => ({
-          name,
-          slug,
-          link,
-          category_id,
-          link_check_status,
-          is_approved,
-        }))
+      ? accepted.map(
+          ({
+            name,
+            slug,
+            link,
+            category_id,
+            pricing_model,
+            platforms,
+            tier,
+            technical_details,
+            link_check_status,
+            is_approved,
+          }) => ({
+            name,
+            slug,
+            link,
+            category_id,
+            pricing_model,
+            platforms,
+            tier,
+            has_technical_details: Boolean(technical_details),
+            link_check_status,
+            is_approved,
+          })
+        )
       : [],
     skipped: skipped.slice(0, 20),
   };
