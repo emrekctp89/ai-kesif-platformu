@@ -163,22 +163,24 @@ export async function generateMetadata({ params }) {
 
   const title = `${tool.name} Nedir? Özellikleri ve Kullanımı`;
   const description = createMetaDescription(tool.description);
+  const pageUrl = `${siteUrl}/tool/${tool.slug}`;
+  const ogImageUrl = `${siteUrl}/opengraph-image`;
 
   return {
     metadataBase: new URL(siteUrl),
     title,
     description,
     alternates: {
-      canonical: `/tool/${tool.slug}`,
+      canonical: pageUrl,
     },
     openGraph: {
       type: 'website',
       title,
       description,
-      url: `/tool/${tool.slug}`,
+      url: pageUrl,
       images: [
         {
-          url: '/opengraph-image',
+          url: ogImageUrl,
           width: 1200,
           height: 630,
           alt: `${tool.name} - AI Keşif`,
@@ -189,7 +191,7 @@ export async function generateMetadata({ params }) {
       card: 'summary_large_image',
       title,
       description,
-      images: ['/opengraph-image'],
+      images: [ogImageUrl],
     },
   };
 }

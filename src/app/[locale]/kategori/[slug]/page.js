@@ -60,22 +60,24 @@ export async function generateMetadata({ params }) {
 
   const title = `${category.name} Yapay Zeka Araçları`;
   const description = `${category.name} kategorisindeki güncel yapay zeka araçlarını keşfedin, özelliklerini inceleyin ve ihtiyacınıza uygun çözümü bulun.`;
+  const pageUrl = `${siteUrl}/kategori/${category.slug}`;
+  const ogImageUrl = `${siteUrl}/opengraph-image`;
 
   return {
     metadataBase: new URL(siteUrl),
     title,
     description,
     alternates: {
-      canonical: `/kategori/${category.slug}`,
+      canonical: pageUrl,
     },
     openGraph: {
       title,
       description,
-      url: `/kategori/${category.slug}`,
+      url: pageUrl,
       type: 'website',
       images: [
         {
-          url: '/opengraph-image',
+          url: ogImageUrl,
           width: 1200,
           height: 630,
           alt: `${category.name} yapay zeka araçları - AI Keşif`,
@@ -86,7 +88,7 @@ export async function generateMetadata({ params }) {
       card: 'summary_large_image',
       title,
       description,
-      images: ['/opengraph-image'],
+      images: [ogImageUrl],
     },
   };
 }

@@ -32,6 +32,7 @@ export function generatePageMetadata({
   const fullUrl = `${siteConfig.url}${path}`;
 
   return {
+    metadataBase: new URL(siteConfig.url),
     title: fullTitle,
     description: fullDescription,
     keywords: ['AI araçları', 'yapay zeka', 'AI keşfi', 'AI platformu', 'araç karşılaştırma'],
