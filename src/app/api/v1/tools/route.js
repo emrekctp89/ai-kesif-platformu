@@ -1,11 +1,40 @@
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { rateLimit, getClientIp } from '@/lib/rateLimit';
+
+const limiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500 });
 
 // Initialization moved inside the handler to prevent build-time errors
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
+    // Rate limit check — 30 requests per minute per IP
+    const clientIp = getClientIp(request);
+    const {
+      success: rateLimitOk,
+      limit: rateMax,
+      remaining,
+      reset,
+    } = await limiter.check(30, clientIp);
+
+    if (!rateLimitOk) {
+      return new Response(
+        JSON.stringify({
+          error: 'Çok fazla istek gönderildi. Lütfen bir dakika bekleyin.',
+          retryAfter: Math.ceil((reset - Date.now()) / 1000),
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-RateLimit-Limit': String(rateMax),
+            'X-RateLimit-Remaining': '0',
+            'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)),
+          },
+        }
+      );
+    }
     // We use the admin client because we need to query without RLS for API keys
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || '',
