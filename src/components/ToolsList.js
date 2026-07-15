@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { recordVariantImpression, recordVariantClick } from '@/app/actions';
 import ToolIcon from '@/components/ToolIcon';
 import { TrackedExternalLink } from '@/components/TrackedExternalLink';
+import { formatRating, getActiveToolVariants, getOriginalToolVariant } from '@/utils/toolVariants';
 
 // Seviyelere göre stiller
 const tierStyles = {
@@ -34,13 +35,8 @@ function ToolCard({ tool, user, isFavorited }) {
   // Bu useEffect, bileşen ilk render edildiğinde çalışır.
   // A/B testi için gösterilecek varyantı seçer ve gösterimini kaydeder.
   React.useEffect(() => {
-    const originalVariant = {
-      id: `original-${tool.id}`,
-      title: tool.name,
-      description: tool.description,
-    };
-
-    const activeVariants = tool.tool_variants.filter((v) => v.is_active);
+    const originalVariant = getOriginalToolVariant(tool);
+    const activeVariants = getActiveToolVariants(tool);
 
     // Eğer test edilecek aktif varyantlar varsa, orijinali de listeye ekle ve rastgele birini seç
     if (activeVariants.length > 0) {
@@ -51,7 +47,7 @@ function ToolCard({ tool, user, isFavorited }) {
 
       // Seçilen varyant orijinal değilse, gösterimini kaydet
       if (selectedVariant.id !== `original-${tool.id}`) {
-        recordVariantImpression(selectedVariant.id);
+        void recordVariantImpression(selectedVariant.id);
       }
     } else {
       // Aktif varyant yoksa, sadece orijinali göster
@@ -63,7 +59,7 @@ function ToolCard({ tool, user, isFavorited }) {
   const handleCardClick = () => {
     // Tıklanan varyant orijinal değilse, tıklamasını kaydet
     if (displayedVariant && displayedVariant.id !== `original-${tool.id}`) {
-      recordVariantClick(displayedVariant.id);
+      void recordVariantClick(displayedVariant.id);
     }
     // Kullanıcıyı aracın detay sayfasına yönlendir
     router.push(`/tool/${tool.slug}`);
@@ -128,8 +124,8 @@ function ToolCard({ tool, user, isFavorited }) {
       <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-          <span className="font-bold text-foreground">{tool.average_rating.toFixed(1)}</span>
-          <span>({tool.total_ratings} oy)</span>
+          <span className="font-bold text-foreground">{formatRating(tool.average_rating)}</span>
+          <span>({tool.total_ratings || 0} oy)</span>
         </div>
         <Button asChild size="sm">
           <TrackedExternalLink
@@ -154,7 +150,7 @@ function ToolCard({ tool, user, isFavorited }) {
 // Ana Araç Listesi Bileşeni
 // Bu bileşen artık bir Server Component değil, Client Component olmalı.
 // Bu yüzden, veri çekme mantığını bir üst bileşene (page.js) taşımamız gerekecek.
-export function ToolsList({ tools, user, favoriteToolIds }) {
+export function ToolsList({ tools = [], user, favoriteToolIds = new Set() }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {tools.map((tool) => (
