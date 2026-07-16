@@ -5,6 +5,7 @@ import { FeaturedTools } from '@/components/FeaturedTools';
 import { ToolOfTheDay } from '@/components/ToolOfTheDay';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { getTranslations } from 'next-intl/server';
+import { CategoryGrid } from '@/components/CategoryGrid';
 
 const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
 
@@ -51,6 +52,7 @@ export default async function HomePage(props) {
   // Keys: RSC → Client prop geçişinde React list uyarısını önler.
   const discoverySections = (
     <div key="discovery-sections" className="space-y-12">
+      <CategoryGrid key="category-grid" categories={initialData.categories} />
       <ToolOfTheDay key="tool-of-the-day" />
       <FeaturedTools key="featured-tools" />
       <SpeedInsights key="speed-insights" />

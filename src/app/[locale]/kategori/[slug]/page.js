@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { HomepageClient } from '@/components/HomepageClient';
+import { getCategoryConfig } from '@/lib/categoryConfig';
 
 const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
 
@@ -143,6 +144,30 @@ export default async function CategoryPage({ params }) {
     ],
   };
 
+  const config = getCategoryConfig(category.slug);
+  const Icon = config.icon;
+
+  const customHeader = (
+    <div className="flex flex-col items-center justify-center space-y-4 pb-2">
+      <div
+        className={`p-4 rounded-2xl bg-background border ${config.border} shadow-lg shadow-${config.color}-500/10`}
+      >
+        <Icon className={`w-10 h-10 ${config.text}`} />
+      </div>
+      <div>
+        <h1
+          id="tools-page-title"
+          className="text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl"
+        >
+          {category.name} <span className="font-light text-muted-foreground">Araçları</span>
+        </h1>
+        <p className="mx-auto mt-3 max-w-2xl text-base text-muted-foreground sm:text-lg">
+          {config.description}
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <script
@@ -158,6 +183,7 @@ export default async function CategoryPage({ params }) {
         pageTitle={title}
         pageDescription={description}
         discoverySections={null}
+        customHeader={customHeader}
       />
     </>
   );

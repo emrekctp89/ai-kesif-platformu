@@ -42,6 +42,7 @@ export function HomepageClient({
   pageTitle = 'İhtiyacına Uygun Yapay Zeka Aracını Bul',
   pageDescription = 'Ne yapmak istediğini ara, kategorileri keşfet veya AI tavsiyesiyle doğru araca daha hızlı ulaş.',
   fixedSearchParams,
+  customHeader,
 }) {
   const {
     user,
@@ -181,15 +182,21 @@ export function HomepageClient({
         className="sticky top-16 z-40 border-b px-3 py-2 text-center sm:px-4 sm:py-5 md:py-7
              bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
-        <h1
-          id="tools-page-title"
-          className="text-xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl"
-        >
-          {pageTitle}
-        </h1>
-        <p className="mx-auto mt-1 hidden max-w-xl text-sm text-muted-foreground sm:block sm:mt-2 sm:text-base">
-          {pageDescription}
-        </p>
+        {customHeader ? (
+          customHeader
+        ) : (
+          <>
+            <h1
+              id="tools-page-title"
+              className="text-xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl"
+            >
+              {pageTitle}
+            </h1>
+            <p className="mx-auto mt-1 hidden max-w-xl text-sm text-muted-foreground sm:block sm:mt-2 sm:text-base">
+              {pageDescription}
+            </p>
+          </>
+        )}
 
         {showControls && (
           <div className="mt-2 grid grid-cols-2 items-stretch justify-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 sm:mt-4 sm:flex sm:items-center sm:gap-3 md:mt-6">
