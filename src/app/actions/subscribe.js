@@ -14,7 +14,6 @@ export async function subscribeToNewsletter(formData) {
   try {
     const supabaseAdmin = createAdminClient();
 
-    // Check if already subscribed
     const { data: existingSubscriber } = await supabaseAdmin
       .from('newsletter_subscribers')
       .select('id, status')
@@ -23,7 +22,6 @@ export async function subscribeToNewsletter(formData) {
 
     if (existingSubscriber) {
       if (existingSubscriber.status === 'unsubscribed') {
-        // Re-subscribe
         const { error: updateError } = await supabaseAdmin
           .from('newsletter_subscribers')
           .update({ status: 'active', updated_at: new Date().toISOString() })
@@ -35,7 +33,6 @@ export async function subscribeToNewsletter(formData) {
       return { success: true, message: 'Bu e-posta adresi zaten bültenimize kayıtlı.' };
     }
 
-    // Insert new subscriber
     const { error: insertError } = await supabaseAdmin
       .from('newsletter_subscribers')
       .insert([{ email, source: 'website' }]);
