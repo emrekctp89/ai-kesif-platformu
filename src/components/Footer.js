@@ -8,6 +8,7 @@ const footerLinks = [
   { href: '/karsilastir', label: 'Karşılaştır' },
   { href: '/tavsiye', label: 'AI Tavsiye' },
   { href: '/blog', label: 'Blog' },
+  { href: '/bulten', label: 'Bülten' },
   { href: '/eserler', label: 'Eserler' },
   { href: '/koleksiyonlar', label: 'Koleksiyonlar' },
   { href: '/ogren', label: 'Öğren' },

@@ -65,6 +65,12 @@ export function HeaderNav({
           {t('blog')}
         </Link>
         <Link
+          href="/bulten"
+          className="text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {t('newsletter')}
+        </Link>
+        <Link
           href="/eserler"
           className="text-muted-foreground transition-colors hover:text-foreground"
         >

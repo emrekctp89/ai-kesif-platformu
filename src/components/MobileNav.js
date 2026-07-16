@@ -47,6 +47,7 @@ export function MobileNav({ user, isProUser }) {
     { href: '/karsilastir', label: 'Karşılaştır', icon: GitCompareArrows },
     { href: '/tavsiye', label: 'AI Tavsiye', icon: Lightbulb },
     { href: '/blog', label: 'Blog', icon: Newspaper },
+    { href: '/bulten', label: 'Bülten', icon: Mail },
     { href: '/eserler', label: 'Eserler', icon: Images },
     { href: '/ogren', label: 'Öğren', icon: GraduationCap },
     { href: '/submit', label: 'Araç Öner', icon: PlusCircle },

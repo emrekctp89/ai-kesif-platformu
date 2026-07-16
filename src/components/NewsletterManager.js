@@ -48,7 +48,8 @@ export function NewsletterManager() {
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success(result.success);
+        const archiveNote = result.slug ? ` Arşiv: /bulten/${result.slug}` : '';
+        toast.success(`${result.success}${archiveNote}`);
       }
     });
   };

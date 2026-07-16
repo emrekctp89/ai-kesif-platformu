@@ -41,6 +41,7 @@ import { deleteReportedComment, dismissAlert } from '@/app/actions/moderation';
 import { AiToolFactory } from './AiToolFactory';
 import { BlogManager } from './BlogManager';
 import { ChallengeManager } from './ChallengeManager';
+import { NewsletterManager } from './NewsletterManager';
 import { TagManager } from './TagManager';
 import { CategoryManager } from './CategoryManager';
 import { FeaturedToggle } from './FeaturedToggle';
@@ -1624,6 +1625,24 @@ export function AdminPageClient({ data }) {
         <AiToolFactory categories={categories} />
         <ChallengeManager challenges={challenges} />
         <BlogManager posts={allPosts} />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" aria-hidden="true" />
+              Haftalık Bülten
+            </CardTitle>
+            <CardDescription>
+              Bülteni önizleyin, abonelere gönderin. Gönderim sonrası içerik otomatik olarak{' '}
+              <Link href="/bulten" className="font-medium text-primary hover:underline">
+                /bulten
+              </Link>{' '}
+              arşivine kaydedilir.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <NewsletterManager />
+          </CardContent>
+        </Card>
       </TabsContent>
 
       <TabsContent value="platform_settings" className="mt-6 space-y-6">

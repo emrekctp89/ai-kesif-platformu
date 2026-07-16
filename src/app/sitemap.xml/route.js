@@ -27,6 +27,7 @@ export async function GET() {
     { url: withBase('/karsilastir'), lastModified: generatedAt },
     { url: withBase('/tavsiye'), lastModified: generatedAt },
     { url: withBase('/blog'), lastModified: generatedAt },
+    { url: withBase('/bulten'), lastModified: generatedAt },
     { url: withBase('/eserler'), lastModified: generatedAt },
     { url: withBase('/koleksiyonlar'), lastModified: generatedAt },
     { url: withBase('/topluluk'), lastModified: generatedAt },
@@ -58,15 +59,17 @@ export async function GET() {
 
   let toolsData = [];
   let categoriesData = [];
+  let newslettersData = [];
 
   try {
-    const [toolsResult, categoriesResult] = await Promise.all([
+    const [toolsResult, categoriesResult, newslettersResult] = await Promise.all([
       supabase
         .from('tools')
         .select('slug, updated_at')
         .eq('is_approved', true)
         .not('slug', 'is', null),
       supabase.from('categories').select('slug').not('slug', 'is', null),
+      supabase.from('newsletters').select('slug, sent_at, updated_at').not('slug', 'is', null),
     ]);
 
     if (toolsResult.error) {
@@ -79,6 +82,12 @@ export async function GET() {
       console.error('Kategoriler alınamadı:', categoriesResult.error);
     } else {
       categoriesData = categoriesResult.data || [];
+    }
+
+    if (newslettersResult.error) {
+      console.error('Bültenler alınamadı:', newslettersResult.error);
+    } else {
+      newslettersData = newslettersResult.data || [];
     }
   } catch (error) {
     console.error('Sitemap fetch failed (likely during build):', error);
@@ -95,6 +104,13 @@ export async function GET() {
     urls.push({
       url: withBase(`/tool/${tool.slug}`),
       lastModified: tool.updated_at || generatedAt,
+    });
+  });
+
+  newslettersData.forEach((item) => {
+    urls.push({
+      url: withBase(`/bulten/${item.slug}`),
+      lastModified: item.updated_at || item.sent_at || generatedAt,
     });
   });
 

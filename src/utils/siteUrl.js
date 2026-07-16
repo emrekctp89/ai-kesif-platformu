@@ -47,7 +47,8 @@ export function getSiteOrigin() {
     toOrigin(process.env.VERCEL_PROJECT_PRODUCTION_URL, 'https') ||
     toOrigin(process.env.NEXT_PUBLIC_VERCEL_URL, 'https') ||
     toOrigin(process.env.VERCEL_URL, 'https') ||
-    'https://www.aikeşif.com'
+    // ASCII / punycode fallback only — HTTP headers cannot carry raw IDN (ş etc.)
+    'https://www.xn--aikeif-zjb.com'
   );
 }
 

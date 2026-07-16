@@ -12,6 +12,31 @@ import { getSupabaseCookieOptions } from './utils/siteUrl';
 // 1. Initialize next-intl middleware with routing config
 const intlMiddleware = createIntlMiddleware(routing);
 
+/**
+ * HTTP headers only accept ByteString (code points ≤ 255).
+ * IDN hosts like aikeşif.com must be converted to ASCII punycode via URL API.
+ */
+function toHeaderSafeOrigin(raw) {
+  if (!raw) return null;
+  const trimmed = String(raw)
+    .trim()
+    .replace(/^["']|["']$/g, '');
+  if (!trimmed || trimmed === '*') return null;
+
+  try {
+    const withProto =
+      trimmed.startsWith('http://') || trimmed.startsWith('https://')
+        ? trimmed
+        : `https://${trimmed}`;
+    const origin = new URL(withProto).origin; // non-ASCII host → punycode
+    // Final guard: reject any remaining non-Latin-1 characters
+    if ([...origin].some((ch) => ch.charCodeAt(0) > 255)) return null;
+    return origin;
+  } catch {
+    return null;
+  }
+}
+
 export async function middleware(request) {
   // 1b. Supabase PKCE sometimes returns `?code=` on Site URL root.
   const { pathname, searchParams } = request.nextUrl;
@@ -57,10 +82,15 @@ export async function middleware(request) {
     console.error('[middleware] auth session refresh failed:', error?.message || error);
   }
 
-  // 4. Security headers — CORS
-  const allowedOrigin = process.env.NEXT_PUBLIC_SITE_URL || '*';
-  response.headers.set('Access-Control-Allow-Credentials', 'true');
-  response.headers.set('Access-Control-Allow-Origin', allowedOrigin);
+  // 4. Security headers — CORS (header values must be ByteString / Latin-1)
+  // NEXT_PUBLIC_SITE_URL may contain IDN (e.g. aikeşif.com); convert via URL.origin → punycode.
+  const allowedOrigin = toHeaderSafeOrigin(
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL
+  );
+  if (allowedOrigin && allowedOrigin !== '*') {
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Origin', allowedOrigin);
+  }
   response.headers.set('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   response.headers.set(
     'Access-Control-Allow-Headers',
