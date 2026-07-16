@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { buildCategoryLookupMap, normalizeCategoryLookupKey } from '@/lib/categoryLookup';
 import slugify from 'slugify';
 
 export async function bulkImportTools(jsonText) {
@@ -34,6 +35,15 @@ export async function bulkImportTools(jsonText) {
 
   let successCount = 0;
   let errors = [];
+  const { data: categories, error: categoriesError } = await supabaseAdmin
+    .from('categories')
+    .select('id, name, slug');
+
+  if (categoriesError) {
+    return { error: `Kategoriler okunamadı: ${categoriesError.message}` };
+  }
+
+  const categoriesByInput = buildCategoryLookupMap(categories || []);
 
   // 3. Her aracı tek tek ekle
   for (let i = 0; i < toolsToImport.length; i++) {
@@ -44,8 +54,10 @@ export async function bulkImportTools(jsonText) {
         errors.push(`Satır ${i + 1}: İsim ve web sitesi url si zorunludur.`);
         continue;
       }
-      if (!rawTool.category_name && !rawTool.category_id) {
-        errors.push(`Satır ${i + 1} (${rawTool.name}): category_name veya category_id zorunludur.`);
+      if (!rawTool.category_name && !rawTool.category_slug && !rawTool.category_id) {
+        errors.push(
+          `Satır ${i + 1} (${rawTool.name}): category_name, category_slug veya category_id zorunludur.`
+        );
         continue;
       }
 
@@ -54,22 +66,15 @@ export async function bulkImportTools(jsonText) {
       const slug = `${baseSlug}-${crypto.randomUUID().split('-')[0]}`;
 
       let finalCategoryId = rawTool.category_id;
-      if (!finalCategoryId && rawTool.category_name) {
-        // Kategori adını veritabanında ara (büyük/küçük harf duyarsız veya ilike ile yapılabilir)
-        // Performans için veritabanına tek tek sorgu atmak yerine yukarıda toplu çekilebilir, ama şimdilik en temizi tek sorgu.
-        const { data: catData } = await supabase
-          .from('categories')
-          .select('id')
-          .ilike('name', rawTool.category_name)
-          .maybeSingle();
+      if (!finalCategoryId) {
+        const categoryInput = rawTool.category_slug || rawTool.category_name;
+        const matchedCategory = categoriesByInput.get(normalizeCategoryLookupKey(categoryInput));
 
-        if (catData) {
-          finalCategoryId = catData.id;
+        if (matchedCategory) {
+          finalCategoryId = matchedCategory.id;
         } else {
-          // Bulunamadıysa ilk kategoriyi veya 'Diğer' kategorisini alabilirsiniz
-          // Burada katı davranıp hata fırlatalım
           errors.push(
-            `Satır ${i + 1} (${rawTool.name}): '${rawTool.category_name}' kategorisi bulunamadı.`
+            `Satır ${i + 1} (${rawTool.name}): '${categoryInput}' kategorisi bulunamadı.`
           );
           continue;
         }

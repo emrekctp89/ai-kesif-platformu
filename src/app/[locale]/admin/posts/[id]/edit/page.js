@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import { PostEditor } from '@/components/PostEditor';
+import { sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
 
 // Tüm gerekli verileri çeken fonksiyonlar
 async function getPost(id) {
@@ -33,7 +34,7 @@ async function getAllTags() {
 async function getAllCategories() {
   const supabase = await createClient();
   const { data } = await supabase.from('categories').select('*').order('name', { ascending: true });
-  return data || [];
+  return sortCategoriesByCanonicalOrder(data || []);
 }
 
 export default async function EditPostPage(props) {

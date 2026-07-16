@@ -4,6 +4,7 @@ import {
   getCategoryConfig,
   sortCategoriesByCanonicalOrder,
 } from '../categoryConfig';
+import { findCategoryByInput, normalizeCategoryLookupKey } from '../categoryLookup';
 
 describe('categoryConfig', () => {
   it('keeps the expanded category seed unique and configured', () => {
@@ -36,5 +37,18 @@ describe('categoryConfig', () => {
       'seo',
       'ozel-kategori',
     ]);
+  });
+
+  it('matches categories by name, slug and normalized user input', () => {
+    const categories = [
+      { id: '1', name: 'Görsel & Video', slug: 'gorsel-video' },
+      { id: '2', name: 'Kod & Yazılım', slug: 'kod-yazilim' },
+    ];
+
+    expect(findCategoryByInput(categories, 'Görsel & Video')?.id).toBe('1');
+    expect(findCategoryByInput(categories, 'gorsel-video')?.id).toBe('1');
+    expect(findCategoryByInput(categories, 'gorsel video')?.id).toBe('1');
+    expect(findCategoryByInput(categories, 'Kod Yazilim')?.id).toBe('2');
+    expect(normalizeCategoryLookupKey('  Görsel-&-Video  ')).toBe('gorsel ve video');
   });
 });
