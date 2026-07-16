@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { slugify } from '@/utils/slugify';
 import { embedGeminiText } from '@/utils/gemini';
+import { getSiteOrigin } from '@/utils/siteUrl';
 import {
   inferPlatformsFromLink,
   inferPricingModel,
@@ -495,7 +496,7 @@ async function notifyAdmin({ insertedTools, skippedCount }) {
             .map((tool) => `<li><strong>${tool.name}</strong> — ${tool.link}</li>`)
             .join('')}
         </ul>
-        <p>Onay kuyruğu: <a href="${process.env.NEXT_PUBLIC_SITE_URL || ''}/admin">Admin paneli</a></p>
+        <p>Onay kuyruğu: <a href="${getSiteOrigin()}/admin">Admin paneli</a></p>
       `,
     });
   } catch (error) {
