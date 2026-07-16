@@ -1,6 +1,10 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+
+const GROK_API_URL = 'https://api.x.ai/v1/chat/completions';
+const GROK_MODEL = 'grok-2-latest';
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
@@ -21,73 +25,59 @@ serve(async (req) => {
       - Etkileşim Sıcak Noktaları: ${JSON.stringify(analyticsData.interaction_hotspots)}
       - "Soğuk" Kategoriler: ${JSON.stringify(analyticsData.cold_categories)}
     `;
+    const systemPrompt = `Sen 'AI Keşif Platformu'nun Baş Büyüme Sorumlusun. Cevabını SADECE geçerli bir JSON formatında ver. Aşağıdaki şemaya uy:
+{
+  "briefing_title": "string",
+  "summary": "string",
+  "opportunities": ["string"],
+  "risks": ["string"],
+  "action_suggestion": "string"
+}`;
     const prompt = `
-      Sen 'AI Keşif Platformu'nun Baş Büyüme Sorumlusun. İşte bu haftanın analiz raporu. 
+      İşte bu haftanın analiz raporu. 
       HAFTALIK VERİLER:
       ${formattedData}
-      GÖREVİN: Bu verilere dayanarak, admin için bir "Haftalık Stratejik Brifing" hazırla. Bu brifingde, platformu büyütmek için somut ve yaratıcı önerilerde bulun. Cevabını SADECE aşağıdaki JSON formatında ver.
+      GÖREVİN: Bu verilere dayanarak, admin için bir "Haftalık Stratejik Brifing" hazırla. Bu brifingde, platformu büyütmek için somut ve yaratıcı önerilerde bulun. 
+      action_suggestion: Tüm bu analizlere dayanarak, adminin bu hafta odaklanması gereken EN ÖNEMLİ tek bir aksiyon önerisi sun.
     `;
-    const chatHistory = [
-      {
-        role: 'user',
-        parts: [
-          {
-            text: prompt,
-          },
-        ],
-      },
-    ];
-    const payload = {
-      contents: chatHistory,
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: 'OBJECT',
-          properties: {
-            briefing_title: {
-              type: 'STRING',
-            },
-            summary: {
-              type: 'STRING',
-            },
-            opportunities: {
-              type: 'ARRAY',
-              items: {
-                type: 'STRING',
-              },
-            },
-            risks: {
-              type: 'ARRAY',
-              items: {
-                type: 'STRING',
-              },
-            },
-            action_suggestion: {
-              type: 'STRING',
-              description:
-                'Tüm bu analizlere dayanarak, adminin bu hafta odaklanması gereken EN ÖNEMLİ tek bir aksiyon önerisi sun.',
-            },
-          },
-          required: ['briefing_title', 'summary', 'opportunities', 'risks', 'action_suggestion'],
-        },
-      },
-    };
-    const apiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!apiKey) throw new Error('GEMINI_API_KEY bulunamadı.');
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    const response = await fetch(apiUrl, {
+
+    const apiKey = Deno.env.get('XAI_API_KEY');
+    if (!apiKey) throw new Error('XAI_API_KEY bulunamadı. Lütfen Supabase secrets olarak ekleyin.');
+
+    const response = await fetch(GROK_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        model: GROK_MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+        response_format: { type: 'json_object' },
+      }),
     });
+
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(`Gemini API Hatası: ${errorBody}`);
+      throw new Error(`Grok API Hatası: ${response.status} - ${errorBody}`);
     }
+
     const result = await response.json();
-    const analysisResult = JSON.parse(result.candidates[0].content.parts[0].text);
+    const content = result.choices?.[0]?.message?.content;
+    if (!content) throw new Error('Grok API boş yanıt döndü');
+
+    const analysisResult = JSON.parse(content);
+
+    // Validate required fields
+    if (!analysisResult.briefing_title || !analysisResult.summary) {
+      throw new Error('Grok yanıtı beklenen formatta değil');
+    }
+
     const { error: insertError } = await supabaseAdmin.from('ai_briefings').insert({
       title: analysisResult.briefing_title,
       summary: analysisResult.summary,
