@@ -1,4 +1,4 @@
-// postcss.config.js (v3 Uyumlu Hali)
+// postcss.config.js (Tailwind v3 uyumlu)
 module.exports = {
   plugins: {
     tailwindcss: {},

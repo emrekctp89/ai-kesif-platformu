@@ -19,7 +19,7 @@ installSerwist({
   },
 });
 
-// Mevcut push notification yapısı
+// Mevcut push notification yapısı.
 self.addEventListener('push', function (event) {
   let data = {};
   try {

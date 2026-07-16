@@ -1,8 +1,3 @@
-/*
- * ---------------------------------------------------
- * GÜNCELLENMİŞ BİLEŞEN: src/components/PushNotificationManager.js
- * ---------------------------------------------------
- */
 'use client';
 
 import * as React from 'react';
@@ -11,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { savePushSubscription, deletePushSubscription } from '@/app/actions';
 import toast from 'react-hot-toast';
 
-// Tarayıcıdan gelen abonelik objesini VAPID anahtarıyla işleyen yardımcı fonksiyon
+// Tarayıcıdan gelen abonelik objesini VAPID anahtarıyla işleyen yardımcı fonksiyon.
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -52,8 +47,6 @@ export function PushNotificationManager({ initialSubscriptionStatus }) {
           applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY),
         });
 
-        // DEĞİŞİKLİK: Sunucuya göndermeden önce, karmaşık objeyi
-        // basit bir JSON objesine dönüştürüyoruz.
         const result = await savePushSubscription(subscription.toJSON());
 
         if (result.success) {
