@@ -1,4 +1,3 @@
-'use server';
 /**
  * Rate Limiter Utility — Basit bellek-tabanlı (in-memory) hız sınırlayıcı.
  *
