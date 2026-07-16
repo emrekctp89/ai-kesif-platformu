@@ -4,6 +4,7 @@ import { HomepageClient } from '@/components/HomepageClient';
 import { FeaturedTools } from '@/components/FeaturedTools';
 import { ToolOfTheDay } from '@/components/ToolOfTheDay';
 import { CategoryGrid } from '@/components/CategoryGrid';
+import { sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { getTranslations } from 'next-intl/server';
 import { getSiteOrigin } from '@/utils/siteUrl';
@@ -34,7 +35,7 @@ async function getPageData(searchParams) {
     user,
     favoriteToolIds,
     initialTools,
-    categories: categoriesResult.data || [],
+    categories: sortCategoriesByCanonicalOrder(categoriesResult.data || []),
     allTags: tagsResult.data || [],
   };
 }

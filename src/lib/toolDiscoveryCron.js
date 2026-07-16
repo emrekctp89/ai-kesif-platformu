@@ -177,13 +177,39 @@ function buildUniqueSlug(name, existingSlugs) {
   return candidate;
 }
 
+function normalizeCategoryLookupKey(value) {
+  return String(value || '')
+    .trim()
+    .toLocaleLowerCase('tr-TR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/&/g, ' ve ')
+    .replace(/[^a-z0-9ğüşöçıİ\s-]/gi, ' ')
+    .replace(/[-\s]+/g, ' ')
+    .trim();
+}
+
+function addCategoryLookupKeys(map, category) {
+  const keys = [
+    category.name,
+    category.slug,
+    String(category.slug || '').replace(/-/g, ' '),
+    String(category.name || '').replace(/&/g, 've'),
+  ];
+
+  for (const key of keys) {
+    const normalized = normalizeCategoryLookupKey(key);
+    if (normalized && !map.has(normalized)) {
+      map.set(normalized, category);
+    }
+  }
+}
+
 function normalizeCandidate(rawCandidate, categoriesByName) {
   const name = normalizeTextField(rawCandidate?.name || '');
   const description = normalizeTextField(rawCandidate?.description || '');
   const normalizedLink = normalizeToolUrl(rawCandidate?.link || '');
-  const requestedCategory = normalizeTextField(rawCandidate?.category || '').toLocaleLowerCase(
-    'tr-TR'
-  );
+  const requestedCategory = normalizeCategoryLookupKey(rawCandidate?.category || '');
 
   if (name.length < 2 || name.length > 80) {
     return { error: 'Araç adı geçersiz.' };
@@ -203,6 +229,7 @@ function normalizeCandidate(rawCandidate, categoriesByName) {
 
   const category =
     categoriesByName.get(requestedCategory) ||
+    categoriesByName.get(requestedCategory.replace(/-/g, ' ')) ||
     categoriesByName.get('yapay zeka') ||
     categoriesByName.get('genel') ||
     categoriesByName.values().next().value;
@@ -543,14 +570,10 @@ export async function runScheduledToolDiscovery(options = {}) {
   if (toolsError) throw new Error(`Mevcut araçlar okunamadı: ${toolsError.message}`);
   if (!categories?.length) throw new Error('Kategori bulunamadı.');
 
-  const categoriesByName = new Map(
-    categories.map((category) => [
-      String(category.name || '')
-        .trim()
-        .toLocaleLowerCase('tr-TR'),
-      category,
-    ])
-  );
+  const categoriesByName = new Map();
+  for (const category of categories) {
+    addCategoryLookupKeys(categoriesByName, category);
+  }
   const existingNames = new Set(
     (existingTools || []).map((tool) =>
       String(tool.name || '')

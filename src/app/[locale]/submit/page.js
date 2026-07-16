@@ -5,11 +5,12 @@ import { createClient } from '@/utils/supabase/server';
 import SubmitForm from '@/components/SubmitForm';
 import { Button } from '@/components/ui/button';
 import { AnalyticsEvent } from '@/components/AnalyticsEvent';
+import { sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
 
 async function getCategories() {
   const supabase = await createClient();
-  const { data } = await supabase.from('categories').select('id, name').order('name');
-  return data || [];
+  const { data } = await supabase.from('categories').select('id, name, slug').order('name');
+  return sortCategoriesByCanonicalOrder(data || []);
 }
 
 export default async function SubmitPage({ searchParams }) {

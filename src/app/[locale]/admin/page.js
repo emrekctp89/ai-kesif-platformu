@@ -5,6 +5,7 @@ import { AdminPageClient } from '@/components/AdminPageClient';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, Database } from 'lucide-react';
+import { sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
 
 export const metadata = {
   title: 'Operasyon Merkezi | AI Keşif Platformu',
@@ -155,7 +156,7 @@ async function getAdminData() {
     unapprovedTools: normalizedUnapprovedTools,
     unapprovedShowcaseItems: unapprovedShowcaseResult.data || [],
     approvedTools: normalizedApprovedTools,
-    categories: categoriesResult.data || [],
+    categories: sortCategoriesByCanonicalOrder(categoriesResult.data || []),
     allTags: tagsResult.data || [],
     allPosts: postsResult.data || [],
     challenges: challengesResult.data || [],

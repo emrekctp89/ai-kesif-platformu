@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { CategoryGrid } from '@/components/CategoryGrid';
+import { sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
 
 export const revalidate = 3600;
 
@@ -17,7 +18,7 @@ async function getCategories() {
     console.error('Kategoriler çekilirken hata:', error);
     return [];
   }
-  return data || [];
+  return sortCategoriesByCanonicalOrder(data || []);
 }
 
 export default async function CategoriesIndexPage() {

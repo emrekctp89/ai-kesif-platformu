@@ -1019,6 +1019,9 @@ const built = buildFromDefs(CATEGORY_DEFS);
 
 export const categoryConfig = built.config;
 export const CATEGORY_SEED = built.seed;
+export const CATEGORY_ORDER = new Map(
+  CATEGORY_SEED.map((category, index) => [category.slug, index])
+);
 
 export const defaultCategoryConfig = {
   icon: LayoutTemplate,
@@ -1035,4 +1038,27 @@ export function getCategoryConfig(slug) {
 
 export function getCategoryCount() {
   return CATEGORY_SEED.length;
+}
+
+function normalizeCategoryValue(value) {
+  return String(value || '')
+    .trim()
+    .toLocaleLowerCase('tr-TR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+export function sortCategoriesByCanonicalOrder(categories = []) {
+  return [...categories].sort((a, b) => {
+    const aOrder = CATEGORY_ORDER.has(a.slug)
+      ? CATEGORY_ORDER.get(a.slug)
+      : Number.MAX_SAFE_INTEGER;
+    const bOrder = CATEGORY_ORDER.has(b.slug)
+      ? CATEGORY_ORDER.get(b.slug)
+      : Number.MAX_SAFE_INTEGER;
+
+    if (aOrder !== bOrder) return aOrder - bOrder;
+
+    return normalizeCategoryValue(a.name).localeCompare(normalizeCategoryValue(b.name), 'tr');
+  });
 }

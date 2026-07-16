@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { HomepageClient } from '@/components/HomepageClient';
-import { getCategoryConfig } from '@/lib/categoryConfig';
+import { getCategoryConfig, sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
 import { getSiteOrigin } from '@/utils/siteUrl';
 
 const siteUrl = getSiteOrigin();
@@ -43,7 +43,7 @@ async function getCategoryPageData(slug) {
       user,
       favoriteToolIds: new Set(favorites?.map((favorite) => favorite.tool_id) || []),
       initialTools,
-      categories: categoriesResult.data || [],
+      categories: sortCategoriesByCanonicalOrder(categoriesResult.data || []),
       allTags: tagsResult.data || [],
     },
   };
