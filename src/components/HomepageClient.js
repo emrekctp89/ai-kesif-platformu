@@ -28,6 +28,16 @@ const quickStarts = [
     label: 'Kodlama aracını bul',
     icon: Code2,
   },
+  {
+    href: '/kategori/otomasyon-ajan',
+    label: 'Otomasyon & ajan kur',
+    icon: Sparkles,
+  },
+  {
+    href: '/kategori',
+    label: 'Tüm kategoriler',
+    icon: WandSparkles,
+  },
 ];
 
 const sortLabels = {

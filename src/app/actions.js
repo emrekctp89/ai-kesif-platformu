@@ -1,6 +1,7 @@
 export * from './actions/auth';
 export * from './actions/tools';
 export * from './actions/categories';
+export * from './actions/seedCategories';
 export * from './actions/content';
 export * from './actions/community';
 export * from './actions/showcase';

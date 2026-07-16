@@ -27,8 +27,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { addCategory, updateCategory, deleteCategory } from '@/app/actions';
+import { addCategory, updateCategory, deleteCategory, seedExpandedCategories } from '@/app/actions';
 import toast from 'react-hot-toast';
+import { Layers } from 'lucide-react';
 
 // Kategori Düzenleme Formu
 function EditCategoryDialog({ category }) {
@@ -124,6 +125,7 @@ function DeleteCategoryButton({ categoryId }) {
 // Ana Kategori Yönetim Bileşeni
 export function CategoryManager({ categories }) {
   const formRef = React.useRef(null);
+  const [isSeeding, startSeed] = React.useTransition();
 
   const handleAddCategory = async (formData) => {
     const result = await addCategory(formData);
@@ -135,11 +137,41 @@ export function CategoryManager({ categories }) {
     }
   };
 
+  const handleSeedCategories = () => {
+    startSeed(async () => {
+      const result = await seedExpandedCategories();
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(result.success || 'Kategoriler güncellendi.');
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
+      <div className="flex flex-col gap-3 rounded-xl border border-indigo-500/20 bg-indigo-950/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="font-semibold text-foreground">Kategori setini genişlet</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            48 kanonik kategoriyi eksik olanları ekleyerek senkronlar. Mevcut kayıtlar korunur.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleSeedCategories}
+          disabled={isSeeding}
+          className="shrink-0"
+        >
+          <Layers className="mr-2 h-4 w-4" />
+          {isSeeding ? 'Ekleniyor…' : 'Eksik kategorileri ekle'}
+        </Button>
+      </div>
+
       {/* Yeni Kategori Ekleme Formu */}
       <div>
-        <h3 className="text-lg font-medium mb-2">Yeni Kategori Ekle</h3>
+        <h3 className="mb-2 text-lg font-medium">Yeni Kategori Ekle</h3>
         <form ref={formRef} action={handleAddCategory} className="flex items-center gap-2">
           <Label htmlFor="new-category-name" className="sr-only">
             Kategori Adı

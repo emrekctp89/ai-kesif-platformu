@@ -1,0 +1,57 @@
+-- Genişletilmiş kategori seti (mevcut slug'lara dokunmaz)
+INSERT INTO public.categories (name, slug)
+SELECT v.name, v.slug
+FROM (
+  VALUES
+    ('Görsel & Video', 'gorsel-video'),
+    ('Görsel Üretim', 'gorsel-uretim'),
+    ('Video Üretim', 'video-uretim'),
+    ('Fotoğraf Düzenleme', 'fotograf-duzenleme'),
+    ('3D Modelleme', '3d-modelleme'),
+    ('Avatar & Dijital İnsan', 'avatar-dijital-insan'),
+    ('Ses & Müzik', 'ses-muzik'),
+    ('Ses Klonlama', 'ses-klonlama'),
+    ('Podcast & Yayın', 'podcast-yayin'),
+    ('Metin Yazarlığı', 'metin-yazarligi'),
+    ('Çeviri & Dil', 'ceviri-dil'),
+    ('Sunum & Doküman', 'sunum-dokuman'),
+    ('Kod & Yazılım', 'kod-yazilim'),
+    ('Geliştirici Araçları', 'gelistirici-araclari'),
+    ('No-Code / Low-Code', 'no-code-low-code'),
+    ('MLOps & Model', 'mlops-model'),
+    ('Veritabanı & Bilgi', 'veritabani-bilgi'),
+    ('Prompt Mühendisliği', 'prompt-muhendisligi'),
+    ('Chatbotlar', 'chatbotlar'),
+    ('Kişisel Asistan', 'kisisel-asistan'),
+    ('Otomasyon & Ajan', 'otomasyon-ajan'),
+    ('Toplantı & Not', 'toplanti-not'),
+    ('Üretkenlik', 'uretkenlik'),
+    ('Bilgi Yönetimi', 'bilgi-yonetimi'),
+    ('Pazarlama', 'pazarlama'),
+    ('Sosyal Medya', 'sosyal-medya'),
+    ('Satış & CRM', 'satis-crm'),
+    ('E-Ticaret', 'e-ticaret'),
+    ('Müşteri Destek', 'musteri-destek'),
+    ('İnsan Kaynakları', 'insan-kaynaklari'),
+    ('İş Dünyası', 'is-dunyasi'),
+    ('Finans & Yatırım', 'finans-yatirim'),
+    ('Hukuk & Uyumluluk', 'hukuk-uyumluluk'),
+    ('Güvenlik & Siber', 'guvenlik-siber'),
+    ('İçerik Moderasyon', 'icerik-moderasyon'),
+    ('Eğitim', 'egitim'),
+    ('Araştırma & Akademik', 'arastirma-akademik'),
+    ('Arama Motoru', 'arama-motoru'),
+    ('Veri Analiz', 'veri-analiz'),
+    ('Tasarım', 'tasarim'),
+    ('Ürün Yönetimi', 'urun-yonetimi'),
+    ('Girişimcilik', 'girisimcilik'),
+    ('Oyun & Eğlence', 'oyun-eglence'),
+    ('Sağlık & Yaşam', 'saglik-yasam'),
+    ('Sağlıklı Yaşam', 'saglikli-yasam'),
+    ('Emlak & İnşaat', 'emlak-insaat'),
+    ('Harita & Konum', 'harita-konum'),
+    ('Diğer', 'diger')
+) AS v(name, slug)
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.categories c WHERE c.slug = v.slug
+);
