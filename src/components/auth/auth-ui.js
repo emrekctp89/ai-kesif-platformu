@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useFormStatus } from 'react-dom';
-import { Bot, Eye, EyeOff, LoaderCircle, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff, LoaderCircle, Lock, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FutureAiGlyph } from '@/components/FutureAiGlyph';
 import { cn } from '@/lib/utils';
 
 export function isSuccessMessage(message) {
@@ -31,7 +32,7 @@ export function AuthBrandLink({ className }) {
         className
       )}
     >
-      <Bot className="h-4 w-4" />
+      <FutureAiGlyph className="h-5 w-5" />
       AI Keşif
     </Link>
   );

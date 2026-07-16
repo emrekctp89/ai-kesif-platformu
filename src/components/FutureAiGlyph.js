@@ -1,30 +1,22 @@
 'use client';
 
+import { useId } from 'react';
+
 export function FutureAiGlyph({ className = 'h-6 w-6' }) {
+  const reactId = useId().replace(/:/g, '');
+  const coreId = `ai-core-gradient-${reactId}`;
+  const orbitId = `ai-orbit-gradient-${reactId}`;
+
   return (
     <span className={`relative inline-flex ${className}`} aria-hidden="true">
       <svg viewBox="0 0 48 48" className="h-full w-full">
         <defs>
-          <linearGradient
-            id="ai-core-gradient"
-            x1="6"
-            y1="42"
-            x2="42"
-            y2="6"
-            gradientUnits="userSpaceOnUse"
-          >
+          <linearGradient id={coreId} x1="6" y1="42" x2="42" y2="6" gradientUnits="userSpaceOnUse">
             <stop offset="0" stopColor="#22d3ee" />
             <stop offset="0.45" stopColor="#818cf8" />
             <stop offset="1" stopColor="#f472b6" />
           </linearGradient>
-          <linearGradient
-            id="ai-orbit-gradient"
-            x1="8"
-            y1="8"
-            x2="40"
-            y2="40"
-            gradientUnits="userSpaceOnUse"
-          >
+          <linearGradient id={orbitId} x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse">
             <stop offset="0" stopColor="#67e8f9" />
             <stop offset="1" stopColor="#a78bfa" />
           </linearGradient>
@@ -35,14 +27,14 @@ export function FutureAiGlyph({ className = 'h-6 w-6' }) {
           cy="24"
           r="18.5"
           fill="none"
-          stroke="url(#ai-orbit-gradient)"
+          stroke={`url(#${orbitId})`}
           strokeWidth="1.7"
           opacity="0.65"
         />
         <path
           d="M10 25.2c5.9-3.6 10.6-6 14-7.2 4.1-1.4 8.1-1.2 14 .8"
           fill="none"
-          stroke="url(#ai-orbit-gradient)"
+          stroke={`url(#${orbitId})`}
           strokeLinecap="round"
           strokeWidth="1.4"
           opacity="0.7"
@@ -50,14 +42,14 @@ export function FutureAiGlyph({ className = 'h-6 w-6' }) {
         <path
           d="M15.2 36.2c2.8-5.1 5.6-8.8 8.8-11.6 3.1-2.8 6.8-4.9 12.7-6.8"
           fill="none"
-          stroke="url(#ai-orbit-gradient)"
+          stroke={`url(#${orbitId})`}
           strokeLinecap="round"
           strokeWidth="1.2"
           opacity="0.55"
         />
 
         <g
-          stroke="url(#ai-core-gradient)"
+          stroke={`url(#${coreId})`}
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="2.1"

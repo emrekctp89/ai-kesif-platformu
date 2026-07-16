@@ -1,25 +1,9 @@
 import { NextResponse } from 'next/server';
 import { enrichExistingTools } from '@/lib/existingToolEnrichment';
-
-function getBooleanParam(searchParams, key, fallback = false) {
-  const value = searchParams.get(key);
-  if (value === null) return fallback;
-  return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
-}
-
-function isAuthorized(request) {
-  const configuredSecret = process.env.CRON_SECRET;
-  if (!configuredSecret) return false;
-
-  const authHeader = request.headers.get('authorization') || '';
-  const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice('Bearer '.length) : '';
-  const querySecret = new URL(request.url).searchParams.get('secret') || '';
-
-  return bearer === configuredSecret || querySecret === configuredSecret;
-}
+import { getBooleanParam, isCronAuthorized } from '@/utils/cron';
 
 export async function GET(request) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request, { allowQuerySecret: true })) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Bot, Quote, Sparkles } from 'lucide-react';
+import { Bot, Quote } from 'lucide-react';
+import { FutureAiGlyph } from '@/components/FutureAiGlyph';
 
 const quotes = [
   {
@@ -75,7 +76,7 @@ export default function ScrollingQuotes() {
 
       <div className="relative z-10 flex w-full max-w-lg flex-col gap-10 px-10 py-12 text-white">
         <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide backdrop-blur-sm">
-          <Sparkles className="h-3.5 w-3.5" />
+          <FutureAiGlyph className="h-4 w-4" />
           AI Keşif Platformu
         </div>
 

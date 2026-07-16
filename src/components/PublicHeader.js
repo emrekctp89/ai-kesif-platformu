@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from './ui/button';
-import { Logo } from './Logo';
+import { FutureAiGlyph } from './FutureAiGlyph';
 
 export function PublicHeader() {
   return (
@@ -11,7 +11,7 @@ export function PublicHeader() {
       <div className="container flex h-16 items-center">
         <div className="mr-4 flex">
           <Link href="/" className="flex items-center space-x-2">
-            <Logo />
+            <FutureAiGlyph className="h-7 w-7" />
             <span className="font-bold text-lg">AI Keşif</span>
           </Link>
         </div>

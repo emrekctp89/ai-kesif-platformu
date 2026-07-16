@@ -1,34 +1,13 @@
 import { NextResponse } from 'next/server';
 import { runScheduledLinkAudit } from '@/lib/linkAuditCron';
+import { getIntegerParam, isCronAuthorized } from '@/utils/cron';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-function isAuthorized(request) {
-  const secret = process.env.CRON_SECRET;
-
-  if (!secret) {
-    return process.env.NODE_ENV !== 'production';
-  }
-
-  const authorization = request.headers.get('authorization') || '';
-  const bearerToken = authorization.startsWith('Bearer ')
-    ? authorization.slice('Bearer '.length)
-    : '';
-
-  return bearerToken === secret;
-}
-
-function getIntegerParam(searchParams, name) {
-  const value = searchParams.get(name);
-  if (!value) return undefined;
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) ? parsed : undefined;
-}
-
 export async function GET(request) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

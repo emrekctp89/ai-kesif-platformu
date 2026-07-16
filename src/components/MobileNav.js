@@ -27,6 +27,7 @@ import {
   Rss,
   Users,
 } from 'lucide-react';
+import { FutureAiGlyph } from '@/components/FutureAiGlyph';
 
 export function MobileNav({ user, isProUser }) {
   const [open, setOpen] = React.useState(false);
@@ -66,7 +67,7 @@ export function MobileNav({ user, isProUser }) {
           className="mr-6 mb-8 flex items-center space-x-2"
           onClick={() => setOpen(false)}
         >
-          <Bot className="h-6 w-6 text-primary" />
+          <FutureAiGlyph className="h-7 w-7" />
           <span className="font-bold">AI Keşif</span>
         </Link>
         <div className="flex flex-col gap-2">

@@ -1,40 +1,13 @@
 import { NextResponse } from 'next/server';
 import { runScheduledToolDiscovery } from '@/lib/toolDiscoveryCron';
+import { getBooleanParam, getIntegerParam, isCronAuthorized } from '@/utils/cron';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-function isAuthorized(request) {
-  const secret = process.env.CRON_SECRET;
-
-  if (!secret) {
-    return process.env.NODE_ENV !== 'production';
-  }
-
-  const authorization = request.headers.get('authorization') || '';
-  const bearerToken = authorization.startsWith('Bearer ')
-    ? authorization.slice('Bearer '.length)
-    : '';
-  const secretParam = new URL(request.url).searchParams.get('secret');
-
-  return bearerToken === secret || secretParam === secret;
-}
-
-function getIntegerParam(searchParams, name) {
-  const value = searchParams.get(name);
-  if (!value) return undefined;
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) ? parsed : undefined;
-}
-
-function getBooleanParam(searchParams, name) {
-  const value = searchParams.get(name);
-  return value === '1' || value === 'true';
-}
-
 export async function GET(request) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request, { allowQuerySecret: true })) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
