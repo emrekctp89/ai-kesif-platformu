@@ -15,11 +15,10 @@ const eslintConfig = [
       '.next/**',
       'node_modules/**',
       'public/**',
-      // ESLint 9 flat config .eslintignore dosyasını okumaz;
-      // eski hariç tutmalar buraya taşındı.
+      // ESLint 9 flat config does not read .eslintignore;
+      // keep legacy exclusions here.
       'e2e/**',
       'playwright.config.js',
-      'playwright.config.ts',
     ],
   },
   ...compat.extends('next/core-web-vitals'),
