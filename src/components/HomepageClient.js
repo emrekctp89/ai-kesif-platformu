@@ -187,30 +187,31 @@ export function HomepageClient({
 
   return (
     <div className="space-y-8 sm:space-y-12">
-      {/* Üst Başlık ve Arama/Filtre Kontrolleri */}
+      {/* Üst Başlık ve Arama/Filtre Kontrolleri — kompakt sticky bar */}
       <div
-        className="sticky top-16 z-40 border-b px-3 py-2 text-center sm:px-4 sm:py-5 md:py-7
+        className="sticky top-16 z-40 border-b px-3 py-2 text-center sm:px-4 sm:py-2.5
              bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
         {customHeader ? (
-          customHeader
+          <div className="mb-2">{customHeader}</div>
         ) : (
-          <>
-            <h1
-              id="tools-page-title"
-              className="text-xl font-bold tracking-tight text-foreground sm:text-3xl md:text-4xl"
-            >
-              {pageTitle}
-            </h1>
-            <p className="mx-auto mt-1 hidden max-w-xl text-sm text-muted-foreground sm:block sm:mt-2 sm:text-base">
-              {pageDescription}
-            </p>
-          </>
+          <h1
+            id="tools-page-title"
+            className="truncate text-base font-bold tracking-tight text-foreground sm:text-lg"
+          >
+            {pageTitle}
+          </h1>
         )}
+        {/* Açıklama sticky bar dışında; yer kaplamasın diye sr-only */}
+        {!customHeader ? (
+          <p id="tools-page-description" className="sr-only">
+            {pageDescription}
+          </p>
+        ) : null}
 
         {showControls && (
-          <div className="mt-2 grid grid-cols-2 items-stretch justify-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 sm:mt-4 sm:flex sm:items-center sm:gap-3 md:mt-6">
-            <div className="col-span-2 sm:col-span-1 sm:min-w-80 sm:flex-1">
+          <div className="mt-1.5 grid grid-cols-2 items-center justify-center gap-1.5 animate-in fade-in duration-200 sm:mt-2 sm:flex sm:gap-2">
+            <div className="col-span-2 sm:col-span-1 sm:min-w-0 sm:max-w-xl sm:flex-1">
               <SearchInput key={searchParams.get('search') || 'empty-search'} />
             </div>
             <FilterSheet
@@ -220,13 +221,14 @@ export function HomepageClient({
             />
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setShowDiscovery(!showDiscovery)}
-              className="brand-gradient h-9 w-full group shadow-xl sm:h-10 sm:w-auto"
+              className="brand-gradient h-8 w-full px-3 text-xs group shadow-md sm:h-9 sm:w-auto sm:text-sm"
             >
               {showDiscovery ? (
-                <X className="mr-2 h-4 w-4" />
+                <X className="mr-1.5 h-3.5 w-3.5" />
               ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
+                <Sparkles className="mr-1.5 h-3.5 w-3.5" />
               )}
               {showDiscovery ? 'Keşfi Gizle' : 'Keşfet'}
             </Button>

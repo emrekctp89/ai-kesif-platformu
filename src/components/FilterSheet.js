@@ -106,7 +106,11 @@ export function FilterSheet({ categories, allTags, fixedSearchParams }) {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" className="h-9 w-full sm:h-10 sm:w-auto">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 w-full px-3 text-xs sm:h-9 sm:w-auto sm:text-sm"
+        >
           <Filter className="mr-2 h-4 w-4" />
           Filtrele
           {appliedFilterCount > 0 && (

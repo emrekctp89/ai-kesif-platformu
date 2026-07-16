@@ -131,7 +131,7 @@ export function SearchInput() {
       <div className="relative">
         <Search
           aria-hidden="true"
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground sm:left-3 sm:h-4 sm:w-4"
         />
         <Input
           id="tool-search"
@@ -139,8 +139,8 @@ export function SearchInput() {
           role="combobox"
           autoComplete="off"
           enterKeyHint="search"
-          placeholder="Ne yapmak istiyorsunuz? Örn. video oluşturma"
-          className="block h-10 w-full rounded-xl border border-input bg-background/80 py-2 pl-10 pr-10 text-sm shadow-sm backdrop-blur-sm transition-all duration-300 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 focus:shadow-[0_0_15px_rgba(var(--primary),0.3)] sm:h-12 sm:py-3 sm:pl-11 sm:text-base"
+          placeholder="Araç ara… örn. video, kod, ses"
+          className="block h-9 w-full rounded-lg border border-input bg-background/80 py-1.5 pl-9 pr-9 text-sm shadow-sm backdrop-blur-sm transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 sm:h-9 sm:pl-10"
           value={searchTerm}
           onChange={handleChange}
           onKeyDown={(event) => {
