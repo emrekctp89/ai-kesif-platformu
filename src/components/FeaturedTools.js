@@ -42,9 +42,13 @@ export async function FeaturedTools() {
         {featuredTools.map((tool, index) => (
           <Card
             key={tool.id ?? tool.slug ?? `featured-${index}`}
-            className="h-full border-none bg-gradient-to-r from-[#7F00FF] via-[#00BFFF] to-[#FF1493] text-white shadow-lg"
+            className="group relative h-full overflow-hidden border border-indigo-500/20 bg-slate-950 text-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgb(99,102,241,0.2)]"
           >
-            <CardContent className="flex h-full flex-col p-6">
+            {/* Arka plan parlama efektleri (Aurora efekti) */}
+            <div className="absolute -left-12 -top-12 h-32 w-32 rounded-full bg-indigo-600/30 blur-3xl transition-all duration-500 group-hover:bg-indigo-500/40" />
+            <div className="absolute -bottom-12 -right-12 h-32 w-32 rounded-full bg-purple-600/30 blur-3xl transition-all duration-500 group-hover:bg-purple-500/40" />
+
+            <CardContent className="relative z-10 flex h-full flex-col p-6">
               <div>
                 {tool.tier && (
                   <Badge variant="secondary" className="mb-3">

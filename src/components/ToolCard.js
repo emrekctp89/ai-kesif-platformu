@@ -58,10 +58,16 @@ export default function ToolCard({ tool }) {
 
   if (!tool || !tool.name) return null;
 
-  const isPremium = tool.tier === 'Pro' || tool.tier === 'Sponsorlu' || tool.is_promoted;
+  const isPremium =
+    tool.tier === 'Pro' || tool.tier === 'Sponsorlu' || tool.is_promoted || tool.is_featured;
 
   const getBadgeStyle = () => {
     if (tool.is_promoted || tool.tier === 'Sponsorlu') return tierStyles['Sponsorlu'];
+    if (tool.is_featured)
+      return {
+        badge: 'bg-indigo-500/20 text-indigo-200 border border-indigo-500/30 backdrop-blur-sm',
+        icon: <Star className="w-4 h-4 mr-1.5 text-indigo-400" />,
+      };
     if (tool.tier === 'Pro') return tierStyles['Pro'];
     return {
       badge: 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white',
@@ -72,6 +78,7 @@ export default function ToolCard({ tool }) {
   const getBadgeText = () => {
     if (tool.is_promoted) return tc('promoted');
     if (tool.tier === 'Sponsorlu') return tc('promoted');
+    if (tool.is_featured) return 'Öne Çıkan';
     if (tool.tier === 'Pro') return tc('pro');
     return tool.tier;
   };
@@ -83,12 +90,14 @@ export default function ToolCard({ tool }) {
       className={cn(
         'glow-effect relative block p-6 rounded-xl border shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer overflow-hidden group',
         {
+          'border-indigo-500/40 shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:border-indigo-400 hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] bg-slate-950 text-white':
+            tool.is_featured && !tool.is_promoted && tool.tier !== 'Sponsorlu',
           'border-purple-500/40 shadow-purple-500/20 hover:border-purple-400/60 bg-card':
-            tool.tier === 'Pro' && !tool.is_promoted,
+            tool.tier === 'Pro' && !tool.is_promoted && !tool.is_featured,
           'border-amber-500/40 shadow-amber-500/20 hover:border-amber-400/60 bg-card':
             tool.tier === 'Sponsorlu' || tool.is_promoted,
           'border-border/50 shadow-sm glass-panel hover:border-primary/30':
-            !tool.tier && !tool.is_promoted,
+            !tool.tier && !tool.is_promoted && !tool.is_featured,
         }
       )}
     >
