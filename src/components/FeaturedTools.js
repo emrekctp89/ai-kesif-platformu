@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
 import ToolIcon from '@/components/ToolIcon';
 import { TrackedExternalLink } from '@/components/TrackedExternalLink';
 
@@ -42,15 +43,26 @@ export async function FeaturedTools() {
         {featuredTools.map((tool, index) => (
           <Card
             key={tool.id ?? tool.slug ?? `featured-${index}`}
-            className="brand-gradient-flow h-full shadow-lg"
+            className="group relative h-full overflow-hidden border border-indigo-500/20 bg-slate-950 text-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgb(99,102,241,0.2)]"
           >
-            <CardContent className="flex h-full flex-col p-6">
+            {/* Aurora / cam efekt katmanları */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-indigo-600/25 via-slate-950 to-purple-900/40" />
+            <div className="absolute -left-12 -top-12 h-32 w-32 rounded-full bg-indigo-600/30 blur-3xl transition-all duration-500 group-hover:bg-indigo-500/40" />
+            <div className="absolute -bottom-12 -right-12 h-32 w-32 rounded-full bg-purple-600/30 blur-3xl transition-all duration-500 group-hover:bg-purple-500/40" />
+
+            <CardContent className="relative z-10 flex h-full flex-col p-6">
               <div>
-                {tool.tier && (
-                  <Badge variant="secondary" className="mb-3">
-                    {tool.tier}
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/15">
+                    <Sparkles className="mr-1 h-3.5 w-3.5" />
+                    Öne Çıkan
                   </Badge>
-                )}
+                  {tool.tier ? (
+                    <Badge variant="secondary" className="bg-white/15 text-white hover:bg-white/20">
+                      {tool.tier}
+                    </Badge>
+                  ) : null}
+                </div>
                 <Link href={`/tool/${tool.slug}`} prefetch={false}>
                   <h3 className="flex items-center gap-2 text-lg font-semibold hover:underline">
                     <ToolIcon
@@ -72,7 +84,12 @@ export async function FeaturedTools() {
                   {tool.category_name}
                 </Link>
                 {tool.link && (
-                  <Button asChild size="sm" variant="secondary">
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="secondary"
+                    className="bg-white text-slate-950 hover:bg-white/90"
+                  >
                     <TrackedExternalLink
                       href={tool.link}
                       target="_blank"

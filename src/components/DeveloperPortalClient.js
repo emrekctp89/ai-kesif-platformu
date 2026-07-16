@@ -91,6 +91,42 @@ export function DeveloperPortalClient() {
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
+      {/* API Documentation Section */}
+      <Card className="bg-primary/5 border-primary/20">
+        <CardHeader>
+          <CardTitle>API Dokümantasyonu</CardTitle>
+          <CardDescription>
+            AI Keşif Platformu verilerine programatik olarak erişin. Tüm isteklerde{' '}
+            <code className="text-xs bg-muted px-1 py-0.5 rounded">
+              Authorization: Bearer aik_...
+            </code>{' '}
+            başlığı zorunludur.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-muted p-4 rounded-md">
+            <p className="font-semibold text-sm mb-2">Örnek İstek (Araçları Listeleme)</p>
+            <pre className="text-sm bg-card p-3 rounded border overflow-x-auto">
+              <code>
+                {`curl -X GET "https://api.aikesif.com/v1/tools?page=1&limit=10" \\
+  -H "Authorization: Bearer SİZİN_API_ANAHTARINIZ"`}
+              </code>
+            </pre>
+          </div>
+          <div className="flex gap-2 items-start bg-orange-100 dark:bg-orange-950/30 text-orange-800 dark:text-orange-300 p-3 rounded-md text-sm">
+            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold">Kullanım Limitleri (Rate Limits)</p>
+              <p>
+                Adil kullanım politikası gereği, API istekleri <b>dakikada 30 istek</b> ile
+                sınırlandırılmıştır. Limiti aştığınızda <code>429 Too Many Requests</code> hatası
+                alırsınız.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Yeni API Anahtarı Oluştur</CardTitle>

@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { HomepageClient } from '@/components/HomepageClient';
 import { FeaturedTools } from '@/components/FeaturedTools';
 import { ToolOfTheDay } from '@/components/ToolOfTheDay';
+import { CategoryGrid } from '@/components/CategoryGrid';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { getTranslations } from 'next-intl/server';
 import { getSiteOrigin } from '@/utils/siteUrl';
@@ -52,6 +53,7 @@ export default async function HomePage(props) {
   // Keys: RSC → Client prop geçişinde React list uyarısını önler.
   const discoverySections = (
     <div key="discovery-sections" className="space-y-12">
+      <CategoryGrid key="category-grid" categories={initialData.categories} />
       <ToolOfTheDay key="tool-of-the-day" />
       <FeaturedTools key="featured-tools" />
       <SpeedInsights key="speed-insights" />

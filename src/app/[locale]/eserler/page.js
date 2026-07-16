@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Code, Image as ImageIcon } from 'lucide-react';
 import { ShowcaseGallery } from '@/components/ShowcaseGallery';
 import { ShowcaseFilters } from '@/components/ShowcaseFilters'; // Yeni filtre bileşenini import ediyoruz
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { unstable_cache } from 'next/cache';
 
 // Fonksiyon artık filtre parametrelerini alıyor
 async function getPublicShowcaseItems(searchParams) {
@@ -27,20 +29,31 @@ async function getPublicShowcaseItems(searchParams) {
   return data;
 }
 
-// Filtre menüsü için tüm araçları çeken fonksiyon
-async function getAllToolsForSelect() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('tools')
-    .select('id, name')
-    .eq('is_approved', true)
-    .order('name');
-  if (error) {
-    console.error('Filtre için araçlar çekilirken hata:', error);
-    return [];
-  }
-  return data;
-}
+// Supabase client without cookies for static caching
+const getSupabase = () =>
+  createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+// Filtre menüsü için tüm araçları çeken fonksiyon (Önbellekli)
+const getAllToolsForSelect = unstable_cache(
+  async () => {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('tools')
+      .select('id, name')
+      .eq('is_approved', true)
+      .order('name');
+    if (error) {
+      console.error('Filtre için araçlar çekilirken hata:', error);
+      return [];
+    }
+    return data;
+  },
+  ['all-tools-for-showcase-filter'],
+  { revalidate: 3600 }
+);
 
 async function getCurrentUser() {
   const supabase = await createClient();

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { HomepageClient } from '@/components/HomepageClient';
+import { getCategoryConfig } from '@/lib/categoryConfig';
 import { getSiteOrigin } from '@/utils/siteUrl';
 
 const siteUrl = getSiteOrigin();
@@ -59,8 +60,11 @@ export async function generateMetadata({ params }) {
     };
   }
 
+  const config = getCategoryConfig(category.slug);
   const title = `${category.name} Yapay Zeka Araçları`;
-  const description = `${category.name} kategorisindeki güncel yapay zeka araçlarını keşfedin, özelliklerini inceleyin ve ihtiyacınıza uygun çözümü bulun.`;
+  const description =
+    config.description ||
+    `${category.name} kategorisindeki güncel yapay zeka araçlarını keşfedin, özelliklerini inceleyin ve ihtiyacınıza uygun çözümü bulun.`;
   const pageUrl = `${siteUrl}/kategori/${category.slug}`;
   const ogImageUrl = `${siteUrl}/opengraph-image`;
 
@@ -101,8 +105,12 @@ export default async function CategoryPage({ params }) {
   if (!pageData) notFound();
 
   const { category, initialData } = pageData;
+  const config = getCategoryConfig(category.slug);
+  const Icon = config.icon;
   const title = `${category.name} Yapay Zeka Araçları`;
-  const description = `${category.name} alanındaki araçları karşılaştırın ve işinize en uygun yapay zeka çözümünü keşfedin.`;
+  const description =
+    config.description ||
+    `${category.name} alanındaki araçları karşılaştırın ve işinize en uygun yapay zeka çözümünü keşfedin.`;
   const categoryUrl = `${siteUrl}/kategori/${category.slug}`;
 
   const structuredData = {
@@ -147,6 +155,27 @@ export default async function CategoryPage({ params }) {
     ],
   };
 
+  const customHeader = (
+    <div className="flex flex-col items-center justify-center space-y-4 pb-2">
+      <div
+        className={`rounded-2xl border bg-background p-4 shadow-lg ${config.border} shadow-${config.color}-500/10`}
+      >
+        <Icon className={`h-10 w-10 ${config.text}`} />
+      </div>
+      <div>
+        <h1
+          id="tools-page-title"
+          className="text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl"
+        >
+          {category.name} <span className="font-light text-muted-foreground">Araçları</span>
+        </h1>
+        <p className="mx-auto mt-3 max-w-2xl text-base text-muted-foreground sm:text-lg">
+          {config.description}
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <script
@@ -162,6 +191,7 @@ export default async function CategoryPage({ params }) {
         pageTitle={title}
         pageDescription={description}
         discoverySections={null}
+        customHeader={customHeader}
       />
     </>
   );

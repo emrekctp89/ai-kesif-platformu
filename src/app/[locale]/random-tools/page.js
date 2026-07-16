@@ -24,6 +24,8 @@ export const metadata = {
   description: 'Sizin için özel olarak seçilmiş rastgele yapay zeka araçlarını keşfedin.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function RandomToolsPage() {
   const randomTools = await getThreeRandomTools();
 

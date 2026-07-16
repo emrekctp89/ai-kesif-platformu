@@ -25,6 +25,8 @@ export const metadata = {
   description: 'Platforma en çok katkıda bulunan, en itibarlı kullanıcıları keşfedin.',
 };
 
+export const revalidate = 3600; // 1 hour ISR caching
+
 export default async function LeaderboardPage() {
   const topUsers = await getTopUsers();
 

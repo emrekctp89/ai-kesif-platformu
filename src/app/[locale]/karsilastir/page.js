@@ -1,4 +1,5 @@
-import { createClient } from '@/utils/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { unstable_cache } from 'next/cache';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,54 +7,84 @@ import { Star } from 'lucide-react';
 import { ToolSelectForComparison } from '@/components/ToolSelectForComparison';
 import { AiComparison } from '@/components/AiComparison';
 
-// URL'den gelen araç slug'larına göre verileri çeken fonksiyon
-async function getComparisonData(toolSlugs) {
-  if (!toolSlugs || toolSlugs.length === 0) {
-    return [];
+// Supabase client without cookies for static caching
+const getSupabase = () =>
+  createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+// URL'den gelen araç slug'larına göre verileri çeken fonksiyon (Önbellekli)
+const getCachedComparisonData = unstable_cache(
+  async (toolSlugs) => {
+    if (!toolSlugs || toolSlugs.length === 0) {
+      return [];
+    }
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('tools_with_ratings')
+      .select('*')
+      .in('slug', toolSlugs);
+
+    if (error) {
+      console.error('Karşılaştırma verisi çekilirken hata:', error);
+      return [];
+    }
+    return toolSlugs.map((slug) => data.find((tool) => tool.slug === slug)).filter(Boolean);
+  },
+  ['comparison-data-cache'],
+  { revalidate: 3600 }
+);
+
+// Tüm araçları seçme menüsü için çeken fonksiyon (Önbellekli)
+const getCachedAllToolsForSelect = unstable_cache(
+  async () => {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('tools')
+      .select('name, slug')
+      .eq('is_approved', true)
+      .order('name');
+
+    if (error) {
+      console.error('Tüm araçlar çekilirken hata:', error);
+      return [];
+    }
+    return data;
+  },
+  ['all-tools-select-cache'],
+  { revalidate: 3600 }
+);
+
+// Dinamik SEO Metadata
+export async function generateMetadata(props) {
+  const searchParams = await props.searchParams;
+  const toolSlugs = searchParams.tools ? searchParams.tools.split(',') : [];
+
+  if (toolSlugs.length > 0) {
+    const tools = await getCachedComparisonData(toolSlugs);
+    if (tools.length > 0) {
+      const toolNames = tools.map((t) => t.name).join(' vs ');
+      return {
+        title: `${toolNames} Karşılaştırması | AI Keşif Platformu`,
+        description: `${toolNames} yapay zeka araçlarını özelliklerine, fiyatlarına ve puanlarına göre yan yana karşılaştırın.`,
+      };
+    }
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('tools_with_ratings')
-    .select('*')
-    .in('slug', toolSlugs);
-
-  if (error) {
-    console.error('Karşılaştırma verisi çekilirken hata:', error);
-    return [];
-  }
-
-  return toolSlugs.map((slug) => data.find((tool) => tool.slug === slug)).filter(Boolean);
+  return {
+    title: 'Araçları Karşılaştır | AI Keşif Platformu',
+    description:
+      'Yapay zeka araçlarını yan yana karşılaştırarak ihtiyaçlarınıza en uygun olanı bulun.',
+  };
 }
-
-// Tüm araçları seçme menüsü için çeken fonksiyon
-async function getAllToolsForSelect() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('tools')
-    .select('name, slug')
-    .eq('is_approved', true)
-    .order('name');
-
-  if (error) {
-    console.error('Tüm araçlar çekilirken hata:', error);
-    return [];
-  }
-  return data;
-}
-
-export const metadata = {
-  title: 'Araçları Karşılaştır | AI Keşif Platformu',
-  description:
-    'Yapay zeka araçlarını yan yana karşılaştırarak ihtiyaçlarınıza en uygun olanı bulun.',
-};
 
 export default async function ComparePage(props) {
   const searchParams = await props.searchParams;
   const toolSlugs = searchParams.tools ? searchParams.tools.split(',') : [];
   const [comparedTools, allTools] = await Promise.all([
-    getComparisonData(toolSlugs),
-    getAllToolsForSelect(),
+    getCachedComparisonData(toolSlugs),
+    getCachedAllToolsForSelect(),
   ]);
 
   return (

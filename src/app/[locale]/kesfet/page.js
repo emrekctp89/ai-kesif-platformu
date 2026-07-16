@@ -38,6 +38,8 @@ export const metadata = {
     'Yapay zeka dünyasındaki en son araçları, popüler eserleri, blog yazılarını ve daha fazlasını keşfedin.',
 };
 
+export const revalidate = 3600; // 1 hour ISR caching
+
 export default async function DiscoverPage() {
   const discoverData = await getDiscoverData();
 
