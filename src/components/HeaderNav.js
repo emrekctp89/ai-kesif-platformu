@@ -35,6 +35,12 @@ export function HeaderNav({
           {t('home')}
         </Link>
         <Link
+          href="/kategori"
+          className="text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Kategoriler
+        </Link>
+        <Link
           href="/kesfet"
           className="text-muted-foreground transition-colors hover:text-foreground"
         >
@@ -45,6 +51,12 @@ export function HeaderNav({
           className="text-muted-foreground transition-colors hover:text-foreground"
         >
           {t('compare')}
+        </Link>
+        <Link
+          href="/topluluk"
+          className="hidden text-muted-foreground transition-colors hover:text-foreground lg:inline"
+        >
+          Topluluk
         </Link>
         <Link
           href="/blog"

@@ -3,6 +3,7 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { slugify } from '@/utils/slugify';
 import { embedGeminiText } from '@/utils/gemini';
 import { getSiteOrigin } from '@/utils/siteUrl';
+import { buildCategoryLookupMap, normalizeCategoryLookupKey } from '@/lib/categoryLookup';
 import {
   inferPlatformsFromLink,
   inferPricingModel,
@@ -175,34 +176,6 @@ function buildUniqueSlug(name, existingSlugs) {
 
   existingSlugs.add(candidate);
   return candidate;
-}
-
-function normalizeCategoryLookupKey(value) {
-  return String(value || '')
-    .trim()
-    .toLocaleLowerCase('tr-TR')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/&/g, ' ve ')
-    .replace(/[^a-z0-9ğüşöçıİ\s-]/gi, ' ')
-    .replace(/[-\s]+/g, ' ')
-    .trim();
-}
-
-function addCategoryLookupKeys(map, category) {
-  const keys = [
-    category.name,
-    category.slug,
-    String(category.slug || '').replace(/-/g, ' '),
-    String(category.name || '').replace(/&/g, 've'),
-  ];
-
-  for (const key of keys) {
-    const normalized = normalizeCategoryLookupKey(key);
-    if (normalized && !map.has(normalized)) {
-      map.set(normalized, category);
-    }
-  }
 }
 
 function normalizeCandidate(rawCandidate, categoriesByName) {
@@ -570,10 +543,7 @@ export async function runScheduledToolDiscovery(options = {}) {
   if (toolsError) throw new Error(`Mevcut araçlar okunamadı: ${toolsError.message}`);
   if (!categories?.length) throw new Error('Kategori bulunamadı.');
 
-  const categoriesByName = new Map();
-  for (const category of categories) {
-    addCategoryLookupKeys(categoriesByName, category);
-  }
+  const categoriesByName = buildCategoryLookupMap(categories);
   const existingNames = new Set(
     (existingTools || []).map((tool) =>
       String(tool.name || '')

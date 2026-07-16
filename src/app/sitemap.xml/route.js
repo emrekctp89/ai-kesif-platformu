@@ -22,12 +22,23 @@ export async function GET() {
   const generatedAt = new Date().toISOString();
   const urls = [
     { url: withBase('/'), lastModified: generatedAt },
+    { url: withBase('/kategori'), lastModified: generatedAt },
+    { url: withBase('/kesfet'), lastModified: generatedAt },
+    { url: withBase('/karsilastir'), lastModified: generatedAt },
     { url: withBase('/tavsiye'), lastModified: generatedAt },
+    { url: withBase('/blog'), lastModified: generatedAt },
+    { url: withBase('/eserler'), lastModified: generatedAt },
+    { url: withBase('/koleksiyonlar'), lastModified: generatedAt },
+    { url: withBase('/topluluk'), lastModified: generatedAt },
+    { url: withBase('/leaderboard'), lastModified: generatedAt },
+    { url: withBase('/ogren'), lastModified: generatedAt },
+    { url: withBase('/random-tools'), lastModified: generatedAt },
     { url: withBase('/hakkimizda'), lastModified: generatedAt },
     { url: withBase('/iletisim'), lastModified: generatedAt },
     { url: withBase('/gizlilik'), lastModified: generatedAt },
     { url: withBase('/kullanim-kosullari'), lastModified: generatedAt },
     { url: withBase('/submit'), lastModified: generatedAt },
+    { url: withBase('/developer'), lastModified: generatedAt },
   ];
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {

@@ -13,7 +13,18 @@ import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from './ui/badge';
 import { signOut } from '@/app/actions';
-import { User, PlusCircle, LogOut, Sparkles, Crown, Database, Rss } from 'lucide-react';
+import {
+  User,
+  PlusCircle,
+  LogOut,
+  Sparkles,
+  Crown,
+  Database,
+  Rss,
+  LayoutGrid,
+  Trophy,
+  Users,
+} from 'lucide-react';
 
 // Bu bileşen, Header'dan gelen kullanıcı bilgilerini kullanarak menüyü oluşturur.
 export function UserNav({ user, profile, isProUser, isAdmin }) {
@@ -53,6 +64,24 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
           <Link href="/akis">
             <Rss className="mr-2 h-4 w-4" />
             <span>Akışım</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/kategori">
+            <LayoutGrid className="mr-2 h-4 w-4" />
+            <span>Kategoriler</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/topluluk">
+            <Users className="mr-2 h-4 w-4" />
+            <span>Topluluk</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/leaderboard">
+            <Trophy className="mr-2 h-4 w-4" />
+            <span>Liderlik</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>

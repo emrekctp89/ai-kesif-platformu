@@ -16,19 +16,16 @@ const withSerwist = require('@serwist/next').default({
 // Feature-flag style kill switch for incomplete / high-risk surfaces.
 // Enabled product surfaces (not listed): home, tools, kesfet, karsilastir,
 // blog, profile, public user pages, eserler, koleksiyonlar, uyelik, auth flows.
+// Olgunlaşmış yüzeyler açıldı: akis, topluluk, leaderboard, random-tools, ogren
+// Hâlâ kapalı: yarışma, stüdyo, mesajlar, ödül avcılığı, launchpad (eksik/riskli)
 const disabledRoutes = [
   '/register',
   '/yarisma',
-  '/topluluk',
   '/studyo',
-  '/random-tools',
-  '/ogren',
   '/odul-avciligi/:path*',
   '/mesajlar/:path*',
-  '/leaderboard',
   '/leaderbord',
   '/launchpad/:path*',
-  '/akis',
 ];
 
 /**

@@ -183,6 +183,7 @@ import {
   Plug,
   Cable,
 } from 'lucide-react';
+import { normalizeCategoryLookupKey } from '@/lib/categoryLookup';
 
 const ICONS = {
   ImageIcon,
@@ -1041,11 +1042,7 @@ export function getCategoryCount() {
 }
 
 function normalizeCategoryValue(value) {
-  return String(value || '')
-    .trim()
-    .toLocaleLowerCase('tr-TR')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+  return normalizeCategoryLookupKey(value);
 }
 
 export function sortCategoriesByCanonicalOrder(categories = []) {

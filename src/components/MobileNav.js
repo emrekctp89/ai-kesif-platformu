@@ -26,6 +26,10 @@ import {
   LogIn,
   Rss,
   Users,
+  LayoutGrid,
+  Trophy,
+  Dice5,
+  GraduationCap,
 } from 'lucide-react';
 import { FutureAiGlyph } from '@/components/FutureAiGlyph';
 
@@ -34,13 +38,17 @@ export function MobileNav({ user, isProUser }) {
 
   const links = [
     { href: '/', label: 'Tüm Araçlar', icon: Bot },
+    { href: '/kategori', label: 'Kategoriler', icon: LayoutGrid },
     { href: '/kesfet', label: 'Keşfet', icon: Compass },
     ...(user ? [{ href: '/akis', label: 'Akışım', icon: Rss }] : []),
     { href: '/topluluk', label: 'Topluluk', icon: Users },
+    { href: '/leaderboard', label: 'Liderlik', icon: Trophy },
+    { href: '/random-tools', label: 'Rastgele Araç', icon: Dice5 },
     { href: '/karsilastir', label: 'Karşılaştır', icon: GitCompareArrows },
+    { href: '/tavsiye', label: 'AI Tavsiye', icon: Lightbulb },
     { href: '/blog', label: 'Blog', icon: Newspaper },
     { href: '/eserler', label: 'Eserler', icon: Images },
-    { href: '/tavsiye', label: 'AI Tavsiye', icon: Lightbulb },
+    { href: '/ogren', label: 'Öğren', icon: GraduationCap },
     { href: '/submit', label: 'Araç Öner', icon: PlusCircle },
     ...(user && !isProUser ? [{ href: '/uyelik', label: "Pro'ya Yükselt", icon: Crown }] : []),
     ...(!user ? [{ href: '/login', label: 'Giriş Yap', icon: LogIn }] : []),

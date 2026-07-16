@@ -1,10 +1,19 @@
 import Link from 'next/link';
 
 const footerLinks = [
+  { href: '/kategori', label: 'Kategoriler' },
   { href: '/kesfet', label: 'Keşfet' },
-  { href: '/blog', label: 'Blog' },
+  { href: '/topluluk', label: 'Topluluk' },
+  { href: '/leaderboard', label: 'Liderlik' },
+  { href: '/karsilastir', label: 'Karşılaştır' },
   { href: '/tavsiye', label: 'AI Tavsiye' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/eserler', label: 'Eserler' },
+  { href: '/koleksiyonlar', label: 'Koleksiyonlar' },
+  { href: '/ogren', label: 'Öğren' },
+  { href: '/random-tools', label: 'Rastgele' },
   { href: '/submit', label: 'Araç Öner' },
+  { href: '/developer', label: 'Geliştirici' },
   { href: '/hakkimizda', label: 'Hakkımızda' },
   { href: '/iletisim', label: 'İletişim' },
   { href: '/gizlilik', label: 'Gizlilik' },
