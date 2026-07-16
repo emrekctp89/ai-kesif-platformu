@@ -154,7 +154,7 @@ export function CategoryManager({ categories }) {
         <div>
           <p className="font-semibold text-foreground">Kategori setini genişlet</p>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            48 kanonik kategoriyi eksik olanları ekleyerek senkronlar. Mevcut kayıtlar korunur.
+            160+ kanonik kategoriyi eksik olanları ekleyerek senkronlar. Mevcut kayıtlar korunur.
           </p>
         </div>
         <Button

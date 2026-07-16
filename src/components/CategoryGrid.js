@@ -7,7 +7,7 @@ import { ArrowRight } from 'lucide-react';
  * @param {{ categories: Array<{ name: string, slug: string }>, limit?: number | null, showAllLink?: boolean }} props
  * limit: anasayfada gösterilecek max kart (null = hepsi)
  */
-export function CategoryGrid({ categories, limit = 24, showAllLink = true }) {
+export function CategoryGrid({ categories, limit = 36, showAllLink = true }) {
   if (!categories || categories.length === 0) return null;
 
   const visible = typeof limit === 'number' && limit > 0 ? categories.slice(0, limit) : categories;
