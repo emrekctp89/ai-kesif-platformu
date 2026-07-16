@@ -16,8 +16,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { previewNewsletter, sendNewsletter } from '@/app/actions';
-import { WeeklyNewsletterEmail } from '@/components/emails/WeeklyNewsletterEmail'; // E-posta şablonunu import ediyoruz
-import { render } from '@react-email/render'; // Render fonksiyonunu burada kullanacağız
 import toast from 'react-hot-toast';
 
 export function NewsletterManager() {
@@ -27,13 +25,10 @@ export function NewsletterManager() {
   const handlePreview = () => {
     startTransition(async () => {
       setPreviewHtml('');
-      // 1. Sunucudan sadece ham veriyi istiyoruz
       const result = await previewNewsletter();
 
-      // 2. Veri geldikten sonra, HTML'i tarayıcıda kendimiz oluşturuyoruz
-      if (result.success && result.data) {
-        const html = render(<WeeklyNewsletterEmail newsletterData={result.data} />);
-        setPreviewHtml(html);
+      if (result.success && result.html) {
+        setPreviewHtml(result.html);
       } else if (result.error) {
         toast.error(result.error);
       } else {

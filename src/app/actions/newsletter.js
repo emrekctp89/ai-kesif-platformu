@@ -119,7 +119,9 @@ export async function previewNewsletter() {
       };
     }
 
-    return { success: true, data: newsletterData };
+    const html = await render(<WeeklyNewsletterEmail newsletterData={newsletterData} />);
+
+    return { success: true, data: newsletterData, html };
   } catch (e) {
     console.error('previewNewsletter hatası:', e);
     return { error: 'Önizleme verisi alınırken beklenmedik bir hata oluştu.' };
