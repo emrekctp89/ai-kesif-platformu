@@ -25,10 +25,11 @@ import { ToolComments } from '@/components/ToolComments';
 import { PromoteToolButton } from '@/components/PromoteToolButton';
 import { getTranslations } from 'next-intl/server';
 import { formatPricing } from '@/utils/formatPricing';
+import { getSiteOrigin } from '@/utils/siteUrl';
 
 export const revalidate = 3600;
 
-const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
+const siteUrl = getSiteOrigin();
 
 function createPublicClient() {
   return createClient(

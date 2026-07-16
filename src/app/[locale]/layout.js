@@ -8,10 +8,11 @@ import { Analytics } from '@vercel/analytics/react';
 import { GoogleAnalytics } from '@/components/GoogleAnalytics';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { generatePageMetadata } from '@/utils/seo';
+import { getSiteOrigin } from '@/utils/siteUrl';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 
-const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
+const siteUrl = getSiteOrigin();
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;

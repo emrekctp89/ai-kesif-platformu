@@ -1,21 +1,21 @@
+import { getSiteOrigin } from './siteUrl';
+
 /**
- * SEO Metadata Utilities
- * Centralized metadata management for all pages
+ * SEO metadata utilities.
  */
+
+const siteOrigin = getSiteOrigin();
 
 export const siteConfig = {
   name: 'AI Keşif Platformu',
   description:
     'Yapay zeka araçlarını keşfet, karşılaştır, test et ve toplulukla paylaş. 1000+ AI aracının kapsamlı kütüphanesi.',
-  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://ai-kesif-platformu.vercel.app',
-  ogImage: 'https://ai-kesif-platformu.vercel.app/og-image.png',
+  url: siteOrigin,
+  ogImage: `${siteOrigin}/og-image.png`,
   twitterHandle: '@AIKesifPlatformu',
   language: 'tr',
 };
 
-/**
- * Generate standard metadata for a page
- */
 export function generatePageMetadata({
   title,
   description,
@@ -94,24 +94,18 @@ export function generatePageMetadata({
   };
 }
 
-/**
- * Generate metadata for tool pages
- */
-export function generateToolMetadata({ name, description, category, rating, image }) {
+export function generateToolMetadata({ name, description, image }) {
   return generatePageMetadata({
     title: `${name} - AI Aracı`,
     description:
-      description || `${name} hakkında bilgi edinin, puanları görmek ve karşılaştırma yapın.`,
+      description || `${name} hakkında bilgi edinin, puanları görün ve karşılaştırma yapın.`,
     path: `/tool/${name.toLowerCase().replace(/\s+/g, '-')}`,
-    image: image,
+    image,
     type: 'product',
     author: 'AI Keşif Platformu',
   });
 }
 
-/**
- * Generate metadata for collection/list pages
- */
 export function generateCollectionMetadata({ name, description, itemCount }) {
   return generatePageMetadata({
     title: name,
@@ -121,9 +115,6 @@ export function generateCollectionMetadata({ name, description, itemCount }) {
   });
 }
 
-/**
- * Generate metadata for blog posts
- */
 export function generateBlogMetadata({
   title,
   description,
@@ -145,9 +136,6 @@ export function generateBlogMetadata({
   });
 }
 
-/**
- * Generate structured data (Schema.org JSON-LD)
- */
 export function generateStructuredData(type, data) {
   const baseSchema = {
     '@context': 'https://schema.org',
@@ -234,9 +222,6 @@ export function generateStructuredData(type, data) {
   }
 }
 
-/**
- * Generate Sitemap entry metadata
- */
 export function generateSitemapEntry({
   url,
   lastModified = new Date(),

@@ -5,8 +5,9 @@ import { FeaturedTools } from '@/components/FeaturedTools';
 import { ToolOfTheDay } from '@/components/ToolOfTheDay';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { getTranslations } from 'next-intl/server';
+import { getSiteOrigin } from '@/utils/siteUrl';
 
-const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
+const siteUrl = getSiteOrigin();
 
 // Bu fonksiyon, sayfa için gerekli olan tüm verileri sunucuda tek seferde çeker.
 async function getPageData(searchParams) {

@@ -2,8 +2,9 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { HomepageClient } from '@/components/HomepageClient';
+import { getSiteOrigin } from '@/utils/siteUrl';
 
-const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
+const siteUrl = getSiteOrigin();
 
 async function getCategory(slug) {
   const supabase = await createClient(await cookies());

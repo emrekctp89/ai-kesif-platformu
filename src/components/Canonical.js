@@ -1,12 +1,11 @@
-// components/Canonical.js
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { getSiteOrigin } from '@/utils/siteUrl';
 
 export default function Canonical() {
   const pathname = usePathname();
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com';
-  const canonicalUrl = new URL(pathname, `${baseUrl.replace(/\/$/, '')}/`);
+  const canonicalUrl = new URL(pathname, `${getSiteOrigin().replace(/\/$/, '')}/`);
 
   return <link rel="canonical" href={canonicalUrl.toString()} />;
 }

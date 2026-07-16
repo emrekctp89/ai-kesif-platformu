@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSiteOrigin } from '@/utils/siteUrl';
 
-const SITE_URL = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
+const SITE_URL = getSiteOrigin();
 
 export const revalidate = 3600;
 

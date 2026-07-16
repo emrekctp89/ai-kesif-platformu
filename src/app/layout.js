@@ -1,8 +1,9 @@
 import './globals.css';
 import { Onest } from 'next/font/google';
 import { generateStructuredData } from '@/utils/seo';
+import { getSiteOrigin } from '@/utils/siteUrl';
 
-const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikeşif.com').origin;
+const siteUrl = getSiteOrigin();
 
 const onest = Onest({
   subsets: ['latin'],

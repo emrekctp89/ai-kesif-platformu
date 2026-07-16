@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSiteOrigin } from '@/utils/siteUrl';
 
-const SITE_URL = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aikesif.com').origin;
+const SITE_URL = getSiteOrigin();
 
-export const revalidate = 3600; // Cache for 1 hour
+export const revalidate = 3600;
 
 function escapeXml(unsafe) {
   return String(unsafe)
