@@ -27,6 +27,8 @@ export const metadata = {
   description: 'Yapay zeka dünyasındaki en son haberler, makaleler ve araç incelemeleri.',
 };
 
+export const revalidate = 3600; // 1 hour ISR caching
+
 export default async function BlogPage() {
   const posts = await getPublishedPosts();
 
