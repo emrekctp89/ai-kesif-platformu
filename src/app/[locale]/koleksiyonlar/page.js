@@ -32,6 +32,8 @@ export const metadata = {
     'Topluluk tarafından oluşturulmuş, belirli ihtiyaçlara yönelik en iyi yapay zeka araçları koleksiyonlarını ve rehberlerini keşfedin.',
 };
 
+export const revalidate = 3600; // 1 hour ISR caching
+
 export default async function CollectionsPage() {
   const collections = await getPublicCollections();
 
