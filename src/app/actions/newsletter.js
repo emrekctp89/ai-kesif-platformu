@@ -147,12 +147,25 @@ export async function sendNewsletter() {
 
   const htmlContent = await render(<WeeklyNewsletterEmail newsletterData={newsletterData} />);
 
-  const { data: users, error: userError } = await supabaseAdmin.from('profiles').select('email');
+  const { data: subscribers, error: subscriberError } = await supabaseAdmin
+    .from('newsletter_subscribers')
+    .select('email')
+    .eq('status', 'active');
 
-  if (userError || !users || users.length === 0) {
-    return { error: 'Gönderilecek kullanıcı bulunamadı.' };
+  if (subscriberError || !subscribers || subscribers.length === 0) {
+    return { error: 'Gönderilecek aktif bülten abonesi bulunamadı.' };
   }
-  const recipients = users.map((u) => u.email).filter(Boolean);
+  const recipients = [
+    ...new Set(
+      subscribers
+        .map((subscriber) =>
+          String(subscriber.email || '')
+            .trim()
+            .toLowerCase()
+        )
+        .filter(Boolean)
+    ),
+  ];
 
   if (recipients.length === 0) {
     return { error: 'Gönderilecek geçerli e-posta adresi bulunamadı.' };
