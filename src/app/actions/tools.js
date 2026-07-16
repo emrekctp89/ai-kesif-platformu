@@ -673,6 +673,49 @@ export async function runToolDiscoveryAdmin(options = {}) {
 }
 
 /**
+ * Existing tool enrichment.
+ * Brings older approved tools closer to the rich metadata produced by AI discovery.
+ * Dry-run is the default; live updates must pass dryRun=false explicitly.
+ */
+export async function runExistingToolEnrichmentAdmin(options = {}) {
+  'use server';
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: 'Yetkiniz yok.' };
+  }
+
+  try {
+    const { enrichExistingTools } = await import('@/lib/existingToolEnrichment');
+    const report = await enrichExistingTools({
+      dryRun: options.dryRun !== false,
+      limit: options.limit || 5,
+      includeGoodQuality: Boolean(options.includeGoodQuality),
+    });
+
+    if (!report.dryRun && report.updatedCount > 0) {
+      revalidatePath('/admin');
+      revalidatePath('/');
+      for (const slug of report.touchedSlugs || []) {
+        revalidatePath(`/tool/${slug}`);
+        revalidatePath(`/en/tool/${slug}`);
+      }
+    }
+
+    return { success: true, report };
+  } catch (error) {
+    console.error('Existing tool enrichment failed:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Mevcut araçlar zenginleştirilemedi.',
+    };
+  }
+}
+
+/**
  * Bulk-fill English name/description for approved tools missing EN fields.
  * Uses Cloud Translation API (admin-only, rate-limited batch).
  */

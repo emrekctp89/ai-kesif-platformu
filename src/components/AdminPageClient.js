@@ -33,6 +33,7 @@ import {
   rejectTool,
   runToolQualityAutomation,
   runToolDiscoveryAdmin,
+  runExistingToolEnrichmentAdmin,
   bulkTranslateToolsToEnglish,
   updateToolLinkReportStatus,
 } from '@/app/actions';
@@ -730,6 +731,8 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
   );
   const [discoveryReport, setDiscoveryReport] = React.useState(null);
   const [isDiscoveryPending, startDiscoveryTransition] = React.useTransition();
+  const [enrichmentReport, setEnrichmentReport] = React.useState(null);
+  const [isEnrichmentPending, startEnrichmentTransition] = React.useTransition();
   const [enBulkReport, setEnBulkReport] = React.useState(null);
   const [isEnBulkPending, startEnBulkTransition] = React.useTransition();
 
@@ -789,6 +792,28 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
     });
   };
 
+  const runEnrichment = (dryRun = true) => {
+    startEnrichmentTransition(async () => {
+      const result = await runExistingToolEnrichmentAdmin({ dryRun, limit: 5 });
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      setEnrichmentReport(result.report);
+      const candidateCount = result.report?.candidateCount ?? 0;
+      const updatedCount = result.report?.updatedCount ?? 0;
+      const failedCount = result.report?.failedCount ?? 0;
+
+      toast.success(
+        dryRun
+          ? `Mevcut araç enrichment dry-run: ${candidateCount} aday, ${failedCount} hata`
+          : `Mevcut araç enrichment: ${updatedCount} araç güncellendi, ${failedCount} hata`
+      );
+      if (!dryRun) router.refresh();
+    });
+  };
+
   const runEnBulk = () => {
     startEnBulkTransition(async () => {
       const result = await bulkTranslateToolsToEnglish({ limit: 8 });
@@ -838,6 +863,37 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
               >
                 {isDiscoveryPending ? 'Keşif çalışıyor...' : 'AI keşif (dry-run)'}
               </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => runEnrichment(true)}
+                disabled={isEnrichmentPending}
+              >
+                {isEnrichmentPending ? 'Zenginleştirme…' : 'Mevcut araç enrichment (dry-run)'}
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="secondary" disabled={isEnrichmentPending}>
+                    Mevcut araçları güncelle (5)
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Mevcut araç detayları güncellensin mi?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Gemini, eski araçların açıklama, fiyat, platform ve teknik detay alanlarını
+                      zenginleştirecek. En fazla 5 onaylı araç güncellenir. Önce dry-run sonucunu
+                      kontrol etmeniz önerilir.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => runEnrichment(false)}>
+                      Evet, 5 aracı güncelle
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button size="sm" variant="secondary" disabled={isDiscoveryPending}>
@@ -896,6 +952,23 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                       {item.link ? ` — ${item.link}` : ''}
                     </p>
                   ))}
+              </div>
+            )}
+            {enrichmentReport && (
+              <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                <p>
+                  Son enrichment: {enrichmentReport.candidateCount} aday,{' '}
+                  {enrichmentReport.updatedCount} güncellendi, {enrichmentReport.failedCount} hata
+                  {enrichmentReport.dryRun ? ' (dry-run)' : ' (kayıtlı)'}.
+                </p>
+                {(enrichmentReport.results || []).slice(0, 5).map((item) => (
+                  <p key={item.id || item.slug || item.name} className="truncate pl-2">
+                    • {item.name}
+                    {item.error
+                      ? ` — hata: ${item.error}`
+                      : ` — alan: ${Object.keys(item.updates || {}).join(', ') || 'değişiklik yok'}`}
+                  </p>
+                ))}
               </div>
             )}
             {enBulkReport && (
