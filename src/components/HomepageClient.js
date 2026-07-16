@@ -204,7 +204,7 @@ export function HomepageClient({
             <Button
               variant="outline"
               onClick={() => setShowDiscovery(!showDiscovery)}
-              className="h-9 w-full group text-white border-none shadow-xl bg-gradient-to-r from-[#7F00FF] via-[#00BFFF] to-[#FF1493] bg-[length:200%_200%] animate-[gradientShift_6s_ease_infinite] sm:h-10 sm:w-auto"
+              className="brand-gradient h-9 w-full group shadow-xl sm:h-10 sm:w-auto"
             >
               {showDiscovery ? (
                 <X className="mr-2 h-4 w-4" />
@@ -265,14 +265,14 @@ export function HomepageClient({
       {!fixedSearchParams && !hasActiveFilters && (
         <section
           aria-labelledby="quick-start-heading"
-          className="relative rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 via-background to-purple-500/5 p-6 sm:p-8 shadow-xl overflow-hidden glass-panel"
+          className="brand-surface relative overflow-hidden rounded-3xl p-6 shadow-xl glass-panel sm:p-8"
         >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none" />
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl" />
 
           <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-sm font-bold text-primary mb-3 shadow-inner border border-primary/10">
+              <div className="brand-chip mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
                 <WandSparkles aria-hidden="true" className="h-4 w-4 animate-pulse" />
                 Hızlı başlangıç
               </div>
@@ -291,7 +291,7 @@ export function HomepageClient({
             <Button
               asChild
               size="lg"
-              className="min-h-14 shrink-0 shadow-xl hover:shadow-primary/30 transition-all duration-300 hover:-translate-y-1 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 rounded-2xl px-8"
+              className="ai-tavsiye-gradient min-h-14 shrink-0 rounded-2xl px-8 shadow-xl transition-all duration-300 hover:-translate-y-1"
             >
               <Link
                 href="/tavsiye"
@@ -325,7 +325,7 @@ export function HomepageClient({
                     label,
                   })
                 }
-                className="inline-flex min-h-10 items-center gap-2.5 rounded-full border border-border/50 bg-background/50 backdrop-blur-sm px-4 py-2 text-sm font-semibold transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-md hover:-translate-y-0.5"
+                className="inline-flex min-h-10 items-center gap-2.5 rounded-full border border-border/50 bg-background/50 px-4 py-2 text-sm font-semibold backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-md"
               >
                 <Icon aria-hidden="true" className="h-4 w-4" />
                 {label}

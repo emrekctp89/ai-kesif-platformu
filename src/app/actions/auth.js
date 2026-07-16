@@ -123,6 +123,14 @@ export async function signUp(formData) {
     .toLowerCase();
   const password = String(formData.get('password') || '');
 
+  if (!email || password.length < 8) {
+    return redirect(
+      `/signup?message=${encodeURIComponent(
+        'Geçerli bir e-posta ve en az 8 karakterlik şifre girin.'
+      )}`
+    );
+  }
+
   // Rate Limiting: 3 hesap / 1 saat
   const rateLimit = await enforceRateLimit('auth-signup', { limit: 3, windowMs: 60 * 60 * 1000 });
   if (!rateLimit.allowed) {
@@ -154,7 +162,7 @@ export async function signUp(formData) {
 
   if (error || !data?.user) {
     const errorMessage =
-      'Kullanıcı oluşturulamadı. Şifre en az 6 karakter olmalı veya e-posta zaten kullanımda olabilir.';
+      'Kullanıcı oluşturulamadı. Şifre en az 8 karakter olmalı veya e-posta zaten kullanımda olabilir.';
     return redirect(`/signup?message=${encodeURIComponent(errorMessage)}`);
   }
 
@@ -211,11 +219,17 @@ export async function requestPasswordReset(formData) {
 export async function updatePassword(formData) {
   'use server';
 
-  const password = formData.get('password');
+  const password = String(formData.get('password') || '');
+  if (password.length < 8) {
+    return redirect(
+      `/reset-password?message=${encodeURIComponent('Şifre en az 8 karakter olmalıdır.')}`
+    );
+  }
+
   const supabase = await createClient();
 
   const { error } = await supabase.auth.updateUser({
-    password: password,
+    password,
   });
 
   if (error) {

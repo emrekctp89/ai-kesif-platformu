@@ -31,21 +31,21 @@ export async function ToolOfTheDay() {
 
   return (
     <div className="mb-12 relative group">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-purple-500/20 to-pink-500/20 blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl" />
-      <Card className="relative w-full glass-panel border-2 border-primary/30 shadow-2xl overflow-hidden rounded-3xl">
-        <div className="absolute top-0 right-0 p-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse" />
-        <CardContent className="relative grid items-center gap-6 p-6 sm:p-8 md:grid-cols-2 md:gap-10 md:p-10 z-10">
+      <div className="brand-glow absolute inset-0 rounded-3xl opacity-50 blur-xl transition-opacity duration-700 group-hover:opacity-100" />
+      <Card className="brand-surface relative w-full overflow-hidden rounded-3xl border-2 border-primary/30 shadow-2xl glass-panel">
+        <div className="absolute -right-16 -top-16 rounded-full bg-primary/5 p-32 blur-3xl animate-pulse" />
+        <CardContent className="relative z-10 grid items-center gap-6 p-6 sm:p-8 md:grid-cols-2 md:gap-10 md:p-10">
           {/* Sol Taraf: Açıklamalar */}
           <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm font-bold text-primary shadow-inner">
+            <div className="brand-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
               <Zap className="h-4 w-4 animate-bounce" />
               <span>GÜNÜN ARACI</span>
             </div>
             <h2 className="flex items-center gap-4 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
-              <div className="p-3 bg-background rounded-2xl shadow-lg border border-border/50 animate-float">
+              <div className="animate-float rounded-2xl border border-border/50 bg-background p-3 shadow-lg">
                 <ToolIcon name={tool.name} link={tool.link} className="h-10 w-10 sm:h-12 sm:w-12" />
               </div>
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+              <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 {tool.name}
               </span>
             </h2>
@@ -55,7 +55,7 @@ export async function ToolOfTheDay() {
             <div className="flex flex-wrap items-center gap-4 pt-4">
               <Button
                 asChild
-                className="w-full sm:w-auto shadow-xl hover:shadow-primary/25 transition-all duration-300 hover:-translate-y-1 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
+                className="brand-gradient w-full shadow-xl transition-all duration-300 hover:-translate-y-1 sm:w-auto"
                 size="lg"
               >
                 <TrackedExternalLink

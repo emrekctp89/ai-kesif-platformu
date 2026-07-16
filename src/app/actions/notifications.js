@@ -96,21 +96,27 @@ export async function deletePushSubscription() {
   return { success: true };
 }
 
-export async function fetchActivityFeed() {
+/**
+ * @param {{ mode?: 'following' | 'general' }} [options]
+ * - following: takip edilenlerin aktiviteleri (giriş gerekir)
+ * - general: genel topluluk akışı
+ */
+export async function fetchActivityFeed(options = {}) {
   'use server';
 
+  const mode = options?.mode === 'general' ? 'general' : 'following';
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase.rpc('get_community_activity_feed', {
-    p_user_id: user?.id,
-  });
+  const rpcArgs = mode === 'following' && user?.id ? { p_user_id: user.id } : {};
+
+  const { data, error } = await supabase.rpc('get_community_activity_feed', rpcArgs);
 
   if (error) {
     console.error('Aktivite akışı yeniden çekilirken hata:', error);
     return [];
   }
-  return data;
+  return Array.isArray(data) ? data : [];
 }

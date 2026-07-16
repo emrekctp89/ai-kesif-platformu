@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Zap, Rss, Library, Map, Users, Sparkles } from 'lucide-react';
+import { CommunityFeedPreview } from '@/components/CommunityFeedPreview';
 
 // Veritabanındaki RPC fonksiyonlarını çağıran ana fonksiyon
 async function getDiscoverData() {
@@ -60,18 +61,18 @@ export default async function DiscoverPage() {
     <div className="container mx-auto py-12 px-4 space-y-16">
       {tool_of_the_day && (
         <section>
-          <Card className="w-full bg-gradient-to-br from-primary/10 via-background to-background border-2 border-primary/50 shadow-lg">
-            <CardContent className="p-8 grid md:grid-cols-2 gap-8 items-center">
+          <Card className="brand-surface w-full border-2 border-primary/50 shadow-lg">
+            <CardContent className="grid items-center gap-8 p-8 md:grid-cols-2">
               <div className="space-y-4">
-                <div className="flex items-center gap-3 text-primary font-bold text-lg">
-                  <Zap className="w-6 h-6" />
+                <div className="brand-chip inline-flex items-center gap-3 rounded-full px-3 py-1.5 text-lg font-bold">
+                  <Zap className="h-6 w-6" />
                   <span>GÜNÜN ARACI</span>
                 </div>
                 <h2 className="text-4xl font-extrabold tracking-tight text-foreground">
                   {tool_of_the_day.name}
                 </h2>
-                <p className="text-muted-foreground text-lg">{tool_of_the_day.description}</p>
-                <Button asChild size="lg">
+                <p className="text-lg text-muted-foreground">{tool_of_the_day.description}</p>
+                <Button asChild size="lg" className="brand-gradient shadow-md">
                   <Link href={`/tool/${tool_of_the_day.slug}`}>İncele & Keşfet</Link>
                 </Button>
               </div>
@@ -139,6 +140,8 @@ export default async function DiscoverPage() {
           </div>
         </section>
       )}
+
+      <CommunityFeedPreview limit={5} className="max-w-3xl" />
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">

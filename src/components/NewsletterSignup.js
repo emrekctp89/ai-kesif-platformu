@@ -26,7 +26,7 @@ export function NewsletterSignup({ className = '' }) {
 
   return (
     <div
-      className={`glass-panel glow-effect relative overflow-hidden rounded-3xl p-8 sm:p-12 ${className}`}
+      className={`brand-surface glass-panel glow-effect relative overflow-hidden rounded-3xl p-8 sm:p-12 ${className}`}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
 
@@ -74,7 +74,7 @@ export function NewsletterSignup({ className = '' }) {
               />
               <Button
                 type="submit"
-                className="h-12 w-full rounded-xl transition-all sm:w-auto"
+                className="brand-gradient h-12 w-full rounded-xl transition-all sm:w-auto"
                 disabled={isPending}
               >
                 {isPending ? (

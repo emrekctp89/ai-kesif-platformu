@@ -63,10 +63,7 @@ export function HeaderNav({
       {/* Sağ Taraftaki Butonlar */}
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <div className="hidden items-center gap-2 sm:flex">
-          <Button
-            asChild
-            className="font-semibold text-white bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 bg-[size:300%_auto] animate-breathing-glow hover:opacity-90"
-          >
+          <Button asChild className="ai-tavsiye-gradient font-semibold shadow-md">
             <Link href="/tavsiye" prefetch={false}>
               AI Tavsiye
             </Link>

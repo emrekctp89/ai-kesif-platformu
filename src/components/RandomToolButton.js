@@ -37,7 +37,7 @@ export function RandomToolButton({ user }) {
     <Button
       asChild
       variant="ghost"
-      className="relative overflow-hidden group"
+      className="brand-gradient group relative overflow-hidden shadow-md"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

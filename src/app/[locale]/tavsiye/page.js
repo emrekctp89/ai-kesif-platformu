@@ -68,7 +68,7 @@ export default function RecommendationPage() {
   return (
     <div className="mx-auto max-w-5xl px-1 py-8 sm:px-4 sm:py-12">
       <header className="mx-auto mb-8 max-w-3xl text-center sm:mb-10">
-        <div className="mx-auto mb-4 flex w-fit items-center gap-2 rounded-full border bg-primary/5 px-4 py-2 text-sm font-semibold text-primary">
+        <div className="brand-chip mx-auto mb-4 flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
           <Sparkles aria-hidden="true" className="h-4 w-4" />
           Ücretsiz AI araç eşleştirmesi
         </div>
@@ -133,7 +133,7 @@ export default function RecommendationPage() {
               <Button
                 type="submit"
                 size="lg"
-                className="min-h-12 w-full"
+                className="ai-tavsiye-gradient min-h-12 w-full shadow-md"
                 disabled={isPending || prompt.trim().length < 10}
               >
                 {isPending ? (

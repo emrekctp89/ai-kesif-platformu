@@ -298,7 +298,7 @@ export function InfiniteToolsList({
                   Arama ve filtreleri temizle
                 </Link>
               </Button>
-              <Button asChild variant="outline">
+              <Button asChild className="ai-tavsiye-gradient shadow-md">
                 <Link
                   href="/tavsiye"
                   prefetch={false}

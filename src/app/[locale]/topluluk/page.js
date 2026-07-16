@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { UserCard } from '@/components/UserCard';
 import { Users, Star, TrendingUp } from 'lucide-react';
+import { CommunityFeedPreview } from '@/components/CommunityFeedPreview';
 
 // Veritabanındaki RPC fonksiyonlarını çağıran fonksiyonlar
 async function getDiscoveryData(userId) {
@@ -56,6 +57,8 @@ export default async function CommunityPage() {
       </div>
 
       <div className="space-y-16">
+        <CommunityFeedPreview limit={4} className="max-w-3xl mx-auto" />
+
         {/* Haftanın Yıldızları */}
         {weeklyTop.length > 0 && (
           <section>

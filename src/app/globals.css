@@ -94,6 +94,38 @@
 }
 
 /* Custom UI Utilities */
+/* Ana marka: koyu indigo → mor (primary temadan bağımsız, her temada okunaklı) */
+.brand-gradient {
+  @apply border-none bg-gradient-to-r from-indigo-950 to-purple-800 text-white hover:from-indigo-900 hover:to-purple-700;
+}
+
+/* Öne çıkan araçlar: koyu ama renkleri akan gradyan */
+.brand-gradient-flow {
+  @apply border-none bg-gradient-to-r from-indigo-950 via-violet-700 to-purple-800 bg-[length:200%_200%] text-white animate-[gradientShift_6s_ease_infinite];
+}
+
+/* AI Tavsiye: ayrı palet (mavi → indigo → camgöbeği) */
+.ai-tavsiye-gradient {
+  @apply border-none bg-gradient-to-r from-blue-700 via-indigo-600 to-cyan-600 bg-[size:300%_auto] text-white animate-breathing-glow hover:opacity-95;
+}
+
+/* Yumuşak yüzey: kartlar / hero panelleri */
+.brand-surface {
+  @apply border border-indigo-500/20 bg-gradient-to-br from-indigo-950/10 via-background to-purple-800/10;
+}
+
+.brand-glow {
+  @apply bg-gradient-to-r from-indigo-900/25 via-violet-700/20 to-purple-800/25;
+}
+
+.brand-chip {
+  @apply border border-indigo-500/20 bg-indigo-950/10 text-indigo-700;
+}
+
+.dark .brand-chip {
+  @apply border-indigo-400/25 bg-indigo-950/40 text-indigo-200;
+}
+
 .glass-panel {
   @apply bg-background/60 backdrop-blur-md border border-border/50 shadow-sm;
 }
@@ -103,7 +135,11 @@
 }
 
 .glass-button {
-  @apply bg-primary/10 hover:bg-primary/20 backdrop-blur-sm border border-primary/20 text-primary transition-all duration-300;
+  @apply border border-indigo-500/25 bg-indigo-950/10 text-indigo-800 backdrop-blur-sm transition-all duration-300 hover:bg-indigo-950/15;
+}
+
+.dark .glass-button {
+  @apply border-indigo-400/30 bg-indigo-950/40 text-indigo-200 hover:bg-indigo-900/50;
 }
 
 .glow-effect {
@@ -114,12 +150,7 @@
   content: '';
   position: absolute;
   inset: -1px;
-  background: linear-gradient(
-    to right,
-    theme('colors.primary.DEFAULT'),
-    theme('colors.purple.500'),
-    theme('colors.pink.500')
-  );
+  background: linear-gradient(to right, #312e81, #6d28d9, #581c87);
   z-index: -1;
   border-radius: inherit;
   opacity: 0;

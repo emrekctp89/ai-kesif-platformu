@@ -2,116 +2,96 @@
 
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { Building2, ShieldCheck } from 'lucide-react';
 import { oAuthSignIn, signIn } from '@/app/actions';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useSearchParams } from 'next/navigation';
-import ScrollingQuotes from '@/components/ScrollingQuotes';
+import { AuthShell } from '@/components/auth/AuthShell';
+import {
+  AuthAlert,
+  AuthCard,
+  AuthEmailField,
+  AuthFooterLink,
+  AuthFormFallback,
+  AuthHeader,
+  AuthPasswordField,
+  AuthSubmitButton,
+  GoogleIcon,
+} from '@/components/auth/auth-ui';
 
 function LoginForm() {
   const searchParams = useSearchParams();
   const message = searchParams.get('message');
 
   return (
-    <div className="mx-auto grid w-[350px] gap-6">
-      <div className="grid gap-2 text-center">
-        <h1 className="text-3xl font-bold">Giriş Yap</h1>
-        <p className="text-balance text-muted-foreground">
-          Hesabınıza erişmek için bilgilerinizi girin
-        </p>
-      </div>
+    <div className="mx-auto w-full max-w-[420px]">
+      <AuthHeader
+        title="Tekrar hoş geldin"
+        description="Hesabına giriş yap; kişisel akışına, favorilerine ve AI tavsiyelerine kaldığın yerden devam et."
+      />
 
-      <form action={signIn} className="grid gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            name="email"
-            placeholder="ornek@mail.com"
-            autoComplete="email"
-            required
-          />
-        </div>
-        <div className="grid gap-2">
-          <div className="flex items-center">
-            <Label htmlFor="password">Şifre</Label>
-            <Link
-              href="/forgot-password"
-              className="ml-auto inline-block text-sm underline hover:text-primary"
-            >
-              Şifrenizi mi unuttunuz?
-            </Link>
-          </div>
-          <Input
+      <AuthCard>
+        <form action={signIn} className="grid gap-4">
+          <AuthEmailField id="email" />
+          <AuthPasswordField
             id="password"
-            type="password"
-            name="password"
             autoComplete="current-password"
-            required
+            helper={
+              <Link
+                href="/forgot-password"
+                className="text-xs font-medium text-indigo-700 hover:underline dark:text-indigo-300"
+              >
+                Şifreni mi unuttun?
+              </Link>
+            }
           />
-        </div>
-
-        {typeof message === 'string' && message.length > 0 && (
-          <p
-            role="alert"
-            className="rounded-md bg-foreground/10 p-2 text-center text-sm text-destructive"
-          >
-            {message}
-          </p>
-        )}
-
-        <Button type="submit" className="w-full">
-          Giriş Yap
-        </Button>
-      </form>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Veya şununla devam et</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Button variant="outline" className="w-full" asChild>
-          <Link href="/sso">SSO</Link>
-        </Button>
-        <form action={oAuthSignIn.bind(null, 'google')}>
-          <Button type="submit" variant="outline" className="w-full">
-            Google
-          </Button>
+          <AuthAlert message={message} />
+          <AuthSubmitButton idleLabel="Giriş Yap" pendingLabel="Giriş yapılıyor…" />
         </form>
-      </div>
 
-      <div className="mt-4 text-center text-sm">
-        Hesabınız yok mu?{' '}
-        <Link href="/signup" className="underline">
-          Kayıt Ol
-        </Link>
-      </div>
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/70" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase tracking-wide">
+            <span className="bg-card px-3 text-muted-foreground">veya şununla devam et</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <form action={oAuthSignIn.bind(null, 'google')} className="w-full">
+            <Button type="submit" variant="outline" className="h-11 w-full font-medium">
+              <GoogleIcon className="mr-2 h-4 w-4" />
+              Google
+            </Button>
+          </form>
+          <Button variant="outline" className="h-11 w-full font-medium" asChild>
+            <Link href="/sso">
+              <Building2 className="mr-2 h-4 w-4" />
+              Kurumsal SSO
+            </Link>
+          </Button>
+        </div>
+
+        <div className="mt-6 flex items-start gap-2 rounded-xl border border-indigo-500/15 bg-indigo-950/5 px-3 py-2.5 text-xs leading-5 text-muted-foreground">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-300" />
+          <span>
+            Giriş bilgilerin güvenli şekilde işlenir. Şüpheli denemelere karşı hız sınırı uygulanır.
+          </span>
+        </div>
+      </AuthCard>
+
+      <AuthFooterLink prompt="Hesabın yok mu?" href="/signup" label="Kayıt ol" />
     </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <div className="h-screen w-full lg:grid lg:grid-cols-2">
-      <div className="flex items-center justify-center py-12">
-        <Suspense
-          fallback={
-            <div className="mx-auto w-[350px] text-center text-sm text-muted-foreground">
-              Yükleniyor…
-            </div>
-          }
-        >
-          <LoginForm />
-        </Suspense>
-      </div>
-      <ScrollingQuotes />
-    </div>
+    <AuthShell>
+      <Suspense fallback={<AuthFormFallback label="Giriş formu yükleniyor…" />}>
+        <LoginForm />
+      </Suspense>
+    </AuthShell>
   );
 }

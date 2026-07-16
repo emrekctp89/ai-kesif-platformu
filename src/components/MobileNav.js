@@ -24,6 +24,8 @@ import {
   Images,
   Crown,
   LogIn,
+  Rss,
+  Users,
 } from 'lucide-react';
 
 export function MobileNav({ user, isProUser }) {
@@ -32,6 +34,8 @@ export function MobileNav({ user, isProUser }) {
   const links = [
     { href: '/', label: 'Tüm Araçlar', icon: Bot },
     { href: '/kesfet', label: 'Keşfet', icon: Compass },
+    ...(user ? [{ href: '/akis', label: 'Akışım', icon: Rss }] : []),
+    { href: '/topluluk', label: 'Topluluk', icon: Users },
     { href: '/karsilastir', label: 'Karşılaştır', icon: GitCompareArrows },
     { href: '/blog', label: 'Blog', icon: Newspaper },
     { href: '/eserler', label: 'Eserler', icon: Images },
@@ -66,18 +70,25 @@ export function MobileNav({ user, isProUser }) {
           <span className="font-bold">AI Keşif</span>
         </Link>
         <div className="flex flex-col gap-2">
-          {links.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              prefetch={false}
-              onClick={() => setOpen(false)}
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <Icon className="h-5 w-5" />
-              {label}
-            </Link>
-          ))}
+          {links.map(({ href, label, icon: Icon }) => {
+            const isAiTavsiye = href === '/tavsiye';
+            return (
+              <Link
+                key={href}
+                href={href}
+                prefetch={false}
+                onClick={() => setOpen(false)}
+                className={
+                  isAiTavsiye
+                    ? 'ai-tavsiye-gradient flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold shadow-md'
+                    : 'flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+                }
+              >
+                <Icon className="h-5 w-5" />
+                {label}
+              </Link>
+            );
+          })}
         </div>
       </SheetContent>
     </Sheet>
