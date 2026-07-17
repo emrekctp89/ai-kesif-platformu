@@ -5,6 +5,7 @@ import { Resend } from 'resend';
 import { WeeklyNewsletterEmail } from '@/components/emails/WeeklyNewsletterEmail';
 import { render } from '@react-email/render';
 import { slugify } from '@/utils/slugify';
+import { normalizeNewsletterRecipients } from '@/lib/newsletterRecipients';
 
 const NEWSLETTER_SUBJECT = 'AI Keşif Platformu | Haftalık Bülten';
 
@@ -155,17 +156,7 @@ export async function sendNewsletter() {
   if (subscriberError || !subscribers || subscribers.length === 0) {
     return { error: 'Gönderilecek aktif bülten abonesi bulunamadı.' };
   }
-  const recipients = [
-    ...new Set(
-      subscribers
-        .map((subscriber) =>
-          String(subscriber.email || '')
-            .trim()
-            .toLowerCase()
-        )
-        .filter(Boolean)
-    ),
-  ];
+  const recipients = normalizeNewsletterRecipients(subscribers);
 
   if (recipients.length === 0) {
     return { error: 'Gönderilecek geçerli e-posta adresi bulunamadı.' };
