@@ -60,6 +60,13 @@ describe('subscribeToNewsletter', () => {
     expect(table.insert).toHaveBeenCalledWith([{ email: 'user@example.com', source: 'website' }]);
   });
 
+  it('rejects malformed email addresses before touching the database', async () => {
+    const result = await subscribeToNewsletter(createFormData('user@example'));
+
+    expect(result.error).toContain('geçerli');
+    expect(createAdminClient).not.toHaveBeenCalled();
+  });
+
   it('returns the already subscribed message without inserting a duplicate', async () => {
     const table = createNewsletterTable({
       existingSubscriber: { id: 'subscriber-1', status: 'active' },

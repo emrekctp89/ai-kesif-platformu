@@ -1,13 +1,12 @@
 'use server';
 
 import { createAdminClient } from '@/utils/supabase/admin';
+import { normalizeNewsletterEmail } from '@/lib/newsletterRecipients';
 
 export async function subscribeToNewsletter(formData) {
-  const email = String(formData.get('email') || '')
-    .trim()
-    .toLowerCase();
+  const email = normalizeNewsletterEmail(formData.get('email'));
 
-  if (!email || !email.includes('@')) {
+  if (!email) {
     return { error: 'Lütfen geçerli bir e-posta adresi girin.' };
   }
 

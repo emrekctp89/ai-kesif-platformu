@@ -1,4 +1,16 @@
-import { normalizeNewsletterRecipients } from '../newsletterRecipients';
+import { normalizeNewsletterEmail, normalizeNewsletterRecipients } from '../newsletterRecipients';
+
+describe('normalizeNewsletterEmail', () => {
+  it('normalizes a valid email address', () => {
+    expect(normalizeNewsletterEmail('  USER@Example.com ')).toBe('user@example.com');
+  });
+
+  it('returns an empty string for invalid emails', () => {
+    expect(normalizeNewsletterEmail('not-an-email')).toBe('');
+    expect(normalizeNewsletterEmail('user@example')).toBe('');
+    expect(normalizeNewsletterEmail('')).toBe('');
+  });
+});
 
 describe('normalizeNewsletterRecipients', () => {
   it('normalizes and deduplicates subscriber emails', () => {
