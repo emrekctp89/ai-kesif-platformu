@@ -38,13 +38,19 @@ export function HeaderNav({
           href="/kategori"
           className="text-muted-foreground transition-colors hover:text-foreground"
         >
-          Kategoriler
+          {t('categories')}
         </Link>
         <Link
           href="/kesfet"
           className="text-muted-foreground transition-colors hover:text-foreground"
         >
           {t('discover')}
+        </Link>
+        <Link
+          href="/ogren"
+          className="text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {t('learn')}
         </Link>
         <Link
           href="/karsilastir"
@@ -56,7 +62,7 @@ export function HeaderNav({
           href="/topluluk"
           className="hidden text-muted-foreground transition-colors hover:text-foreground lg:inline"
         >
-          Topluluk
+          {t('community')}
         </Link>
         <Link
           href="/blog"
@@ -66,7 +72,7 @@ export function HeaderNav({
         </Link>
         <Link
           href="/bulten"
-          className="text-muted-foreground transition-colors hover:text-foreground"
+          className="hidden text-muted-foreground transition-colors hover:text-foreground xl:inline"
         >
           {t('newsletter')}
         </Link>
@@ -83,7 +89,7 @@ export function HeaderNav({
         <div className="hidden items-center gap-2 sm:flex">
           <Button asChild className="ai-tavsiye-gradient font-semibold shadow-md">
             <Link href="/tavsiye" prefetch={false}>
-              AI Tavsiye
+              {t('aiRecommend')}
             </Link>
           </Button>
           <Button asChild variant="secondary">

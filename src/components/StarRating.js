@@ -4,14 +4,17 @@ import * as React from 'react';
 import { useTransition } from 'react';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { upsertRating } from '@/app/actions'; // Yeni fonksiyonu import ediyoruz
+import { upsertRating } from '@/app/actions';
 import toast from 'react-hot-toast';
-import { Button } from './ui/button';
 
-export default function StarRating({ toolId, toolSlug, currentUsersRating = 0 }) {
+export default function StarRating({ toolId, toolSlug, currentUsersRating = 0, size = 'md' }) {
   const [rating, setRating] = React.useState(currentUsersRating);
   const [hover, setHover] = React.useState(0);
   const [isPending, startTransition] = useTransition();
+
+  React.useEffect(() => {
+    setRating(currentUsersRating);
+  }, [currentUsersRating]);
 
   const handleRating = (newRating) => {
     setRating(newRating);
@@ -25,7 +28,6 @@ export default function StarRating({ toolId, toolSlug, currentUsersRating = 0 })
       const result = await upsertRating(formData);
       if (result?.error) {
         toast.error(result.error);
-        // Hata durumunda, oylamayı eski haline geri al
         setRating(currentUsersRating);
       } else {
         toast.success(result.success);
@@ -33,26 +35,31 @@ export default function StarRating({ toolId, toolSlug, currentUsersRating = 0 })
     });
   };
 
+  const starClass = size === 'sm' ? 'h-6 w-6' : 'h-8 w-8';
+
   return (
-    <div className="flex items-center gap-2">
-      {[...Array(5)].map((star, index) => {
+    <div className="flex items-center gap-1 sm:gap-1.5" role="radiogroup" aria-label="Araç puanı">
+      {[...Array(5)].map((_, index) => {
         const ratingValue = index + 1;
+        const isActive = ratingValue <= (hover || rating);
         return (
           <button
             type="button"
             key={ratingValue}
+            role="radio"
+            aria-checked={rating === ratingValue}
+            aria-label={`${ratingValue} yıldız`}
             className={cn(
-              'transition-colors',
-              ratingValue <= (hover || rating)
-                ? 'text-yellow-400'
-                : 'text-gray-300 dark:text-gray-600'
+              'rounded-md p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              isActive ? 'text-amber-400' : 'text-muted-foreground/40 hover:text-amber-300',
+              isPending && 'opacity-70'
             )}
             onClick={() => handleRating(ratingValue)}
             onMouseEnter={() => setHover(ratingValue)}
             onMouseLeave={() => setHover(0)}
             disabled={isPending}
           >
-            <Star className="w-8 h-8 fill-current" />
+            <Star className={cn(starClass, 'fill-current')} aria-hidden="true" />
           </button>
         );
       })}

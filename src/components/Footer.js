@@ -1,28 +1,32 @@
-import Link from 'next/link';
+'use client';
 
-const footerLinks = [
-  { href: '/kategori', label: 'Kategoriler' },
-  { href: '/kesfet', label: 'Keşfet' },
-  { href: '/topluluk', label: 'Topluluk' },
-  { href: '/leaderboard', label: 'Liderlik' },
-  { href: '/karsilastir', label: 'Karşılaştır' },
-  { href: '/tavsiye', label: 'AI Tavsiye' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/bulten', label: 'Bülten' },
-  { href: '/eserler', label: 'Eserler' },
-  { href: '/koleksiyonlar', label: 'Koleksiyonlar' },
-  { href: '/ogren', label: 'Öğren' },
-  { href: '/random-tools', label: 'Rastgele' },
-  { href: '/submit', label: 'Araç Öner' },
-  { href: '/developer', label: 'Geliştirici' },
-  { href: '/hakkimizda', label: 'Hakkımızda' },
-  { href: '/iletisim', label: 'İletişim' },
-  { href: '/gizlilik', label: 'Gizlilik' },
-  { href: '/kullanim-kosullari', label: 'Kullanım Koşulları' },
-];
+import { Link } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 
 export default function Footer() {
+  const t = useTranslations('Navigation');
   const year = new Date().getFullYear();
+
+  const footerLinks = [
+    { href: '/kategori', label: t('categories') },
+    { href: '/kesfet', label: t('discover') },
+    { href: '/ogren', label: t('learn') },
+    { href: '/topluluk', label: t('community') },
+    { href: '/leaderboard', label: t('leaderboard') },
+    { href: '/karsilastir', label: t('compare') },
+    { href: '/tavsiye', label: t('aiRecommend') },
+    { href: '/blog', label: t('blog') },
+    { href: '/bulten', label: t('newsletter') },
+    { href: '/eserler', label: t('showcase') },
+    { href: '/koleksiyonlar', label: t('collections') },
+    { href: '/random-tools', label: t('randomTools') },
+    { href: '/submit', label: t('submitTool') },
+    { href: '/developer', label: t('developer') },
+    { href: '/hakkimizda', label: t('about') },
+    { href: '/iletisim', label: t('contact') },
+    { href: '/gizlilik', label: t('privacy') },
+    { href: '/kullanim-kosullari', label: t('terms') },
+  ];
 
   return (
     <footer className="mt-12 border-t border-border bg-card">

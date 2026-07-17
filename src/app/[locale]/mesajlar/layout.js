@@ -45,67 +45,73 @@ export default async function MessagesLayout(props) {
   const activeConversationId = params.conversationId;
 
   return (
-    // DEĞİŞİKLİK: Bu ana kapsayıcı, ana layout'un padding'ini sıfırlayarak
-    // tüm alanı kaplayan bir flex container'a dönüşüyor.
-    <div className="flex h-[calc(100vh-5.6rem)] -m-4 md:-m-6 border-t">
-      {/* Sol Taraf: Sohbet Listesi */}
+    <div className="-m-4 flex h-[calc(100vh-5.6rem)] border-t border-border/60 md:-m-6">
       <aside
         className={cn(
-          'w-full border-r flex-col h-full bg-background',
-          'md:w-[300px] lg:w-[350px] md:flex', // Masaüstünde her zaman görünür
-          activeConversationId ? 'hidden md:flex' : 'flex' // Bir sohbet seçiliyse mobilde gizle
+          'h-full w-full flex-col border-r border-border/60 bg-background',
+          'md:flex md:w-[300px] lg:w-[350px]',
+          activeConversationId ? 'hidden md:flex' : 'flex'
         )}
       >
-        <div className="p-4 border-b">
-          <h2 className="text-xl font-bold">Sohbetler</h2>
+        <div className="border-b border-border/60 bg-muted/20 p-4">
+          <h2 className="text-xl font-extrabold tracking-tight">Sohbetler</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">{conversations.length} sohbet</p>
         </div>
         <div className="flex-1 overflow-y-auto">
-          <div className="space-y-1 p-2">
-            {conversations.map((convo) => {
-              const otherUser = {
-                id: convo.other_participant_id,
-                username: convo.other_participant_username,
-                avatar_url: convo.other_participant_avatar_url,
-                email: convo.other_participant_email,
-              };
-              const unreadCount = convo.unread_count;
-              const fallback =
-                (otherUser.username || otherUser.email)?.substring(0, 2).toUpperCase() || '??';
+          {conversations.length === 0 ? (
+            <p className="p-6 text-center text-sm text-muted-foreground">
+              Henüz sohbet yok. Bir profil üzerinden mesaj başlatabilirsin.
+            </p>
+          ) : (
+            <div className="space-y-1 p-2">
+              {conversations.map((convo) => {
+                const otherUser = {
+                  id: convo.other_participant_id,
+                  username: convo.other_participant_username,
+                  avatar_url: convo.other_participant_avatar_url,
+                  email: convo.other_participant_email,
+                };
+                const unreadCount = convo.unread_count;
+                const display =
+                  otherUser.username ||
+                  (otherUser.email ? String(otherUser.email).split('@')[0] : 'Kullanıcı');
+                const fallback = display.substring(0, 2).toUpperCase() || '??';
+                const isActive = String(activeConversationId) === String(convo.conversation_id);
 
-              return (
-                <Link
-                  key={convo.conversation_id}
-                  href={`/mesajlar/${convo.conversation_id}`}
-                  className={cn(
-                    'flex items-center justify-between p-3 rounded-lg transition-colors',
-                    activeConversationId == convo.conversation_id ? 'bg-muted' : 'hover:bg-muted/50'
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={otherUser.avatar_url} />
-                      <AvatarFallback>{fallback}</AvatarFallback>
-                    </Avatar>
-                    <p className="font-semibold text-sm truncate">
-                      {otherUser.username || otherUser.email}
-                    </p>
-                  </div>
-                  {unreadCount > 0 && (
-                    <Badge className="h-6 w-6 flex items-center justify-center shrink-0">
-                      {unreadCount}
-                    </Badge>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
+                return (
+                  <Link
+                    key={convo.conversation_id}
+                    href={`/mesajlar/${convo.conversation_id}`}
+                    className={cn(
+                      'flex items-center justify-between rounded-xl p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      isActive ? 'bg-primary/10 ring-1 ring-primary/20' : 'hover:bg-muted/60'
+                    )}
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Avatar className="h-10 w-10 shrink-0">
+                        {otherUser.avatar_url ? (
+                          <AvatarImage src={otherUser.avatar_url} alt="" />
+                        ) : null}
+                        <AvatarFallback>{fallback}</AvatarFallback>
+                      </Avatar>
+                      <p className="truncate text-sm font-semibold">{display}</p>
+                    </div>
+                    {unreadCount > 0 ? (
+                      <Badge className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
+                        {unreadCount}
+                      </Badge>
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </aside>
-      {/* Sağ Taraf: Aktif Sohbet Penceresi */}
       <main
         className={cn(
-          'flex-1 flex-col h-full',
-          activeConversationId ? 'flex' : 'hidden md:flex' // Bir sohbet seçili değilse mobilde gizle
+          'h-full flex-1 flex-col bg-muted/10',
+          activeConversationId ? 'flex' : 'hidden md:flex'
         )}
       >
         {children}

@@ -14,8 +14,8 @@ export function CategoryGrid({ categories, limit = 36, showAllLink = true }) {
   const hasMore = typeof limit === 'number' && categories.length > limit;
 
   return (
-    <section className="mb-16" aria-labelledby="categories-heading">
-      <div className="mb-6 flex items-center justify-between gap-3">
+    <section className="mb-4" aria-labelledby="categories-heading">
+      <div className="mb-5 flex items-center justify-between gap-3 sm:mb-6">
         <div>
           <h2 id="categories-heading" className="text-2xl font-bold tracking-tight text-foreground">
             Kategorileri Keşfet
@@ -27,15 +27,15 @@ export function CategoryGrid({ categories, limit = 36, showAllLink = true }) {
         {showAllLink ? (
           <Link
             href="/kategori"
-            className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary hover:underline"
+            className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             Tümünü gör
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         ) : null}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
         {visible.map((category) => {
           const config = getCategoryConfig(category.slug);
           const Icon = config.icon;
@@ -44,7 +44,7 @@ export function CategoryGrid({ categories, limit = 36, showAllLink = true }) {
             <Link
               key={category.slug}
               href={`/kategori/${category.slug}`}
-              className="group block h-full"
+              className="group block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               prefetch={false}
             >
               <Card className="glass-panel relative h-full overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
@@ -55,7 +55,7 @@ export function CategoryGrid({ categories, limit = 36, showAllLink = true }) {
                   <div
                     className={`rounded-2xl border bg-background p-3 shadow-sm transition-transform duration-300 group-hover:scale-110 ${config.border}`}
                   >
-                    <Icon className={`h-6 w-6 ${config.text}`} />
+                    <Icon className={`h-6 w-6 ${config.text}`} aria-hidden="true" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
@@ -76,10 +76,10 @@ export function CategoryGrid({ categories, limit = 36, showAllLink = true }) {
         <div className="mt-6 flex justify-center">
           <Link
             href="/kategori"
-            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-indigo-500/25 bg-indigo-950/5 px-5 py-2 text-sm font-semibold text-indigo-800 transition hover:bg-indigo-950/10 dark:text-indigo-200"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-indigo-500/25 bg-indigo-950/5 px-5 py-2 text-sm font-semibold text-indigo-800 transition hover:bg-indigo-950/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-indigo-200"
           >
             +{categories.length - limit} kategori daha
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
       ) : null}

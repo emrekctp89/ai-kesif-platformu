@@ -48,8 +48,8 @@ function PromptItem({ prompt, user, isVoted, toolSlug }) {
   const isOwner = user?.id === prompt.user_id;
 
   return (
-    <Card>
-      <CardContent className="p-4 flex gap-4">
+    <Card className="glass-panel border-border/50">
+      <CardContent className="flex gap-4 p-4">
         <div className="flex flex-col items-center gap-1">
           <Button
             onClick={handleVoteAction}
@@ -58,24 +58,25 @@ function PromptItem({ prompt, user, isVoted, toolSlug }) {
             size="icon"
             className={cn('h-8 w-8', optimisticState.isVoted && 'text-primary')}
             disabled={isPending}
+            aria-label={optimisticState.isVoted ? 'Oyu geri al' : 'Promptu oyla'}
+            aria-pressed={optimisticState.isVoted}
           >
             <ArrowUp className={cn('h-5 w-5', optimisticState.isVoted && 'fill-current')} />
           </Button>
           <span className="text-sm font-bold">{optimisticState.voteCount}</span>
         </div>
-        <div className="flex-1">
-          <div className="flex justify-between items-start">
-            <h4 className="font-semibold">{prompt.title}</h4>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="font-semibold leading-snug">{prompt.title}</h4>
             {isOwner && <DeletePromptButton promptId={prompt.id} toolSlug={toolSlug} />}
           </div>
-          <pre className="text-sm bg-muted p-3 rounded-md my-2 whitespace-pre-wrap font-mono">
+          <pre className="my-2 overflow-x-auto whitespace-pre-wrap rounded-md bg-muted p-3 font-mono text-sm">
             {prompt.prompt_text}
           </pre>
-          {prompt.notes && (
-            <p className="text-xs text-muted-foreground italic mt-2">{prompt.notes}</p>
-          )}
-          <div className="flex items-center gap-2 mt-3">
-            {/* DEĞİŞİKLİK: Avatar ve kullanıcı adı artık bir link */}
+          {prompt.notes ? (
+            <p className="mt-2 text-xs italic text-muted-foreground">{prompt.notes}</p>
+          ) : null}
+          <div className="mt-3 flex items-center gap-2">
             <Link href={profileLink} className="group flex items-center gap-2">
               <Avatar className="h-5 w-5">
                 <AvatarImage src={userProfile.avatar_url} />
@@ -93,15 +94,21 @@ function PromptItem({ prompt, user, isVoted, toolSlug }) {
 }
 
 // Ana Prompt Listesi Bileşeni
-export function PromptList({ prompts, user, userVotes, toolSlug }) {
+export function PromptList({
+  prompts,
+  user,
+  userVotes,
+  toolSlug,
+  emptyLabel = 'Bu araç için henüz hiç prompt paylaşılmamış.',
+}) {
   if (!prompts || prompts.length === 0) {
     return (
-      <p className="text-muted-foreground text-center py-4">
-        Bu araç için henüz hiç prompt paylaşılmamış.
+      <p className="rounded-xl border border-dashed bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+        {emptyLabel}
       </p>
     );
   }
-  const userVoteSet = new Set(userVotes.map((v) => v.prompt_id));
+  const userVoteSet = new Set((userVotes || []).map((v) => v.prompt_id));
   return (
     <div className="space-y-4">
       {prompts.map((prompt) => (

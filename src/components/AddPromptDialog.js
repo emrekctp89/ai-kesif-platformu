@@ -20,7 +20,7 @@ import {
 import { PlusCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export function AddPromptDialog({ toolId, toolSlug }) {
+export function AddPromptDialog({ toolId, toolSlug, onSuccess, triggerLabel = 'Prompt paylaş' }) {
   const formRef = React.useRef(null);
   const [isOpen, setIsOpen] = React.useState(false);
   const [isPending, startTransition] = useTransition();
@@ -31,7 +31,8 @@ export function AddPromptDialog({ toolId, toolSlug }) {
       if (result?.success) {
         toast.success(result.success);
         formRef.current?.reset();
-        setIsOpen(false); // Başarılı olursa pencereyi kapat
+        setIsOpen(false);
+        onSuccess?.();
       } else if (result?.error) {
         toast.error(result.error);
       }
@@ -41,9 +42,9 @@ export function AddPromptDialog({ toolId, toolSlug }) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <PlusCircle className="h-5 w-5" />
-          <span className="sr-only">Yeni Prompt Paylaş</span>
+        <Button variant="outline" size="sm" className="shrink-0 gap-1.5">
+          <PlusCircle className="h-4 w-4" aria-hidden="true" />
+          {triggerLabel}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

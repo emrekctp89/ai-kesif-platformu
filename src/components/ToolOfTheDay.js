@@ -30,7 +30,7 @@ export async function ToolOfTheDay() {
   }
 
   return (
-    <div className="mb-12 relative group">
+    <section className="relative mb-4 group" aria-labelledby="tool-of-the-day-heading">
       <div className="brand-glow absolute inset-0 rounded-3xl opacity-50 blur-xl transition-opacity duration-700 group-hover:opacity-100" />
       <Card className="brand-surface relative w-full overflow-hidden rounded-3xl border-2 border-primary/30 shadow-2xl glass-panel">
         <div className="absolute -right-16 -top-16 rounded-full bg-primary/5 p-32 blur-3xl animate-pulse" />
@@ -38,10 +38,13 @@ export async function ToolOfTheDay() {
           {/* Sol Taraf: Açıklamalar */}
           <div className="space-y-5">
             <div className="brand-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
-              <Zap className="h-4 w-4 animate-bounce" />
+              <Zap className="h-4 w-4 animate-bounce" aria-hidden="true" />
               <span>GÜNÜN ARACI</span>
             </div>
-            <h2 className="flex items-center gap-4 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+            <h2
+              id="tool-of-the-day-heading"
+              className="flex items-center gap-4 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl"
+            >
               <div className="animate-float rounded-2xl border border-border/50 bg-background p-3 shadow-lg">
                 <ToolIcon name={tool.name} link={tool.link} className="h-10 w-10 sm:h-12 sm:w-12" />
               </div>
@@ -113,6 +116,6 @@ export async function ToolOfTheDay() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </section>
   );
 }

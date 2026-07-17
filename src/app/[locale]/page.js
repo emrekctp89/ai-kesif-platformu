@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { HomepageClient } from '@/components/HomepageClient';
 import { FeaturedTools } from '@/components/FeaturedTools';
 import { ToolOfTheDay } from '@/components/ToolOfTheDay';
+import { TrendingTools } from '@/components/TrendingTools';
 import { CategoryGrid } from '@/components/CategoryGrid';
 import { sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -17,12 +18,14 @@ async function getPageData(searchParams) {
   const supabase = await createClient(await cookies());
 
   const { fetchMoreTools } = await import('@/app/actions');
-  const [authResult, initialTools, categoriesResult, tagsResult] = await Promise.all([
-    supabase.auth.getUser(),
-    fetchMoreTools({ page: 0, searchParams }),
-    supabase.from('categories').select('name, slug').order('name'),
-    supabase.from('tags').select('id, name').order('name'),
-  ]);
+  const [authResult, initialTools, categoriesResult, tagsResult, toolsCountResult] =
+    await Promise.all([
+      supabase.auth.getUser(),
+      fetchMoreTools({ page: 0, searchParams }),
+      supabase.from('categories').select('name, slug').order('name'),
+      supabase.from('tags').select('id, name').order('name'),
+      supabase.from('tools').select('id', { count: 'exact', head: true }).eq('is_approved', true),
+    ]);
 
   const user = authResult.data.user;
   const { data: favorites } = user
@@ -31,13 +34,18 @@ async function getPageData(searchParams) {
 
   // Client Component props must be serializable — pass an array, not a Set.
   const favoriteToolIds = favorites?.map((f) => f.tool_id).filter(Boolean) || [];
+  const categories = sortCategoriesByCanonicalOrder(categoriesResult.data || []);
 
   return {
     user,
     favoriteToolIds,
     initialTools,
-    categories: sortCategoriesByCanonicalOrder(categoriesResult.data || []),
+    categories,
     allTags: tagsResult.data || [],
+    stats: {
+      toolCount: toolsCountResult.count ?? 0,
+      categoryCount: categories.length,
+    },
   };
 }
 
@@ -51,13 +59,14 @@ export default async function HomePage(props) {
   // Tüm verileri sunucuda çekiyoruz
   const initialData = await getPageData(resolvedSearchParams);
 
-  // Keşif bölümlerini Server Component olarak oluşturuyoruz.
+  // Keşif sırası: Günün aracı → Öne çıkan → Trendler → Kategoriler (kompakt)
   // Keys: RSC → Client prop geçişinde React list uyarısını önler.
   const discoverySections = (
-    <div key="discovery-sections" className="space-y-12">
-      <CategoryGrid key="category-grid" categories={initialData.categories} />
+    <div key="discovery-sections" className="space-y-12 sm:space-y-14">
       <ToolOfTheDay key="tool-of-the-day" />
       <FeaturedTools key="featured-tools" />
+      <TrendingTools key="trending-tools" emptyMode="hide" />
+      <CategoryGrid key="category-grid" categories={initialData.categories} limit={12} />
       <SpeedInsights key="speed-insights" />
     </div>
   );

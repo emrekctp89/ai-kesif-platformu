@@ -178,7 +178,7 @@ export function AuthCard({ children, className }) {
   return (
     <div
       className={cn(
-        'rounded-3xl border border-border/60 bg-card/80 p-6 shadow-xl backdrop-blur-sm sm:p-8',
+        'glass-panel rounded-3xl border border-border/60 bg-card/85 p-6 shadow-xl backdrop-blur-sm sm:p-8',
         className
       )}
     >

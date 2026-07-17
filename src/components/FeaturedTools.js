@@ -32,18 +32,23 @@ export async function FeaturedTools() {
   if (featuredTools.length === 0) return null;
 
   return (
-    <section className="mb-12" aria-labelledby="featured-tools-heading">
-      <h2
-        id="featured-tools-heading"
-        className="mb-4 text-2xl font-bold tracking-tight text-foreground"
-      >
-        Öne Çıkan Araçlar
-      </h2>
+    <section className="mb-4" aria-labelledby="featured-tools-heading">
+      <div className="mb-5 sm:mb-6">
+        <h2
+          id="featured-tools-heading"
+          className="text-2xl font-bold tracking-tight text-foreground"
+        >
+          Öne Çıkan Araçlar
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Editör seçkisi · keşfe değer yapay zeka araçları
+        </p>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {featuredTools.map((tool, index) => (
           <Card
             key={tool.id ?? tool.slug ?? `featured-${index}`}
-            className="group relative h-full overflow-hidden border border-indigo-500/20 bg-slate-950 text-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgb(99,102,241,0.2)]"
+            className="group relative h-full overflow-hidden border border-indigo-500/20 bg-slate-950 text-white shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/40 hover:shadow-[0_8px_30px_rgb(99,102,241,0.2)] focus-within:ring-2 focus-within:ring-indigo-400/50"
           >
             {/* Aurora / cam efekt katmanları */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-indigo-600/25 via-slate-950 to-purple-900/40" />

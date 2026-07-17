@@ -1,16 +1,33 @@
 import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Zap, Rss, Library, Map, Users, Sparkles } from 'lucide-react';
-import { CommunityFeedPreview } from '@/components/CommunityFeedPreview';
+import {
+  ArrowRight,
+  BookOpen,
+  Compass,
+  GitCompareArrows,
+  GraduationCap,
+  Library,
+  Map,
+  Sparkles,
+  Users,
+  Zap,
+} from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
-// Veritabanındaki RPC fonksiyonlarını çağıran ana fonksiyon
+import { CommunityFeedPreview } from '@/components/CommunityFeedPreview';
+import ToolIcon from '@/components/ToolIcon';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { generatePageMetadata } from '@/utils/seo';
+
+export const revalidate = 3600;
+
 async function getDiscoverData() {
-  const supabase = await createClient();
-  // DEĞİŞİKLİK: Artık 3 farklı RPC'yi tek seferde çağırıyoruz
+  const supabase = await createClient(await cookies());
   const [
     { data: mainData, error: mainError },
     { data: collections, error: collectionsError },
@@ -21,31 +38,80 @@ async function getDiscoverData() {
     supabase.rpc('get_learning_paths'),
   ]);
 
-  if (mainError || collectionsError || learningPathsError) {
-    console.error(
-      'Keşfet sayfası verisi çekilirken hata:',
-      mainError || collectionsError || learningPathsError
-    );
+  // Partial failure: still render whatever we have.
+  if (mainError) {
+    console.error('Keşfet ana verisi hatası:', mainError);
+  }
+  if (collectionsError) {
+    console.error('Keşfet koleksiyon hatası:', collectionsError);
+  }
+  if (learningPathsError) {
+    console.error('Keşfet öğrenme yolu hatası:', learningPathsError);
+  }
+
+  if (mainError && !mainData) {
     return null;
   }
 
-  return { ...mainData, collections, learningPaths };
+  return {
+    ...(mainData || {}),
+    collections: collectionsError ? [] : collections || [],
+    learningPaths: learningPathsError ? [] : learningPaths || [],
+  };
 }
 
-export const metadata = {
-  title: 'Keşfet | AI Keşif Platformu',
-  description:
-    'Yapay zeka dünyasındaki en son araçları, popüler eserleri, blog yazılarını ve daha fazlasını keşfedin.',
-};
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Discover' });
+  const path = locale === 'en' ? '/en/kesfet' : '/kesfet';
 
-export const revalidate = 3600; // 1 hour ISR caching
+  return generatePageMetadata({
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+    path,
+  });
+}
 
-export default async function DiscoverPage() {
+function SectionHeader({ id, icon: Icon, title, subtitle, action }) {
+  return (
+    <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h2
+          id={id}
+          className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+        >
+          {Icon ? <Icon className="h-7 w-7 text-primary" aria-hidden="true" /> : null}
+          {title}
+        </h2>
+        {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
+      </div>
+      {action || null}
+    </div>
+  );
+}
+
+function EmptyNote({ message }) {
+  return (
+    <div className="rounded-2xl border border-dashed bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+      {message}
+    </div>
+  );
+}
+
+export default async function DiscoverPage({ params }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Discover' });
   const discoverData = await getDiscoverData();
 
   if (!discoverData) {
     return (
-      <p className="text-center text-muted-foreground">İçerik yüklenirken bir sorun oluştu.</p>
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <h1 className="text-2xl font-bold tracking-tight">{t('errorTitle')}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{t('errorBody')}</p>
+        <Button asChild className="brand-gradient mt-6 min-h-11">
+          <Link href="/">{t('retryHome')}</Link>
+        </Button>
+      </div>
     );
   }
 
@@ -59,146 +125,298 @@ export default async function DiscoverPage() {
     learningPaths,
   } = discoverData;
 
-  return (
-    <div className="container mx-auto py-12 px-4 space-y-16">
-      {tool_of_the_day && (
-        <section>
-          <Card className="brand-surface w-full border-2 border-primary/50 shadow-lg">
-            <CardContent className="grid items-center gap-8 p-8 md:grid-cols-2">
-              <div className="space-y-4">
-                <div className="brand-chip inline-flex items-center gap-3 rounded-full px-3 py-1.5 text-lg font-bold">
-                  <Zap className="h-6 w-6" />
-                  <span>GÜNÜN ARACI</span>
-                </div>
-                <h2 className="text-4xl font-extrabold tracking-tight text-foreground">
-                  {tool_of_the_day.name}
-                </h2>
-                <p className="text-lg text-muted-foreground">{tool_of_the_day.description}</p>
-                <Button asChild size="lg" className="brand-gradient shadow-md">
-                  <Link href={`/tool/${tool_of_the_day.slug}`}>İncele & Keşfet</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      )}
+  const quickLinks = [
+    { href: '/tavsiye', label: t('quickRecommend'), icon: Sparkles, primary: true },
+    { href: '/ogren', label: t('quickLearn'), icon: GraduationCap },
+    { href: '/karsilastir', label: t('quickCompare'), icon: GitCompareArrows },
+    { href: '/kategori', label: t('quickCategories'), icon: Compass },
+  ];
 
-      {/* YENİ: Popüler Koleksiyonlar Bölümü */}
-      {collections?.length > 0 && (
-        <section>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground mb-6 flex items-center gap-3">
-            <Library className="w-8 h-8 text-blue-500" />
-            Popüler Koleksiyonlar
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  return (
+    <div className="mx-auto max-w-6xl space-y-12 pb-8 sm:space-y-16 sm:pb-12">
+      {/* Hero */}
+      <section className="brand-surface relative overflow-hidden rounded-3xl p-6 shadow-xl glass-panel sm:p-8 lg:p-10">
+        <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-purple-500/10 blur-3xl" />
+
+        <div className="relative z-10 mx-auto max-w-3xl text-center">
+          <div className="brand-chip mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
+            <Compass className="h-4 w-4" aria-hidden="true" />
+            {t('heroChip')}
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
+            {t('title')}
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+            {t('subtitle')}
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+            {quickLinks.map(({ href, label, icon: Icon, primary }) => (
+              <Button
+                key={href}
+                asChild
+                size="sm"
+                variant={primary ? 'default' : 'outline'}
+                className={
+                  primary
+                    ? 'ai-tavsiye-gradient min-h-10 rounded-full border-0 px-4 font-semibold shadow-md'
+                    : 'glass-button min-h-10 rounded-full px-4 font-semibold'
+                }
+              >
+                <Link href={href} prefetch={false}>
+                  <Icon className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                  {label}
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Tool of the day */}
+      {tool_of_the_day ? (
+        <section aria-labelledby="discover-totd-heading">
+          <div className="relative group">
+            <div className="brand-glow absolute inset-0 rounded-3xl opacity-40 blur-xl transition-opacity group-hover:opacity-70" />
+            <Card className="brand-surface relative overflow-hidden rounded-3xl border-2 border-primary/30 shadow-2xl glass-panel">
+              <CardContent className="relative z-10 grid items-center gap-6 p-6 sm:p-8 md:grid-cols-[1fr_auto] md:gap-10">
+                <div className="space-y-4">
+                  <div className="brand-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold">
+                    <Zap className="h-4 w-4" aria-hidden="true" />
+                    {t('toolOfDay')}
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="shrink-0 rounded-2xl border border-border/50 bg-background p-3 shadow-md">
+                      <ToolIcon
+                        name={tool_of_the_day.name}
+                        link={tool_of_the_day.link}
+                        className="h-12 w-12"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <h2
+                        id="discover-totd-heading"
+                        className="text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl"
+                      >
+                        {tool_of_the_day.name}
+                      </h2>
+                      <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                        {tool_of_the_day.description}
+                      </p>
+                    </div>
+                  </div>
+                  <Button asChild size="lg" className="brand-gradient min-h-12 shadow-md">
+                    <Link href={`/tool/${tool_of_the_day.slug}`} prefetch={false}>
+                      {t('exploreTool')}
+                      <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      ) : null}
+
+      {/* Collections */}
+      <section aria-labelledby="discover-collections-heading">
+        <SectionHeader
+          id="discover-collections-heading"
+          icon={Library}
+          title={t('collectionsHeading')}
+          subtitle={t('collectionsSubheading')}
+          action={
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/koleksiyonlar" prefetch={false}>
+                {t('viewAllCollections')}
+                <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          }
+        />
+        {collections?.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-5">
             {collections.map((collection) => (
               <Link
                 key={collection.slug}
                 href={`/koleksiyonlar/${collection.slug}`}
-                className="group"
+                className="group block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                prefetch={false}
               >
-                <Card className="h-full overflow-hidden transition-all hover:shadow-lg hover:border-blue-500">
-                  <CardHeader>
-                    <CardTitle className="group-hover:text-blue-500">{collection.title}</CardTitle>
+                <Card className="glass-panel h-full border-border/50 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg">
+                  <CardHeader className="space-y-2">
+                    <Badge variant="secondary" className="w-fit">
+                      <Library className="mr-1 h-3 w-3" aria-hidden="true" />
+                      {t('collectionsHeading')}
+                    </Badge>
+                    <CardTitle className="text-lg leading-snug transition-colors group-hover:text-primary">
+                      {collection.title}
+                    </CardTitle>
                     <CardDescription className="line-clamp-2">
-                      {collection.description}
+                      {collection.description || ''}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <p className="text-xs text-muted-foreground">
-                      Oluşturan: {collection.author_username}
+                      {t('createdBy', {
+                        name: collection.author_username || t('unknownAuthor'),
+                      })}
                     </p>
                   </CardContent>
                 </Card>
               </Link>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <EmptyNote message={t('collectionsEmpty')} />
+        )}
+      </section>
 
-      {/* YENİ: Öğrenme Yolları Bölümü */}
-      {learningPaths?.length > 0 && (
-        <section>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground mb-6 flex items-center gap-3">
-            <Map className="w-8 h-8 text-green-500" />
-            Öğrenme Yolları
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Learning paths */}
+      <section aria-labelledby="discover-paths-heading">
+        <SectionHeader
+          id="discover-paths-heading"
+          icon={Map}
+          title={t('pathsHeading')}
+          subtitle={t('pathsSubheading')}
+          action={
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/ogren" prefetch={false}>
+                {t('viewAllLearn')}
+                <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          }
+        />
+        {learningPaths?.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-5">
             {learningPaths.map((path) => (
-              <Link key={path.slug} href={`/koleksiyonlar/${path.slug}`} className="group">
-                <Card className="h-full overflow-hidden transition-all hover:shadow-lg hover:border-green-500">
-                  <CardHeader>
-                    <CardTitle className="group-hover:text-green-500">{path.title}</CardTitle>
-                    <CardDescription className="line-clamp-2">{path.description}</CardDescription>
+              <Link
+                key={path.slug}
+                href={`/koleksiyonlar/${path.slug}`}
+                className="group block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                prefetch={false}
+              >
+                <Card className="glass-panel h-full border-border/50 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg">
+                  <CardHeader className="space-y-2">
+                    <Badge variant="outline" className="w-fit">
+                      <Map className="mr-1 h-3 w-3" aria-hidden="true" />
+                      {t('pathsHeading')}
+                    </Badge>
+                    <CardTitle className="text-lg leading-snug transition-colors group-hover:text-primary">
+                      {path.title}
+                    </CardTitle>
+                    <CardDescription className="line-clamp-2">
+                      {path.description || ''}
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <p className="text-xs text-muted-foreground">
-                      Oluşturan: {path.author_username}
+                      {t('createdBy', {
+                        name: path.author_username || t('unknownAuthor'),
+                      })}
                     </p>
                   </CardContent>
                 </Card>
               </Link>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <EmptyNote message={t('pathsEmpty')} />
+        )}
+      </section>
 
       <CommunityFeedPreview limit={5} className="max-w-3xl" />
 
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Showcase + leaders */}
+      <section className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-pink-500" />
-            Son Eserler
-          </h2>
+          <SectionHeader
+            id="discover-showcase-heading"
+            icon={Sparkles}
+            title={t('showcaseHeading')}
+            subtitle={t('showcaseSubheading')}
+            action={
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/eserler" prefetch={false}>
+                  {t('viewAllShowcase')}
+                  <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
+            }
+          />
           {latest_showcase?.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 sm:gap-4">
               {latest_showcase.map((item) => (
-                <Link key={item.id} href={`/eserler?eserId=${item.id}`} className="group">
-                  <div className="aspect-square relative rounded-lg overflow-hidden">
-                    {/* DÜZELTME: Görsel URL'i varsa Image bileşenini render et */}
-                    {item.image_url && (
+                <Link
+                  key={item.id}
+                  href={`/eserler?eserId=${item.id}`}
+                  className="group block overflow-hidden rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  prefetch={false}
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-xl border border-border/50 bg-muted">
+                    {item.image_url ? (
                       <Image
                         src={item.image_url}
-                        alt={item.title}
+                        alt={item.title || ''}
                         fill
-                        className="object-cover transition-transform group-hover:scale-105"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 50vw, 25vw"
                       />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-muted-foreground">
+                        <Sparkles className="h-8 w-8 opacity-40" aria-hidden="true" />
+                      </div>
                     )}
                   </div>
                 </Link>
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground">Henüz eser yok.</p>
+            <EmptyNote message={t('showcaseEmpty')} />
           )}
         </div>
-        <div className="lg:col-span-1">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-3">
-            <Users className="w-6 h-6 text-teal-500" />
-            Topluluk Liderleri
-          </h2>
+
+        <div>
+          <SectionHeader
+            id="discover-leaders-heading"
+            icon={Users}
+            title={t('leadersHeading')}
+            subtitle={t('leadersSubheading')}
+            action={
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/leaderboard" prefetch={false}>
+                  {t('viewLeaderboard')}
+                  <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
+            }
+          />
           {top_users?.length > 0 ? (
-            <Card>
-              <CardContent className="p-4 space-y-3">
+            <Card className="glass-panel border-border/50">
+              <CardContent className="space-y-1 p-3 sm:p-4">
                 {top_users.map((user, index) => {
-                  const displayName = user.username || user.email || 'Anonim';
+                  const displayName = user.username || user.email || t('unknownAuthor');
                   const fallback = displayName.substring(0, 2).toUpperCase();
+                  const href = user.username ? `/u/${user.username}` : '#';
                   return (
                     <Link
-                      key={index}
-                      href={user.username ? `/u/${user.username}` : '#'}
-                      className="flex items-center gap-3 p-2 rounded-md hover:bg-muted"
+                      key={user.username || user.email || index}
+                      href={href}
+                      className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      prefetch={false}
                     >
+                      <span className="w-5 text-center text-xs font-bold text-muted-foreground">
+                        {index + 1}
+                      </span>
                       <Avatar className="h-10 w-10">
-                        {/* DÜZELTME: Avatar URL'i varsa AvatarImage'ı render et */}
-                        {user.avatar_url && <AvatarImage src={user.avatar_url} />}
+                        {user.avatar_url ? <AvatarImage src={user.avatar_url} alt="" /> : null}
                         <AvatarFallback>{fallback}</AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-semibold text-sm">{displayName}</p>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">{displayName}</p>
                         <p className="text-xs text-muted-foreground">
-                          {user.reputation_points} Puan
+                          {t('points', { count: user.reputation_points ?? 0 })}
                         </p>
                       </div>
                     </Link>
@@ -207,41 +425,57 @@ export default async function DiscoverPage() {
               </CardContent>
             </Card>
           ) : (
-            <p className="text-muted-foreground">Henüz lider yok.</p>
+            <EmptyNote message={t('leadersEmpty')} />
           )}
         </div>
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Posts + latest tools */}
+      <section className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-3">
-            <Rss className="w-6 h-6 text-orange-500" />
-            Son Yazılar
-          </h2>
+          <SectionHeader
+            id="discover-posts-heading"
+            icon={BookOpen}
+            title={t('postsHeading')}
+            subtitle={t('postsSubheading')}
+            action={
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/blog" prefetch={false}>
+                  {t('viewAllBlog')}
+                  <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
+            }
+          />
           {latest_posts?.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               {latest_posts.map((post) => (
-                <Link key={post.slug} href={`/blog/${post.slug}`} className="group">
-                  <Card className="h-full overflow-hidden transition-all hover:border-primary">
-                    {/* DÜZELTME: Öne çıkan görsel URL'i varsa Image bileşenini render et */}
-                    {post.featured_image_url && (
-                      <div className="aspect-video relative">
+                <Link
+                  key={post.slug}
+                  href={`/blog/${post.slug}`}
+                  className="group block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  prefetch={false}
+                >
+                  <Card className="glass-panel h-full overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+                    {post.featured_image_url ? (
+                      <div className="relative aspect-video bg-muted">
                         <Image
                           src={post.featured_image_url}
                           alt={post.title}
                           fill
-                          className="object-cover transition-transform group-hover:scale-105"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          sizes="(max-width: 768px) 100vw, 40vw"
                         />
                       </div>
-                    )}
+                    ) : null}
                     <CardHeader>
-                      <CardTitle className="group-hover:text-primary transition-colors">
+                      <CardTitle className="text-lg leading-snug transition-colors group-hover:text-primary">
                         {post.title}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground line-clamp-3 text-sm">
-                        {post.description}
+                    <CardContent className="pt-0">
+                      <p className="line-clamp-3 text-sm text-muted-foreground">
+                        {post.description || ''}
                       </p>
                     </CardContent>
                   </Card>
@@ -249,30 +483,45 @@ export default async function DiscoverPage() {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground">Henüz yazı yok.</p>
+            <EmptyNote message={t('postsEmpty')} />
           )}
         </div>
-        <div className="lg:col-span-1">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-4">
-            Son Eklenen Araçlar
-          </h2>
+
+        <div>
+          <SectionHeader
+            id="discover-tools-heading"
+            title={t('latestToolsHeading')}
+            subtitle={t('latestToolsSubheading')}
+            action={
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/" prefetch={false}>
+                  {t('viewAllTools')}
+                  <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
+            }
+          />
           {latest_tools?.length > 0 ? (
-            <Card>
-              <CardContent className="p-4 space-y-4">
+            <Card className="glass-panel border-border/50">
+              <CardContent className="space-y-1 p-3 sm:p-4">
                 {latest_tools.map((tool) => (
                   <Link
                     key={tool.id}
                     href={`/tool/${tool.slug}`}
-                    className="block p-2 rounded-md hover:bg-muted"
+                    className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    prefetch={false}
                   >
-                    <p className="font-semibold text-sm">{tool.name}</p>
-                    <p className="text-xs text-muted-foreground">{tool.category_name}</p>
+                    <ToolIcon name={tool.name} link={tool.link} className="h-9 w-9" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{tool.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{tool.category_name}</p>
+                    </div>
                   </Link>
                 ))}
               </CardContent>
             </Card>
           ) : (
-            <p className="text-muted-foreground">Henüz araç yok.</p>
+            <EmptyNote message={t('latestToolsEmpty')} />
           )}
         </div>
       </section>

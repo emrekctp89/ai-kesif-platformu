@@ -96,14 +96,26 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
-      <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-8">
+      <header className="brand-surface relative overflow-hidden rounded-3xl p-6 shadow-lg glass-panel sm:p-8">
+        <div className="relative z-10">
+          <p className="brand-chip mb-2 inline-flex rounded-full px-3 py-1 text-xs font-bold">
+            Yönetim
+          </p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            Admin Dashboard
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
+            Platform istatistikleri, AI brifing, link sağlığı ve kullanıcı yönetimi.
+          </p>
+        </div>
+      </header>
 
       <AiBriefingCard briefing={latestBriefing} />
 
       <DashboardClient stats={stats} linkHealthStats={linkHealthStats} />
 
-      <Card>
+      <Card className="glass-panel border-border/50">
         <CardHeader>
           <CardTitle>Kullanıcı Yönetimi</CardTitle>
           <CardDescription>

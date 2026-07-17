@@ -66,23 +66,26 @@ export default function RecommendationPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-1 py-8 sm:px-4 sm:py-12">
-      <header className="mx-auto mb-8 max-w-3xl text-center sm:mb-10">
-        <div className="brand-chip mx-auto mb-4 flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
-          <Sparkles aria-hidden="true" className="h-4 w-4" />
-          Ücretsiz AI araç eşleştirmesi
+    <div className="mx-auto max-w-5xl space-y-8 px-1 py-8 sm:space-y-10 sm:px-4 sm:py-12">
+      <header className="brand-surface relative mx-auto max-w-3xl overflow-hidden rounded-3xl p-6 text-center shadow-xl glass-panel sm:p-8">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative z-10">
+          <div className="brand-chip mx-auto mb-4 flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
+            <Sparkles aria-hidden="true" className="h-4 w-4" />
+            Ücretsiz AI araç eşleştirmesi
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">
+            İhtiyacını anlat, doğru AI aracını bul
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+            Yapmak istediğin işi doğal bir dille yaz. Platformdaki araçları inceleyip sana en uygun
+            üç seçeneği ve nedenlerini sunalım.
+          </p>
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-          İhtiyacını anlat, doğru AI aracını bul
-        </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-          Yapmak istediğin işi doğal bir dille yaz. Platformdaki araçları inceleyip sana en uygun üç
-          seçeneği ve nedenlerini sunalım.
-        </p>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <Card className="shadow-sm">
+        <Card className="glass-panel border-border/50 shadow-sm">
           <CardContent className="p-5 sm:p-7">
             <form action={handleFormSubmit} className="space-y-5">
               <div className="grid w-full gap-2">
@@ -157,7 +160,7 @@ export default function RecommendationPage() {
           </CardContent>
         </Card>
 
-        <aside className="rounded-xl border bg-muted/30 p-5">
+        <aside className="rounded-2xl border border-border/50 bg-muted/30 p-5 glass-panel">
           <h2 className="font-bold">Nasıl çalışır?</h2>
           <ol className="mt-4 space-y-4 text-sm text-muted-foreground">
             {[
@@ -205,7 +208,7 @@ export default function RecommendationPage() {
               {recommendations.map((tool, index) => (
                 <Card
                   key={tool.slug}
-                  className="flex h-full flex-col transition-colors hover:border-primary"
+                  className="glass-panel flex h-full flex-col border-border/50 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
                 >
                   <CardHeader>
                     <p className="text-xs font-bold uppercase tracking-wide text-primary">
