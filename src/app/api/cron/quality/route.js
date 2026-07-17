@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
 import { runToolQualityAutomation } from '@/app/actions/tools';
+import { isCronAuthorized } from '@/utils/cron';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 /**
  * Quality automation endpoint.
@@ -8,17 +13,13 @@ import { runToolQualityAutomation } from '@/app/actions/tools';
  */
 export async function GET(request) {
   const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
+  if (!cronSecret && process.env.NODE_ENV === 'production') {
     console.error('[cron/quality] CRON_SECRET is not configured');
     return NextResponse.json({ error: 'Sunucu yapılandırması eksik.' }, { status: 500 });
   }
 
-  const authHeader = request.headers.get('authorization');
-  const secretParam = new URL(request.url).searchParams.get('secret');
-  const authorized = authHeader === `Bearer ${cronSecret}` || secretParam === cronSecret;
-
-  if (!authorized) {
-    return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+  if (!isCronAuthorized(request, { allowQuerySecret: true })) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
