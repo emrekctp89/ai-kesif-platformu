@@ -1,21 +1,24 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
+
+import { bulkImportTools } from '@/app/actions/bulk';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { bulkImportTools } from '@/app/actions/bulk';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export function BulkImportClient() {
+  const t = useTranslations('BulkImport');
   const [jsonInput, setJsonInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
 
   const handleImport = async () => {
     if (!jsonInput.trim()) {
-      toast.error('Lütfen eklenecek JSON verisini girin.');
+      toast.error(t('emptyError'));
       return;
     }
 
@@ -30,7 +33,7 @@ export function BulkImportClient() {
       toast.success(result.message);
       setResults(result);
       if (!result.errors) {
-        setJsonInput(''); // Clear on full success
+        setJsonInput('');
       }
     }
   };
@@ -46,50 +49,53 @@ export function BulkImportClient() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="glass-panel border-border/50">
         <CardHeader>
-          <CardTitle>JSON İçe Aktarım</CardTitle>
-          <CardDescription>
-            Aşağıdaki metin kutusuna JSON formatında bir liste yapıştırın. Toplu olarak tüm araçlar
-            veritabanına eklenecektir.
-          </CardDescription>
+          <CardTitle>{t('title')}</CardTitle>
+          <CardDescription>{t('description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-muted p-3 rounded-md text-xs font-mono mb-4">
-            <p className="text-muted-foreground mb-2">Örnek Format:</p>
+          <div className="mb-4 rounded-xl bg-muted p-3 font-mono text-xs">
+            <p className="mb-2 text-muted-foreground">{t('sampleLabel')}</p>
             <pre>{sampleJson}</pre>
           </div>
 
           <Textarea
             placeholder="[ { ... } ]"
-            className="font-mono min-h-[300px]"
+            className="min-h-[300px] font-mono"
             value={jsonInput}
             onChange={(e) => setJsonInput(e.target.value)}
           />
 
-          <Button onClick={handleImport} disabled={loading} className="w-full sm:w-auto">
-            {loading ? 'İçe Aktarılıyor...' : 'Toplu Araç Ekle'}
+          <Button
+            onClick={handleImport}
+            disabled={loading}
+            className="brand-gradient w-full min-h-11 shadow-md sm:w-auto"
+          >
+            {loading ? t('importing') : t('importButton')}
           </Button>
 
-          {results && (
-            <div className="mt-6 p-4 border rounded-md">
-              <h3 className="font-semibold flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-500" /> Sonuç: {results.message}
+          {results ? (
+            <div className="mt-6 rounded-xl border border-border/50 p-4">
+              <h3 className="flex items-center gap-2 font-semibold">
+                <CheckCircle2 className="h-5 w-5 text-green-500" aria-hidden="true" />
+                {t('resultTitle', { message: results.message })}
               </h3>
-              {results.errors && results.errors.length > 0 && (
+              {results.errors && results.errors.length > 0 ? (
                 <div className="mt-4 space-y-2">
-                  <h4 className="font-semibold text-red-500 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" /> Hatalı Kayıtlar ({results.errors.length}):
+                  <h4 className="flex items-center gap-2 font-semibold text-red-500">
+                    <AlertCircle className="h-4 w-4" aria-hidden="true" />
+                    {t('errorsTitle', { count: results.errors.length })}
                   </h4>
-                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                  <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
                     {results.errors.map((err, i) => (
                       <li key={i}>{err}</li>
                     ))}
                   </ul>
                 </div>
-              )}
+              ) : null}
             </div>
-          )}
+          ) : null}
         </CardContent>
       </Card>
     </div>

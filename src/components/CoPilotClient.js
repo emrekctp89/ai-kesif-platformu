@@ -2,11 +2,6 @@
 
 import * as React from 'react';
 import { useTransition, useRef, useEffect } from 'react';
-import { getAdminCoPilotResponse } from '@/app/actions';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Bot,
   User,
@@ -16,48 +11,52 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import toast from 'react-hot-toast';
-
-// YENI: Kod formatlama için bir fonksiyon
 import { js as beautify } from 'js-beautify';
 
-// AI'ın cevabını formatlayan bileşen
+import { getAdminCoPilotResponse } from '@/app/actions';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
 function AiResponse({ data }) {
-  if (!data) return <p className="text-destructive">Analiz verisi alınamadı.</p>;
+  const t = useTranslations('CoPilot');
+
+  if (!data) return <p className="text-destructive">{t('noData')}</p>;
 
   const handleCopy = (code) => {
     navigator.clipboard.writeText(code);
-    toast.success('Kod panoya kopyalandı!');
+    toast.success(t('copied'));
   };
 
-  // YENI: Geri bildirim gönderme fonksiyonu (örnek olarak)
   const handleFeedback = (isHelpful) => {
-    toast.success(`Geri bildiriminiz için teşekkürler! ${isHelpful ? '👍' : '👎'}`);
-    // Burada geri bildirimi sunucuya gönderme işlemini gerçekleştirebilirsin.
+    toast.success(`${t('feedbackThanks')} ${isHelpful ? '👍' : '👎'}`);
   };
 
   return (
-    <Card className="bg-background/50 border">
+    <Card className="border bg-background/50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Lightbulb className="w-5 h-5 text-yellow-500" />
-          {data.response_title || 'Yapay Zeka Analizi'}
+          <Lightbulb className="h-5 w-5 text-yellow-500" aria-hidden="true" />
+          {data.response_title || t('analysisFallback')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
-        {data.response_text && <p className="text-muted-foreground">{data.response_text}</p>}
+        {data.response_text ? <p className="text-muted-foreground">{data.response_text}</p> : null}
 
-        {/* DEĞIŞIKLIK: Kod önerisi varsa, onu göster */}
-        {data.code_suggestion && data.code_suggestion.code && (
+        {data.code_suggestion && data.code_suggestion.code ? (
           <div className="space-y-2">
-            <h4 className="font-semibold">Kod Önerisi:</h4>
+            <h4 className="font-semibold">{t('codeSuggestion')}</h4>
             <p className="text-xs text-muted-foreground">{data.code_suggestion.explanation}</p>
-            <div className="relative bg-black rounded-md p-4 font-mono text-xs text-white">
+            <div className="relative rounded-md bg-black p-4 font-mono text-xs text-white">
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-2 right-2 h-6 w-6"
+                className="absolute right-2 top-2 h-6 w-6"
                 onClick={() => handleCopy(data.code_suggestion.code)}
+                aria-label={t('copied')}
               >
                 <Clipboard className="h-4 w-4" />
               </Button>
@@ -68,17 +67,16 @@ function AiResponse({ data }) {
               </pre>
             </div>
           </div>
-        )}
+        ) : null}
 
-        {/* YENI: Geri bildirim butonları */}
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => handleFeedback(true)}>
-            <ThumbsUp className="h-4 w-4 mr-2" />
-            Yardımcı Oldu
+            <ThumbsUp className="mr-2 h-4 w-4" aria-hidden="true" />
+            {t('helpful')}
           </Button>
           <Button variant="outline" size="sm" onClick={() => handleFeedback(false)}>
-            <ThumbsDown className="h-4 w-4 mr-2" />
-            Yardımcı Olmadı
+            <ThumbsDown className="mr-2 h-4 w-4" aria-hidden="true" />
+            {t('notHelpful')}
           </Button>
         </div>
       </CardContent>
@@ -87,16 +85,19 @@ function AiResponse({ data }) {
 }
 
 export function CoPilotClient() {
-  const [messages, setMessages] = React.useState([
-    {
-      role: 'ai',
-      content:
-        'Merhaba! Ben Admin Co-Pilot. Sitenizi geliştirmek için benden kod veya strateji isteyebilirsiniz.| *ben gemini 1.5 ile desteklenmiş bir dil modeliyim ve yaratıcımda admindir.*',
-    },
-  ]);
+  const t = useTranslations('CoPilot');
+  const [messages, setMessages] = React.useState([]);
   const [input, setInput] = React.useState('');
   const [isPending, startTransition] = useTransition();
   const chatContainerRef = useRef(null);
+  const welcomeSeeded = useRef(false);
+
+  useEffect(() => {
+    if (!welcomeSeeded.current) {
+      welcomeSeeded.current = true;
+      setMessages([{ role: 'ai', content: t('welcome') }]);
+    }
+  }, [t]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -118,10 +119,9 @@ export function CoPilotClient() {
       if (result.error) {
         setMessages((prev) => [
           ...prev,
-          { role: 'ai', content: `Bir hata oluştu: ${result.error}` },
+          { role: 'ai', content: t('errorPrefix', { error: result.error }) },
         ]);
       } else {
-        // YENI: AI yanıtını formatla
         let aiResponseContent = result.data;
         if (result.data.code_suggestion && result.data.code_suggestion.code) {
           try {
@@ -146,22 +146,24 @@ export function CoPilotClient() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-6">
+    <div className="flex h-full flex-col">
+      <div ref={chatContainerRef} className="flex-1 space-y-6 overflow-y-auto p-4">
         {messages.map((msg, index) => (
           <div
             key={index}
             className={`flex items-start gap-4 ${msg.role === 'user' ? 'justify-end' : ''}`}
           >
-            {msg.role === 'ai' && (
+            {msg.role === 'ai' ? (
               <Avatar className="h-9 w-9 border-2 border-primary">
                 <AvatarFallback>
-                  <Bot />
+                  <Bot aria-hidden="true" />
                 </AvatarFallback>
               </Avatar>
-            )}
+            ) : null}
             <div
-              className={`max-w-xl rounded-lg p-3 ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+              className={`max-w-xl rounded-2xl p-3 ${
+                msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+              }`}
             >
               {msg.isResponse ? (
                 <AiResponse data={msg.content} />
@@ -169,36 +171,38 @@ export function CoPilotClient() {
                 <p className="whitespace-pre-wrap">{msg.content}</p>
               )}
             </div>
-            {msg.role === 'user' && (
+            {msg.role === 'user' ? (
               <Avatar className="h-9 w-9">
                 <AvatarFallback>
-                  <User />
+                  <User aria-hidden="true" />
                 </AvatarFallback>
               </Avatar>
-            )}
+            ) : null}
           </div>
         ))}
-        {isPending && (
-          <div className="flex items-start gap-4 animate-pulse">
+        {isPending ? (
+          <div className="flex animate-pulse items-start gap-4">
             <Avatar className="h-9 w-9 border-2 border-primary">
               <AvatarFallback>
-                <Bot />
+                <Bot aria-hidden="true" />
               </AvatarFallback>
             </Avatar>
-            <div className="max-w-sm rounded-lg p-4 bg-muted">
-              <div className="h-2 w-24 bg-slate-400 rounded"></div>
+            <div className="max-w-sm rounded-2xl bg-muted p-4">
+              <div className="h-2 w-24 rounded bg-slate-400" />
+              <span className="sr-only">{t('sending')}</span>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
 
-      <div className="p-4 border-t bg-background">
+      <div className="border-t border-border/60 bg-background p-4">
         <form onSubmit={handleSubmit} className="relative">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Platformu geliştirmek için bir soru sorun veya kod isteyin..."
-            className="pr-20 min-h-[50px] resize-none"
+            placeholder={t('placeholder')}
+            className="min-h-[50px] resize-none pr-20"
+            aria-label={t('placeholder')}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -211,6 +215,7 @@ export function CoPilotClient() {
             size="icon"
             className="absolute bottom-3 right-3"
             disabled={isPending || !input.trim()}
+            aria-label={isPending ? t('sending') : t('send')}
           >
             <CornerDownLeft className="h-4 w-4" />
           </Button>

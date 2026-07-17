@@ -10,6 +10,11 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import toast from 'react-hot-toast';
+import { useLocale, useTranslations } from 'next-intl';
+import { CalendarDays, Check, ExternalLink, Mail, ShieldAlert, Trash2 } from 'lucide-react';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +31,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import Image from 'next/image';
 import {
   approveTool,
   approveShowcaseItem,
@@ -47,8 +51,6 @@ import { CategoryManager } from './CategoryManager';
 import { FeaturedToggle } from './FeaturedToggle';
 import { EditToolDialog } from './EditToolDialog';
 import { DeleteToolButton } from './DeleteToolButton';
-import toast from 'react-hot-toast';
-import { CalendarDays, Check, ExternalLink, Mail, ShieldAlert, Trash2 } from 'lucide-react';
 import {
   getToolQualityIssues,
   isLikelyEnglishDescription,
@@ -68,22 +70,22 @@ function getQualityPriority(issues, duplicateNameCount, duplicateLinkCount) {
   return 'clean';
 }
 
-function getQualityPriorityMeta(priority) {
+function getQualityPriorityMeta(priority, t) {
   const meta = {
     high: {
-      label: 'Yüksek öncelik',
+      label: t('priorityHigh'),
       className: 'bg-red-600 hover:bg-red-600',
     },
     medium: {
-      label: 'Orta öncelik',
+      label: t('priorityMedium'),
       className: 'bg-orange-600 hover:bg-orange-600',
     },
     low: {
-      label: 'Düşük öncelik',
+      label: t('priorityLow'),
       className: 'bg-sky-600 hover:bg-sky-600',
     },
     clean: {
-      label: 'Temiz',
+      label: t('priorityClean'),
       className: 'bg-emerald-600 hover:bg-emerald-600',
     },
   };
@@ -210,14 +212,16 @@ function getCanonicalScore(tool) {
 }
 
 function PendingToolCard({ tool, categories, allTags, hasDuplicateLink }) {
+  const t = useTranslations('AdminClient');
+  const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
   const qualityWarnings = [
-    !tool.description || tool.description.trim().length < 60 ? 'Açıklama kısa' : null,
-    !tool.category_id ? 'Kategori eksik' : null,
-    !tool.link ? 'Site bağlantısı eksik' : null,
-    !tool.slug ? 'Slug eksik' : null,
-    hasDuplicateLink ? 'Benzer bağlantı yayında' : null,
+    !tool.description || tool.description.trim().length < 60 ? t('warnShortDesc') : null,
+    !tool.category_id ? t('warnNoCategory') : null,
+    !tool.link ? t('warnNoLink') : null,
+    !tool.slug ? t('warnNoSlug') : null,
+    hasDuplicateLink ? t('warnDupLink') : null,
   ].filter(Boolean);
 
   const runAction = (action, successFallback) => {
@@ -236,38 +240,38 @@ function PendingToolCard({ tool, categories, allTags, hasDuplicateLink }) {
   };
 
   return (
-    <article className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+    <article className="rounded-xl border border-border/50 bg-card p-4 shadow-sm glass-panel sm:p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-semibold">{tool.name}</h3>
-            <Badge variant="outline">{tool.categories?.name || 'Kategorisiz'}</Badge>
+            <Badge variant="outline">{tool.categories?.name || t('uncategorized')}</Badge>
             {qualityWarnings.length === 0 && (
-              <Badge className="bg-emerald-600 hover:bg-emerald-600">İncelemeye hazır</Badge>
+              <Badge className="bg-emerald-600 hover:bg-emerald-600">{t('readyForReview')}</Badge>
             )}
           </div>
 
           <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-            {tool.description || 'Açıklama girilmemiş.'}
+            {tool.description || t('noDescription')}
           </p>
 
           <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Mail aria-hidden="true" className="h-4 w-4 shrink-0" />
               <dt className="sr-only">Gönderen</dt>
-              <dd className="truncate">{tool.suggester_email || 'Bilinmiyor'}</dd>
+              <dd className="truncate">{tool.suggester_email || t('unknownSender')}</dd>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <CalendarDays aria-hidden="true" className="h-4 w-4 shrink-0" />
               <dt className="sr-only">Gönderim tarihi</dt>
               <dd>
                 {tool.created_at
-                  ? new Intl.DateTimeFormat('tr-TR', {
+                  ? new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'tr-TR', {
                       dateStyle: 'medium',
                       timeStyle: 'short',
                       timeZone: 'Europe/Istanbul',
                     }).format(new Date(tool.created_at))
-                  : 'Tarih bilinmiyor'}
+                  : t('unknownDate')}
               </dd>
             </div>
           </dl>
@@ -292,7 +296,7 @@ function PendingToolCard({ tool, categories, allTags, hasDuplicateLink }) {
           {tool.link && (
             <Button asChild variant="outline" size="sm">
               <a href={tool.link} target="_blank" rel="noopener noreferrer">
-                Siteyi aç
+                {t('openSite')}
                 <ExternalLink aria-hidden="true" className="ml-2 h-4 w-4" />
               </a>
             </Button>
@@ -302,37 +306,35 @@ function PendingToolCard({ tool, categories, allTags, hasDuplicateLink }) {
             size="sm"
             disabled={
               isPending ||
-              qualityWarnings.includes('Site bağlantısı eksik') ||
-              qualityWarnings.includes('Kategori eksik') ||
-              qualityWarnings.includes('Slug eksik')
+              qualityWarnings.includes(t('warnNoLink')) ||
+              qualityWarnings.includes(t('warnNoCategory')) ||
+              qualityWarnings.includes(t('warnNoSlug'))
             }
-            onClick={() => runAction(approveTool, 'Araç onaylandı.')}
+            onClick={() => runAction(approveTool, t('approvedSuccess'))}
           >
             <Check aria-hidden="true" className="mr-2 h-4 w-4" />
-            {isPending ? 'İşleniyor…' : 'Onayla'}
+            {isPending ? t('processing') : t('approve')}
           </Button>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm" disabled={isPending}>
                 <Trash2 aria-hidden="true" className="mr-2 h-4 w-4" />
-                Reddet
+                {t('reject')}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>{tool.name} önerisi reddedilsin mi?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Bu işlem bekleyen öneriyi kalıcı olarak siler ve geri alınamaz.
-                </AlertDialogDescription>
+                <AlertDialogTitle>{t('confirmRejectTitle', { name: tool.name })}</AlertDialogTitle>
+                <AlertDialogDescription>{t('confirmRejectBody')}</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+                <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                 <AlertDialogAction
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={() => runAction(rejectTool, 'Araç önerisi reddedildi.')}
+                  onClick={() => runAction(rejectTool, t('rejectedSuccess'))}
                 >
-                  Evet, reddet
+                  {t('confirmRejectAction')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -351,12 +353,13 @@ function ApprovalQueueTab({
   categories,
   allTags,
 }) {
+  const t = useTranslations('AdminClient');
   const approvedLinks = new Set(approvedTools.map((tool) => normalizeToolLink(tool.link)));
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="glass-panel border-border/50">
         <CardHeader>
-          <CardTitle>Onay Bekleyen Araçlar ({unapprovedTools.length})</CardTitle>
+          <CardTitle>{t('pendingToolsTitle', { count: unapprovedTools.length })}</CardTitle>
           <CardDescription>
             Siteyi ve veri kalitesi uyarılarını inceleyin; gerekirse düzenledikten sonra onaylayın.
           </CardDescription>
@@ -375,13 +378,15 @@ function ApprovalQueueTab({
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-4">Onay bekleyen araç bulunmuyor.</p>
+            <p className="py-4 text-center text-muted-foreground">{t('pendingToolsEmpty')}</p>
           )}
         </CardContent>
       </Card>
-      <Card>
+      <Card className="glass-panel border-border/50">
         <CardHeader>
-          <CardTitle>Onay Bekleyen Eserler ({unapprovedShowcaseItems.length})</CardTitle>
+          <CardTitle>
+            {t('pendingShowcaseTitle', { count: unapprovedShowcaseItems.length })}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {unapprovedShowcaseItems.length > 0 ? (
@@ -389,7 +394,7 @@ function ApprovalQueueTab({
               {unapprovedShowcaseItems.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-muted p-4 rounded-lg flex flex-col sm:flex-row justify-between sm:items-center gap-4"
+                  className="flex flex-col justify-between gap-4 rounded-xl bg-muted p-4 sm:flex-row sm:items-center"
                 >
                   <div className="flex items-center gap-4">
                     <Image
@@ -397,26 +402,26 @@ function ApprovalQueueTab({
                       alt={item.title}
                       width={64}
                       height={64}
-                      className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                      className="h-16 w-16 flex-shrink-0 rounded-md object-cover"
                     />
                     <div>
                       <h3 className="font-semibold">{item.title}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Gönderen: {item.profiles?.email || 'Bilinmiyor'}
+                        {item.profiles?.email || t('unknownSender')}
                       </p>
                     </div>
                   </div>
                   <form action={approveShowcaseItem}>
                     <input type="hidden" name="itemId" value={item.id} />
                     <Button type="submit" className="w-full sm:w-auto">
-                      Onayla
+                      {t('approve')}
                     </Button>
                   </form>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-4">Onay bekleyen eser bulunmuyor.</p>
+            <p className="py-4 text-center text-muted-foreground">{t('pendingShowcaseEmpty')}</p>
           )}
         </CardContent>
       </Card>
@@ -426,6 +431,7 @@ function ApprovalQueueTab({
 
 // YENİ: "Araç Yönetimi" Sekmesi
 function ToolManagementTab({ approvedTools, categories, allTags }) {
+  const t = useTranslations('AdminClient');
   const router = useRouter();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [qualityFilter, setQualityFilter] = React.useState('all');
@@ -839,7 +845,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Onaylanmış Araçları Yönet</CardTitle>
+        <CardTitle>{t('manageToolsTitle')}</CardTitle>
         <CardDescription>
           Veri kalitesi sorunlarını filtreleyin; araçları düzenleyin, silin veya öne çıkarın.
         </CardDescription>
@@ -847,7 +853,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
       <CardContent className="space-y-4">
         <div className="grid gap-3 md:grid-cols-[1.2fr_2fr]">
           <div className="rounded-xl border bg-muted/30 p-4">
-            <p className="text-sm font-semibold">Veri kalitesi kuyruğu</p>
+            <p className="text-sm font-semibold">{t('qualityQueue')}</p>
             <p className="mt-1 text-2xl font-bold">{activeIssueCount}</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Düzeltme gerektiren kayıt; sorunsuz kayıt sayısı {qualityCounts.ready}.
@@ -1182,8 +1188,8 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-semibold">{tool.name}</h3>
                         <Badge variant="outline">{tool.category_name || 'Kategorisiz'}</Badge>
-                        <Badge className={getQualityPriorityMeta(priority).className}>
-                          {getQualityPriorityMeta(priority).label}
+                        <Badge className={getQualityPriorityMeta(priority, t).className}>
+                          {getQualityPriorityMeta(priority, t).label}
                         </Badge>
                       </div>
                       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
@@ -1371,6 +1377,7 @@ function LinkReportCard({ report }) {
 }
 
 function ReportedLinksTab({ reports }) {
+  const t = useTranslations('AdminClient');
   const [statusFilter, setStatusFilter] = React.useState('active');
   const counts = React.useMemo(
     () => ({
@@ -1393,7 +1400,7 @@ function ReportedLinksTab({ reports }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Reported Links</CardTitle>
+        <CardTitle>{t('reportedLinksTitle')}</CardTitle>
         <CardDescription>
           Kullanıcıların araç detay sayfalarından gönderdiği hatalı link bildirimlerini inceleyin.
         </CardDescription>
@@ -1443,6 +1450,7 @@ function ReportedLinksTab({ reports }) {
 
 // YENİ: Sistem Uyarıları & Şikayetler Sekmesi
 function AdminAlertsTab({ alerts }) {
+  const t = useTranslations('AdminClient');
   const [statusFilter, setStatusFilter] = React.useState('Açık');
   const [isPending, startTransition] = React.useTransition();
   const router = useRouter();
@@ -1464,7 +1472,7 @@ function AdminAlertsTab({ alerts }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sistem Uyarıları & Şikayetler</CardTitle>
+        <CardTitle>{t('alertsTitle')}</CardTitle>
         <CardDescription>
           Kullanıcılar tarafından raporlanan yorumları ve diğer sistem uyarılarını yönetin.
         </CardDescription>
@@ -1545,6 +1553,7 @@ function AdminAlertsTab({ alerts }) {
 
 // Ana Admin Paneli Bileşeni
 export function AdminPageClient({ data }) {
+  const t = useTranslations('AdminClient');
   const {
     unapprovedTools,
     unapprovedShowcaseItems,
@@ -1564,22 +1573,22 @@ export function AdminPageClient({ data }) {
 
   return (
     <Tabs defaultValue="approval_queue" className="w-full">
-      <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto p-1">
+      <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-2xl p-1">
         <TabsTrigger value="approval_queue" className="shrink-0 text-xs sm:text-sm">
-          Onay Kuyruğu{' '}
+          {t('tabApproval')}{' '}
           <Badge variant={approvalCount > 0 ? 'default' : 'secondary'} className="ml-2">
             {approvalCount}
           </Badge>
         </TabsTrigger>
-        <TabsTrigger value="tool_management">Araç Yönetimi</TabsTrigger>
+        <TabsTrigger value="tool_management">{t('tabTools')}</TabsTrigger>
         <TabsTrigger value="reported_links">
-          Reported Links
+          {t('tabReports')}
           <Badge variant={activeReportCount > 0 ? 'default' : 'secondary'} className="ml-2">
             {activeReportCount}
           </Badge>
         </TabsTrigger>
         <TabsTrigger value="admin_alerts">
-          Uyarılar
+          {t('tabAlerts')}
           <Badge
             variant={
               adminAlerts.filter((a) => a.status === 'Açık').length > 0
@@ -1591,8 +1600,8 @@ export function AdminPageClient({ data }) {
             {adminAlerts.filter((a) => a.status === 'Açık').length}
           </Badge>
         </TabsTrigger>
-        <TabsTrigger value="content_management">İçerik Yönetimi</TabsTrigger>
-        <TabsTrigger value="platform_settings">Platform Ayarları</TabsTrigger>
+        <TabsTrigger value="content_management">{t('tabContent')}</TabsTrigger>
+        <TabsTrigger value="platform_settings">{t('tabSettings')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="approval_queue" className="mt-6">
@@ -1625,19 +1634,13 @@ export function AdminPageClient({ data }) {
         <AiToolFactory categories={categories} />
         <ChallengeManager challenges={challenges} />
         <BlogManager posts={allPosts} />
-        <Card>
+        <Card className="glass-panel border-border/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5" aria-hidden="true" />
-              Haftalık Bülten
+              {t('newsletterTitle')}
             </CardTitle>
-            <CardDescription>
-              Bülteni önizleyin, abonelere gönderin. Gönderim sonrası içerik otomatik olarak{' '}
-              <Link href="/bulten" className="font-medium text-primary hover:underline">
-                /bulten
-              </Link>{' '}
-              arşivine kaydedilir.
-            </CardDescription>
+            <CardDescription>{t('newsletterDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <NewsletterManager />
