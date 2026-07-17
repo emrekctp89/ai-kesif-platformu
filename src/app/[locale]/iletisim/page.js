@@ -1,15 +1,19 @@
 'use client';
 
-import * as React from 'react'; // React ve hook'larını kullanmak için import ediyoruz
+import * as React from 'react';
+import Link from 'next/link';
+import { LoaderCircle, Mail, MessageSquareText, Send } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
 import { sendContactMessage } from '@/app/actions';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LoaderCircle, Send } from 'lucide-react';
 
 export default function ContactPage() {
+  const t = useTranslations('ContactPage');
   const formRef = React.useRef(null);
   const [startedAt, setStartedAt] = React.useState(() => Date.now());
   const [isPending, startTransition] = React.useTransition();
@@ -33,22 +37,40 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-2xl py-12 px-4">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
-          Bize Ulaşın
-        </h1>
-        <p className="mt-4 text-lg text-muted-foreground">
-          Soru, öneri veya geri bildirimleriniz için buradayız.
-        </p>
-      </div>
+    <div className="mx-auto max-w-2xl space-y-10 pb-10">
+      <section className="brand-surface relative overflow-hidden rounded-3xl p-6 text-center shadow-xl glass-panel sm:p-8">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-12 h-56 w-56 rounded-full bg-purple-500/10 blur-3xl" />
 
-      <Card>
+        <div className="relative z-10">
+          <div className="brand-chip mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
+            <Mail className="h-4 w-4" aria-hidden="true" />
+            {t('heroChip')}
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
+            {t('title')}
+          </h1>
+          <p className="mx-auto mt-3 max-w-lg text-base text-muted-foreground sm:text-lg">
+            {t('subtitle')}
+          </p>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="glass-button mt-5 min-h-9 rounded-full"
+          >
+            <Link href="/feedback" prefetch={false}>
+              <MessageSquareText className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              {t('ctaFeedback')}
+            </Link>
+          </Button>
+        </div>
+      </section>
+
+      <Card className="glass-panel border-border/50">
         <CardHeader>
-          <CardTitle>İletişim Formu</CardTitle>
-          <CardDescription>
-            Aşağıdaki formu doldurarak bize doğrudan bir e-posta gönderebilirsiniz.
-          </CardDescription>
+          <CardTitle>{t('formTitle')}</CardTitle>
+          <CardDescription>{t('formDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form ref={formRef} action={handleFormAction} className="space-y-6">
@@ -57,7 +79,7 @@ export default function ContactPage() {
               className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden"
               aria-hidden="true"
             >
-              <Label htmlFor="contact-company-website">Şirket web sitesi</Label>
+              <Label htmlFor="contact-company-website">{t('companyWebsite')}</Label>
               <Input
                 id="contact-company-website"
                 name="company_website"
@@ -65,13 +87,13 @@ export default function ContactPage() {
                 autoComplete="off"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name">Adınız Soyadınız</Label>
+                <Label htmlFor="name">{t('nameLabel')}</Label>
                 <Input
                   id="name"
                   name="name"
-                  placeholder="Adınız Soyadınız"
+                  placeholder={t('namePlaceholder')}
                   minLength={2}
                   maxLength={100}
                   disabled={isPending}
@@ -79,12 +101,12 @@ export default function ContactPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">E-posta Adresiniz</Label>
+                <Label htmlFor="email">{t('emailLabel')}</Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="ornek@mail.com"
+                  placeholder={t('emailPlaceholder')}
                   maxLength={254}
                   autoComplete="email"
                   disabled={isPending}
@@ -93,11 +115,11 @@ export default function ContactPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="message">Mesajınız</Label>
+              <Label htmlFor="message">{t('messageLabel')}</Label>
               <Textarea
                 id="message"
                 name="message"
-                placeholder="Mesajınızı buraya yazın..."
+                placeholder={t('messagePlaceholder')}
                 minLength={20}
                 maxLength={2000}
                 disabled={isPending}
@@ -110,19 +132,18 @@ export default function ContactPage() {
                 id="contact-message-help"
                 className="flex justify-between text-xs text-muted-foreground"
               >
-                <span>En az 20 karakter yazın.</span>
+                <span>{t('messageHelp')}</span>
                 <span>{messageLength}/2000</span>
               </div>
             </div>
 
-            {/* YENİ: Başarı veya Hata Mesajının Gösterileceği Alan */}
             {formMessage && (
               <div
                 role={formMessage.type === 'error' ? 'alert' : 'status'}
                 aria-live="polite"
-                className={`text-sm p-3 rounded-md text-center ${
+                className={`rounded-md p-3 text-center text-sm ${
                   formMessage.type === 'success'
-                    ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'
                     : 'bg-destructive/10 text-destructive'
                 }`}
               >
@@ -130,16 +151,20 @@ export default function ContactPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button
+              type="submit"
+              className="brand-gradient w-full min-h-11 shadow-md"
+              disabled={isPending}
+            >
               {isPending ? (
                 <>
                   <LoaderCircle aria-hidden="true" className="mr-2 h-4 w-4 animate-spin" />
-                  Gönderiliyor…
+                  {t('sending')}
                 </>
               ) : (
                 <>
                   <Send aria-hidden="true" className="mr-2 h-4 w-4" />
-                  Mesajı Gönder
+                  {t('send')}
                 </>
               )}
             </Button>

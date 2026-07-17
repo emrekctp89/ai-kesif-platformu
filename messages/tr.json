@@ -448,5 +448,201 @@
     "yearly": "Yıllık",
     "credits": "Kredi",
     "oneTime": "Tek Seferlik"
+  },
+
+  "AboutPage": {
+    "metaTitle": "Hakkımızda",
+    "metaDescription": "AI Keşif Platformu'nun misyonu, vizyonu ve hikayesi.",
+    "heroChip": "Hikayemiz",
+    "title": "Hakkımızda",
+    "subtitle": "Yapay zekanın sonsuz potansiyelini herkes için erişilebilir kılma yolculuğumuz.",
+    "missionTitle": "Misyonumuz",
+    "missionBody": "AI Keşif Platformu olarak misyonumuz, geliştiricilerden pazarlamacılara, öğrencilerden sanatçılara kadar herkesin kendi ihtiyaçlarına en uygun yapay zeka aracını kolayca bulabileceği merkezi ve güvenilir bir kaynak oluşturmaktır. Karmaşık ve hızla büyüyen bu dünyada doğru araçları keşfetme sürecini basitleştirmeyi hedefliyoruz.",
+    "visionTitle": "Vizyonumuz",
+    "visionBody": "Vizyonumuz, sadece bir araç listesi olmanın ötesine geçerek, kullanıcıların birbirlerinin deneyimlerinden öğrendiği, en iyi araçların topluluk tarafından belirlendiği ve yapay zeka ekosisteminin nabzının attığı canlı bir topluluk platformu haline gelmektir. İnsan potansiyelini yapay zeka ile birleştirerek yeni olasılıkların kapısını aralamak istiyoruz.",
+    "valuesTitle": "Değerlerimiz",
+    "valueCommunityTitle": "Topluluk odaklı",
+    "valueCommunityBody": "Platformumuzun en büyük gücü kullanıcılarımızdır. Her yorum, puan ve öneri bizim için değerlidir.",
+    "valueDiscoveryTitle": "Sürekli keşif",
+    "valueDiscoveryBody": "AI dünyası durmuyor, biz de durmuyoruz. Sürekli olarak yeni ve etkili araçları araştırıp platforma ekliyoruz.",
+    "valueAccessTitle": "Erişilebilirlik",
+    "valueAccessBody": "Teknik bilgi seviyesi ne olursa olsun, herkesin yapay zekanın gücünden faydalanabilmesi gerektiğine inanıyoruz.",
+    "ctaDiscover": "Araçları keşfet",
+    "ctaContact": "Bize ulaşın"
+  },
+
+  "ContactPage": {
+    "metaTitle": "İletişim",
+    "metaDescription": "Soru, öneri veya geri bildirimleriniz için AI Keşif Platformu ekibiyle iletişime geçin.",
+    "heroChip": "Destek",
+    "title": "Bize ulaşın",
+    "subtitle": "Soru, öneri veya geri bildirimleriniz için buradayız.",
+    "formTitle": "İletişim formu",
+    "formDescription": "Aşağıdaki formu doldurarak bize doğrudan bir e-posta gönderebilirsiniz.",
+    "nameLabel": "Adınız soyadınız",
+    "namePlaceholder": "Adınız Soyadınız",
+    "emailLabel": "E-posta adresiniz",
+    "emailPlaceholder": "ornek@mail.com",
+    "messageLabel": "Mesajınız",
+    "messagePlaceholder": "Mesajınızı buraya yazın…",
+    "messageHelp": "En az 20 karakter yazın.",
+    "companyWebsite": "Şirket web sitesi",
+    "sending": "Gönderiliyor…",
+    "send": "Mesajı gönder",
+    "ctaFeedback": "Hızlı geri bildirim"
+  },
+
+  "PrivacyPage": {
+    "metaTitle": "Gizlilik Politikası",
+    "metaDescription": "AI Keşif Platformu olarak gizliliğinize nasıl saygı duyduğumuzu ve verilerinizi nasıl koruduğumuzu öğrenin.",
+    "heroChip": "Güvenlik",
+    "title": "Gizlilik politikası",
+    "lastUpdated": "Son güncelleme: 13 Haziran 2025",
+    "sectionSecurityTitle": "Veri güvenliği taahhüdümüz",
+    "sectionSecurityBody": "AI Keşif Platformu olarak, kullanıcılarımızın gizliliğine ve veri güvenliğine en üst düzeyde önem veriyoruz. Bu politika, hangi verileri topladığımızı, bu verileri nasıl kullandığımızı ve haklarınızı nasıl koruduğumuzu açıklar.",
+    "sectionDataTitle": "Topladığımız bilgiler",
+    "sectionDataBody": "Kayıt sırasında sağladığınız e-posta adresi, yaptığınız yorumlar, verdiğiniz puanlar ve favori olarak işaretlediğiniz araçlar gibi etkileşim verilerini saklamaktayız. Misafir olarak araç önerdiğinizde, yalnızca bu işlem için sağladığınız e-posta adresi geçici olarak kaydedilir.",
+    "sectionUseTitle": "Bilgilerin kullanımı",
+    "sectionUseBody": "Toplanan veriler yalnızca platform deneyiminizi kişiselleştirmek (örneğin profil sayfanızı oluşturmak) ve size hizmetle ilgili (onay, şifre sıfırlama vb.) e-postaları göndermek amacıyla kullanılır. E-posta adresleriniz asla üçüncü partilerle paylaşılmaz veya pazarlama amacıyla kullanılmaz.",
+    "sectionCookiesTitle": "Çerezler (cookies)",
+    "sectionCookiesBody": "Sitemiz, kullanıcı oturumlarını yönetmek ve tema tercihlerinizi hatırlamak gibi temel işlevler için gerekli olan çerezleri kullanır. Bu çerezler kişisel veri toplamaz.",
+    "ctaContact": "Sorunuz mu var?"
+  },
+
+  "TermsPage": {
+    "metaTitle": "Kullanım Koşulları",
+    "metaDescription": "AI Keşif Platformu'nu kullanarak kabul ettiğiniz şartlar ve koşullar.",
+    "heroChip": "Yasal",
+    "title": "Kullanım koşulları",
+    "subtitle": "Lütfen platformumuzu kullanmadan önce bu koşulları dikkatlice okuyun.",
+    "section1Title": "1. Koşulların kabulü",
+    "section1Body": "Bu web sitesini kullanarak, burada belirtilen kullanım koşullarını tam olarak kabul etmiş sayılırsınız. Eğer bu koşullardan herhangi birini kabul etmiyorsanız, platformu kullanmamanız gerekmektedir.",
+    "section2Title": "2. Kullanıcı sorumlulukları",
+    "section2Body": "Platforma kayıt olurken veya içerik gönderirken sağladığınız bilgilerin doğruluğundan siz sorumlusunuz. Diğer kullanıcılara saygısızlık içeren, yasa dışı veya spam niteliğinde yorumlar yapmak yasaktır. Bu tür davranışlar hesabınızın askıya alınmasına veya silinmesine neden olabilir.",
+    "section3Title": "3. İçerik ve fikri mülkiyet",
+    "section3Body": "Sitede listelenen yapay zeka araçlarının tüm hakları kendi geliştiricilerine aittir. Kullanıcılar tarafından oluşturulan yorumlar gibi içerikler platformun bir parçası olarak kabul edilir. Kendi gönderdiğiniz içeriklerden siz sorumlusunuz.",
+    "section4Title": "4. Sorumluluğun sınırlandırılması",
+    "section4Body": "AI Keşif Platformu, listelenen araçların kullanımı veya performansından kaynaklanabilecek herhangi bir zarardan sorumlu tutulamaz. Platform “olduğu gibi” sunulmaktadır ve doğruluğu veya kesintisiz çalışacağı garanti edilmez.",
+    "ctaPrivacy": "Gizlilik politikası"
+  },
+
+  "MembershipPage": {
+    "metaTitle": "Üyelik",
+    "metaDescription": "Pro üyelikle platformun tüm gücünü kullanın: stüdyo, pro araçlar ve özel rozet.",
+    "heroChip": "Pro",
+    "title": "Potansiyelinizi ortaya çıkarın",
+    "subtitle": "Pro üyeliğe geçerek platformun tüm gücünü kullanın ve topluluğumuzun en değerli üyelerinden biri olun.",
+    "freeTitle": "Temel",
+    "freeDescription": "Keşfetmeye başlayın.",
+    "freePrice": "Ücretsiz",
+    "freeFeature1": "Sınırsız araç keşfi",
+    "freeFeature2": "Araçlara puan verme",
+    "freeFeature3": "Yorum yapma",
+    "freeFeature4": "Favorilere ekleme",
+    "currentPlan": "Mevcut planınız",
+    "popular": "Popüler",
+    "perMonth": "/ay",
+    "proFeatureAll": "Tüm Temel özellikler",
+    "proFeatureTools": "Tüm Pro araçlara erişim",
+    "proFeatureBadge": "Özel Pro rozeti",
+    "proFeatureStudio": "AI İçerik Stüdyosu kullanımı",
+    "proFeatureSupport": "Topluluğu destekleme",
+    "loginRequired": "Üyelik sayfasını görmek için giriş yapmalısınız."
+  },
+
+  "LaunchpadPage": {
+    "metaTitle": "AI Launchpad",
+    "metaDescription": "Yapay zeka dünyasındaki en yeni ve en heyecan verici araç lansmanlarını keşfedin, oylayın ve ilk deneyenlerden olun.",
+    "heroChip": "Lansmanlar",
+    "title": "AI Launchpad",
+    "subtitle": "Yapay zeka dünyasındaki en yeni ürünleri keşfedin. Her gün yeni bir lansman.",
+    "ctaSubmit": "Yeni lansman yap",
+    "tabToday": "Bugün",
+    "tabWeek": "Bu hafta",
+    "emptyToday": "Bugün için henüz bir lansman yok.",
+    "emptyWeek": "Bu hafta için henüz bir lansman yok.",
+    "statsToday": "{count} bugün",
+    "statsWeek": "{count} bu hafta"
+  },
+
+  "LaunchpadSubmitPage": {
+    "metaTitle": "Yeni Lansman",
+    "metaDescription": "Yapay zeka aracınızı topluluğa duyurun ve ilk geri bildirimleri alın.",
+    "heroChip": "Gönder",
+    "title": "Yeni lansmanını yap",
+    "subtitle": "Yapay zeka aracını topluluğumuza duyur ve ilk geri bildirimleri al.",
+    "loginRequired": "Lansman yapmak için giriş yapmalısınız.",
+    "back": "Launchpad’e dön"
+  },
+
+  "ChallengePage": {
+    "metaTitle": "Haftalık Yarışma",
+    "metaDescription": "Topluluğun katıldığı haftalık yaratıcılık yarışmalarını keşfedin ve en iyi eserlere oy verin.",
+    "heroChip": "Yarışma",
+    "title": "Haftalık yarışma",
+    "noActive": "Şu anda aktif bir yarışma bulunmuyor. Yakında tekrar kontrol edin!",
+    "emptySubmissions": "Bu yarışmaya henüz katılım olmadı. İlk eseri sen gönder!",
+    "adminPrompt": "Yeni bir yarışma başlatmak ister misiniz?",
+    "adminCta": "Yarışma yönetimine git",
+    "ctaShowcase": "Eserleri gör"
+  },
+
+  "BountiesPage": {
+    "metaTitle": "Ödül Avcılığı",
+    "metaDescription": "Topluluğun yardımıyla ihtiyacınız olan yapay zeka aracını bulun ve katkıda bulunanları ödüllendirin.",
+    "heroChip": "Ödüller",
+    "title": "Ödül avcılığı",
+    "subtitle": "Aradığınız aracı bulamıyor musunuz? Bir ödül ilanı oluşturun, topluluk sizin için bulsun!",
+    "points": "{count} puan",
+    "emptyTitle": "Aktif ödül yok",
+    "emptyBody": "Şu anda açık bir ödül ilanı bulunmuyor. İhtiyacınız olan aracı arıyorsanız bir ilan oluşturabilirsiniz.",
+    "statsOpen": "{count} açık ilan"
+  },
+
+  "BountyDetailPage": {
+    "owner": "İlan sahibi",
+    "reward": "Ödül: {count} puan",
+    "deadline": "Son tarih: {date}",
+    "back": "Tüm ödüller"
+  },
+
+  "ResearchPage": {
+    "metaTitle": "Araştırma Portalı",
+    "metaDescription": "Yapay zeka alanındaki en son bilimsel makaleleri, araştırmaları ve öncü akademisyenleri keşfedin.",
+    "heroChip": "Akademi",
+    "title": "Araştırma portalı",
+    "subtitle": "Yapay zekanın bilimsel temellerini keşfedin. En son makaleler, araştırmalar ve daha fazlası.",
+    "emptyTitle": "Henüz makale yok",
+    "emptyBody": "Yayınlanmış akademik makale bulunmuyor. Yeni içerikler eklendikçe burada listelenecek.",
+    "statsPapers": "{count} makale",
+    "authors": "Yazarlar",
+    "institutions": "Kurumlar"
+  },
+
+  "FeedbackPage": {
+    "metaTitle": "Geri Bildirim",
+    "metaDescription": "Platformla ilgili görüşlerinizi AI Keşif ekibiyle paylaşın.",
+    "heroChip": "Görüş",
+    "title": "Geri bildirim",
+    "subtitle": "Platformla ilgili görüşlerinizi bizimle paylaşın. Her öneri ürünü daha iyi hale getirir.",
+    "ctaContact": "İletişim formu"
+  },
+
+  "ActivityFeedPage": {
+    "metaTitle": "Akış",
+    "metaDescription": "Takip ettiğiniz kişilerin ve topluluğun en son aktivitelerini, favorilerini, yorumlarını ve eserlerini keşfedin.",
+    "title": "Sizin için akış",
+    "description": "Takip ettiklerinizden veya genel topluluktan favoriler, yorumlar, eserler ve promptlar.",
+    "loginRequired": "Akış sayfasını görmek için giriş yapmalısınız."
+  },
+
+  "StudioPage": {
+    "metaTitle": "AI İçerik Stüdyosu",
+    "metaDescription": "Yapay zeka modellerini kullanarak kendi metinlerinizi ve görsellerinizi yaratın.",
+    "heroChip": "Stüdyo",
+    "title": "AI içerik stüdyosu",
+    "subtitle": "Yaratıcılığınızı serbest bırakın. Fikirlerinizi metinlere ve görsellere dönüştürün.",
+    "loginRequired": "AI Stüdyosunu kullanmak için giriş yapmalısınız.",
+    "proRequired": "AI Stüdyosunu kullanmak için Pro üyeliğe yükseltmelisiniz."
   }
 }

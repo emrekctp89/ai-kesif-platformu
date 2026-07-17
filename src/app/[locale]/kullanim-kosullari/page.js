@@ -1,56 +1,69 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Gavel, UserCheck, Copy, ShieldAlert } from 'lucide-react';
+import Link from 'next/link';
+import { Gavel, Shield } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 
-export const metadata = {
-  title: 'Kullanım Koşulları | AI Keşif Platformu',
-  description: "AI Keşif Platformu'nu kullanarak kabul ettiğiniz şartlar ve koşullar.",
-};
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { generatePageMetadata } from '@/utils/seo';
 
-const TermsSection = ({ title, children }) => (
-  <div className="space-y-2">
-    <h2 className="text-xl font-semibold">{title}</h2>
-    <p className="text-muted-foreground leading-relaxed">{children}</p>
-  </div>
-);
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'TermsPage' });
+  return generatePageMetadata({
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+    path: locale === 'en' ? '/en/kullanim-kosullari' : '/kullanim-kosullari',
+  });
+}
 
-export default function TermsOfUsePage() {
+function TermsSection({ title, children }) {
   return (
-    <div className="container mx-auto max-w-4xl py-12 px-4">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
-          Kullanım Koşulları
-        </h1>
-        <p className="mt-4 text-lg text-muted-foreground">
-          Lütfen platformumuzu kullanmadan önce bu koşulları dikkatlice okuyun.
-        </p>
-      </div>
+    <div className="space-y-2">
+      <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+      <p className="leading-relaxed text-muted-foreground">{children}</p>
+    </div>
+  );
+}
 
-      <Card>
-        <CardContent className="p-8 space-y-8">
-          <TermsSection title="1. Koşulların Kabulü">
-            Bu web sitesini kullanarak, burada belirtilen kullanım koşullarını tam olarak kabul
-            etmiş sayılırsınız. Eğer bu koşullardan herhangi birini kabul etmiyorsanız, platformu
-            kullanmamanız gerekmektedir.
-          </TermsSection>
+export default async function TermsOfUsePage({ params }) {
+  await params;
+  const t = await getTranslations('TermsPage');
 
-          <TermsSection title="2. Kullanıcı Sorumlulukları">
-            Platforma kayıt olurken veya içerik gönderirken sağladığınız bilgilerin doğruluğundan
-            siz sorumlusunuz. Diğer kullanıcılara saygısızlık içeren, yasa dışı veya spam
-            niteliğinde yorumlar yapmak yasaktır. Bu tür davranışlar hesabınızın askıya alınmasına
-            veya silinmesine neden olabilir.
-          </TermsSection>
+  return (
+    <div className="mx-auto max-w-4xl space-y-10 pb-10">
+      <section className="brand-surface relative overflow-hidden rounded-3xl p-6 text-center shadow-xl glass-panel sm:p-8">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative z-10">
+          <div className="brand-chip mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
+            <Gavel className="h-4 w-4" aria-hidden="true" />
+            {t('heroChip')}
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
+            {t('title')}
+          </h1>
+          <p className="mx-auto mt-3 max-w-xl text-base text-muted-foreground sm:text-lg">
+            {t('subtitle')}
+          </p>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="glass-button mt-5 min-h-9 rounded-full"
+          >
+            <Link href="/gizlilik" prefetch={false}>
+              <Shield className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              {t('ctaPrivacy')}
+            </Link>
+          </Button>
+        </div>
+      </section>
 
-          <TermsSection title="3. İçerik ve Fikri Mülkiyet">
-            Sitede listelenen yapay zeka araçlarının tüm hakları kendi geliştiricilerine aittir.
-            Kullanıcılar tarafından oluşturulan yorumlar gibi içerikler, platformun bir parçası
-            olarak kabul edilir. Kendi gönderdiğiniz içeriklerden siz sorumlusunuz.
-          </TermsSection>
-
-          <TermsSection title="4. Sorumluluğun Sınırlandırılması">
-            AI Keşif Platformu, listelenen araçların kullanımı veya performansından
-            kaynaklanabilecek herhangi bir zarardan sorumlu tutulamaz. Platform "olduğu gibi"
-            sunulmaktadır ve doğruluğu veya kesintisiz çalışacağı garanti edilmez.
-          </TermsSection>
+      <Card className="glass-panel border-border/50">
+        <CardContent className="space-y-8 p-6 sm:p-8">
+          <TermsSection title={t('section1Title')}>{t('section1Body')}</TermsSection>
+          <TermsSection title={t('section2Title')}>{t('section2Body')}</TermsSection>
+          <TermsSection title={t('section3Title')}>{t('section3Body')}</TermsSection>
+          <TermsSection title={t('section4Title')}>{t('section4Body')}</TermsSection>
         </CardContent>
       </Card>
     </div>

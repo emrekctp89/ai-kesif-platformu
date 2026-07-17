@@ -1,79 +1,101 @@
+import Link from 'next/link';
+import { Compass, Mail, Rocket, Target, Users } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
+
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Target, Rocket } from 'lucide-react';
+import { generatePageMetadata } from '@/utils/seo';
 
-// Metadata (sayfa başlığı)
-export const metadata = {
-  title: 'Hakkımızda | AI Keşif Platformu',
-  description: "AI Keşif Platformu'nun misyonu, vizyonu ve hikayesi.",
-};
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'AboutPage' });
+  return generatePageMetadata({
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+    path: locale === 'en' ? '/en/hakkimizda' : '/hakkimizda',
+  });
+}
 
-const FeatureCard = ({ icon, title, children }) => (
-  <div className="flex flex-col items-center text-center">
-    <div className="p-4 bg-primary/10 rounded-full mb-4">{icon}</div>
-    <h3 className="text-xl font-semibold mb-2">{title}</h3>
-    <p className="text-muted-foreground">{children}</p>
-  </div>
-);
-
-export default function AboutPage() {
+function FeatureCard({ icon: Icon, title, children }) {
   return (
-    <div className="container mx-auto max-w-4xl py-12 px-4">
-      {/* Üst Başlık Bölümü */}
-      <div className="text-center mb-16">
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
-          Hakkımızda
-        </h1>
-        <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-          Yapay zekanın sonsuz potansiyelini herkes için erişilebilir kılma yolculuğumuz.
-        </p>
+    <div className="flex flex-col items-center text-center">
+      <div className="mb-4 rounded-full bg-primary/10 p-4">
+        <Icon className="h-8 w-8 text-primary" aria-hidden="true" />
       </div>
+      <h3 className="mb-2 text-xl font-semibold">{title}</h3>
+      <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">{children}</p>
+    </div>
+  );
+}
 
-      {/* Misyon & Vizyon Bölümü */}
-      <div className="grid md:grid-cols-2 gap-12 mb-16">
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold flex items-center gap-3">
-            <Rocket className="w-8 h-8 text-primary" />
-            Misyonumuz
-          </h2>
-          <p className="text-muted-foreground leading-relaxed">
-            AI Keşif Platformu olarak misyonumuz, geliştiricilerden pazarlamacılara, öğrencilerden
-            sanatçılara kadar herkesin, kendi ihtiyaçlarına en uygun yapay zeka aracını kolayca
-            bulabileceği merkezi ve güvenilir bir kaynak oluşturmaktır. Karmaşık ve hızla büyüyen bu
-            dünyada, doğru araçları keşfetme sürecini basitleştirmeyi hedefliyoruz.
-          </p>
-        </div>
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold flex items-center gap-3">
-            <Target className="w-8 h-8 text-primary" />
-            Vizyonumuz
-          </h2>
-          <p className="text-muted-foreground leading-relaxed">
-            Vizyonumuz, sadece bir araç listesi olmanın ötesine geçerek, kullanıcıların
-            birbirlerinin deneyimlerinden öğrendiği, en iyi araçların topluluk tarafından
-            belirlendiği ve yapay zeka ekosisteminin nabzının attığı canlı bir topluluk platformu
-            haline gelmektir. İnsan potansiyelini yapay zeka ile birleştirerek yeni olasılıkların
-            kapısını aralamak istiyoruz.
-          </p>
-        </div>
-      </div>
+export default async function AboutPage({ params }) {
+  await params;
+  const t = await getTranslations('AboutPage');
 
-      {/* Ekip veya Değerler Bölümü */}
-      <Card className="bg-card/50">
+  return (
+    <div className="mx-auto max-w-4xl space-y-12 pb-10 sm:space-y-16 sm:pb-12">
+      <section className="brand-surface relative overflow-hidden rounded-3xl p-6 text-center shadow-xl glass-panel sm:p-8 lg:p-10">
+        <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-purple-500/10 blur-3xl" />
+
+        <div className="relative z-10 mx-auto max-w-3xl">
+          <div className="brand-chip mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
+            <Users className="h-4 w-4" aria-hidden="true" />
+            {t('heroChip')}
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl">
+            {t('title')}
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+            {t('subtitle')}
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Button asChild className="brand-gradient min-h-11 shadow-md">
+              <Link href="/" prefetch={false}>
+                <Compass className="mr-2 h-4 w-4" aria-hidden="true" />
+                {t('ctaDiscover')}
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="glass-button min-h-11 rounded-xl">
+              <Link href="/iletisim" prefetch={false}>
+                <Mail className="mr-2 h-4 w-4" aria-hidden="true" />
+                {t('ctaContact')}
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-8 md:grid-cols-2 md:gap-10">
+        <div className="space-y-4 rounded-2xl border border-border/50 bg-card/40 p-6 glass-panel">
+          <h2 className="flex items-center gap-3 text-2xl font-bold tracking-tight sm:text-3xl">
+            <Rocket className="h-7 w-7 shrink-0 text-primary" aria-hidden="true" />
+            {t('missionTitle')}
+          </h2>
+          <p className="leading-relaxed text-muted-foreground">{t('missionBody')}</p>
+        </div>
+        <div className="space-y-4 rounded-2xl border border-border/50 bg-card/40 p-6 glass-panel">
+          <h2 className="flex items-center gap-3 text-2xl font-bold tracking-tight sm:text-3xl">
+            <Target className="h-7 w-7 shrink-0 text-primary" aria-hidden="true" />
+            {t('visionTitle')}
+          </h2>
+          <p className="leading-relaxed text-muted-foreground">{t('visionBody')}</p>
+        </div>
+      </section>
+
+      <Card className="glass-panel border-border/50 bg-card/50">
         <CardHeader>
-          <CardTitle className="text-center text-3xl">Değerlerimiz</CardTitle>
+          <CardTitle className="text-center text-2xl sm:text-3xl">{t('valuesTitle')}</CardTitle>
         </CardHeader>
-        <CardContent className="grid sm:grid-cols-3 gap-8">
-          <FeatureCard icon={<Users className="w-8 h-8 text-primary" />} title="Topluluk Odaklı">
-            Platformumuzun en büyük gücü kullanıcılarımızdır. Her yorum, puan ve öneri bizim için
-            değerlidir.
+        <CardContent className="grid gap-8 sm:grid-cols-3">
+          <FeatureCard icon={Users} title={t('valueCommunityTitle')}>
+            {t('valueCommunityBody')}
           </FeatureCard>
-          <FeatureCard icon={<Rocket className="w-8 h-8 text-primary" />} title="Sürekli Keşif">
-            AI dünyası durmuyor, biz de durmuyoruz. Sürekli olarak yeni ve etkili araçları araştırıp
-            platforma ekliyoruz.
+          <FeatureCard icon={Rocket} title={t('valueDiscoveryTitle')}>
+            {t('valueDiscoveryBody')}
           </FeatureCard>
-          <FeatureCard icon={<Target className="w-8 h-8 text-primary" />} title="Erişilebilirlik">
-            Teknik bilgi seviyesi ne olursa olsun, herkesin yapay zekanın gücünden faydalanabilmesi
-            gerektiğine inanıyoruz.
+          <FeatureCard icon={Target} title={t('valueAccessTitle')}>
+            {t('valueAccessBody')}
           </FeatureCard>
         </CardContent>
       </Card>

@@ -448,5 +448,201 @@
     "yearly": "Yearly",
     "credits": "Credits",
     "oneTime": "One Time"
+  },
+
+  "AboutPage": {
+    "metaTitle": "About",
+    "metaDescription": "Mission, vision, and story of AI Keşif Platformu.",
+    "heroChip": "Our story",
+    "title": "About us",
+    "subtitle": "Our journey to make AI’s potential accessible to everyone.",
+    "missionTitle": "Our mission",
+    "missionBody": "We build a trusted, central place where developers, marketers, students, and creators can find the AI tools that fit their needs. In a complex, fast-growing landscape, we simplify discovery.",
+    "visionTitle": "Our vision",
+    "visionBody": "Beyond a directory: a living community where people learn from each other, the best tools rise through shared experience, and the AI ecosystem’s pulse is easy to follow. We want to unlock new possibilities by pairing human potential with AI.",
+    "valuesTitle": "Our values",
+    "valueCommunityTitle": "Community first",
+    "valueCommunityBody": "Our users are the product’s strength. Every comment, rating, and suggestion matters.",
+    "valueDiscoveryTitle": "Continuous discovery",
+    "valueDiscoveryBody": "AI never stops—and neither do we. We keep researching and adding effective tools.",
+    "valueAccessTitle": "Accessibility",
+    "valueAccessBody": "Everyone should benefit from AI, no matter their technical background.",
+    "ctaDiscover": "Browse tools",
+    "ctaContact": "Contact us"
+  },
+
+  "ContactPage": {
+    "metaTitle": "Contact",
+    "metaDescription": "Reach the AI Keşif Platformu team with questions, ideas, or feedback.",
+    "heroChip": "Support",
+    "title": "Contact us",
+    "subtitle": "We’re here for questions, suggestions, and feedback.",
+    "formTitle": "Contact form",
+    "formDescription": "Fill out the form below to send us an email directly.",
+    "nameLabel": "Full name",
+    "namePlaceholder": "Your name",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Write your message here…",
+    "messageHelp": "Please write at least 20 characters.",
+    "companyWebsite": "Company website",
+    "sending": "Sending…",
+    "send": "Send message",
+    "ctaFeedback": "Quick feedback"
+  },
+
+  "PrivacyPage": {
+    "metaTitle": "Privacy Policy",
+    "metaDescription": "How AI Keşif Platformu respects your privacy and protects your data.",
+    "heroChip": "Security",
+    "title": "Privacy policy",
+    "lastUpdated": "Last updated: June 13, 2025",
+    "sectionSecurityTitle": "Our data security commitment",
+    "sectionSecurityBody": "We take privacy and data security seriously. This policy explains what we collect, how we use it, and how we protect your rights.",
+    "sectionDataTitle": "Information we collect",
+    "sectionDataBody": "We store the email you provide at signup, plus interaction data such as comments, ratings, and favorites. When guests suggest a tool, we only temporarily store the email used for that action.",
+    "sectionUseTitle": "How we use information",
+    "sectionUseBody": "Data is used only to personalize your experience (for example, your profile) and to send service emails (confirmation, password reset, and similar). We never sell or share emails with third parties for marketing.",
+    "sectionCookiesTitle": "Cookies",
+    "sectionCookiesBody": "We use cookies required for core features such as session management and remembering theme preferences. These cookies do not collect personal data.",
+    "ctaContact": "Have a question?"
+  },
+
+  "TermsPage": {
+    "metaTitle": "Terms of Use",
+    "metaDescription": "Terms and conditions you accept when using AI Keşif Platformu.",
+    "heroChip": "Legal",
+    "title": "Terms of use",
+    "subtitle": "Please read these terms carefully before using the platform.",
+    "section1Title": "1. Acceptance of terms",
+    "section1Body": "By using this website, you fully accept the terms below. If you do not agree with any part, you should not use the platform.",
+    "section2Title": "2. User responsibilities",
+    "section2Body": "You are responsible for the accuracy of information you provide when registering or submitting content. Disrespectful, illegal, or spam comments are prohibited and may lead to suspension or account deletion.",
+    "section3Title": "3. Content and intellectual property",
+    "section3Body": "Rights to listed AI tools belong to their developers. User-generated content such as comments is treated as part of the platform. You remain responsible for what you submit.",
+    "section4Title": "4. Limitation of liability",
+    "section4Body": "AI Keşif Platformu is not liable for damages arising from use or performance of listed tools. The platform is provided “as is,” without warranties of accuracy or uninterrupted availability.",
+    "ctaPrivacy": "Privacy policy"
+  },
+
+  "MembershipPage": {
+    "metaTitle": "Membership",
+    "metaDescription": "Go Pro for full platform power: studio, pro tools, and a special badge.",
+    "heroChip": "Pro",
+    "title": "Unlock your potential",
+    "subtitle": "Upgrade to Pro to use the full platform and become one of our most valued members.",
+    "freeTitle": "Basic",
+    "freeDescription": "Start exploring.",
+    "freePrice": "Free",
+    "freeFeature1": "Unlimited tool discovery",
+    "freeFeature2": "Rate tools",
+    "freeFeature3": "Comment on tools",
+    "freeFeature4": "Save favorites",
+    "currentPlan": "Your current plan",
+    "popular": "Popular",
+    "perMonth": "/mo",
+    "proFeatureAll": "Everything in Basic",
+    "proFeatureTools": "Access to all Pro tools",
+    "proFeatureBadge": "Exclusive Pro badge",
+    "proFeatureStudio": "AI Content Studio access",
+    "proFeatureSupport": "Support the community",
+    "loginRequired": "Sign in to view membership plans."
+  },
+
+  "LaunchpadPage": {
+    "metaTitle": "AI Launchpad",
+    "metaDescription": "Discover, upvote, and try the newest AI product launches first.",
+    "heroChip": "Launches",
+    "title": "AI Launchpad",
+    "subtitle": "Discover the newest products in AI. A fresh launch every day.",
+    "ctaSubmit": "Submit a launch",
+    "tabToday": "Today",
+    "tabWeek": "This week",
+    "emptyToday": "No launches yet today.",
+    "emptyWeek": "No launches yet this week.",
+    "statsToday": "{count} today",
+    "statsWeek": "{count} this week"
+  },
+
+  "LaunchpadSubmitPage": {
+    "metaTitle": "New Launch",
+    "metaDescription": "Announce your AI tool to the community and collect early feedback.",
+    "heroChip": "Submit",
+    "title": "Launch your tool",
+    "subtitle": "Announce your AI tool to the community and get early feedback.",
+    "loginRequired": "Sign in to submit a launch.",
+    "back": "Back to Launchpad"
+  },
+
+  "ChallengePage": {
+    "metaTitle": "Weekly Challenge",
+    "metaDescription": "Join weekly creativity challenges and vote on the best community work.",
+    "heroChip": "Challenge",
+    "title": "Weekly challenge",
+    "noActive": "There is no active challenge right now. Check back soon!",
+    "emptySubmissions": "No entries yet. Be the first to submit!",
+    "adminPrompt": "Want to start a new challenge?",
+    "adminCta": "Go to challenge admin",
+    "ctaShowcase": "View showcase"
+  },
+
+  "BountiesPage": {
+    "metaTitle": "Bounty Hunt",
+    "metaDescription": "Post a bounty to find the AI tool you need—and reward helpers in the community.",
+    "heroChip": "Bounties",
+    "title": "Bounty hunt",
+    "subtitle": "Can’t find the right tool? Post a bounty and let the community hunt for you.",
+    "points": "{count} pts",
+    "emptyTitle": "No open bounties",
+    "emptyBody": "There are no open bounties right now. Create one if you’re looking for a specific tool.",
+    "statsOpen": "{count} open"
+  },
+
+  "BountyDetailPage": {
+    "owner": "Posted by",
+    "reward": "Reward: {count} pts",
+    "deadline": "Deadline: {date}",
+    "back": "All bounties"
+  },
+
+  "ResearchPage": {
+    "metaTitle": "Research Portal",
+    "metaDescription": "Explore the latest AI research papers, studies, and leading academics.",
+    "heroChip": "Academia",
+    "title": "Research portal",
+    "subtitle": "Explore the scientific foundations of AI—papers, research, and more.",
+    "emptyTitle": "No papers yet",
+    "emptyBody": "Published academic papers will appear here as they are added.",
+    "statsPapers": "{count} papers",
+    "authors": "Authors",
+    "institutions": "Institutions"
+  },
+
+  "FeedbackPage": {
+    "metaTitle": "Feedback",
+    "metaDescription": "Share your thoughts about the platform with the AI Keşif team.",
+    "heroChip": "Feedback",
+    "title": "Feedback",
+    "subtitle": "Share your thoughts with us. Every idea helps improve the product.",
+    "ctaContact": "Contact form"
+  },
+
+  "ActivityFeedPage": {
+    "metaTitle": "Feed",
+    "metaDescription": "See the latest activity from people you follow and the wider community.",
+    "title": "Your feed",
+    "description": "Favorites, comments, showcase items, and prompts from people you follow—or the wider community.",
+    "loginRequired": "Sign in to view your activity feed."
+  },
+
+  "StudioPage": {
+    "metaTitle": "AI Content Studio",
+    "metaDescription": "Create text and images with AI models in one studio.",
+    "heroChip": "Studio",
+    "title": "AI content studio",
+    "subtitle": "Unleash your creativity. Turn ideas into text and images.",
+    "loginRequired": "Sign in to use the AI Studio.",
+    "proRequired": "Upgrade to Pro to use the AI Studio."
   }
 }
