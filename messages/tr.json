@@ -21,7 +21,26 @@
     "contact": "İletişim",
     "privacy": "Gizlilik",
     "terms": "Kullanım Koşulları",
-    "allTools": "Tüm Araçlar"
+    "allTools": "Tüm Araçlar",
+    "launchpad": "Launchpad",
+    "challenge": "Yarışma",
+    "bounties": "Ödül Avcılığı",
+    "research": "Araştırma",
+    "feedback": "Geri Bildirim",
+    "studio": "AI Stüdyo",
+    "feed": "Akış",
+    "membership": "Üyelik",
+    "more": "Daha fazla",
+    "groupExplore": "Keşfet",
+    "groupCommunity": "Topluluk",
+    "groupContent": "İçerik",
+    "groupPlatform": "Platform",
+    "footerAria": "Alt menü",
+    "mainNavAria": "Ana navigasyon",
+    "mobileNavTitle": "Ana menü",
+    "mobileNavDescription": "Site bölümleri arasında gezinin.",
+    "openMenu": "Menüyü aç",
+    "upgradePro": "Pro'ya yükselt"
   },
   "BlogPost": {
     "publishedOn": "Yayınlanma tarihi: {date}",
@@ -644,5 +663,82 @@
     "subtitle": "Yaratıcılığınızı serbest bırakın. Fikirlerinizi metinlere ve görsellere dönüştürün.",
     "loginRequired": "AI Stüdyosunu kullanmak için giriş yapmalısınız.",
     "proRequired": "AI Stüdyosunu kullanmak için Pro üyeliğe yükseltmelisiniz."
+  },
+
+  "CategoryDetail": {
+    "toolsSuffix": "Araçları",
+    "breadcrumbHome": "Ana Sayfa",
+    "breadcrumbCategories": "Kategoriler",
+    "metaTitle": "{name} Yapay Zeka Araçları",
+    "metaDescription": "{name} kategorisindeki güncel yapay zeka araçlarını keşfedin, özelliklerini inceleyin ve ihtiyacınıza uygun çözümü bulun.",
+    "fallbackDescription": "{name} alanındaki araçları karşılaştırın ve işinize en uygun yapay zeka çözümünü keşfedin.",
+    "statsTools": "{count} araç",
+    "ctaAllCategories": "Tüm kategoriler",
+    "ctaCompare": "Karşılaştır"
+  },
+
+  "ProfilePage": {
+    "metaTitle": "{name} profili",
+    "metaDescription": "{name} kullanıcısının AI Keşif Platformu’ndaki katkıları.",
+    "heroChip": "Profil",
+    "followers": "Takipçi",
+    "following": "Takip",
+    "reputation": "{count} itibar",
+    "memberSince": "{date} tarihinden beri üye",
+    "sendMessage": "Mesaj gönder",
+    "badgesHeading": "Kazanılan rozetler",
+    "commentsHeading": "Son yorumları",
+    "favoritesHeading": "Son favorileri",
+    "showcaseHeading": "Son eserleri",
+    "commentOnTool": "{name} için yazdı.",
+    "emptyActivity": "Bu kullanıcının henüz herkese açık bir aktivitesi yok.",
+    "ctaCommunity": "Topluluğu keşfet"
+  },
+
+  "FollowListPage": {
+    "followersTitle": "{name} kullanıcısının takipçileri",
+    "followingTitle": "{name} kullanıcısının takip ettikleri",
+    "backToProfile": "Profile dön",
+    "emptyFollowers": "Henüz takipçi yok.",
+    "emptyFollowing": "Henüz kimse takip edilmiyor.",
+    "statsCount": "{count} kişi"
+  },
+
+  "DeveloperPage": {
+    "metaTitle": "Geliştirici Portalı",
+    "metaDescription": "API anahtarlarınızı oluşturun ve yönetin. AI Keşif verilerine programatik erişim.",
+    "heroChip": "API",
+    "title": "Geliştirici portalı",
+    "subtitle": "AI Keşif Platformu verilerine programatik olarak erişmek için API anahtarlarınızı yönetin.",
+    "loginRequired": "Geliştirici portalını kullanmak için giriş yapmalısınız.",
+    "docsHint": "Anahtarları güvenli saklayın; rate limit ve kullanım politikalarına uyun."
+  },
+
+  "NotFoundPage": {
+    "metaTitle": "Sayfa bulunamadı",
+    "metaDescription": "Aradığınız sayfa bulunamadı. Ana sayfaya dönün veya keşfet sayfasını ziyaret edin.",
+    "heroChip": "404",
+    "title": "Sayfa bulunamadı",
+    "body": "Aradığınız sayfa silinmiş, taşınmış veya hiç var olmamış olabilir.",
+    "hint": "URL’i kontrol ettikten sonra yeniden deneyin veya aşağıdaki seçeneklerden birini kullanın.",
+    "tipsTitle": "Deneyebileceğiniz şeyler",
+    "tip1": "URL’de yazım hatası olup olmadığını kontrol edin",
+    "tip2": "Ana sayfaya geri dönüp arama yapın",
+    "tip3": "Keşfet sayfasından araçları inceleyin",
+    "ctaHome": "Ana sayfa",
+    "ctaDiscover": "Keşfet",
+    "helpPrefix": "Yardıma ihtiyacınız mı var?",
+    "helpLink": "İletişim sayfasını",
+    "helpSuffix": "ziyaret edin."
+  },
+
+  "MessagesPage": {
+    "title": "Sohbetlerinizi görüntüleyin",
+    "body": "Başlamak için soldaki menüden bir sohbet seçin veya bir kullanıcının profilinden yeni bir sohbet başlatın.",
+    "ctaCommunity": "Topluluğu keşfet",
+    "sidebarTitle": "Sohbetler",
+    "sidebarCount": "{count} sohbet",
+    "emptySidebar": "Henüz sohbet yok. Bir profil üzerinden mesaj başlatabilirsin.",
+    "loginRequired": "Mesajları görmek için giriş yapmalısınız."
   }
 }

@@ -1,6 +1,9 @@
 import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -12,9 +15,8 @@ export const metadata = {
   },
 };
 
-// Kullanıcının sohbetlerini, okunmamış mesaj sayılarıyla birlikte çeken fonksiyon
 async function getConversations(userId) {
-  const supabase = await createClient();
+  const supabase = await createClient(await cookies());
   const { data, error } = await supabase.rpc('get_user_conversations', {
     p_user_id: userId,
   });
@@ -23,25 +25,25 @@ async function getConversations(userId) {
     console.error('Sohbetler çekilirken hata:', error);
     return [];
   }
-  return data;
+  return data || [];
 }
 
 export default async function MessagesLayout(props) {
   const params = await props.params;
-
   const { children } = props;
+  const locale = params.locale;
+  const t = await getTranslations({ locale, namespace: 'MessagesPage' });
 
-  const supabase = await createClient();
+  const supabase = await createClient(await cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect(`/login?message=${encodeURIComponent('Mesajları görmek için giriş yapmalısınız.')}`);
+    redirect(`/login?message=${encodeURIComponent(t('loginRequired'))}`);
   }
 
   const conversations = await getConversations(user.id);
-  // URL'den aktif sohbetin ID'sini alıyoruz
   const activeConversationId = params.conversationId;
 
   return (
@@ -54,14 +56,14 @@ export default async function MessagesLayout(props) {
         )}
       >
         <div className="border-b border-border/60 bg-muted/20 p-4">
-          <h2 className="text-xl font-extrabold tracking-tight">Sohbetler</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">{conversations.length} sohbet</p>
+          <h2 className="text-xl font-extrabold tracking-tight">{t('sidebarTitle')}</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {t('sidebarCount', { count: conversations.length })}
+          </p>
         </div>
         <div className="flex-1 overflow-y-auto">
           {conversations.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">
-              Henüz sohbet yok. Bir profil üzerinden mesaj başlatabilirsin.
-            </p>
+            <p className="p-6 text-center text-sm text-muted-foreground">{t('emptySidebar')}</p>
           ) : (
             <div className="space-y-1 p-2">
               {conversations.map((convo) => {
@@ -74,7 +76,7 @@ export default async function MessagesLayout(props) {
                 const unreadCount = convo.unread_count;
                 const display =
                   otherUser.username ||
-                  (otherUser.email ? String(otherUser.email).split('@')[0] : 'Kullanıcı');
+                  (otherUser.email ? String(otherUser.email).split('@')[0] : '—');
                 const fallback = display.substring(0, 2).toUpperCase() || '??';
                 const isActive = String(activeConversationId) === String(convo.conversation_id);
 
@@ -86,6 +88,7 @@ export default async function MessagesLayout(props) {
                       'flex items-center justify-between rounded-xl p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                       isActive ? 'bg-primary/10 ring-1 ring-primary/20' : 'hover:bg-muted/60'
                     )}
+                    prefetch={false}
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <Avatar className="h-10 w-10 shrink-0">

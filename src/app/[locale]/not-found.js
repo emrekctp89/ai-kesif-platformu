@@ -1,79 +1,74 @@
 import Link from 'next/link';
+import { AlertTriangle, Home, Search } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
+
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Home, Search, ArrowLeft } from 'lucide-react';
 
-export const metadata = {
-  title: 'Sayfa Bulunamadı - 404',
-  description: 'Aradığınız sayfa bulunamadı. Ana sayfaya dönün veya keşfet sayfasını ziyaret edin.',
-  robots: {
-    index: false,
-    follow: true,
-  },
-};
+export default async function NotFound() {
+  const t = await getTranslations('NotFoundPage');
 
-export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full text-center space-y-6">
-        {/* Icon */}
-        <div className="flex justify-center">
-          <div className="relative">
-            <div className="absolute inset-0 bg-destructive/20 blur-xl rounded-full" />
-            <AlertTriangle className="relative w-20 h-20 text-destructive" />
+    <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
+      <div className="brand-surface relative w-full max-w-lg overflow-hidden rounded-3xl p-8 text-center shadow-xl glass-panel sm:p-10">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-destructive/10 blur-3xl" />
+        <div className="relative z-10 space-y-6">
+          <div className="flex justify-center">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-destructive/20 blur-xl" />
+              <AlertTriangle
+                className="relative h-16 w-16 text-destructive sm:h-20 sm:w-20"
+                aria-hidden="true"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Status Code */}
-        <div>
-          <h1 className="text-7xl font-bold text-foreground">404</h1>
-          <p className="text-xl font-semibold text-muted-foreground mt-2">Sayfa Bulunamadı</p>
-        </div>
+          <div>
+            <div className="brand-chip mb-3 inline-flex items-center rounded-full px-3 py-1 text-sm font-bold shadow-inner">
+              {t('heroChip')}
+            </div>
+            <h1 className="text-5xl font-extrabold tracking-tight text-foreground sm:text-6xl">
+              404
+            </h1>
+            <p className="mt-2 text-xl font-semibold text-muted-foreground">{t('title')}</p>
+          </div>
 
-        {/* Description */}
-        <div className="space-y-2">
-          <p className="text-muted-foreground">
-            Aradığınız sayfa silinmiş, taşınmış veya hiç var olmamış olabilir.
+          <div className="space-y-2">
+            <p className="text-muted-foreground">{t('body')}</p>
+            <p className="text-sm text-muted-foreground">{t('hint')}</p>
+          </div>
+
+          <div className="space-y-2 rounded-2xl bg-muted/50 p-4 text-left text-sm">
+            <p className="font-semibold text-foreground">{t('tipsTitle')}</p>
+            <ul className="space-y-1 text-muted-foreground">
+              <li>• {t('tip1')}</li>
+              <li>• {t('tip2')}</li>
+              <li>• {t('tip3')}</li>
+            </ul>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Button asChild className="brand-gradient min-h-11 gap-2 shadow-md">
+              <Link href="/" prefetch={false}>
+                <Home className="h-4 w-4" aria-hidden="true" />
+                {t('ctaHome')}
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="glass-button min-h-11 gap-2">
+              <Link href="/kesfet" prefetch={false}>
+                <Search className="h-4 w-4" aria-hidden="true" />
+                {t('ctaDiscover')}
+              </Link>
+            </Button>
+          </div>
+
+          <p className="border-t border-border/50 pt-4 text-xs text-muted-foreground">
+            {t('helpPrefix')}{' '}
+            <Link href="/iletisim" className="text-primary hover:underline" prefetch={false}>
+              {t('helpLink')}
+            </Link>{' '}
+            {t('helpSuffix')}
           </p>
-          <p className="text-sm text-muted-foreground">
-            URL&apos;i kontrol ettikten sonra yeniden deneyin veya aşağıdaki seçeneklerden birini
-            kullanın.
-          </p>
         </div>
-
-        {/* Suggestions */}
-        <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-left text-sm">
-          <p className="font-semibold text-foreground">Deneyebileceğiniz şeyler:</p>
-          <ul className="space-y-1 text-muted-foreground">
-            <li>✓ URL'de yazım hatası olup olmadığını kontrol edin</li>
-            <li>✓ Ana sayfaya geri dönüp arama yapın</li>
-            <li>✓ Keşfet sayfasından araçları inceleyin</li>
-          </ul>
-        </div>
-
-        {/* Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button asChild variant="default" className="gap-2">
-            <Link href="/">
-              <Home className="w-4 h-4" />
-              Ana Sayfa
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="gap-2">
-            <Link href="/kesfet">
-              <Search className="w-4 h-4" />
-              Keşfet
-            </Link>
-          </Button>
-        </div>
-
-        {/* Footer */}
-        <p className="text-xs text-muted-foreground pt-4 border-t">
-          Yardıma ihtiyacınız mı var?{' '}
-          <Link href="/iletisim" className="text-primary hover:underline">
-            İletişim sayfasını
-          </Link>{' '}
-          ziyaret edin.
-        </p>
       </div>
     </div>
   );

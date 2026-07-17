@@ -21,7 +21,26 @@
     "contact": "Contact",
     "privacy": "Privacy",
     "terms": "Terms of use",
-    "allTools": "All tools"
+    "allTools": "All tools",
+    "launchpad": "Launchpad",
+    "challenge": "Challenge",
+    "bounties": "Bounty hunt",
+    "research": "Research",
+    "feedback": "Feedback",
+    "studio": "AI Studio",
+    "feed": "Feed",
+    "membership": "Membership",
+    "more": "More",
+    "groupExplore": "Explore",
+    "groupCommunity": "Community",
+    "groupContent": "Content",
+    "groupPlatform": "Platform",
+    "footerAria": "Footer navigation",
+    "mainNavAria": "Main navigation",
+    "mobileNavTitle": "Main menu",
+    "mobileNavDescription": "Browse site sections.",
+    "openMenu": "Open menu",
+    "upgradePro": "Upgrade to Pro"
   },
   "BlogPost": {
     "publishedOn": "Published: {date}",
@@ -644,5 +663,82 @@
     "subtitle": "Unleash your creativity. Turn ideas into text and images.",
     "loginRequired": "Sign in to use the AI Studio.",
     "proRequired": "Upgrade to Pro to use the AI Studio."
+  },
+
+  "CategoryDetail": {
+    "toolsSuffix": "Tools",
+    "breadcrumbHome": "Home",
+    "breadcrumbCategories": "Categories",
+    "metaTitle": "{name} AI Tools",
+    "metaDescription": "Discover current AI tools in the {name} category, review features, and find the right fit.",
+    "fallbackDescription": "Compare tools in {name} and find the best AI solution for your work.",
+    "statsTools": "{count} tools",
+    "ctaAllCategories": "All categories",
+    "ctaCompare": "Compare"
+  },
+
+  "ProfilePage": {
+    "metaTitle": "{name}’s profile",
+    "metaDescription": "{name}’s contributions on AI Keşif Platformu.",
+    "heroChip": "Profile",
+    "followers": "Followers",
+    "following": "Following",
+    "reputation": "{count} rep",
+    "memberSince": "Member since {date}",
+    "sendMessage": "Send message",
+    "badgesHeading": "Badges earned",
+    "commentsHeading": "Recent comments",
+    "favoritesHeading": "Recent favorites",
+    "showcaseHeading": "Recent showcase",
+    "commentOnTool": "on {name}",
+    "emptyActivity": "This user has no public activity yet.",
+    "ctaCommunity": "Explore community"
+  },
+
+  "FollowListPage": {
+    "followersTitle": "{name}’s followers",
+    "followingTitle": "People {name} follows",
+    "backToProfile": "Back to profile",
+    "emptyFollowers": "No followers yet.",
+    "emptyFollowing": "Not following anyone yet.",
+    "statsCount": "{count} people"
+  },
+
+  "DeveloperPage": {
+    "metaTitle": "Developer Portal",
+    "metaDescription": "Create and manage API keys for programmatic access to AI Keşif data.",
+    "heroChip": "API",
+    "title": "Developer portal",
+    "subtitle": "Manage API keys for programmatic access to AI Keşif Platformu data.",
+    "loginRequired": "Sign in to use the developer portal.",
+    "docsHint": "Keep keys secure and follow rate limits and usage policies."
+  },
+
+  "NotFoundPage": {
+    "metaTitle": "Page not found",
+    "metaDescription": "The page you requested was not found. Return home or browse Discover.",
+    "heroChip": "404",
+    "title": "Page not found",
+    "body": "The page may have been removed, moved, or never existed.",
+    "hint": "Check the URL, then try again or use one of the options below.",
+    "tipsTitle": "Things you can try",
+    "tip1": "Check the URL for typos",
+    "tip2": "Go home and search",
+    "tip3": "Browse tools on Discover",
+    "ctaHome": "Home",
+    "ctaDiscover": "Discover",
+    "helpPrefix": "Need help?",
+    "helpLink": "Contact page",
+    "helpSuffix": "."
+  },
+
+  "MessagesPage": {
+    "title": "Your conversations",
+    "body": "Pick a chat from the sidebar, or start a new conversation from someone’s profile.",
+    "ctaCommunity": "Explore community",
+    "sidebarTitle": "Chats",
+    "sidebarCount": "{count} chats",
+    "emptySidebar": "No chats yet. Start one from a profile.",
+    "loginRequired": "Sign in to view messages."
   }
 }

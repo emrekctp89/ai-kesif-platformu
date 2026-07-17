@@ -24,6 +24,9 @@ import {
   LayoutGrid,
   Trophy,
   Users,
+  Rocket,
+  Target,
+  WandSparkles,
 } from 'lucide-react';
 
 // Bu bileşen, Header'dan gelen kullanıcı bilgilerini kullanarak menüyü oluşturur.
@@ -32,7 +35,7 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-10 w-10 border-2 border-transparent hover:border-primary transition-colors">
+          <Avatar className="h-10 w-10 border-2 border-transparent transition-colors hover:border-primary">
             <AvatarImage src={profile?.avatar_url} alt={profile?.username || user.email} />
             <AvatarFallback>{user.email?.substring(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
@@ -43,9 +46,8 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
           <div className="flex flex-col space-y-1">
             <div className="flex items-center gap-2">
               <p className="text-sm font-medium leading-none">{profile?.username || 'Kullanıcı'}</p>
-              {/* DEĞİŞİKLİK: Pro üye ise bir rozet göster */}
               {isProUser && (
-                <Badge variant="outline" className="text-purple-500 border-purple-500">
+                <Badge variant="outline" className="border-purple-500 text-purple-500">
                   Pro
                 </Badge>
               )}
@@ -85,12 +87,29 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
+          <Link href="/launchpad">
+            <Rocket className="mr-2 h-4 w-4" />
+            <span>Launchpad</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/odul-avciligi">
+            <Target className="mr-2 h-4 w-4" />
+            <span>Ödül Avcılığı</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/yarisma">
+            <Trophy className="mr-2 h-4 w-4" />
+            <span>Yarışma</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
           <Link href="/submit">
             <PlusCircle className="mr-2 h-4 w-4" />
             <span>Yeni Araç Öner</span>
           </Link>
         </DropdownMenuItem>
-        {/* YENİ: Geliştirici Portalı (Tüm kullanıcılar için) */}
         <DropdownMenuItem asChild>
           <Link href="/developer">
             <Sparkles className="mr-2 h-4 w-4" />
@@ -98,29 +117,36 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
           </Link>
         </DropdownMenuItem>
 
-        {/* DEĞİŞİKLİK: Pro olmayanlar için yükseltme linki */}
-        {!isProUser && !isAdmin && (
+        {isProUser && (
           <DropdownMenuItem asChild>
-            <Link href="/uyelik">
-              <Crown className="mr-2 h-4 w-4 text-purple-500" />
-              <span>Pro'ya Yükselt</span>
+            <Link href="/studyo">
+              <WandSparkles className="mr-2 h-4 w-4 text-purple-500" />
+              <span>AI Stüdyo</span>
             </Link>
           </DropdownMenuItem>
         )}
 
-        {/* YENİ: Admin Paneli linki (Sadece yöneticiler) */}
+        {!isProUser && !isAdmin && (
+          <DropdownMenuItem asChild>
+            <Link href="/uyelik">
+              <Crown className="mr-2 h-4 w-4 text-purple-500" />
+              <span>Pro&apos;ya Yükselt</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
+
         {isAdmin && (
           <>
             <DropdownMenuItem asChild>
               <Link href="/admin">
                 <User className="mr-2 h-4 w-4 text-red-500" />
-                <span className="text-red-500 font-medium">Admin Paneli</span>
+                <span className="font-medium text-red-500">Admin Paneli</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/admin/bulk-import">
                 <Database className="mr-2 h-4 w-4 text-orange-500" />
-                <span className="text-orange-500 font-medium">Toplu İçe Aktarım</span>
+                <span className="font-medium text-orange-500">Toplu İçe Aktarım</span>
               </Link>
             </DropdownMenuItem>
           </>
@@ -128,7 +154,7 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
         <DropdownMenuSeparator />
         <form action={signOut} className="w-full">
           <DropdownMenuItem asChild>
-            <button type="submit" className="w-full text-left cursor-pointer flex items-center">
+            <button type="submit" className="flex w-full cursor-pointer items-center text-left">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Çıkış Yap</span>
             </button>
