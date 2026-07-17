@@ -24,8 +24,10 @@ function createPublicClient() {
 
 async function getAlternatives(currentTool) {
   const supabase = createPublicClient();
+  // Note: tools_with_ratings view currently does not expose name_en / description_en.
+  // Use base name/description until the view is refreshed to include translation columns.
   const select =
-    'id, name, name_en, slug, pricing_model, platforms, average_rating, total_ratings, link, tier, category_slug, category_name';
+    'id, name, slug, pricing_model, platforms, average_rating, total_ratings, link, tier, category_slug, category_name';
 
   let query = supabase
     .from('tools_with_ratings')
