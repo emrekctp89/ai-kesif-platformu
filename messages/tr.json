@@ -335,7 +335,15 @@
     "filterPlatform": "Platform: {value}",
     "filterSort": "Sıralama: {value}",
     "sortRating": "En yüksek puanlı",
-    "sortPopularity": "En çok oylanan"
+    "sortPopularity": "En çok oylanan",
+    "categoriesHeading": "Kategorileri keşfet",
+    "categoriesSubheading": "{count} kategori · ihtiyacına uygun araç grubunu seç",
+    "viewAll": "Tümünü gör",
+    "moreCategories": "+{count} kategori daha",
+    "advancedFilters": "Gelişmiş",
+    "pricingHeading": "Fiyatlandırma",
+    "platformHeading": "Platform",
+    "platformChromeExt": "Chrome uzantısı"
   },
   "Common": {
     "search": "Ara...",
@@ -343,7 +351,12 @@
     "signup": "Kayıt Ol",
     "logout": "Çıkış Yap",
     "promoted": "Sponsorlu",
-    "pro": "Pro"
+    "pro": "Pro",
+    "myProfile": "Profilim",
+    "close": "Kapat",
+    "announcementAria": "Geliştirme duyurusu",
+    "announcementTitle": "Geliştirme notu:",
+    "announcementBody": "Platformumuz henüz çok yeni ve sürekli olarak yeni özellikler ekleniyor. Bir sorunla karşılaşırsanız veya bir fikriniz varsa, bizimle paylaşmaktan çekinmeyin!"
   },
   "Tool": {
     "visitSite": "Ziyaret Et",
@@ -477,10 +490,11 @@
     "free": "Ücretsiz",
     "freemium": "Freemium",
     "paid": "Ücretli",
+    "subscription": "Abonelik",
     "monthly": "Aylık",
     "yearly": "Yıllık",
     "credits": "Kredi",
-    "oneTime": "Tek Seferlik"
+    "oneTime": "Tek seferlik"
   },
 
   "AboutPage": {

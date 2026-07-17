@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { useTranslations } from 'next-intl';
 import { Megaphone, X } from 'lucide-react';
+
 import { Button } from './ui/button';
 
 const FeedbackDialog = dynamic(
@@ -13,22 +15,17 @@ const FeedbackDialog = dynamic(
 const ANNOUNCEMENT_ID = 'welcome-banner-v1';
 
 export function AnnouncementBanner() {
+  const t = useTranslations('Common');
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Bug fix: Safari gizli sekmede localStorage erişilebilir görünür ama
-    // setItem() QuotaExceededError fırlatır (kota ~0'a düşer). getItem
-    // genelde güvenlidir ama bazı kısıtlı/yönetilen tarayıcı profillerinde
-    // localStorage nesinesine erişimin kendisi de SecurityError fırlatabilir.
-    // Bu try/catch olmadan bu bileşen tüm sayfayı client-side exception'a
-    // düşürebilir (üstünde yerel bir error boundary yok).
+    // Safari private mode may throw on localStorage; never crash the page for a banner.
     try {
       const isDismissed = localStorage.getItem(ANNOUNCEMENT_ID);
       if (!isDismissed) {
         setIsVisible(true);
       }
-    } catch (error) {
-      // localStorage kullanılamıyor (gizli sekme, kısıtlı profil, vb.) — sessizce banner'ı göster.
+    } catch {
       setIsVisible(true);
     }
   }, []);
@@ -37,8 +34,8 @@ export function AnnouncementBanner() {
     setIsVisible(false);
     try {
       localStorage.setItem(ANNOUNCEMENT_ID, 'true');
-    } catch (error) {
-      // localStorage yazılamıyor (örn. Safari gizli sekme) — banner yine de bu oturum için kapanır.
+    } catch {
+      // Banner still dismisses for this session if storage is unavailable.
     }
   };
 
@@ -51,11 +48,11 @@ export function AnnouncementBanner() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300 p-2 sm:p-4">
+    <div className="fixed bottom-0 left-0 right-0 z-50 animate-in fade-in slide-in-from-bottom-4 p-2 duration-300 sm:p-4">
       <div className="container mx-auto">
         <div
           role="region"
-          aria-label="Geliştirme duyurusu"
+          aria-label={t('announcementAria')}
           className="flex items-start justify-between gap-2 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:items-center sm:gap-4 sm:p-4"
         >
           <div className="flex min-w-0 flex-1 flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
@@ -63,9 +60,8 @@ export function AnnouncementBanner() {
               <Megaphone aria-hidden="true" className="h-5 w-5 text-primary" />
             </div>
             <p className="line-clamp-3 text-xs leading-5 text-muted-foreground sm:line-clamp-none sm:text-sm">
-              <span className="font-semibold text-foreground">Geliştirme Notu:</span> Platformumuz
-              henüz çok yeni ve sürekli olarak yeni özellikler ekleniyor. Bir sorunla
-              karşılaşırsanız veya bir fikriniz varsa, bizimle paylaşmaktan çekinmeyin!
+              <span className="font-semibold text-foreground">{t('announcementTitle')}</span>{' '}
+              {t('announcementBody')}
             </p>
             <div className="shrink-0">
               <FeedbackDialog />
@@ -78,7 +74,7 @@ export function AnnouncementBanner() {
             className="h-7 w-7 flex-shrink-0"
           >
             <X aria-hidden="true" className="h-4 w-4" />
-            <span className="sr-only">Kapat</span>
+            <span className="sr-only">{t('close')}</span>
           </Button>
         </div>
       </div>

@@ -335,7 +335,15 @@
     "filterPlatform": "Platform: {value}",
     "filterSort": "Sort: {value}",
     "sortRating": "Highest rated",
-    "sortPopularity": "Most voted"
+    "sortPopularity": "Most voted",
+    "categoriesHeading": "Explore categories",
+    "categoriesSubheading": "{count} categories · pick the group that fits your needs",
+    "viewAll": "View all",
+    "moreCategories": "+{count} more categories",
+    "advancedFilters": "Advanced",
+    "pricingHeading": "Pricing",
+    "platformHeading": "Platform",
+    "platformChromeExt": "Chrome extension"
   },
   "Common": {
     "search": "Search...",
@@ -343,7 +351,12 @@
     "signup": "Sign Up",
     "logout": "Logout",
     "promoted": "Promoted",
-    "pro": "Pro"
+    "pro": "Pro",
+    "myProfile": "My profile",
+    "close": "Close",
+    "announcementAria": "Development notice",
+    "announcementTitle": "Development note:",
+    "announcementBody": "Our platform is brand new and we keep shipping features. If you hit a problem or have an idea, please share it with us!"
   },
   "Tool": {
     "visitSite": "Visit Site",
@@ -477,10 +490,11 @@
     "free": "Free",
     "freemium": "Freemium",
     "paid": "Paid",
+    "subscription": "Subscription",
     "monthly": "Monthly",
     "yearly": "Yearly",
     "credits": "Credits",
-    "oneTime": "One Time"
+    "oneTime": "One-time"
   },
 
   "AboutPage": {

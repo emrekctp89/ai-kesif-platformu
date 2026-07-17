@@ -1,15 +1,18 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
+import { ArrowRight } from 'lucide-react';
+
 import { getCategoryConfig } from '@/lib/categoryConfig';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight } from 'lucide-react';
 
 /**
  * @param {{ categories: Array<{ name: string, slug: string }>, limit?: number | null, showAllLink?: boolean }} props
- * limit: anasayfada gösterilecek max kart (null = hepsi)
+ * limit: max cards on homepage (null = all)
  */
-export function CategoryGrid({ categories, limit = 36, showAllLink = true }) {
+export async function CategoryGrid({ categories, limit = 36, showAllLink = true }) {
   if (!categories || categories.length === 0) return null;
 
+  const t = await getTranslations('Homepage');
   const visible = typeof limit === 'number' && limit > 0 ? categories.slice(0, limit) : categories;
   const hasMore = typeof limit === 'number' && categories.length > limit;
 
@@ -18,10 +21,10 @@ export function CategoryGrid({ categories, limit = 36, showAllLink = true }) {
       <div className="mb-5 flex items-center justify-between gap-3 sm:mb-6">
         <div>
           <h2 id="categories-heading" className="text-2xl font-bold tracking-tight text-foreground">
-            Kategorileri Keşfet
+            {t('categoriesHeading')}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {categories.length} kategori · ihtiyacına uygun araç grubunu seç
+            {t('categoriesSubheading', { count: categories.length })}
           </p>
         </div>
         {showAllLink ? (
@@ -29,7 +32,7 @@ export function CategoryGrid({ categories, limit = 36, showAllLink = true }) {
             href="/kategori"
             className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            Tümünü gör
+            {t('viewAll')}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         ) : null}
@@ -78,7 +81,7 @@ export function CategoryGrid({ categories, limit = 36, showAllLink = true }) {
             href="/kategori"
             className="inline-flex min-h-11 items-center gap-2 rounded-full border border-indigo-500/25 bg-indigo-950/5 px-5 py-2 text-sm font-semibold text-indigo-800 transition hover:bg-indigo-950/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-indigo-200"
           >
-            +{categories.length - limit} kategori daha
+            {t('moreCategories', { count: categories.length - limit })}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
