@@ -2,6 +2,9 @@
 
 import * as React from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
+import toast from 'react-hot-toast';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,20 +18,18 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { deleteShowcaseItem } from '@/app/actions';
-import toast from 'react-hot-toast';
-import { Trash2 } from 'lucide-react';
 import { AddShowcaseItemDialog } from './AddShowcaseItemDialog';
-// Yeni Düzenleme bileşenini import ediyoruz
 import { EditShowcaseItemDialog } from './EditShowcaseItemDialog';
 
-// Eser Silme Butonu
 function DeleteShowcaseItemButton({ item }) {
+  const t = useTranslations('ProfileComponents');
+
   const handleFormAction = async (formData) => {
     const result = await deleteShowcaseItem(formData);
     if (result?.error) {
       toast.error(result.error);
     } else {
-      toast.success('Eser başarıyla silindi.');
+      toast.success(t('showcaseDeleted'));
     }
   };
 
@@ -36,22 +37,22 @@ function DeleteShowcaseItemButton({ item }) {
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm">
-          Sil
+          {t('delete')}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
+          <AlertDialogTitle>{t('confirmTitle')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Bu işlem geri alınamaz. "{item.title}" başlıklı eseriniz kalıcı olarak silinecektir.
+            {t('confirmDeleteShowcase', { title: item.title })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+          <AlertDialogCancel>{t('dismiss')}</AlertDialogCancel>
           <form action={handleFormAction}>
             <input type="hidden" name="itemId" value={item.id} />
             <input type="hidden" name="imageUrl" value={item.image_url} />
-            <AlertDialogAction type="submit">Evet, Sil</AlertDialogAction>
+            <AlertDialogAction type="submit">{t('confirmYesDelete')}</AlertDialogAction>
           </form>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -59,54 +60,55 @@ function DeleteShowcaseItemButton({ item }) {
   );
 }
 
-// Ana Eser Yönetim Bileşeni
 export function ShowcaseManager({ items }) {
+  const t = useTranslations('ProfileComponents');
+
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
         <AddShowcaseItemDialog />
       </div>
       <hr className="border-border" />
-      <div className="space-y-4">
+      <div className="space-y-3">
         {items.length > 0 ? (
           items.map((item) => (
-            <div key={item.id} className="p-4 rounded-lg border flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center">
+            <div
+              key={item.id}
+              className="flex items-center justify-between gap-3 rounded-xl border border-border/50 p-4 glass-panel"
+            >
+              <div className="flex min-w-0 items-center gap-4">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md bg-muted">
                   {item.image_url ? (
                     <Image
                       src={item.image_url}
                       alt={item.title}
                       width={64}
                       height={64}
-                      className="w-full h-full object-cover rounded-md"
+                      className="h-full w-full rounded-md object-cover"
                     />
                   ) : (
-                    <span className="text-xs font-mono text-muted-foreground">
+                    <span className="font-mono text-xs text-muted-foreground">
                       {item.content_type}
                     </span>
                   )}
                 </div>
-                <div>
-                  <p className="font-semibold">{item.title}</p>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{item.title}</p>
                   <p
                     className={`text-sm ${item.is_approved ? 'text-green-500' : 'text-yellow-500'}`}
                   >
-                    {item.is_approved ? 'Onaylandı' : 'Onay Bekliyor'}
+                    {item.is_approved ? t('showcaseApproved') : t('showcasePending')}
                   </p>
                 </div>
               </div>
-              {/* DEĞİŞİKLİK: Yeni butonları ekliyoruz */}
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <EditShowcaseItemDialog item={item} />
                 <DeleteShowcaseItemButton item={item} />
               </div>
             </div>
           ))
         ) : (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Henüz hiç eser paylaşmadınız.
-          </p>
+          <p className="py-4 text-center text-sm text-muted-foreground">{t('showcaseEmpty')}</p>
         )}
       </div>
     </div>

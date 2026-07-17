@@ -1,6 +1,9 @@
 'use client';
 
 import { useTransition } from 'react';
+import { useTranslations } from 'next-intl';
+import toast from 'react-hot-toast';
+
 import { updateUserProfile } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,11 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AvatarUploader } from '@/components/AvatarUploader';
-import toast from 'react-hot-toast';
 import { PushNotificationManager } from './PushNotificationManager';
-import { cn } from '@/lib/utils';
 
 export function ProfileEditor({ user, profile }) {
+  const t = useTranslations('ProfileComponents');
   const [isPending, startTransition] = useTransition();
 
   const handleFormAction = (formData) => {
@@ -27,50 +29,51 @@ export function ProfileEditor({ user, profile }) {
   };
 
   return (
-    <Card>
+    <Card className="glass-panel border-border/50">
       <CardHeader>
-        <CardTitle>Genel Profil</CardTitle>
-        <CardDescription>
-          Herkese açık profil bilgilerinizi buradan güncelleyebilirsiniz.
-        </CardDescription>
+        <CardTitle>{t('profileTitle')}</CardTitle>
+        <CardDescription>{t('profileDescription')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label>Profil Fotoğrafı</Label>
+          <Label>{t('avatarLabel')}</Label>
           <AvatarUploader userId={user.id} currentAvatarUrl={profile?.avatar_url} />
         </div>
 
         <form action={handleFormAction} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="username">Kullanıcı Adı</Label>
+            <Label htmlFor="username">{t('usernameLabel')}</Label>
             <Input
               id="username"
               name="username"
               defaultValue={profile?.username || ''}
-              placeholder="benzersiz_kullanici_adiniz"
+              placeholder={t('usernamePlaceholder')}
             />
-            <p className="text-xs text-muted-foreground">
-              Sadece küçük harf, sayı, - ve _ kullanabilirsiniz (3-15 karakter).
-            </p>
+            <p className="text-xs text-muted-foreground">{t('usernameHint')}</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="bio">Hakkında (Bio)</Label>
+            <Label htmlFor="bio">{t('bioLabel')}</Label>
             <Textarea
               id="bio"
               name="bio"
               defaultValue={profile?.bio || ''}
-              placeholder="Kendinizden kısaca bahsedin..."
-              maxLength="200"
+              placeholder={t('bioPlaceholder')}
+              maxLength={200}
             />
           </div>
-          {/* YENİ: Bildirim Ayarları Bölümü */}
-          <div className="space-y-4 pt-6 border-t">
-            <Label className="font-semibold">Bildirim Ayarları</Label>
-            <PushNotificationManager initialSubscriptionStatus={profile.wants_push_notifications} />
+          <div className="space-y-4 border-t border-border/60 pt-6">
+            <Label className="font-semibold">{t('notificationsLabel')}</Label>
+            <PushNotificationManager
+              initialSubscriptionStatus={profile?.wants_push_notifications}
+            />
           </div>
           <div className="flex justify-end">
-            <Button type="submit" disabled={isPending}>
-              {isPending ? 'Kaydediliyor...' : 'Profili Güncelle'}
+            <Button
+              type="submit"
+              disabled={isPending}
+              className="brand-gradient min-h-10 shadow-md"
+            >
+              {isPending ? t('saving') : t('saveProfile')}
             </Button>
           </div>
         </form>

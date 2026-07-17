@@ -3,6 +3,10 @@
 import * as React from 'react';
 import { useTransition } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import toast from 'react-hot-toast';
+import { PlusCircle } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,39 +33,36 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { createCollection, deleteCollection } from '@/app/actions';
-import toast from 'react-hot-toast';
-import { PlusCircle } from 'lucide-react';
 
-// Koleksiyon Silme Butonu
 function DeleteCollectionButton({ collectionId }) {
+  const t = useTranslations('ProfileComponents');
+
   const handleFormAction = async (formData) => {
     const result = await deleteCollection(formData);
     if (result?.error) {
       toast.error(result.error);
     } else {
-      toast.success('Koleksiyon başarıyla silindi.');
+      toast.success(t('collectionDeleted'));
     }
   };
+
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm">
-          Sil
+          {t('delete')}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Bu işlem geri alınamaz. Bu koleksiyon ve içindeki tüm araçlar kalıcı olarak
-            silinecektir.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{t('confirmTitle')}</AlertDialogTitle>
+          <AlertDialogDescription>{t('confirmDeleteCollection')}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+          <AlertDialogCancel>{t('dismiss')}</AlertDialogCancel>
           <form action={handleFormAction}>
             <input type="hidden" name="id" value={collectionId} />
-            <AlertDialogAction type="submit">Evet, Sil</AlertDialogAction>
+            <AlertDialogAction type="submit">{t('confirmYesDelete')}</AlertDialogAction>
           </form>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -69,8 +70,8 @@ function DeleteCollectionButton({ collectionId }) {
   );
 }
 
-// Yeni Koleksiyon Oluşturma Penceresi
 function CreateCollectionDialog() {
+  const t = useTranslations('ProfileComponents');
   const formRef = React.useRef(null);
   const [isOpen, setIsOpen] = React.useState(false);
   const [isPending, startTransition] = useTransition();
@@ -81,7 +82,7 @@ function CreateCollectionDialog() {
       if (result?.error) {
         toast.error(result.error);
       } else {
-        toast.success('Koleksiyon oluşturuldu, düzenleme sayfasına yönlendiriliyorsunuz...');
+        toast.success(t('collectionCreated'));
         setIsOpen(false);
       }
     });
@@ -90,26 +91,23 @@ function CreateCollectionDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Yeni Koleksiyon
+        <Button size="sm" className="brand-gradient min-h-9 shadow-md">
+          <PlusCircle className="mr-2 h-4 w-4" aria-hidden="true" />
+          {t('newCollection')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Yeni Koleksiyon Oluştur</DialogTitle>
-          <DialogDescription>
-            Koleksiyonunuza akılda kalıcı bir başlık verin. Daha sonra içine araçlar
-            ekleyebilirsiniz.
-          </DialogDescription>
+          <DialogTitle>{t('newCollectionTitle')}</DialogTitle>
+          <DialogDescription>{t('newCollectionDesc')}</DialogDescription>
         </DialogHeader>
         <form ref={formRef} action={handleCreateCollection} className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="new-collection-title">Koleksiyon Başlığı</Label>
+            <Label htmlFor="new-collection-title">{t('collectionTitleLabel')}</Label>
             <Input
               id="new-collection-title"
               name="title"
-              placeholder="Örn: En İyi Ücretsiz Tasarım Araçları"
+              placeholder={t('collectionTitlePlaceholder')}
               required
               disabled={isPending}
             />
@@ -117,11 +115,11 @@ function CreateCollectionDialog() {
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary" disabled={isPending}>
-                İptal
+                {t('cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" disabled={isPending}>
-              {isPending ? 'Oluşturuluyor...' : 'Oluştur & Düzenle'}
+              {isPending ? t('creating') : t('createAndEdit')}
             </Button>
           </DialogFooter>
         </form>
@@ -130,44 +128,45 @@ function CreateCollectionDialog() {
   );
 }
 
-// Ana Koleksiyon Yönetim Bileşeni
 export function CollectionManager({ collections }) {
+  const t = useTranslations('ProfileComponents');
+
   return (
     <div className="space-y-6">
-      {/* DEĞİŞİKLİK: "Yeni Koleksiyon" butonu artık listenin üzerinde */}
       <div className="flex justify-end">
         <CreateCollectionDialog />
       </div>
 
       <hr className="border-border" />
 
-      {/* Mevcut Koleksiyonlar Listesi */}
       <div>
-        <h3 className="text-lg font-medium mb-2">Koleksiyonlarım</h3>
+        <h3 className="mb-3 text-lg font-medium">{t('collectionsMine')}</h3>
         <div className="space-y-2">
           {collections.length > 0 ? (
             collections.map((collection) => (
               <div
                 key={collection.id}
-                className="p-3 rounded-lg border flex justify-between items-center"
+                className="flex items-center justify-between gap-3 rounded-xl border border-border/50 p-3 glass-panel"
               >
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{collection.title}</p>
-                  <Badge variant={collection.is_public ? 'default' : 'secondary'}>
-                    {collection.is_public ? 'Herkese Açık' : 'Gizli'}
+                  <Badge variant={collection.is_public ? 'default' : 'secondary'} className="mt-1">
+                    {collection.is_public ? t('public') : t('private')}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2">
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/profile/collections/${collection.id}/edit`}>Düzenle</Link>
+                    <Link href={`/profile/collections/${collection.id}/edit`} prefetch={false}>
+                      {t('edit')}
+                    </Link>
                   </Button>
                   <DeleteCollectionButton collectionId={collection.id} />
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Henüz hiç koleksiyon oluşturmadınız.
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              {t('collectionsEmpty')}
             </p>
           )}
         </div>

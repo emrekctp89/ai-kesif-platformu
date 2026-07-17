@@ -1,80 +1,78 @@
 'use client';
 
+import { Flame, Star, MessageSquare, Heart, UserPlus, CheckCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Flame, Star, MessageSquare, Heart, UserPlus, CheckCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
-// Görev türüne göre ikon belirleyen yardımcı obje
 const questIcons = {
-  rating: <Star className="w-5 h-5 text-yellow-500" />,
-  comment: <MessageSquare className="w-5 h-5 text-blue-500" />,
-  favorite: <Heart className="w-5 h-5 text-red-500" />,
-  follow_user: <UserPlus className="w-5 h-5 text-green-500" />,
-  // Diğer görev türleri için de eklenebilir
+  rating: <Star className="h-5 w-5 text-yellow-500" aria-hidden="true" />,
+  comment: <MessageSquare className="h-5 w-5 text-blue-500" aria-hidden="true" />,
+  favorite: <Heart className="h-5 w-5 text-red-500" aria-hidden="true" />,
+  follow_user: <UserPlus className="h-5 w-5 text-green-500" aria-hidden="true" />,
 };
 
 export function DailyQuests({ quests, streak }) {
+  const t = useTranslations('ProfileComponents');
+
   return (
-    <Card>
+    <Card className="glass-panel border-border/50">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Günün Görevleri</span>
-          {streak > 0 && (
+        <CardTitle className="flex items-center justify-between gap-3">
+          <span>{t('questsTitle')}</span>
+          {streak > 0 ? (
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger>
-                  <div className="flex items-center gap-1 text-orange-500 font-bold">
-                    <Flame className="w-5 h-5" />
-                    <span>{streak} Günlük Seri</span>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1 font-bold text-orange-500">
+                    <Flame className="h-5 w-5" aria-hidden="true" />
+                    <span>{t('streakDays', { count: streak })}</span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Görevleri tamamlamaya devam ederek serini koru!</p>
+                  <p>{t('streakTip')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          )}
+          ) : null}
         </CardTitle>
-        <CardDescription>
-          Bu görevleri tamamlayarak itibar puanı kazanın ve serinizi devam ettirin.
-        </CardDescription>
+        <CardDescription>{t('questsDescription')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {quests && quests.length > 0 ? (
           quests.map((quest) => {
-            const progress = (quest.current_progress / quest.quests.target_count) * 100;
+            const target = quest.quests?.target_count || 1;
+            const progress = (quest.current_progress / target) * 100;
             return (
               <div key={quest.quest_id} className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 font-medium">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <div className="flex min-w-0 items-center gap-2 font-medium">
                     {quest.is_completed ? (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <CheckCircle className="h-5 w-5 shrink-0 text-green-500" aria-hidden="true" />
                     ) : (
-                      questIcons[quest.quests.action_type]
+                      questIcons[quest.quests?.action_type] || null
                     )}
-                    <span>{quest.quests.description}</span>
+                    <span className="truncate">{quest.quests?.description}</span>
                   </div>
-                  <span className="font-semibold text-primary">
-                    +{quest.quests.reputation_reward} Puan
+                  <span className="shrink-0 font-semibold text-primary">
+                    {t('questPoints', { count: quest.quests?.reputation_reward || 0 })}
                   </span>
                 </div>
-                {!quest.is_completed && (
+                {!quest.is_completed ? (
                   <div className="flex items-center gap-2">
                     <Progress value={progress} className="w-full" />
                     <span className="text-xs text-muted-foreground">
-                      {quest.current_progress}/{quest.quests.target_count}
+                      {quest.current_progress}/{target}
                     </span>
                   </div>
-                )}
+                ) : null}
               </div>
             );
           })
         ) : (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Bugün için yeni görevleriniz henüz atanmadı. Lütfen daha sonra tekrar kontrol edin.
-          </p>
+          <p className="py-4 text-center text-sm text-muted-foreground">{t('questsEmpty')}</p>
         )}
       </CardContent>
     </Card>
