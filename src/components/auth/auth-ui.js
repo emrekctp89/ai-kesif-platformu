@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useFormStatus } from 'react-dom';
 import { Eye, EyeOff, LoaderCircle, Lock, Mail } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,13 +15,18 @@ import { cn } from '@/lib/utils';
 export function isSuccessMessage(message) {
   if (!message) return false;
   const lower = message.toLocaleLowerCase('tr-TR');
+  const en = message.toLocaleLowerCase('en-US');
   return (
     lower.includes('gönder') ||
     lower.includes('başar') ||
     lower.includes('doğrula') ||
     lower.includes('kontrol edin') ||
     lower.includes('kayıtlıysa') ||
-    lower.includes('kayıt')
+    lower.includes('kayıt') ||
+    en.includes('sent') ||
+    en.includes('success') ||
+    en.includes('check your') ||
+    en.includes('verify')
   );
 }
 
@@ -58,6 +65,7 @@ export function AuthAlert({ message }) {
 }
 
 export function AuthSubmitButton({ idleLabel, pendingLabel }) {
+  const t = useTranslations('Auth');
   const { pending } = useFormStatus();
 
   return (
@@ -69,7 +77,7 @@ export function AuthSubmitButton({ idleLabel, pendingLabel }) {
       {pending ? (
         <>
           <LoaderCircle className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-          {pendingLabel || 'İşleniyor…'}
+          {pendingLabel || t('processing')}
         </>
       ) : (
         idleLabel
@@ -81,15 +89,19 @@ export function AuthSubmitButton({ idleLabel, pendingLabel }) {
 export function AuthEmailField({
   id = 'email',
   name = 'email',
-  label = 'E-posta',
-  placeholder = 'ornek@mail.com',
+  label,
+  placeholder,
   autoComplete = 'email',
   value,
   onChange,
 }) {
+  const t = useTranslations('Auth');
+  const fieldLabel = label ?? t('emailLabel');
+  const fieldPlaceholder = placeholder ?? t('emailPlaceholder');
+
   return (
     <div className="grid gap-2">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>{fieldLabel}</Label>
       <div className="relative">
         <Mail
           className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -99,7 +111,7 @@ export function AuthEmailField({
           id={id}
           type="email"
           name={name}
-          placeholder={placeholder}
+          placeholder={fieldPlaceholder}
           autoComplete={autoComplete}
           required
           className="h-11 pl-10"
@@ -114,17 +126,19 @@ export function AuthEmailField({
 export function AuthPasswordField({
   id = 'password',
   name = 'password',
-  label = 'Şifre',
+  label,
   autoComplete = 'current-password',
   minLength,
   helper,
 }) {
+  const t = useTranslations('Auth');
   const [showPassword, setShowPassword] = useState(false);
+  const fieldLabel = label ?? t('passwordLabel');
 
   return (
     <div className="grid gap-2">
       <div className="flex items-center justify-between gap-3">
-        <Label htmlFor={id}>{label}</Label>
+        <Label htmlFor={id}>{fieldLabel}</Label>
         {helper}
       </div>
       <div className="relative">
@@ -145,7 +159,7 @@ export function AuthPasswordField({
           type="button"
           onClick={() => setShowPassword((value) => !value)}
           className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
+          aria-label={showPassword ? t('hidePassword') : t('showPassword')}
         >
           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
@@ -165,11 +179,13 @@ export function GoogleIcon({ className }) {
   );
 }
 
-export function AuthFormFallback({ label = 'Form yükleniyor…' }) {
+export function AuthFormFallback({ label }) {
+  const t = useTranslations('Auth');
+
   return (
     <div className="mx-auto w-full max-w-[420px] rounded-3xl border border-dashed p-8 text-center text-sm text-muted-foreground">
       <LoaderCircle className="mx-auto mb-3 h-5 w-5 animate-spin" />
-      {label}
+      {label || t('formLoading')}
     </div>
   );
 }
@@ -220,7 +236,7 @@ export function AuthFooterLink({ prompt, href, label, align = 'responsive' }) {
         align === 'responsive' && 'text-center lg:text-left'
       )}
     >
-      {prompt}{' '}
+      {prompt ? <>{prompt} </> : null}
       <Link
         href={href}
         className="font-semibold text-indigo-700 hover:underline dark:text-indigo-300"

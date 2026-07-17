@@ -1,11 +1,15 @@
 import { createClient } from '@/utils/supabase/server';
-// DEĞİŞİKLİK: "Süper Admin" istemcisini import ediyoruz
 import { createAdminClient } from '@/utils/supabase/admin';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { LayoutDashboard } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
+
 import { DashboardClient } from '@/components/DashboardClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserManagementTable } from '@/components/UserManagementTable';
 import { AiBriefingCard } from '@/components/AiBriefingCard';
+import { generatePageMetadata } from '@/utils/seo';
 
 // DEĞİŞİKLİK: Bu fonksiyonlar artık "Süper Admin" yetkileriyle çalışacak
 async function getDashboardData() {
@@ -71,16 +75,21 @@ async function getLatestBriefing() {
   return data;
 }
 
-export const metadata = {
-  title: 'Admin Dashboard | AI Keşif Platformu',
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'AdminDashboard' });
+  return generatePageMetadata({
+    title: t('metaTitle'),
+    description: t('subtitle'),
+    path: locale === 'en' ? '/en/dashboard' : '/dashboard',
+    noindex: true,
+  });
+}
 
-export default async function DashboardPage() {
-  const supabase = await createClient();
+export default async function DashboardPage({ params }) {
+  await params;
+  const t = await getTranslations('AdminDashboard');
+  const supabase = await createClient(await cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -97,16 +106,18 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-8">
-      <header className="brand-surface relative overflow-hidden rounded-3xl p-6 shadow-lg glass-panel sm:p-8">
+      <header className="brand-surface relative overflow-hidden rounded-3xl p-6 shadow-xl glass-panel sm:p-8">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative z-10">
-          <p className="brand-chip mb-2 inline-flex rounded-full px-3 py-1 text-xs font-bold">
-            Yönetim
-          </p>
+          <div className="brand-chip mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
+            <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
+            {t('heroChip')}
+          </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Admin Dashboard
+            {t('title')}
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
-            Platform istatistikleri, AI brifing, link sağlığı ve kullanıcı yönetimi.
+            {t('subtitle')}
           </p>
         </div>
       </header>
@@ -117,10 +128,8 @@ export default async function DashboardPage() {
 
       <Card className="glass-panel border-border/50">
         <CardHeader>
-          <CardTitle>Kullanıcı Yönetimi</CardTitle>
-          <CardDescription>
-            Platformdaki tüm kullanıcıları ve aktivitelerini buradan yönetebilirsiniz.
-          </CardDescription>
+          <CardTitle>{t('usersTitle')}</CardTitle>
+          <CardDescription>{t('usersDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <UserManagementTable users={allUsers} adminId={user.id} />

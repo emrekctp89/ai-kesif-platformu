@@ -807,7 +807,8 @@
     "ssoInvalidEmail": "Enter a valid email address.",
     "ssoFailed": "SSO sign-in failed.",
     "ssoNotConfigured": "No SSO configuration found for this domain.",
-    "ssoUnexpected": "An unexpected error occurred while signing in."
+    "ssoUnexpected": "An unexpected error occurred while signing in.",
+    "formLoading": "Loading form…"
   },
 
   "ProfilePanel": {
@@ -840,6 +841,52 @@
     "title": "Operations center",
     "subtitle": "Approved tools: {approved} · Pending: {pending} · Categories: {categories}",
     "bulkImport": "Bulk import",
-    "analytics": "Analytics & monitoring"
+    "analytics": "Analytics & monitoring",
+    "backToAdmin": "Back to operations",
+    "bulkMetaTitle": "Bulk Import",
+    "bulkTitle": "Bulk import",
+    "bulkSubtitle": "Import tools via CSV or bulk data into the operations panel.",
+    "bulkChip": "Import",
+    "analyticsMetaTitle": "Analytics",
+    "analyticsTitle": "Analytics & monitoring",
+    "analyticsSubtitle": "High-level platform stats and health",
+    "analyticsChip": "Metrics",
+    "chartLoading": "Loading chart…",
+    "statUsers": "Total users",
+    "statUsersHint": "Registered members",
+    "statTools": "Total tools",
+    "statToolsHint": "Approved and pending tools",
+    "statReports": "Broken link reports",
+    "statReportsHint": "Links reported by users",
+    "statTraffic": "Site traffic",
+    "statTrafficValue": "Vercel",
+    "statTrafficHint": "Traffic is tracked via Vercel Analytics",
+    "statApiKeys": "API keys",
+    "statApiKeysHint": "Developer keys created",
+    "chartTitle": "Tool submissions (last 30 days)",
+    "copilotMetaTitle": "Admin Co-Pilot",
+    "copilotTitle": "Admin Co-Pilot",
+    "copilotSubtitle": "AI assistant for admin tasks.",
+    "copilotChip": "Co-Pilot",
+    "editPostTitle": "Edit content",
+    "editPostSubtitle": "Update a blog post or guide.",
+    "editPostChip": "Editor",
+    "previewBanner": "This is a preview only. The post may not be published yet.",
+    "previewChip": "Preview",
+    "editChallengeTitle": "Edit challenge",
+    "editChallengeSubtitle": "Update an active or scheduled challenge.",
+    "editChallengeChip": "Challenge",
+    "loading": "Loading admin panel…",
+    "errorTitle": "Admin panel error",
+    "errorMessage": "Something went wrong while loading the admin panel or fetching data."
+  },
+
+  "AdminDashboard": {
+    "metaTitle": "Admin Dashboard",
+    "heroChip": "Admin",
+    "title": "Admin dashboard",
+    "subtitle": "Platform stats, AI briefing, link health, and user management.",
+    "usersTitle": "User management",
+    "usersDescription": "Manage all platform users and their activity here."
   }
 }

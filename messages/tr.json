@@ -807,7 +807,8 @@
     "ssoInvalidEmail": "Geçerli bir e-posta adresi girin.",
     "ssoFailed": "SSO girişi başarısız oldu.",
     "ssoNotConfigured": "Bu alan adı için SSO yapılandırması bulunamadı.",
-    "ssoUnexpected": "Giriş yapılırken beklenmeyen bir hata oluştu."
+    "ssoUnexpected": "Giriş yapılırken beklenmeyen bir hata oluştu.",
+    "formLoading": "Form yükleniyor…"
   },
 
   "ProfilePanel": {
@@ -840,6 +841,52 @@
     "title": "Operasyon merkezi",
     "subtitle": "Onaylı araç: {approved} · Bekleyen: {pending} · Kategori: {categories}",
     "bulkImport": "Toplu içe aktarım",
-    "analytics": "Analytics & izleme"
+    "analytics": "Analytics & izleme",
+    "backToAdmin": "Operasyon merkezine dön",
+    "bulkMetaTitle": "Toplu İçe Aktarım",
+    "bulkTitle": "Toplu içe aktarım",
+    "bulkSubtitle": "Araçları CSV veya toplu veri ile operasyon paneline aktarın.",
+    "bulkChip": "Import",
+    "analyticsMetaTitle": "Analytics",
+    "analyticsTitle": "Analytics & izleme",
+    "analyticsSubtitle": "Platformun genel istatistikleri ve durumu",
+    "analyticsChip": "Metrikler",
+    "chartLoading": "Grafik yükleniyor…",
+    "statUsers": "Toplam kullanıcı",
+    "statUsersHint": "Sisteme kayıtlı üye sayısı",
+    "statTools": "Toplam araç",
+    "statToolsHint": "Onaylı/onaysız tüm araçlar",
+    "statReports": "Kırık link raporları",
+    "statReportsHint": "Kullanıcılar tarafından bildirilen linkler",
+    "statTraffic": "Site trafiği",
+    "statTrafficValue": "Vercel",
+    "statTrafficHint": "Trafik Vercel Analytics üzerinden takip ediliyor",
+    "statApiKeys": "API anahtarları",
+    "statApiKeysHint": "Oluşturulmuş geliştirici anahtarları",
+    "chartTitle": "Son 30 gün araç eklemeleri",
+    "copilotMetaTitle": "Admin Co-Pilot",
+    "copilotTitle": "Admin Co-Pilot",
+    "copilotSubtitle": "Yönetim görevleri için AI asistanı.",
+    "copilotChip": "Co-Pilot",
+    "editPostTitle": "İçeriği düzenle",
+    "editPostSubtitle": "Blog yazısı veya rehberi güncelleyin.",
+    "editPostChip": "Editör",
+    "previewBanner": "Bu sadece bir önizlemedir. Yazı henüz yayınlanmamış olabilir.",
+    "previewChip": "Önizleme",
+    "editChallengeTitle": "Yarışmayı düzenle",
+    "editChallengeSubtitle": "Aktif veya planlı yarışma detaylarını güncelleyin.",
+    "editChallengeChip": "Yarışma",
+    "loading": "Admin paneli yükleniyor…",
+    "errorTitle": "Admin paneli hatası",
+    "errorMessage": "Yönetim paneli yüklenirken veya veriler alınırken bir sorun oluştu."
+  },
+
+  "AdminDashboard": {
+    "metaTitle": "Admin Dashboard",
+    "heroChip": "Yönetim",
+    "title": "Admin dashboard",
+    "subtitle": "Platform istatistikleri, AI brifing, link sağlığı ve kullanıcı yönetimi.",
+    "usersTitle": "Kullanıcı yönetimi",
+    "usersDescription": "Platformdaki tüm kullanıcıları ve aktivitelerini buradan yönetebilirsiniz."
   }
 }
