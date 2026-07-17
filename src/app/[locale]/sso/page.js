@@ -1,15 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { ArrowRight, Building2, LoaderCircle, ShieldAlert } from 'lucide-react';
+import { Building2, LoaderCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
 import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { AuthCard, AuthEmailField, AuthFooterLink, AuthHeader } from '@/components/auth/auth-ui';
 
 export default function SSOPage() {
+  const t = useTranslations('Auth');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
@@ -19,13 +21,13 @@ export default function SSOPage() {
 
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail) {
-      toast.error('Lütfen şirket e-postanızı girin.');
+      toast.error(t('ssoEmptyEmail'));
       return;
     }
 
     const domain = normalizedEmail.split('@')[1];
     if (!domain) {
-      toast.error('Geçerli bir e-posta adresi girin.');
+      toast.error(t('ssoInvalidEmail'));
       return;
     }
 
@@ -37,7 +39,7 @@ export default function SSOPage() {
       });
 
       if (error) {
-        toast.error(error.message || 'SSO girişi başarısız oldu.');
+        toast.error(error.message || t('ssoFailed'));
         return;
       }
 
@@ -46,9 +48,9 @@ export default function SSOPage() {
         return;
       }
 
-      toast.error('Bu alan adı için SSO yapılandırması bulunamadı.');
+      toast.error(t('ssoNotConfigured'));
     } catch {
-      toast.error('Giriş yapılırken beklenmeyen bir hata oluştu.');
+      toast.error(t('ssoUnexpected'));
     } finally {
       setLoading(false);
     }
@@ -57,22 +59,19 @@ export default function SSOPage() {
   return (
     <AuthShell>
       <div className="mx-auto w-full max-w-[420px]">
-        <AuthHeader
-          title="Kurumsal giriş"
-          description="Şirket e-postanı gir; yetkili kimlik sağlayıcına (SAML/SSO) yönlendirelim."
-        />
+        <AuthHeader title={t('ssoTitle')} description={t('ssoDescription')} />
 
         <AuthCard>
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-950/5 px-3 py-1.5 text-xs font-semibold text-indigo-800 dark:text-indigo-200">
-            <Building2 className="h-3.5 w-3.5" />
-            SSO / SAML
+            <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
+            {t('ssoChip')}
           </div>
 
           <form className="grid gap-4" onSubmit={handleSSOLogin}>
             <AuthEmailField
               id="sso-email"
-              label="Şirket e-postası"
-              placeholder="ornek@sirketiniz.com"
+              label={t('ssoEmailLabel')}
+              placeholder={t('ssoEmailPlaceholder')}
               value={email}
               onChange={(event) => setEmail(event.target.value)}
             />
@@ -84,35 +83,17 @@ export default function SSOPage() {
             >
               {loading ? (
                 <>
-                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  Yönlendiriliyor…
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  {t('ssoPending')}
                 </>
               ) : (
-                <>
-                  SSO ile devam et
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
+                t('ssoSubmit')
               )}
             </Button>
           </form>
-
-          <div className="mt-6 flex items-start gap-2 rounded-xl border border-indigo-500/15 bg-indigo-950/5 px-3 py-2.5 text-xs leading-5 text-muted-foreground">
-            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-300" />
-            <p>
-              Bu sayfa yalnızca Supabase üzerinde tanımlı kurumsal kimlik sağlayıcıları için
-              çalışır. Bireysel hesaplar için{' '}
-              <Link
-                href="/login"
-                className="font-semibold text-indigo-700 hover:underline dark:text-indigo-300"
-              >
-                standart giriş
-              </Link>
-              i kullan.
-            </p>
-          </div>
         </AuthCard>
 
-        <AuthFooterLink prompt="Standart hesaba mı döneceksin?" href="/login" label="Giriş yap" />
+        <AuthFooterLink prompt=" " href="/login" label={t('ssoBack')} align="center" />
       </div>
     </AuthShell>
   );

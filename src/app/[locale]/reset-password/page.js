@@ -3,6 +3,8 @@
 import { Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, Eye, EyeOff, KeyRound, Lock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+
 import { updatePassword } from '@/app/actions';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,13 +20,18 @@ import {
 import { cn } from '@/lib/utils';
 
 function PasswordStrength({ password }) {
+  const t = useTranslations('Auth');
   const checks = useMemo(
     () => [
-      { id: 'length', label: 'En az 8 karakter', ok: password.length >= 8 },
-      { id: 'letter', label: 'En az bir harf', ok: /[A-Za-zÇĞİÖŞÜçğıöşü]/.test(password) },
-      { id: 'number', label: 'En az bir rakam (önerilir)', ok: /\d/.test(password) },
+      { id: 'length', label: t('resetCheckLength'), ok: password.length >= 8 },
+      {
+        id: 'letter',
+        label: t('resetCheckLetter'),
+        ok: /[A-Za-zÇĞİÖŞÜçğıöşü]/.test(password),
+      },
+      { id: 'number', label: t('resetCheckNumber'), ok: /\d/.test(password) },
     ],
-    [password]
+    [password, t]
   );
 
   if (!password) return null;
@@ -39,7 +46,10 @@ function PasswordStrength({ password }) {
             check.ok ? 'text-emerald-600 dark:text-emerald-300' : 'text-muted-foreground'
           )}
         >
-          <CheckCircle2 className={cn('h-3.5 w-3.5', !check.ok && 'opacity-40')} />
+          <CheckCircle2
+            className={cn('h-3.5 w-3.5', !check.ok && 'opacity-40')}
+            aria-hidden="true"
+          />
           {check.label}
         </li>
       ))}
@@ -55,6 +65,7 @@ function ControlledPasswordField({
   onChange,
   autoComplete = 'new-password',
 }) {
+  const t = useTranslations('Auth');
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -80,7 +91,7 @@ function ControlledPasswordField({
           type="button"
           onClick={() => setShowPassword((current) => !current)}
           className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
+          aria-label={showPassword ? t('hidePassword') : t('showPassword')}
         >
           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
@@ -90,6 +101,7 @@ function ControlledPasswordField({
 }
 
 function ResetPasswordForm() {
+  const t = useTranslations('Auth');
   const searchParams = useSearchParams();
   const message = searchParams.get('message');
   const [password, setPassword] = useState('');
@@ -99,15 +111,12 @@ function ResetPasswordForm() {
 
   return (
     <div className="mx-auto w-full max-w-[420px]">
-      <AuthHeader
-        title="Yeni şifre belirle"
-        description="Yeni şifreni gir. En az 8 karakter kullanmanı öneririz."
-      />
+      <AuthHeader title={t('resetTitle')} description={t('resetDescription')} />
 
       <AuthCard>
         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-950/5 px-3 py-1.5 text-xs font-semibold text-indigo-800 dark:text-indigo-200">
-          <KeyRound className="h-3.5 w-3.5" />
-          Güvenli güncelleme
+          <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
+          {t('resetChip')}
         </div>
 
         <form
@@ -122,14 +131,14 @@ function ResetPasswordForm() {
           <ControlledPasswordField
             id="password"
             name="password"
-            label="Yeni şifre"
+            label={t('resetPassword')}
             value={password}
             onChange={setPassword}
           />
           <ControlledPasswordField
             id="confirm-password"
             name="confirmPassword"
-            label="Yeni şifre (tekrar)"
+            label={t('resetConfirm')}
             value={confirm}
             onChange={setConfirm}
           />
@@ -138,29 +147,31 @@ function ResetPasswordForm() {
 
           {tooShort ? (
             <p role="alert" className="text-center text-sm text-destructive">
-              Şifre en az 8 karakter olmalı.
+              {t('resetTooShort')}
             </p>
           ) : null}
           {mismatch ? (
             <p role="alert" className="text-center text-sm text-destructive">
-              Şifreler eşleşmiyor.
+              {t('resetMismatch')}
             </p>
           ) : null}
 
           <AuthAlert message={message} />
-          <AuthSubmitButton idleLabel="Şifreyi Güncelle" pendingLabel="Şifre güncelleniyor…" />
+          <AuthSubmitButton idleLabel={t('resetSubmit')} pendingLabel={t('resetPending')} />
         </form>
       </AuthCard>
 
-      <AuthFooterLink prompt="Giriş yapmaya hazır mısın?" href="/login" label="Giriş yap" />
+      <AuthFooterLink prompt={t('resetReady')} href="/login" label={t('resetLogin')} />
     </div>
   );
 }
 
 export default function ResetPasswordPage() {
+  const t = useTranslations('Auth');
+
   return (
     <AuthShell>
-      <Suspense fallback={<AuthFormFallback label="Şifre formu yükleniyor…" />}>
+      <Suspense fallback={<AuthFormFallback label={t('resetLoading')} />}>
         <ResetPasswordForm />
       </Suspense>
     </AuthShell>

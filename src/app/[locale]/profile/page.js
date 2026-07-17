@@ -1,26 +1,28 @@
 import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowUp, Star, UserRound } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DeleteAccountButton } from '@/components/DeleteAccountButton';
 import { DeleteCommentButton } from '@/components/DeleteCommentButton';
 import { DeletePromptButton } from '@/components/DeletePromptButton';
-import { AvatarUploader } from '@/components/AvatarUploader';
 import { CollectionManager } from '@/components/CollectionManager';
 import { ShowcaseManager } from '@/components/ShowcaseManager';
-import { ArrowUp, Star } from 'lucide-react';
 import { ReputationInfo } from '@/components/ReputationInfo';
 import { ProfileEditor } from '@/components/ProfileEditor';
-// Yeni bileşenleri import ediyoruz
 import { ProjectList } from '@/components/ProjectList';
 import { CreateProjectButton } from '@/components/CreateProjectButton';
-import { DailyQuests } from '@/components/DailyQuests'; // Yeni bileşeni import ediyoruz
+import { DailyQuests } from '@/components/DailyQuests';
+import { generatePageMetadata } from '@/utils/seo';
 
 // --- DATA FETCHING FUNCTIONS ---
 
 async function getUserProfile(userId) {
   if (!userId) return null;
-  const supabase = await createClient();
+  const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from('profiles')
     .select('avatar_url, reputation_points, username, bio')
@@ -35,7 +37,7 @@ async function getUserProfile(userId) {
 }
 
 async function getUserReputationEvents(userId) {
-  const supabase = await createClient();
+  const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from('reputation_events')
     .select('*')
@@ -51,7 +53,7 @@ async function getUserReputationEvents(userId) {
 }
 
 async function getUserCollections(userId) {
-  const supabase = await createClient();
+  const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from('collections')
     .select('id, title, is_public')
@@ -65,7 +67,7 @@ async function getUserCollections(userId) {
 }
 
 async function getUserShowcaseItems(userId) {
-  const supabase = await createClient();
+  const supabase = await createClient(await cookies());
   const { data, error } = await supabase.rpc('get_user_showcase_items', {
     p_user_id: userId,
   });
@@ -77,7 +79,7 @@ async function getUserShowcaseItems(userId) {
 }
 
 async function getUserPrompts(userId) {
-  const supabase = await createClient();
+  const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from('prompts')
     .select(`id, title, vote_count, tools ( name, slug )`)
@@ -91,7 +93,7 @@ async function getUserPrompts(userId) {
 }
 
 async function getUserComments(userId) {
-  const supabase = await createClient();
+  const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from('comments')
     .select(`id, content, created_at, tools ( name, slug )`)
@@ -105,7 +107,7 @@ async function getUserComments(userId) {
 }
 
 async function getUserFavoriteTools(userId) {
-  const supabase = await createClient();
+  const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from('favorites')
     .select(`tools (id, name, slug, description, categories (name))`)
@@ -119,7 +121,7 @@ async function getUserFavoriteTools(userId) {
 }
 
 async function getUserRatedTools(userId) {
-  const supabase = await createClient();
+  const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from('ratings')
     .select(`rating, tools (id, name, slug, description)`)
@@ -134,7 +136,7 @@ async function getUserRatedTools(userId) {
 
 // YENİ: Kullanıcının projelerini çeken fonksiyon
 async function getUserProjects(userId) {
-  const supabase = await createClient();
+  const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from('projects')
     .select('id, title, created_at, updated_at')
@@ -150,7 +152,7 @@ async function getUserProjects(userId) {
 
 // YENİ: Kullanıcının o günkü görevlerini çeken fonksiyon
 async function getUserDailyQuests(userId) {
-  const supabase = await createClient();
+  const supabase = await createClient(await cookies());
   const today = new Date().toISOString().split('T')[0];
 
   const { data, error } = await supabase
@@ -176,14 +178,26 @@ async function getUserDailyQuests(userId) {
   return data;
 }
 
-export default async function ProfilePage() {
-  const supabase = await createClient();
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'ProfilePanel' });
+  return generatePageMetadata({
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+    path: locale === 'en' ? '/en/profile' : '/profile',
+    noindex: true,
+  });
+}
+
+export default async function ProfilePage({ params }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'ProfilePanel' });
+  const supabase = await createClient(await cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return redirect('/login');
 
-  // Yeni proje verisini de paralel olarak çekiyoruz
   const [
     profile,
     reputationEvents,
@@ -193,8 +207,8 @@ export default async function ProfilePage() {
     userComments,
     favoriteTools,
     ratedTools,
-    projects, // <-- Yeni veri
-    dailyQuests, // <-- Yeni veri
+    projects,
+    dailyQuests,
   ] = await Promise.all([
     getUserProfile(user.id),
     getUserReputationEvents(user.id),
@@ -204,21 +218,26 @@ export default async function ProfilePage() {
     getUserComments(user.id),
     getUserFavoriteTools(user.id),
     getUserRatedTools(user.id),
-    getUserProjects(user.id), // <-- Yeni fonksiyonu çağırıyoruz
-    getUserDailyQuests(user.id), // <-- Yeni fonksiyonu çağırıyoruz
+    getUserProjects(user.id),
+    getUserDailyQuests(user.id),
   ]);
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 space-y-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Profilim</h1>
-        <p className="text-muted-foreground">Hoş geldin, {user.email}</p>
-      </div>
+    <div className="mx-auto max-w-4xl space-y-8 pb-10">
+      <section className="brand-surface relative overflow-hidden rounded-3xl p-6 shadow-xl glass-panel sm:p-8">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative z-10">
+          <div className="brand-chip mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
+            <UserRound className="h-4 w-4" aria-hidden="true" />
+            {t('heroChip')}
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{t('title')}</h1>
+          <p className="mt-2 text-muted-foreground">{t('welcome', { email: user.email })}</p>
+        </div>
+      </section>
 
-      {/* Ana Profil Yönetimi ve İtibar Puanı */}
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
-          {/* YENİ: Günlük Görevler Kartı */}
+      <div className="grid gap-8 md:grid-cols-3">
+        <div className="space-y-6 md:col-span-2">
           <DailyQuests quests={dailyQuests} streak={profile?.daily_streak || 0} />
           <ProfileEditor user={user} profile={profile} />
         </div>
@@ -229,12 +248,12 @@ export default async function ProfilePage() {
           />
         </div>
       </div>
-      {/* DEĞİŞİKLİK: Projeler Kartı artık yeni bileşenleri kullanıyor */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+
+      <Card className="glass-panel border-border/50">
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
           <div>
-            <CardTitle>Projelerim</CardTitle>
-            <CardDescription>Kişisel çalışma alanlarınızı buradan yönetin.</CardDescription>
+            <CardTitle>{t('projectsTitle')}</CardTitle>
+            <CardDescription>{t('projectsDescription')}</CardDescription>
           </div>
           <CreateProjectButton />
         </CardHeader>
@@ -243,27 +262,27 @@ export default async function ProfilePage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="glass-panel border-border/50">
         <CardHeader>
-          <CardTitle>Koleksiyon Yönetimi</CardTitle>
+          <CardTitle>{t('collectionsTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <CollectionManager collections={collections} />
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="glass-panel border-border/50">
         <CardHeader>
-          <CardTitle>Eserlerim ({showcaseItems.length})</CardTitle>
+          <CardTitle>{t('showcaseTitle', { count: showcaseItems.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           <ShowcaseManager items={showcaseItems} />
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="glass-panel border-border/50">
         <CardHeader>
-          <CardTitle>Paylaştığın Prompt'lar ({userPrompts.length})</CardTitle>
+          <CardTitle>{t('promptsTitle', { count: userPrompts.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           {userPrompts.length > 0 ? (
@@ -271,20 +290,23 @@ export default async function ProfilePage() {
               {userPrompts.map((prompt) => (
                 <div
                   key={prompt.id}
-                  className="p-4 rounded-lg border flex justify-between items-center"
+                  className="flex items-center justify-between gap-4 rounded-xl border border-border/50 p-4"
                 >
                   <div>
-                    <p className="font-semibold text-lg">{prompt.title}</p>
+                    <p className="text-lg font-semibold">{prompt.title}</p>
                     <p className="text-sm text-muted-foreground">
-                      <Link href={`/tool/${prompt.tools.slug}`} className="hover:underline">
+                      <Link
+                        href={`/tool/${prompt.tools.slug}`}
+                        className="font-medium hover:underline"
+                        prefetch={false}
+                      >
                         {prompt.tools.name}
-                      </Link>{' '}
-                      aracına ait.
+                      </Link>
                     </p>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1.5 text-sm font-bold">
-                      <ArrowUp className="w-4 h-4 text-primary" />
+                      <ArrowUp className="h-4 w-4 text-primary" aria-hidden="true" />
                       {prompt.vote_count}
                     </div>
                     <DeletePromptButton promptId={prompt.id} toolSlug={prompt.tools.slug} />
@@ -293,34 +315,32 @@ export default async function ProfilePage() {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-8">
-              Henüz hiç prompt paylaşmadınız.
-            </p>
+            <p className="py-8 text-center text-muted-foreground">{t('promptsEmpty')}</p>
           )}
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="glass-panel border-border/50">
         <CardHeader>
-          <CardTitle>Yaptığın Yorumlar ({userComments.length})</CardTitle>
+          <CardTitle>{t('commentsTitle', { count: userComments.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           {userComments.length > 0 ? (
             <div className="space-y-4">
               {userComments.map((comment) => (
-                <div key={comment.id} className="p-4 rounded-lg border">
-                  <div className="flex justify-between items-start gap-4">
+                <div key={comment.id} className="rounded-xl border border-border/50 p-4">
+                  <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">
                         <Link
                           href={`/tool/${comment.tools.slug}`}
                           className="font-semibold hover:underline"
+                          prefetch={false}
                         >
                           {comment.tools.name}
-                        </Link>{' '}
-                        aracına yapılan yorum:
+                        </Link>
                       </p>
-                      <p className="text-foreground mt-2 italic">"{comment.content}"</p>
+                      <p className="mt-2 italic text-foreground">&quot;{comment.content}&quot;</p>
                     </div>
                     <DeleteCommentButton commentId={comment.id} />
                   </div>
@@ -328,14 +348,14 @@ export default async function ProfilePage() {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-8">Henüz hiçbir yorum yapmadınız.</p>
+            <p className="py-8 text-center text-muted-foreground">{t('commentsEmpty')}</p>
           )}
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="glass-panel border-border/50">
         <CardHeader>
-          <CardTitle>Favori Araçların ({favoriteTools.length})</CardTitle>
+          <CardTitle>{t('favoritesTitle', { count: favoriteTools.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           {favoriteTools.length > 0 ? (
@@ -343,33 +363,33 @@ export default async function ProfilePage() {
               {favoriteTools.map((tool) => (
                 <div
                   key={tool.id}
-                  className="flex items-center justify-between p-4 rounded-lg border"
+                  className="flex items-center justify-between gap-4 rounded-xl border border-border/50 p-4"
                 >
                   <div>
-                    <Link href={`/tool/${tool.slug}`} className="group">
-                      <h3 className="font-semibold text-lg group-hover:text-primary">
+                    <Link href={`/tool/${tool.slug}`} className="group" prefetch={false}>
+                      <h3 className="text-lg font-semibold group-hover:text-primary">
                         {tool.name}
                       </h3>
                     </Link>
-                    <p className="text-sm text-muted-foreground line-clamp-1">{tool.description}</p>
+                    <p className="line-clamp-1 text-sm text-muted-foreground">{tool.description}</p>
                   </div>
-                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground w-fit shrink-0 ml-4">
-                    {tool.categories.name}
-                  </span>
+                  {tool.categories?.name ? (
+                    <span className="ml-4 w-fit shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
+                      {tool.categories.name}
+                    </span>
+                  ) : null}
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-8">
-              Henüz hiçbir aracı favorilerinize eklemediniz.
-            </p>
+            <p className="py-8 text-center text-muted-foreground">{t('favoritesEmpty')}</p>
           )}
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="glass-panel border-border/50">
         <CardHeader>
-          <CardTitle>Puanladığın Araçlar ({ratedTools.length})</CardTitle>
+          <CardTitle>{t('ratedTitle', { count: ratedTools.length })}</CardTitle>
         </CardHeader>
         <CardContent>
           {ratedTools.length > 0 ? (
@@ -377,37 +397,35 @@ export default async function ProfilePage() {
               {ratedTools.map((tool) => (
                 <div
                   key={tool.id}
-                  className="flex items-center justify-between p-4 rounded-lg border"
+                  className="flex items-center justify-between gap-4 rounded-xl border border-border/50 p-4"
                 >
                   <div>
-                    <Link href={`/tool/${tool.slug}`} className="group">
-                      <h3 className="font-semibold text-lg group-hover:text-primary">
+                    <Link href={`/tool/${tool.slug}`} className="group" prefetch={false}>
+                      <h3 className="text-lg font-semibold group-hover:text-primary">
                         {tool.name}
                       </h3>
                     </Link>
-                    <p className="text-sm text-muted-foreground line-clamp-1">{tool.description}</p>
+                    <p className="line-clamp-1 text-sm text-muted-foreground">{tool.description}</p>
                   </div>
-                  <div className="flex items-center gap-1 text-lg shrink-0 ml-4">
-                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />{' '}
+                  <div className="ml-4 flex shrink-0 items-center gap-1 text-lg">
+                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" aria-hidden="true" />
                     <span className="font-bold">{tool.user_rating}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-8">
-              Henüz hiçbir araca puan vermediniz.
-            </p>
+            <p className="py-8 text-center text-muted-foreground">{t('ratedEmpty')}</p>
           )}
         </CardContent>
       </Card>
 
-      <Card className="border-destructive">
+      <Card className="border-destructive/50 glass-panel">
         <CardHeader>
-          <CardTitle className="text-destructive">Tehlikeli Bölge</CardTitle>
+          <CardTitle className="text-destructive">{t('dangerTitle')}</CardTitle>
         </CardHeader>
-        <CardContent className="flex justify-between items-center">
-          <p className="text-sm">Hesabınızı ve tüm verilerinizi kalıcı olarak silin.</p>
+        <CardContent className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <p className="text-sm text-muted-foreground">{t('dangerBody')}</p>
           <DeleteAccountButton />
         </CardContent>
       </Card>
