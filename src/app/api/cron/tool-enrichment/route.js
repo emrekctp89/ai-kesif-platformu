@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { enrichExistingTools } from '@/lib/existingToolEnrichment';
-import { getBooleanParam, isCronAuthorized } from '@/utils/cron';
+import { getBooleanParam, getIntegerParam, isCronAuthorized } from '@/utils/cron';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function GET(request) {
   if (!isCronAuthorized(request, { allowQuerySecret: true })) {
@@ -12,7 +16,7 @@ export async function GET(request) {
   try {
     const report = await enrichExistingTools({
       dryRun: getBooleanParam(searchParams, 'dryRun', true),
-      limit: searchParams.get('limit') || undefined,
+      limit: getIntegerParam(searchParams, 'limit'),
       includeGoodQuality: getBooleanParam(searchParams, 'includeGoodQuality', false),
     });
 
