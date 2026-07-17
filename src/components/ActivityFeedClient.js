@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   Globe2,
   Heart,
@@ -16,6 +17,7 @@ import {
   UserRound,
   Users,
 } from 'lucide-react';
+
 import { createClient } from '@/utils/supabase/client';
 import { fetchActivityFeed } from '@/app/actions';
 import { Button } from '@/components/ui/button';
@@ -26,17 +28,17 @@ import {
 } from '@/components/ActivityFeedEventCard';
 import { cn } from '@/lib/utils';
 
-const FILTERS = [
-  { id: 'all', label: 'Tümü', Icon: Rss },
-  { id: 'new_favorite', label: 'Favoriler', Icon: Heart },
-  { id: 'new_comment', label: 'Yorumlar', Icon: MessageSquare },
-  { id: 'new_showcase', label: 'Eserler', Icon: ImageIcon },
-  { id: 'new_prompt', label: 'Promptlar', Icon: Star },
+const FILTER_DEFS = [
+  { id: 'all', labelKey: 'filterAll', Icon: Rss },
+  { id: 'new_favorite', labelKey: 'filterFavorites', Icon: Heart },
+  { id: 'new_comment', labelKey: 'filterComments', Icon: MessageSquare },
+  { id: 'new_showcase', labelKey: 'filterShowcase', Icon: ImageIcon },
+  { id: 'new_prompt', labelKey: 'filterPrompts', Icon: Star },
 ];
 
-const FEED_MODES = [
-  { id: 'following', label: 'Takip', Icon: UserRound },
-  { id: 'general', label: 'Genel', Icon: Globe2 },
+const FEED_MODE_DEFS = [
+  { id: 'following', labelKey: 'modeFollowing', Icon: UserRound },
+  { id: 'general', labelKey: 'modeGeneral', Icon: Globe2 },
 ];
 
 const REALTIME_TABLES = [
@@ -59,9 +61,16 @@ export function ActivityFeedClient({
   initialGeneralItems = [],
   initialMode = 'following',
   canUseFollowing = true,
-  title = 'Sizin İçin Akış',
-  description = 'Takip ettikleriniz ve topluluktan en son aktiviteler.',
+  title,
+  description,
 }) {
+  const t = useTranslations('ActivityFeedPage');
+  const locale = useLocale();
+  const timeLocale = locale === 'tr' ? 'tr-TR' : 'en-US';
+
+  const resolvedTitle = title || t('title');
+  const resolvedDescription = description || t('description');
+
   const [mode, setMode] = React.useState(
     canUseFollowing && initialMode === 'following' ? 'following' : 'general'
   );
@@ -97,7 +106,7 @@ export function ActivityFeedClient({
         setModeItems(targetMode, newItems);
         setLastUpdatedAt(new Date());
       } catch (error) {
-        console.error('Akış yenilenirken hata:', error);
+        console.error('Activity feed refresh failed:', error);
       } finally {
         refreshInFlight.current = false;
         if (!silent) setIsRefreshing(false);
@@ -173,14 +182,14 @@ export function ActivityFeedClient({
         <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-xl">
             <div className="brand-chip mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide">
-              <Rss className="h-3.5 w-3.5" />
-              Canlı aktivite
+              <Rss className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('liveChip')}
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-              {title}
+              {resolvedTitle}
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground sm:text-base">
-              {description}
+              {resolvedDescription}
             </p>
           </div>
 
@@ -194,8 +203,8 @@ export function ActivityFeedClient({
                     : 'bg-muted-foreground/40'
                 )}
               />
-              <Radio className="h-3.5 w-3.5" />
-              {isLive ? 'Canlı' : 'Bağlanıyor…'}
+              <Radio className="h-3.5 w-3.5" aria-hidden="true" />
+              {isLive ? t('live') : t('connecting')}
             </div>
             <Button
               type="button"
@@ -206,17 +215,18 @@ export function ActivityFeedClient({
               className="self-start sm:self-end"
             >
               {isRefreshing ? (
-                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
               ) : (
-                <RefreshCw className="mr-2 h-4 w-4" />
+                <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
               )}
-              Yenile
+              {t('refresh')}
             </Button>
             <p className="text-[11px] text-muted-foreground sm:text-right">
-              Son güncelleme:{' '}
-              {lastUpdatedAt.toLocaleTimeString('tr-TR', {
-                hour: '2-digit',
-                minute: '2-digit',
+              {t('lastUpdated', {
+                time: lastUpdatedAt.toLocaleTimeString(timeLocale, {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }),
               })}
             </p>
           </div>
@@ -226,9 +236,9 @@ export function ActivityFeedClient({
       <div
         className="grid grid-cols-2 gap-2 rounded-2xl border bg-muted/30 p-1"
         role="tablist"
-        aria-label="Akış kaynağı"
+        aria-label={t('feedSourceAria')}
       >
-        {FEED_MODES.map(({ id, label, Icon }) => {
+        {FEED_MODE_DEFS.map(({ id, labelKey, Icon }) => {
           const isActive = mode === id;
           const disabled = id === 'following' && !canUseFollowing;
           return (
@@ -247,15 +257,15 @@ export function ActivityFeedClient({
                 disabled && 'cursor-not-allowed opacity-50'
               )}
             >
-              <Icon className="h-4 w-4" />
-              {label}
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {t(labelKey)}
             </button>
           );
         })}
       </div>
 
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Akış filtreleri">
-        {FILTERS.map(({ id, label, Icon }) => {
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label={t('filtersAria')}>
+        {FILTER_DEFS.map(({ id, labelKey, Icon }) => {
           const isActive = filter === id;
           const count = filterCounts[id] ?? 0;
           return (
@@ -272,8 +282,8 @@ export function ActivityFeedClient({
                   : 'border-border/60 bg-background text-muted-foreground hover:border-indigo-500/30 hover:text-foreground'
               )}
             >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
+              <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+              {t(labelKey)}
               <span
                 className={cn(
                   'rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums',
@@ -312,56 +322,56 @@ export function ActivityFeedClient({
                 className="min-w-[200px]"
                 onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
               >
-                Daha fazla göster
+                {t('showMore')}
                 <span className="ml-2 text-xs text-muted-foreground">
-                  ({filteredItems.length - visibleCount} kaldı)
+                  {t('remaining', { count: filteredItems.length - visibleCount })}
                 </span>
               </Button>
             </div>
           ) : filteredItems.length > PAGE_SIZE ? (
             <p className="pt-1 text-center text-xs text-muted-foreground">
-              Tüm {filteredItems.length} aktiviteyi görüntülüyorsunuz.
+              {t('viewingAll', { count: filteredItems.length })}
             </p>
           ) : null}
         </div>
       ) : (
         <div className="rounded-3xl border border-dashed bg-muted/20 px-6 py-14 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-950/10">
-            <Users className="h-7 w-7 text-indigo-700 dark:text-indigo-300" />
+            <Users className="h-7 w-7 text-indigo-700 dark:text-indigo-300" aria-hidden="true" />
           </div>
           <h2 className="text-xl font-semibold tracking-tight">
             {feedItems.length === 0
               ? isFollowingMode
-                ? 'Takip akışınız boş'
-                : 'Henüz aktivite yok'
-              : 'Bu filtrede sonuç yok'}
+                ? t('emptyFollowingTitle')
+                : t('emptyGeneralTitle')
+              : t('emptyFilterTitle')}
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
             {feedItems.length === 0
               ? isFollowingMode
-                ? 'İlgi çekici kullanıcıları takip edin veya Genel sekmeye geçerek platformdaki son aktiviteleri görün.'
-                : 'Platformda yeni bir favori, yorum, eser veya prompt paylaşıldığında burada listelenir.'
-              : 'Başka bir filtre seçerek diğer aktiviteleri inceleyebilirsiniz.'}
+                ? t('emptyFollowingBody')
+                : t('emptyGeneralBody')
+              : t('emptyFilterBody')}
           </p>
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
             {feedItems.length === 0 && isFollowingMode ? (
               <>
                 <Button asChild className="brand-gradient">
-                  <Link href="/topluluk">Kullanıcıları keşfet</Link>
+                  <Link href="/topluluk">{t('discoverUsers')}</Link>
                 </Button>
                 <Button type="button" variant="outline" onClick={() => handleModeChange('general')}>
-                  Genel akışa geç
+                  {t('switchToGeneral')}
                 </Button>
               </>
             ) : null}
             {filter !== 'all' ? (
               <Button type="button" variant="outline" onClick={() => setFilter('all')}>
-                Tümünü göster
+                {t('showAll')}
               </Button>
             ) : feedItems.length > 0 || !isFollowingMode ? (
               <Button type="button" variant="outline" onClick={() => refreshFeed()}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Yeniden dene
+                <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                {t('retry')}
               </Button>
             ) : null}
           </div>

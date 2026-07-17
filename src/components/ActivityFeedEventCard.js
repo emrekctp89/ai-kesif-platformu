@@ -1,53 +1,63 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatDistanceToNow, parseISO } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { enUS, tr } from 'date-fns/locale';
+import { useLocale, useTranslations } from 'next-intl';
+import { Heart, Image as ImageIcon, MessageSquare, Sparkles, Star } from 'lucide-react';
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Heart, Image as ImageIcon, MessageSquare, Sparkles, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export const FEED_EVENT_META = {
+const FEED_EVENT_ICONS = {
   new_favorite: {
-    label: 'Favori',
     Icon: Heart,
     iconClassName: 'text-rose-500',
     badgeClassName: 'bg-rose-500/10 border-rose-500/20',
   },
   new_comment: {
-    label: 'Yorum',
     Icon: MessageSquare,
     iconClassName: 'text-sky-500',
     badgeClassName: 'bg-sky-500/10 border-sky-500/20',
   },
   new_showcase: {
-    label: 'Eser',
     Icon: ImageIcon,
     iconClassName: 'text-emerald-500',
     badgeClassName: 'bg-emerald-500/10 border-emerald-500/20',
   },
   new_prompt: {
-    label: 'Prompt',
     Icon: Star,
     iconClassName: 'text-amber-500',
     badgeClassName: 'bg-amber-500/10 border-amber-500/20',
   },
 };
 
-function formatRelativeTime(value) {
+export const FEED_EVENT_META = {
+  new_favorite: { ...FEED_EVENT_ICONS.new_favorite, labelKey: 'eventFavorite' },
+  new_comment: { ...FEED_EVENT_ICONS.new_comment, labelKey: 'eventComment' },
+  new_showcase: { ...FEED_EVENT_ICONS.new_showcase, labelKey: 'eventShowcase' },
+  new_prompt: { ...FEED_EVENT_ICONS.new_prompt, labelKey: 'eventPrompt' },
+};
+
+function formatRelativeTime(value, localeCode) {
   if (!value) return '';
   try {
     const date = typeof value === 'string' ? parseISO(value) : new Date(value);
     if (Number.isNaN(date.getTime())) return '';
-    return formatDistanceToNow(date, { addSuffix: true, locale: tr });
+    return formatDistanceToNow(date, {
+      addSuffix: true,
+      locale: localeCode === 'tr' ? tr : enUS,
+    });
   } catch {
     return '';
   }
 }
 
-function UserLink({ username }) {
+function UserLink({ username, fallback }) {
   if (!username) {
-    return <span className="font-semibold text-foreground">Bir kullanıcı</span>;
+    return <span className="font-semibold text-foreground">{fallback}</span>;
   }
 
   return (
@@ -57,12 +67,10 @@ function UserLink({ username }) {
   );
 }
 
-function ToolLink({ slug, name }) {
+function ToolLink({ slug, name, fallback }) {
   if (!slug || !name) {
     return (
-      <span className="font-semibold text-indigo-700 dark:text-indigo-300">
-        {name || 'bir araç'}
-      </span>
+      <span className="font-semibold text-indigo-700 dark:text-indigo-300">{name || fallback}</span>
     );
   }
 
@@ -77,23 +85,32 @@ function ToolLink({ slug, name }) {
 }
 
 function EventBody({ event }) {
+  const t = useTranslations('ActivityFeedPage');
   const details = event?.details || {};
+
+  const userNode = () => <UserLink username={event.username} fallback={t('aUser')} />;
+  const toolNode = () => (
+    <ToolLink slug={details.tool_slug} name={details.tool_name} fallback={t('aTool')} />
+  );
 
   switch (event.event_type) {
     case 'new_favorite':
       return (
         <p className="text-sm leading-6 text-foreground/90">
-          <UserLink username={event.username} />{' '}
-          <ToolLink slug={details.tool_slug} name={details.tool_name} /> aracını favorilerine
-          ekledi.
+          {t.rich('eventFavoriteBody', {
+            user: userNode,
+            tool: toolNode,
+          })}
         </p>
       );
     case 'new_comment':
       return (
         <>
           <p className="text-sm leading-6 text-foreground/90">
-            <UserLink username={event.username} />{' '}
-            <ToolLink slug={details.tool_slug} name={details.tool_name} /> aracına yorum yaptı.
+            {t.rich('eventCommentBody', {
+              user: userNode,
+              tool: toolNode,
+            })}
           </p>
           {details.comment_content ? (
             <p className="mt-2 line-clamp-2 rounded-lg border bg-muted/40 px-3 py-2 text-xs italic leading-5 text-muted-foreground">
@@ -102,42 +119,45 @@ function EventBody({ event }) {
           ) : null}
         </>
       );
-    case 'new_showcase':
+    case 'new_showcase': {
+      const itemTitle = details.item_title || t('newShowcase');
       return (
         <p className="text-sm leading-6 text-foreground/90">
-          <UserLink username={event.username} />{' '}
-          {details.item_id ? (
-            <Link
-              href={`/eserler?eserId=${details.item_id}`}
-              className="font-semibold text-indigo-700 hover:underline dark:text-indigo-300"
-            >
-              {details.item_title || 'yeni bir eser'}
-            </Link>
-          ) : (
-            <span className="font-semibold">{details.item_title || 'yeni bir eser'}</span>
-          )}{' '}
-          paylaştı.
+          {t.rich('eventShowcaseBody', {
+            user: userNode,
+            item: () =>
+              details.item_id ? (
+                <Link
+                  href={`/eserler?eserId=${details.item_id}`}
+                  className="font-semibold text-indigo-700 hover:underline dark:text-indigo-300"
+                >
+                  {itemTitle}
+                </Link>
+              ) : (
+                <span className="font-semibold">{itemTitle}</span>
+              ),
+          })}
         </p>
       );
+    }
     case 'new_prompt':
       return (
         <p className="text-sm leading-6 text-foreground/90">
-          <UserLink username={event.username} />{' '}
-          <ToolLink slug={details.tool_slug} name={details.tool_name} /> için yeni bir prompt
-          paylaştı
-          {details.prompt_title ? (
-            <>
-              : <span className="font-medium">&quot;{details.prompt_title}&quot;</span>
-            </>
-          ) : (
-            '.'
-          )}
+          {t.rich('eventPromptBody', {
+            user: userNode,
+            tool: toolNode,
+          })}
+          {details.prompt_title
+            ? t('eventPromptTitleSuffix', { title: details.prompt_title })
+            : '.'}
         </p>
       );
     default:
       return (
         <p className="text-sm leading-6 text-foreground/90">
-          <UserLink username={event.username} /> yeni bir aktivite paylaştı.
+          {t.rich('eventDefaultBody', {
+            user: userNode,
+          })}
         </p>
       );
   }
@@ -154,16 +174,19 @@ export function getFeedEventKey(event, index = 0) {
 }
 
 export function ActivityFeedEventCard({ event, className }) {
+  const t = useTranslations('ActivityFeedPage');
+  const locale = useLocale();
   const meta = FEED_EVENT_META[event?.event_type] || {
-    label: 'Aktivite',
+    labelKey: 'eventActivity',
     Icon: Sparkles,
     iconClassName: 'text-indigo-500',
     badgeClassName: 'bg-indigo-500/10 border-indigo-500/20',
   };
   const { Icon } = meta;
   const details = event?.details || {};
-  const relativeTime = formatRelativeTime(event?.event_time);
+  const relativeTime = formatRelativeTime(event?.event_time, locale);
   const initials = (event?.username || '?').slice(0, 2).toUpperCase();
+  const timeLocale = locale === 'tr' ? 'tr-TR' : 'en-US';
 
   return (
     <Card
@@ -177,7 +200,7 @@ export function ActivityFeedEventCard({ event, className }) {
           <Avatar className="h-10 w-10 border border-border/60 sm:h-11 sm:w-11">
             <AvatarImage
               src={event?.avatar_url || undefined}
-              alt={event?.username || 'Kullanıcı'}
+              alt={event?.username || t('avatarAlt')}
             />
             <AvatarFallback className="bg-indigo-950/10 text-xs font-semibold text-indigo-800 dark:text-indigo-200">
               {initials}
@@ -203,14 +226,16 @@ export function ActivityFeedEventCard({ event, className }) {
                 meta.iconClassName
               )}
             >
-              {meta.label}
+              {t(meta.labelKey)}
             </span>
             {relativeTime ? (
               <time
                 dateTime={event?.event_time}
                 className="text-xs text-muted-foreground"
                 title={
-                  event?.event_time ? new Date(event.event_time).toLocaleString('tr-TR') : undefined
+                  event?.event_time
+                    ? new Date(event.event_time).toLocaleString(timeLocale)
+                    : undefined
                 }
               >
                 {relativeTime}
@@ -228,7 +253,7 @@ export function ActivityFeedEventCard({ event, className }) {
           >
             <Image
               src={details.item_image_url}
-              alt={details.item_title || 'Eser önizlemesi'}
+              alt={details.item_title || t('showcasePreviewAlt')}
               width={64}
               height={64}
               className="h-16 w-16 rounded-xl object-cover ring-1 ring-border/60 transition hover:ring-indigo-400/50"

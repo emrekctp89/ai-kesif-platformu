@@ -3,17 +3,19 @@
 import * as React from 'react';
 import { useOptimistic, useTransition } from 'react';
 import Link from 'next/link';
-import { togglePromptVote } from '@/app/actions';
+import { useTranslations } from 'next-intl';
 import toast from 'react-hot-toast';
-import { Button } from './ui/button';
 import { ArrowUp } from 'lucide-react';
+
+import { togglePromptVote } from '@/app/actions';
+import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DeletePromptButton } from './DeletePromptButton';
 
-// Tek bir prompt'u yöneten alt bileşen
 function PromptItem({ prompt, user, isVoted, toolSlug }) {
+  const t = useTranslations('ToolDetail');
   const [isPending, startTransition] = useTransition();
   const [optimisticState, toggleOptimisticState] = useOptimistic(
     { isVoted, voteCount: prompt.vote_count },
@@ -25,7 +27,7 @@ function PromptItem({ prompt, user, isVoted, toolSlug }) {
 
   const handleVoteAction = () => {
     if (!user) {
-      toast.error('Oylama yapmak için giriş yapmalısınız.');
+      toast.error(t('loginToVote'));
       return;
     }
     startTransition(() => {
@@ -58,7 +60,7 @@ function PromptItem({ prompt, user, isVoted, toolSlug }) {
             size="icon"
             className={cn('h-8 w-8', optimisticState.isVoted && 'text-primary')}
             disabled={isPending}
-            aria-label={optimisticState.isVoted ? 'Oyu geri al' : 'Promptu oyla'}
+            aria-label={optimisticState.isVoted ? t('unvotePrompt') : t('votePrompt')}
             aria-pressed={optimisticState.isVoted}
           >
             <ArrowUp className={cn('h-5 w-5', optimisticState.isVoted && 'fill-current')} />
@@ -68,7 +70,7 @@ function PromptItem({ prompt, user, isVoted, toolSlug }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <h4 className="font-semibold leading-snug">{prompt.title}</h4>
-            {isOwner && <DeletePromptButton promptId={prompt.id} toolSlug={toolSlug} />}
+            {isOwner ? <DeletePromptButton promptId={prompt.id} toolSlug={toolSlug} /> : null}
           </div>
           <pre className="my-2 overflow-x-auto whitespace-pre-wrap rounded-md bg-muted p-3 font-mono text-sm">
             {prompt.prompt_text}
@@ -93,22 +95,18 @@ function PromptItem({ prompt, user, isVoted, toolSlug }) {
   );
 }
 
-// Ana Prompt Listesi Bileşeni
-export function PromptList({
-  prompts,
-  user,
-  userVotes,
-  toolSlug,
-  emptyLabel = 'Bu araç için henüz hiç prompt paylaşılmamış.',
-}) {
+export function PromptList({ prompts, user, userVotes, toolSlug, emptyLabel }) {
+  const t = useTranslations('ToolDetail');
+  const resolvedEmpty = emptyLabel || t('promptsEmpty');
+
   if (!prompts || prompts.length === 0) {
     return (
       <p className="rounded-xl border border-dashed bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-        {emptyLabel}
+        {resolvedEmpty}
       </p>
     );
   }
-  const userVoteSet = new Set((userVotes || []).map((v) => v.prompt_id));
+  const userVoteSet = new Set((userVotes || []).map((vote) => vote.prompt_id));
   return (
     <div className="space-y-4">
       {prompts.map((prompt) => (

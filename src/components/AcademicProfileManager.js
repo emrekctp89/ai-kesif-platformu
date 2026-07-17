@@ -2,6 +2,10 @@
 
 import * as React from 'react';
 import { useTransition } from 'react';
+import { useTranslations } from 'next-intl';
+import toast from 'react-hot-toast';
+import { Check, ChevronsUpDown } from 'lucide-react';
+
 import { updateUserPapers } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -14,11 +18,10 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Badge } from '@/components/ui/badge';
-import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import toast from 'react-hot-toast';
 
 export function AcademicProfileManager({ allPapers, userPapers }) {
+  const t = useTranslations('ResearchPage');
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = React.useState(false);
   const [selectedPapers, setSelectedPapers] = React.useState(new Set(userPapers.map((p) => p.id)));
@@ -43,35 +46,35 @@ export function AcademicProfileManager({ allPapers, userPapers }) {
           <Button
             variant="outline"
             role="combobox"
-            className="w-full justify-between h-auto min-h-[40px]"
+            className="h-auto min-h-10 w-full justify-between"
           >
             <div className="flex flex-wrap gap-1">
               {selectedPaperObjects.length > 0
-                ? selectedPaperObjects.map((p) => (
-                    <Badge key={p.id} variant="secondary">
-                      {p.title}
+                ? selectedPaperObjects.map((paper) => (
+                    <Badge key={paper.id} variant="secondary">
+                      {paper.title}
                     </Badge>
                   ))
-                : 'Yayınlarınızı seçin...'}
+                : t('selectPapers')}
             </div>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0">
           <Command>
-            <CommandInput placeholder="Makale ara..." />
+            <CommandInput placeholder={t('searchPapers')} />
             <CommandList>
-              <CommandEmpty>Makale bulunamadı.</CommandEmpty>
+              <CommandEmpty>{t('paperNotFound')}</CommandEmpty>
               <CommandGroup>
                 {allPapers.map((paper) => (
                   <CommandItem
                     key={paper.id}
                     value={paper.title}
                     onSelect={() => {
-                      const newSelection = new Set(selectedPapers);
-                      if (newSelection.has(paper.id)) newSelection.delete(paper.id);
-                      else newSelection.add(paper.id);
-                      setSelectedPapers(newSelection);
+                      const next = new Set(selectedPapers);
+                      if (next.has(paper.id)) next.delete(paper.id);
+                      else next.add(paper.id);
+                      setSelectedPapers(next);
                     }}
                   >
                     <Check
@@ -89,8 +92,8 @@ export function AcademicProfileManager({ allPapers, userPapers }) {
         </PopoverContent>
       </Popover>
       <div className="flex justify-end">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? 'Kaydediliyor...' : 'Yayınları Kaydet'}
+        <Button type="submit" disabled={isPending} className="brand-gradient min-h-10 shadow-md">
+          {isPending ? t('savingPapers') : t('savePapers')}
         </Button>
       </div>
     </form>

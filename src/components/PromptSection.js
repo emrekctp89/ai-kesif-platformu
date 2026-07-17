@@ -1,9 +1,12 @@
+import { getTranslations } from 'next-intl/server';
+
 import { createClient } from '@/utils/supabase/server';
 import { PromptList } from './PromptList';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AddPromptDialog } from './AddPromptDialog';
 
 export default async function PromptSection({ toolId, toolSlug }) {
+  const t = await getTranslations('ToolDetail');
   const supabase = await createClient();
 
   const {
@@ -13,7 +16,6 @@ export default async function PromptSection({ toolId, toolSlug }) {
     ? await supabase.from('prompt_votes').select('prompt_id').eq('user_id', user.id)
     : { data: [] };
 
-  // DEĞİŞİKLİK: 'profiles' tablosundan 'username'i de çekiyoruz.
   const { data: prompts } = await supabase
     .from('prompts')
     .select(`*, profiles ( username, email, avatar_url )`)
@@ -21,13 +23,13 @@ export default async function PromptSection({ toolId, toolSlug }) {
     .order('vote_count', { ascending: false });
 
   return (
-    <Card className="rounded-xl shadow-xl">
-      <CardHeader className="flex flex-row items-start justify-between">
+    <Card className="rounded-xl shadow-xl glass-panel border-border/50">
+      <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div>
-          <CardTitle>Topluluk Prompt'ları</CardTitle>
-          <CardDescription>Paylaşılan en iyi prompt'ları keşfedin ve oylayın.</CardDescription>
+          <CardTitle>{t('promptsHeading')}</CardTitle>
+          <CardDescription>{t('promptsSubheading')}</CardDescription>
         </div>
-        {user && <AddPromptDialog toolId={toolId} toolSlug={toolSlug} />}
+        {user ? <AddPromptDialog toolId={toolId} toolSlug={toolSlug} /> : null}
       </CardHeader>
       <CardContent className="pt-0">
         <PromptList
@@ -35,6 +37,7 @@ export default async function PromptSection({ toolId, toolSlug }) {
           user={user}
           userVotes={userVotes || []}
           toolSlug={toolSlug}
+          emptyLabel={t('promptsEmpty')}
         />
       </CardContent>
     </Card>
