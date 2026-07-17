@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
+import { Suspense } from 'react';
 import { HomepageClient } from '@/components/HomepageClient';
 import { FeaturedTools } from '@/components/FeaturedTools';
 import { ToolOfTheDay } from '@/components/ToolOfTheDay';
@@ -102,13 +103,17 @@ export default async function HomePage(props) {
           __html: JSON.stringify(structuredData).replace(/</g, '\\u003c'),
         }}
       />
-      <HomepageClient
-        initialData={initialData}
-        searchParams={resolvedSearchParams}
-        discoverySections={discoverySections}
-        pageTitle={t('title')}
-        pageDescription={t('subtitle')}
-      />
+      {/* Bug fix: HomepageClient useSearchParams() kullanıyor, Next.js bunun
+          bir Suspense sınırı içinde olmasını gerektiriyor. */}
+      <Suspense fallback={null}>
+        <HomepageClient
+          initialData={initialData}
+          searchParams={resolvedSearchParams}
+          discoverySections={discoverySections}
+          pageTitle={t('title')}
+          pageDescription={t('subtitle')}
+        />
+      </Suspense>
     </>
   );
 }

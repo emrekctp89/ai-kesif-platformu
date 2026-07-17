@@ -16,15 +16,30 @@ export function AnnouncementBanner() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const isDismissed = localStorage.getItem(ANNOUNCEMENT_ID);
-    if (!isDismissed) {
+    // Bug fix: Safari gizli sekmede localStorage erişilebilir görünür ama
+    // setItem() QuotaExceededError fırlatır (kota ~0'a düşer). getItem
+    // genelde güvenlidir ama bazı kısıtlı/yönetilen tarayıcı profillerinde
+    // localStorage nesinesine erişimin kendisi de SecurityError fırlatabilir.
+    // Bu try/catch olmadan bu bileşen tüm sayfayı client-side exception'a
+    // düşürebilir (üstünde yerel bir error boundary yok).
+    try {
+      const isDismissed = localStorage.getItem(ANNOUNCEMENT_ID);
+      if (!isDismissed) {
+        setIsVisible(true);
+      }
+    } catch (error) {
+      // localStorage kullanılamıyor (gizli sekme, kısıtlı profil, vb.) — sessizce banner'ı göster.
       setIsVisible(true);
     }
   }, []);
 
   const handleDismiss = () => {
     setIsVisible(false);
-    localStorage.setItem(ANNOUNCEMENT_ID, 'true');
+    try {
+      localStorage.setItem(ANNOUNCEMENT_ID, 'true');
+    } catch (error) {
+      // localStorage yazılamıyor (örn. Safari gizli sekme) — banner yine de bu oturum için kapanır.
+    }
   };
 
   if (!isVisible) {

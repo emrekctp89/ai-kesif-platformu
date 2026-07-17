@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { Suspense } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Toaster } from 'react-hot-toast';
@@ -58,7 +59,12 @@ export default async function LocaleLayout(props) {
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <GoogleAnalytics />
+      {/* Bug fix: GoogleAnalytics useSearchParams() kullanıyor, Next.js bunun
+          bir Suspense sınırı içinde olmasını gerektiriyor — aksi halde statik
+          render/build sırasında hataya yol açabilir. */}
+      <Suspense fallback={null}>
+        <GoogleAnalytics />
+      </Suspense>
       <TopLoader />
       <Toaster position="top-center" />
 
