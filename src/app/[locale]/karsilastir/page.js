@@ -32,10 +32,12 @@ const getCachedComparisonData = unstable_cache(
       return [];
     }
     const supabase = getSupabase();
+    // tools_with_ratings view currently lacks name_en / description_en columns.
+    // Fall back to name/description until view is updated.
     const { data, error } = await supabase
       .from('tools_with_ratings')
       .select(
-        'id, name, name_en, slug, description, description_en, link, category_name, category_slug, pricing_model, platforms, tier, average_rating, total_ratings, tags'
+        'id, name, slug, description, link, category_name, category_slug, pricing_model, platforms, tier, average_rating, total_ratings, tags'
       )
       .in('slug', toolSlugs)
       .eq('is_approved', true);
@@ -46,7 +48,7 @@ const getCachedComparisonData = unstable_cache(
     }
     return toolSlugs.map((slug) => data.find((tool) => tool.slug === slug)).filter(Boolean);
   },
-  ['comparison-data-cache-v2'],
+  ['comparison-data-cache-v3'],
   { revalidate: 3600 }
 );
 
