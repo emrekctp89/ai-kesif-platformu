@@ -119,7 +119,7 @@ export async function createCheckoutSession(formData) {
           ...(promo ? { promo_code: promo.code } : {}),
         },
       },
-      success_url: `${siteUrl}/profile?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${siteUrl}/uyelik?success=1&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/uyelik`,
     });
     checkoutUrl = session.url;
@@ -131,6 +131,50 @@ export async function createCheckoutSession(formData) {
 
   if (checkoutUrl) {
     redirect(checkoutUrl);
+  }
+}
+
+export async function createBillingPortalSession() {
+  'use server';
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect(
+      `/login?message=${encodeURIComponent('Pro faturalama için giriş yapmalısınız.')}`
+    );
+  }
+
+  let portalUrl;
+
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('stripe_customer_id')
+      .eq('id', user.id)
+      .single();
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '');
+    if (!profile?.stripe_customer_id || !siteUrl) {
+      throw new Error('Stripe müşterisi veya site adresi bulunamadı.');
+    }
+
+    const stripe = getStripe();
+    const session = await stripe.billingPortal.sessions.create({
+      customer: profile.stripe_customer_id,
+      return_url: `${siteUrl}/uyelik`,
+    });
+    portalUrl = session.url;
+  } catch (error) {
+    logServerError('checkout.create-billing-portal', error);
+    const errorMessage = 'Faturalama portalı açılamadı. Lütfen daha sonra tekrar deneyin.';
+    return redirect(`/uyelik?message=${encodeURIComponent(errorMessage)}`);
+  }
+
+  if (portalUrl) {
+    redirect(portalUrl);
   }
 }
 
