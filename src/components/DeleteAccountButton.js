@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,24 +17,24 @@ import { Button } from '@/components/ui/button';
 import { deleteUser } from '@/app/actions';
 
 export function DeleteAccountButton() {
+  const t = useTranslations('ProfileComponents');
+
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive">Hesabımı Sil</Button>
+        <Button variant="destructive" className="min-h-10 shrink-0">
+          {t('deleteAccount')}
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Bu işlem geri alınamaz. Hesabınız kalıcı olarak silinecek ve tüm verileriniz (verdiğiniz
-            puanlar vb.) kaybolacaktır.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{t('confirmTitle')}</AlertDialogTitle>
+          <AlertDialogDescription>{t('confirmDeleteAccount')}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Vazgeç</AlertDialogCancel>
-          {/* Silme işlemini tetiklemek için bir form kullanıyoruz */}
+          <AlertDialogCancel>{t('dismiss')}</AlertDialogCancel>
           <form action={deleteUser}>
-            <AlertDialogAction type="submit">Evet, Hesabımı Sil</AlertDialogAction>
+            <AlertDialogAction type="submit">{t('confirmYesDeleteAccount')}</AlertDialogAction>
           </form>
         </AlertDialogFooter>
       </AlertDialogContent>

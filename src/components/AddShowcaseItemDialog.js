@@ -2,6 +2,10 @@
 
 import * as React from 'react';
 import { useTransition } from 'react';
+import { useTranslations } from 'next-intl';
+import toast from 'react-hot-toast';
+import { PlusCircle } from 'lucide-react';
+
 import { submitShowcaseItem } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,14 +22,23 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import { PlusCircle } from 'lucide-react';
-import toast from 'react-hot-toast';
+
+// DB values stay Turkish; labels are translated.
+const CONTENT_TYPES = [
+  { value: 'Görsel', labelKey: 'typeImage' },
+  { value: 'Metin', labelKey: 'typeText' },
+  { value: 'Kod', labelKey: 'typeCode' },
+];
 
 export function AddShowcaseItemDialog() {
+  const t = useTranslations('ProfileComponents');
   const formRef = React.useRef(null);
   const [isOpen, setIsOpen] = React.useState(false);
   const [isPending, startTransition] = useTransition();
   const [contentType, setContentType] = React.useState('Görsel');
+
+  const typeLabel =
+    CONTENT_TYPES.find((item) => item.value === contentType)?.labelKey || 'typeImage';
 
   const handleFormAction = (formData) => {
     startTransition(async () => {
@@ -33,6 +46,7 @@ export function AddShowcaseItemDialog() {
       if (result?.success) {
         toast.success(result.success);
         formRef.current?.reset();
+        setContentType('Görsel');
         setIsOpen(false);
       } else if (result?.error) {
         toast.error(result.error);
@@ -43,74 +57,65 @@ export function AddShowcaseItemDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Yeni Eser Paylaş
+        <Button className="brand-gradient min-h-9 shadow-md">
+          <PlusCircle className="mr-2 h-4 w-4" aria-hidden="true" />
+          {t('addShowcase')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Yeni Eser Paylaş</DialogTitle>
-          <DialogDescription>
-            Yapay zeka araçlarını kullanarak yarattığınız bir eseri toplulukla paylaşın.
-          </DialogDescription>
+          <DialogTitle>{t('addShowcaseTitle')}</DialogTitle>
+          <DialogDescription>{t('addShowcaseDesc')}</DialogDescription>
         </DialogHeader>
         <form ref={formRef} action={handleFormAction} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Eser Başlığı *</Label>
+            <Label htmlFor="title">{t('showcaseTitleLabel')}</Label>
             <Input
               id="title"
               name="title"
-              placeholder="Örn: Fütüristik Şehir Konsepti"
+              placeholder={t('showcaseTitlePlaceholder')}
               required
               disabled={isPending}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>İçerik Türü *</Label>
+            <Label>{t('contentTypeLabel')}</Label>
             <RadioGroup
               defaultValue="Görsel"
-              className="flex gap-4 pt-1"
+              className="flex flex-wrap gap-4 pt-1"
               name="content_type"
               onValueChange={setContentType}
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Görsel" id="r1" />
-                <Label htmlFor="r1">Görsel</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Metin" id="r2" />
-                <Label htmlFor="r2">Metin</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Kod" id="r3" />
-                <Label htmlFor="r3">Kod</Label>
-              </div>
+              {CONTENT_TYPES.map((item, index) => (
+                <div key={item.value} className="flex items-center space-x-2">
+                  <RadioGroupItem value={item.value} id={`content-type-${index}`} />
+                  <Label htmlFor={`content-type-${index}`}>{t(item.labelKey)}</Label>
+                </div>
+              ))}
             </RadioGroup>
           </div>
 
-          {/* Dinamik İçerik Alanı */}
           {contentType === 'Görsel' ? (
             <div className="space-y-2">
-              <Label htmlFor="image">Görsel Dosyası *</Label>
+              <Label htmlFor="image">{t('imageFileLabel')}</Label>
               <Input
                 id="image"
                 name="image"
                 type="file"
-                required={contentType === 'Görsel'}
+                required
                 disabled={isPending}
                 accept="image/*"
               />
             </div>
           ) : (
             <div className="space-y-2">
-              <Label htmlFor="content_text">{contentType} İçeriği *</Label>
+              <Label htmlFor="content_text">{t('contentLabel', { type: t(typeLabel) })}</Label>
               <Textarea
                 id="content_text"
                 name="content_text"
-                placeholder={`Paylaşmak istediğiniz ${contentType.toLowerCase()} içeriğini buraya yapıştırın...`}
-                required={contentType !== 'Görsel'}
+                placeholder={t('contentPlaceholder')}
+                required
                 disabled={isPending}
                 className="min-h-[200px] font-mono"
               />
@@ -118,11 +123,11 @@ export function AddShowcaseItemDialog() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="description">Açıklama</Label>
+            <Label htmlFor="description">{t('descriptionLabel')}</Label>
             <Textarea
               id="description"
               name="description"
-              placeholder="Bu eseri nasıl ve hangi araçlarla yarattığınızı anlatın..."
+              placeholder={t('descriptionPlaceholder')}
               disabled={isPending}
             />
           </div>
@@ -130,11 +135,11 @@ export function AddShowcaseItemDialog() {
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary" disabled={isPending}>
-                İptal
+                {t('cancel')}
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? 'Gönderiliyor...' : 'Gönder'}
+            <Button type="submit" disabled={isPending} className="brand-gradient shadow-md">
+              {isPending ? t('submitting') : t('submit')}
             </Button>
           </DialogFooter>
         </form>

@@ -2,6 +2,10 @@
 
 import * as React from 'react';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import toast from 'react-hot-toast';
+import { Trash2 } from 'lucide-react';
+
 import { updateProject, updateProjectItems } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,30 +21,25 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { Check, ChevronsUpDown, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import toast from 'react-hot-toast';
-import Link from 'next/link';
-// Yeni AI bileşenini import ediyoruz
-import { AiProjectStrategist } from './AiProjectStrategist';
 import { Badge } from '@/components/ui/badge';
+import { AiProjectStrategist } from './AiProjectStrategist';
 
-// Projeye içerik eklemek için kullanılan çoklu seçim bileşeni
-function AddItemToProject({ items, onSelect, typeName }) {
+function AddItemToProject({ items, onSelect, typeLabel }) {
+  const t = useTranslations('ProfileComponents');
   const [open, setOpen] = useState(false);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full justify-start">
-          {typeName} Ekle...
+        <Button variant="outline" className="min-h-10 w-full justify-start">
+          {t('addType', { type: typeLabel })}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
         <Command>
-          <CommandInput placeholder="Ara..." />
+          <CommandInput placeholder={t('searchContent')} />
           <CommandList>
-            <CommandEmpty>İçerik bulunamadı.</CommandEmpty>
+            <CommandEmpty>{t('contentNotFound')}</CommandEmpty>
             <CommandGroup>
               {items.map((item) => (
                 <CommandItem
@@ -62,53 +61,72 @@ function AddItemToProject({ items, onSelect, typeName }) {
   );
 }
 
-// Ana Proje Editör Bileşeni
 export function ProjectEditor({ project, allTools, allShowcaseItems, allPrompts }) {
+  const t = useTranslations('ProfileComponents');
   const [title, setTitle] = useState(project.title);
   const [description, setDescription] = useState(project.description || '');
   const [items, setItems] = useState(project.project_items || []);
+  const [isPending, setIsPending] = useState(false);
 
   const handleAddItem = (itemId, itemType) => {
-    if (items.some((i) => i.item_id === itemId && i.item_type === itemType)) {
-      toast.error('Bu içerik zaten projede mevcut.');
+    if (items.some((item) => item.item_id === itemId && item.item_type === itemType)) {
+      toast.error(t('itemAlreadyInProject'));
       return;
     }
     setItems((prev) => [...prev, { item_id: itemId, item_type: itemType }]);
   };
 
   const handleRemoveItem = (itemId, itemType) => {
-    setItems((prev) => prev.filter((i) => !(i.item_id === itemId && i.item_type === itemType)));
+    setItems((prev) =>
+      prev.filter((item) => !(item.item_id === itemId && item.item_type === itemType))
+    );
   };
 
   const getItemDetails = (itemId, itemType) => {
-    if (itemType === 'tool') return allTools.find((t) => t.id === itemId);
-    if (itemType === 'showcase_item') return allShowcaseItems.find((s) => s.id === itemId);
-    if (itemType === 'prompt') return allPrompts.find((p) => p.id === itemId);
+    if (itemType === 'tool') return allTools.find((tool) => tool.id === itemId);
+    if (itemType === 'showcase_item') return allShowcaseItems.find((item) => item.id === itemId);
+    if (itemType === 'prompt') return allPrompts.find((prompt) => prompt.id === itemId);
     return null;
+  };
+
+  const itemTypeKeys = {
+    tool: 'itemType_tool',
+    showcase_item: 'itemType_showcase_item',
+    prompt: 'itemType_prompt',
+  };
+
+  const getItemTypeLabel = (itemType) => {
+    const key = itemTypeKeys[itemType];
+    return key ? t(key) : itemType.replaceAll('_', ' ');
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append('id', project.id);
-    formData.append('title', title);
-    formData.append('description', description);
+    setIsPending(true);
+    try {
+      const formData = new FormData();
+      formData.append('id', project.id);
+      formData.append('title', title);
+      formData.append('description', description);
 
-    const updateResult = await updateProject(formData);
-    if (updateResult?.error) {
-      toast.error(updateResult.error);
-      return;
-    }
+      const updateResult = await updateProject(formData);
+      if (updateResult?.error) {
+        toast.error(updateResult.error);
+        return;
+      }
 
-    const itemsFormData = new FormData();
-    itemsFormData.append('projectId', project.id);
-    itemsFormData.append('items', JSON.stringify(items));
+      const itemsFormData = new FormData();
+      itemsFormData.append('projectId', project.id);
+      itemsFormData.append('items', JSON.stringify(items));
 
-    const itemsResult = await updateProjectItems(itemsFormData);
-    if (itemsResult?.error) {
-      toast.error(itemsResult.error);
-    } else {
-      toast.success('Proje başarıyla güncellendi.');
+      const itemsResult = await updateProjectItems(itemsFormData);
+      if (itemsResult?.error) {
+        toast.error(itemsResult.error);
+      } else {
+        toast.success(t('projectUpdated'));
+      }
+    } finally {
+      setIsPending(false);
     }
   };
 
@@ -116,92 +134,99 @@ export function ProjectEditor({ project, allTools, allShowcaseItems, allPrompts 
     <form onSubmit={handleFormSubmit} className="space-y-8">
       <input type="hidden" name="id" value={project.id} />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Sol Sütun: Proje İçerikleri */}
-        <div className="md:col-span-2 space-y-4">
-          <h2 className="text-2xl font-bold">Proje İçerikleri</h2>
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+        <div className="space-y-4 md:col-span-2">
+          <h2 className="text-2xl font-bold tracking-tight">{t('projectItemsHeading')}</h2>
           <div className="space-y-4">
             {items.map((item) => {
               const details = getItemDetails(item.item_id, item.item_type);
               if (!details) return null;
 
               return (
-                <Card key={`${item.item_type}-${item.item_id}`}>
-                  <CardContent className="p-3 flex items-center justify-between">
+                <Card
+                  key={`${item.item_type}-${item.item_id}`}
+                  className="glass-panel border-border/50"
+                >
+                  <CardContent className="flex items-center justify-between p-3">
                     <div>
                       <Badge variant="secondary" className="mb-1">
-                        {item.item_type.replace('_', ' ')}
+                        {getItemTypeLabel(item.item_type)}
                       </Badge>
                       <p className="font-semibold">{details.title || details.name}</p>
                     </div>
                     <Button
+                      type="button"
                       variant="ghost"
                       size="icon"
                       onClick={() => handleRemoveItem(item.item_id, item.item_type)}
+                      disabled={isPending}
+                      aria-label={t('delete')}
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                     </Button>
                   </CardContent>
                 </Card>
               );
             })}
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <AddItemToProject
               items={allTools}
               onSelect={(id) => handleAddItem(id, 'tool')}
-              typeName="Araç"
+              typeLabel={t('typeTool')}
             />
             <AddItemToProject
               items={allShowcaseItems}
               onSelect={(id) => handleAddItem(id, 'showcase_item')}
-              typeName="Eser"
+              typeLabel={t('typeShowcaseItem')}
             />
             <AddItemToProject
               items={allPrompts}
               onSelect={(id) => handleAddItem(id, 'prompt')}
-              typeName="Prompt"
+              typeLabel={t('typePrompt')}
             />
           </div>
         </div>
 
-        {/* Sağ Sütun: Proje Detayları ve AI Stratejisti */}
-        <div className="md:col-span-1 space-y-6">
-          <Card>
+        <div className="space-y-6 md:col-span-1">
+          <Card className="glass-panel border-border/50">
             <CardHeader>
-              <CardTitle>Proje Detayları</CardTitle>
+              <CardTitle>{t('projectDetails')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Proje Başlığı</Label>
+                <Label htmlFor="title">{t('projectTitleLabel')}</Label>
                 <Input
                   id="title"
                   name="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
+                  disabled={isPending}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Proje Açıklaması</Label>
+                <Label htmlFor="description">{t('projectDescLabel')}</Label>
                 <Textarea
                   id="description"
                   name="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Bu proje ne hakkında?"
+                  placeholder={t('projectDescPlaceholder')}
+                  disabled={isPending}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* YENİ: AI Stratejist bileşenini buraya ekliyoruz */}
           <AiProjectStrategist projectId={project.id} />
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-6 border-t">
-        <Button type="submit">Değişiklikleri Kaydet</Button>
+      <div className="flex justify-end gap-2 border-t border-border/50 pt-6">
+        <Button type="submit" disabled={isPending} className="brand-gradient min-h-10 shadow-md">
+          {isPending ? t('saving') : t('saveChanges')}
+        </Button>
       </div>
     </form>
   );

@@ -1398,7 +1398,7 @@ function ReportedLinksTab({ reports }) {
   });
 
   return (
-    <Card>
+    <Card className="glass-panel border-border/50">
       <CardHeader>
         <CardTitle>{t('reportedLinksTitle')}</CardTitle>
         <CardDescription>

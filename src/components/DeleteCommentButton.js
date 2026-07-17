@@ -1,5 +1,8 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+import toast from 'react-hot-toast';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,42 +16,40 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { deleteComment } from '@/app/actions';
-import toast from 'react-hot-toast';
 
 export function DeleteCommentButton({ commentId }) {
+  const t = useTranslations('ProfileComponents');
+
   const handleFormAction = async (formData) => {
     const result = await deleteComment(formData);
     if (result?.error) {
       toast.error(result.error);
     } else {
-      toast.success('Yorum silindi.');
+      toast.success(t('commentDeleted'));
     }
   };
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        {/* Daha kibar bir görünüm için küçük ve outline bir buton kullanıyoruz */}
         <Button
           variant="outline"
           size="sm"
           className="text-destructive hover:bg-destructive/10 hover:text-destructive"
         >
-          Sil
+          {t('delete')}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Yorumu Silmek İstediğinize Emin misiniz?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Bu işlem geri alınamaz. Yorumunuz kalıcı olarak silinecektir.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{t('confirmTitle')}</AlertDialogTitle>
+          <AlertDialogDescription>{t('confirmDeleteComment')}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+          <AlertDialogCancel>{t('dismiss')}</AlertDialogCancel>
           <form action={handleFormAction}>
             <input type="hidden" name="commentId" value={commentId} />
-            <AlertDialogAction type="submit">Evet, Sil</AlertDialogAction>
+            <AlertDialogAction type="submit">{t('confirmYesDelete')}</AlertDialogAction>
           </form>
         </AlertDialogFooter>
       </AlertDialogContent>
