@@ -15,9 +15,9 @@ export async function GET(request) {
 
   try {
     const report = await runScheduledToolDiscovery({
-      limit: getIntegerParam(searchParams, 'limit'),
-      candidateCount: getIntegerParam(searchParams, 'candidateCount'),
-      timeoutMs: getIntegerParam(searchParams, 'timeoutMs'),
+      limit: getIntegerParam(searchParams, 'limit', { min: 1 }),
+      candidateCount: getIntegerParam(searchParams, 'candidateCount', { min: 1 }),
+      timeoutMs: getIntegerParam(searchParams, 'timeoutMs', { min: 1 }),
       dryRun: getBooleanParam(searchParams, 'dryRun'),
       autoApprove: getBooleanParam(searchParams, 'autoApprove'),
     });

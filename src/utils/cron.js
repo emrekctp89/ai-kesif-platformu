@@ -25,12 +25,21 @@ export function isCronAuthorized(
   return false;
 }
 
-export function getIntegerParam(searchParams, name) {
+export function getIntegerParam(
+  searchParams,
+  name,
+  { min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER } = {}
+) {
   const value = searchParams.get(name);
   if (!value) return undefined;
 
-  const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) ? parsed : undefined;
+  const normalized = value.trim();
+  if (!/^-?\d+$/.test(normalized)) return undefined;
+
+  const parsed = Number.parseInt(normalized, 10);
+  if (!Number.isSafeInteger(parsed)) return undefined;
+
+  return Math.min(Math.max(parsed, min), max);
 }
 
 export function getBooleanParam(searchParams, name, fallback = false) {

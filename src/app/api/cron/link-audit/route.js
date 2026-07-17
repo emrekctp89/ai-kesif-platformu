@@ -15,10 +15,10 @@ export async function GET(request) {
 
   try {
     const report = await runScheduledLinkAudit({
-      limit: getIntegerParam(searchParams, 'limit'),
-      timeoutMs: getIntegerParam(searchParams, 'timeoutMs'),
-      concurrency: getIntegerParam(searchParams, 'concurrency'),
-      staleDays: getIntegerParam(searchParams, 'staleDays'),
+      limit: getIntegerParam(searchParams, 'limit', { min: 1 }),
+      timeoutMs: getIntegerParam(searchParams, 'timeoutMs', { min: 1 }),
+      concurrency: getIntegerParam(searchParams, 'concurrency', { min: 1 }),
+      staleDays: getIntegerParam(searchParams, 'staleDays', { min: 1 }),
     });
 
     return NextResponse.json({ success: true, report });

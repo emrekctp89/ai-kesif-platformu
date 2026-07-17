@@ -16,7 +16,7 @@ export async function GET(request) {
   try {
     const report = await enrichExistingTools({
       dryRun: getBooleanParam(searchParams, 'dryRun', true),
-      limit: getIntegerParam(searchParams, 'limit'),
+      limit: getIntegerParam(searchParams, 'limit', { min: 1 }),
       includeGoodQuality: getBooleanParam(searchParams, 'includeGoodQuality', false),
     });
 

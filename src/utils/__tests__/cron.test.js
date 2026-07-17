@@ -53,11 +53,15 @@ describe('cron helpers', () => {
     const params = new URLSearchParams({
       limit: '12',
       badLimit: 'abc',
+      partialLimit: '12abc',
+      negativeLimit: '-5',
       dryRun: 'yes',
     });
 
     expect(getIntegerParam(params, 'limit')).toBe(12);
     expect(getIntegerParam(params, 'badLimit')).toBeUndefined();
+    expect(getIntegerParam(params, 'partialLimit')).toBeUndefined();
+    expect(getIntegerParam(params, 'negativeLimit', { min: 1 })).toBe(1);
     expect(getIntegerParam(params, 'missing')).toBeUndefined();
     expect(getBooleanParam(params, 'dryRun')).toBe(true);
     expect(getBooleanParam(params, 'missing', true)).toBe(true);
