@@ -7,16 +7,6 @@ installSerwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: defaultCache,
-  fallbacks: {
-    entries: [
-      {
-        url: '/offline.html',
-        matcher({ request }) {
-          return request.destination === 'document';
-        },
-      },
-    ],
-  },
 });
 
 // Mevcut push notification yapısı.
