@@ -1,59 +1,74 @@
-import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { rateLimit, getClientIp } from '@/lib/rateLimit';
+import { createAdminClient } from '@/utils/supabase/admin';
 
 const limiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500 });
 
+const JSON_HEADERS = { 'Content-Type': 'application/json' };
+const DEFAULT_PAGE_SIZE = 50;
+const MAX_PAGE_SIZE = 100;
+
 // Initialization moved inside the handler to prevent build-time errors
 export const dynamic = 'force-dynamic';
+
+export function parsePositiveIntegerParam(
+  value,
+  fallback,
+  { min = 1, max = Number.MAX_SAFE_INTEGER } = {}
+) {
+  const parsed = Number.parseInt(value || '', 10);
+
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return Math.min(Math.max(parsed, min), max);
+}
+
+function jsonResponse(payload, status = 200, headers = {}) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: {
+      ...JSON_HEADERS,
+      ...headers,
+    },
+  });
+}
 
 export async function GET(request) {
   try {
     // Rate limit check — 30 requests per minute per IP
     const clientIp = getClientIp(request);
-    const {
-      success: rateLimitOk,
-      limit: rateMax,
-      remaining,
-      reset,
-    } = await limiter.check(30, clientIp);
+    const { success: rateLimitOk, limit: rateMax, reset } = await limiter.check(30, clientIp);
 
     if (!rateLimitOk) {
-      return new Response(
-        JSON.stringify({
-          error: 'Çok fazla istek gönderildi. Lütfen bir dakika bekleyin.',
-          retryAfter: Math.ceil((reset - Date.now()) / 1000),
-        }),
+      const retryAfter = Math.max(Math.ceil((reset - Date.now()) / 1000), 1);
+
+      return jsonResponse(
         {
-          status: 429,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-RateLimit-Limit': String(rateMax),
-            'X-RateLimit-Remaining': '0',
-            'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)),
-          },
+          error: 'Çok fazla istek gönderildi. Lütfen bir dakika bekleyin.',
+          retryAfter,
+        },
+        429,
+        {
+          'X-RateLimit-Limit': String(rateMax),
+          'X-RateLimit-Remaining': '0',
+          'Retry-After': String(retryAfter),
         }
       );
     }
+
     // We use the admin client because we need to query without RLS for API keys
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-    );
+    const supabaseAdmin = createAdminClient();
     const authHeader = request.headers.get('authorization');
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ error: 'Eksik veya geçersiz Authorization başlığı.' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ error: 'Eksik veya geçersiz Authorization başlığı.' }, 401);
     }
 
     const token = authHeader.split(' ')[1];
     if (!token.startsWith('aik_')) {
-      return new Response(JSON.stringify({ error: 'Geçersiz API Anahtarı formatı.' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ error: 'Geçersiz API Anahtarı formatı.' }, 401);
     }
 
     // Hash the provided token to compare with database
@@ -66,10 +81,7 @@ export async function GET(request) {
       .single();
 
     if (apiKeyError || !apiKey) {
-      return new Response(JSON.stringify({ error: 'Geçersiz veya iptal edilmiş API Anahtarı.' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ error: 'Geçersiz veya iptal edilmiş API Anahtarı.' }, 401);
     }
 
     // Update last_used_at in the background (fire and forget)
@@ -88,11 +100,10 @@ export async function GET(request) {
 
     // Fetch approved tools
     const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '50', 10);
-    const page = parseInt(url.searchParams.get('page') || '1', 10);
-
-    const safeLimit = Math.min(Math.max(limit, 1), 100);
-    const safePage = Math.max(page, 1);
+    const safeLimit = parsePositiveIntegerParam(url.searchParams.get('limit'), DEFAULT_PAGE_SIZE, {
+      max: MAX_PAGE_SIZE,
+    });
+    const safePage = parsePositiveIntegerParam(url.searchParams.get('page'), 1);
     const from = (safePage - 1) * safeLimit;
     const to = from + safeLimit - 1;
 
@@ -115,32 +126,25 @@ export async function GET(request) {
     }
 
     // Flatten category for simpler API response
-    const formattedTools = tools.map((tool) => ({
+    const formattedTools = (tools || []).map((tool) => ({
       ...tool,
       category: tool.category?.name || null,
       category_slug: tool.category?.slug || null,
     }));
 
-    return new Response(
-      JSON.stringify({
-        data: formattedTools,
-        meta: {
-          total: count,
-          page: safePage,
-          limit: safeLimit,
-          totalPages: Math.ceil(count / safeLimit),
-        },
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    const total = count || 0;
+
+    return jsonResponse({
+      data: formattedTools,
+      meta: {
+        total,
+        page: safePage,
+        limit: safeLimit,
+        totalPages: Math.ceil(total / safeLimit),
+      },
+    });
   } catch (error) {
     console.error('API v1 tools error:', error);
-    return new Response(JSON.stringify({ error: 'Sunucu hatası.' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: 'Sunucu hatası.' }, 500);
   }
 }
