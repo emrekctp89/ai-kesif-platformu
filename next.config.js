@@ -102,7 +102,7 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://hhopgeupizlfkmvtsvkf.supabase.co https://avatars.githubusercontent.com https://lh3.googleusercontent.com https://storage.googleapis.com https://www.google-analytics.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; connect-src 'self' https://hhopgeupizlfkmvtsvkf.supabase.co wss://hhopgeupizlfkmvtsvkf.supabase.co https://storage.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com;",
+              "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com https://www.googletagmanager.com https://cdn.consentmanager.net; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://hhopgeupizlfkmvtsvkf.supabase.co https://avatars.githubusercontent.com https://lh3.googleusercontent.com https://storage.googleapis.com https://www.google-analytics.com https://*.consentmanager.net; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; frame-src 'self' https://*.consentmanager.net; connect-src 'self' https://hhopgeupizlfkmvtsvkf.supabase.co wss://hhopgeupizlfkmvtsvkf.supabase.co https://storage.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.consentmanager.net;",
           },
         ],
       },

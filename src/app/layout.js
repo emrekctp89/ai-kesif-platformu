@@ -1,5 +1,6 @@
 import './globals.css';
 import { Onest } from 'next/font/google';
+import Script from 'next/script';
 import { generateStructuredData } from '@/utils/seo';
 import { getSiteOrigin } from '@/utils/siteUrl';
 
@@ -33,6 +34,16 @@ export default function RootLayout({ children }) {
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
+        <Script
+          id="consentmanager-cmp"
+          strategy="beforeInteractive"
+          type="text/javascript"
+          data-cmp-ab="1"
+          src="https://cdn.consentmanager.net/delivery/autoblocking/2476a7ec02ec4.js"
+          data-cmp-host="d.delivery.consentmanager.net"
+          data-cmp-cdn="cdn.consentmanager.net"
+          data-cmp-codesrc="16"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
