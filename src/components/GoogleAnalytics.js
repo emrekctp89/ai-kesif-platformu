@@ -1,54 +1,55 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
+import { useEffect, useRef } from 'react';
 
-// Sayfa görüntüleme olayını Google Analytics'e gönderen yardımcı fonksiyon
-const pageview = (GA_MEASUREMENT_ID, url) => {
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID || 'G-D8WD5SMS6H';
+
+function pageview(url) {
   if (typeof window.gtag !== 'function') return;
 
   window.gtag('config', GA_MEASUREMENT_ID, {
     page_path: url,
   });
-};
+}
 
-export const GoogleAnalytics = () => {
+export function GoogleAnalytics() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID;
+  const isInitialPage = useRef(true);
   const queryString = searchParams.toString();
   const pageUrl = queryString ? `${pathname}?${queryString}` : pathname;
 
   useEffect(() => {
-    if (!GA_MEASUREMENT_ID) return;
+    // gtag('config') sends the first page view. Report only client-side
+    // App Router navigations here so the initial visit is not counted twice.
+    if (isInitialPage.current) {
+      isInitialPage.current = false;
+      return;
+    }
 
-    // Sayfa her değiştiğinde bu fonksiyonu çağır
-    pageview(GA_MEASUREMENT_ID, pageUrl);
-  }, [pageUrl, GA_MEASUREMENT_ID]);
+    pageview(pageUrl);
+  }, [pageUrl]);
 
   return (
     <>
       <Script
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
       />
       <Script
         id="google-analytics"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-
-            gtag('config', '${GA_MEASUREMENT_ID}', {
-                send_page_view: false,
-            });
+            gtag('config', '${GA_MEASUREMENT_ID}');
           `,
         }}
       />
     </>
   );
-};
+}
