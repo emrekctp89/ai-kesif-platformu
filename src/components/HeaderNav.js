@@ -44,6 +44,7 @@ export function HeaderNav({
 
   const moreExplore = [
     { href: '/tavsiye', label: t('aiRecommend') },
+    { href: '/workmind', label: t('workmind') },
     { href: '/random-tools', label: t('randomTools') },
     { href: '/koleksiyonlar', label: t('collections') },
     { href: '/arastirma', label: t('research') },
