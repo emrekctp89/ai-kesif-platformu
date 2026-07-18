@@ -29,6 +29,7 @@ import {
   Shield,
   Scale,
   FolderOpen,
+  BrainCircuit,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
@@ -61,6 +62,7 @@ export function MobileNav({ user, isProUser }) {
         { href: '/random-tools', label: t('randomTools'), icon: Dice5 },
         { href: '/koleksiyonlar', label: t('collections'), icon: FolderOpen },
         { href: '/arastirma', label: t('research'), icon: FlaskConical },
+        { href: '/workmind', label: 'Workmind', icon: BrainCircuit },
       ],
     },
     {
