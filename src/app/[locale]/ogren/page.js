@@ -11,6 +11,11 @@ import {
   Map,
   Sparkles,
   WandSparkles,
+  PlayCircle,
+  Clock,
+  BarChart,
+  Video,
+  ChevronRight,
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
@@ -42,7 +47,6 @@ async function getGuides() {
 async function getLearningPaths() {
   const supabase = await createClient(await cookies());
 
-  // Prefer tool counts; fall back if the nested count select is unavailable.
   let { data, error } = await supabase
     .from('collections')
     .select('title, slug, description, profiles(username), collection_tools(count)')
@@ -109,7 +113,6 @@ export default async function LearningHubPage({ params }) {
 
   const hasPaths = learningPaths.length > 0;
   const hasGuides = guides.length > 0;
-  const isEmpty = !hasPaths && !hasGuides;
   const siteUrl = getSiteOrigin();
 
   const structuredData = {
@@ -153,6 +156,44 @@ export default async function LearningHubPage({ params }) {
     },
   ];
 
+  const mockCourses = [
+    {
+      title: locale === 'en' ? 'ChatGPT for Beginners' : 'Yeni Başlayanlar için ChatGPT',
+      instructor: 'AI Keşif Akademi',
+      duration: '2s 15d',
+      level: locale === 'en' ? 'Beginner' : 'Başlangıç',
+      thumbnail:
+        'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=800',
+      slug: 'yeni-baslayanlar-icin-chatgpt',
+      color: 'from-emerald-500/20 to-teal-500/20',
+      tag: locale === 'en' ? 'Most Popular' : 'En Popüler',
+    },
+    {
+      title:
+        locale === 'en'
+          ? 'Professional Imagery with Midjourney'
+          : 'Midjourney ile Profesyonel Görsel Üretimi',
+      instructor: 'Caner Ö.',
+      duration: '1s 45d',
+      level: locale === 'en' ? 'Intermediate' : 'Orta Seviye',
+      thumbnail:
+        'https://images.unsplash.com/photo-1686191128892-3b37013f7331?auto=format&fit=crop&q=80&w=800',
+      slug: 'midjourney-gorsel-uretimi',
+      color: 'from-purple-500/20 to-pink-500/20',
+      tag: locale === 'en' ? 'New' : 'Yeni',
+    },
+    {
+      title: locale === 'en' ? 'GitHub Copilot for Developers' : 'Yazılımcılar için GitHub Copilot',
+      instructor: 'AI Keşif Akademi',
+      duration: '3s 20d',
+      level: locale === 'en' ? 'Advanced' : 'İleri Seviye',
+      thumbnail:
+        'https://images.unsplash.com/photo-1668554245893-2430d0077217?auto=format&fit=crop&q=80&w=800',
+      slug: 'github-copilot-rehberi',
+      color: 'from-blue-500/20 to-cyan-500/20',
+    },
+  ];
+
   return (
     <>
       <script
@@ -162,236 +203,266 @@ export default async function LearningHubPage({ params }) {
         }}
       />
 
-      <div className="mx-auto max-w-6xl space-y-12 pb-8 sm:space-y-16 sm:pb-12">
-        {/* Hero */}
-        <section className="brand-surface relative overflow-hidden rounded-3xl p-6 shadow-xl glass-panel sm:p-8 lg:p-10">
-          <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-purple-500/10 blur-3xl" />
+      <div className="mx-auto max-w-7xl space-y-16 pb-12 sm:space-y-24 sm:pb-20">
+        {/* HERO SECTION - Academy Style */}
+        <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-950 via-background to-purple-950 p-8 shadow-2xl sm:p-12 lg:p-16 border border-border/20">
+          <div className="pointer-events-none absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+          <div className="pointer-events-none absolute -right-20 -top-20 h-96 w-96 rounded-full bg-primary/20 blur-[100px]" />
+          <div className="pointer-events-none absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-purple-500/20 blur-[100px]" />
 
-          <div className="relative z-10 mx-auto max-w-3xl text-center">
-            <div className="brand-chip mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
-              <GraduationCap className="h-4 w-4" aria-hidden="true" />
-              {t('heroChip')}
+          <div className="relative z-10 mx-auto max-w-4xl text-center">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary backdrop-blur-md">
+              <GraduationCap className="h-5 w-5" aria-hidden="true" />
+              AI Keşif Akademi
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-6xl">
-              {t('title')}
+            <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
+                Yapay Zeka
+              </span>{' '}
+              Uzmanı Olun
             </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              {t('subtitle')}
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-300 sm:text-xl">
+              Video kurslar, rehberler ve adım adım öğrenme yollarıyla AI araçlarını işinize nasıl
+              entegre edeceğinizi keşfedin.
             </p>
 
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-              <span className="inline-flex min-h-9 items-center rounded-full border border-border/60 bg-background/70 px-3.5 py-1.5 text-sm font-semibold backdrop-blur-sm">
-                {t('statsPaths', { count: learningPaths.length })}
-              </span>
-              <span className="inline-flex min-h-9 items-center rounded-full border border-border/60 bg-background/70 px-3.5 py-1.5 text-sm font-semibold backdrop-blur-sm">
-                {t('statsGuides', { count: guides.length })}
-              </span>
+            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Button
+                size="lg"
+                className="h-14 rounded-full px-8 text-base font-bold shadow-lg shadow-primary/25 ai-tavsiye-gradient"
+              >
+                Eğitime Başla
+                <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 rounded-full px-8 text-base font-bold bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white backdrop-blur-sm"
+              >
+                <Video className="mr-2 h-5 w-5" aria-hidden="true" />
+                Kataloğu İncele
+              </Button>
             </div>
           </div>
         </section>
 
-        {/* Quick starts */}
-        <section aria-labelledby="learn-quickstart-heading">
-          <div className="mb-5 sm:mb-6">
-            <h2
-              id="learn-quickstart-heading"
-              className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
-            >
-              {t('quickStartHeading')}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t('quickStartSubheading')}</p>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {quickStarts.map(({ href, label, icon: Icon, className }) => (
-              <Button
-                key={href}
-                asChild
-                variant="outline"
-                className={`min-h-12 justify-start gap-2 rounded-2xl px-4 font-semibold ${className}`}
+        {/* MOCK VIDEO COURSES */}
+        <section aria-labelledby="courses-heading" className="relative px-4 sm:px-0">
+          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2
+                id="courses-heading"
+                className="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl"
               >
-                <Link href={href} prefetch={false}>
-                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span className="truncate">{label}</span>
-                  <ArrowRight className="ml-auto h-4 w-4 shrink-0 opacity-70" aria-hidden="true" />
-                </Link>
-              </Button>
+                <PlayCircle className="h-8 w-8 text-rose-500" aria-hidden="true" />
+                {locale === 'en' ? 'Video Courses' : 'Video Eğitimler'}
+              </h2>
+              <p className="mt-2 text-base text-muted-foreground">
+                {locale === 'en'
+                  ? 'Learn from the best with step-by-step video tutorials'
+                  : 'Adım adım video rehberlerle araçları profesyonelce kullanmayı öğrenin.'}
+              </p>
+            </div>
+            <Button variant="ghost" className="hidden sm:flex group">
+              Tümünü Gör
+              <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {mockCourses.map((course) => (
+              <Link
+                key={course.slug}
+                href={`#`} // Mock link
+                className="group block rounded-3xl border bg-card text-card-foreground shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="relative aspect-video w-full overflow-hidden rounded-t-3xl bg-muted">
+                  <div className="absolute inset-0 z-10 bg-black/20 transition-colors group-hover:bg-black/10" />
+                  {course.tag && (
+                    <div className="absolute top-4 left-4 z-20 rounded-full bg-black/60 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
+                      {course.tag}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 transition-all duration-300 group-hover:opacity-100">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-md">
+                      <PlayCircle className="h-8 w-8 text-white" fill="currentColor" />
+                    </div>
+                  </div>
+                  <Image
+                    src={course.thumbnail}
+                    alt={course.title}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="mb-3 flex items-center gap-4 text-xs font-medium text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5" />
+                      {course.duration}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <BarChart className="h-3.5 w-3.5" />
+                      {course.level}
+                    </div>
+                  </div>
+                  <h3 className="line-clamp-2 text-xl font-bold leading-snug transition-colors group-hover:text-primary">
+                    {course.title}
+                  </h3>
+                  <div className="mt-4 flex items-center gap-3 border-t pt-4">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs">
+                      {course.instructor.charAt(0)}
+                    </div>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {course.instructor}
+                    </span>
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
+          <Button variant="outline" className="mt-6 w-full sm:hidden">
+            Tümünü Gör
+          </Button>
         </section>
 
-        {isEmpty ? (
-          <section className="rounded-3xl border border-dashed bg-muted/20 px-6 py-14 text-center sm:px-10">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-              <WandSparkles className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-8 px-4 sm:px-0">
+          {/* LEARNING PATHS (Öğrenme Yolları) - Left Column */}
+          <div className="lg:col-span-8 space-y-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+                  <Map className="h-7 w-7 text-emerald-500" aria-hidden="true" />
+                  {t('pathsHeading')}
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">{t('pathsSubheading')}</p>
+              </div>
             </div>
-            <h2 className="mt-5 text-xl font-bold tracking-tight">{t('emptyTitle')}</h2>
-            <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
-              {t('emptyBody')}
-            </p>
-            <Button asChild className="brand-gradient mt-6 min-h-11 shadow-md">
-              <Link href="/" prefetch={false}>
-                {t('browseTools')}
-                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-              </Link>
-            </Button>
-          </section>
-        ) : null}
 
-        {/* Learning paths */}
-        <section aria-labelledby="learn-paths-heading">
-          <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2
-                id="learn-paths-heading"
-                className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
-              >
-                <Map className="h-7 w-7 text-primary" aria-hidden="true" />
-                {t('pathsHeading')}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">{t('pathsSubheading')}</p>
-            </div>
-          </div>
-
-          {hasPaths ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-6">
-              {learningPaths.map((path) => (
-                <Link
-                  key={path.slug}
-                  href={`/koleksiyonlar/${path.slug}`}
-                  className="group block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  prefetch={false}
-                >
-                  <Card className="glass-panel h-full overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg">
-                    <CardHeader className="space-y-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary" className="font-semibold">
-                          <Map className="mr-1 h-3 w-3" aria-hidden="true" />
-                          {t('pathsHeading')}
-                        </Badge>
-                        {path.toolsCount > 0 ? (
-                          <Badge variant="outline">
-                            {t('toolsCount', { count: path.toolsCount })}
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <CardTitle className="text-lg leading-snug transition-colors group-hover:text-primary sm:text-xl">
-                        {path.title}
-                      </CardTitle>
-                      <CardDescription className="line-clamp-2">
-                        {path.description || ''}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="mt-auto flex items-center justify-between gap-3 pt-0">
-                      <p className="truncate text-xs text-muted-foreground">
-                        {t('createdBy', {
-                          name: path.authorUsername || t('unknownAuthor'),
-                        })}
-                      </p>
-                      <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary">
-                        {t('openPath')}
-                        <ArrowRight
-                          className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
-                          aria-hidden="true"
-                        />
-                      </span>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <EmptySection message={t('pathsEmpty')} />
-          )}
-        </section>
-
-        {/* Guides */}
-        <section aria-labelledby="learn-guides-heading">
-          <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2
-                id="learn-guides-heading"
-                className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
-              >
-                <BookOpen className="h-7 w-7 text-primary" aria-hidden="true" />
-                {t('guidesHeading')}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">{t('guidesSubheading')}</p>
-            </div>
-            <Button asChild variant="ghost" size="sm" className="self-start sm:self-auto">
-              <Link href="/blog" prefetch={false}>
-                {t('viewAllBlog')}
-                <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
-
-          {hasGuides ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {guides.map((post) => {
-                const publishedLabel = formatDate(post.published_at, locale);
-                return (
+            {hasPaths ? (
+              <div className="grid gap-4 sm:gap-6">
+                {learningPaths.map((path, idx) => (
                   <Link
-                    key={post.slug}
-                    href={`/blog/${post.slug}`}
-                    className="group block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    prefetch={false}
+                    key={path.slug}
+                    href={`/koleksiyonlar/${path.slug}`}
+                    className="group block rounded-2xl border bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/30 hover:shadow-md"
                   >
-                    <Card className="glass-panel h-full overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-xl">
+                        {String(idx + 1).padStart(2, '0')}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold leading-snug transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+                          {path.title}
+                        </h3>
+                        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                          {path.description || ''}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center justify-between sm:flex-col sm:items-end gap-2 border-t pt-4 sm:border-0 sm:pt-0">
+                        <Badge variant="secondary" className="font-semibold bg-muted">
+                          {path.toolsCount} Araç
+                        </Badge>
+                        <span className="flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                          İncele{' '}
+                          <ArrowRight className="ml-1 h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <EmptySection message={t('pathsEmpty')} />
+            )}
+          </div>
+
+          {/* GUIDES (Rehberler) - Right Column Sidebar */}
+          <div className="lg:col-span-4 space-y-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="flex items-center gap-3 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+                  <BookOpen className="h-7 w-7 text-blue-500" aria-hidden="true" />
+                  {t('guidesHeading')}
+                </h2>
+              </div>
+            </div>
+
+            {hasGuides ? (
+              <div className="flex flex-col gap-4">
+                {guides.slice(0, 4).map((post) => {
+                  const publishedLabel = formatDate(post.published_at, locale);
+                  return (
+                    <Link
+                      key={post.slug}
+                      href={`/blog/${post.slug}`}
+                      className="group flex gap-4 rounded-2xl p-3 hover:bg-muted/50 transition-colors"
+                    >
                       {post.featured_image_url ? (
-                        <div className="relative aspect-video overflow-hidden bg-muted">
+                        <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-muted">
                           <Image
                             src={post.featured_image_url}
                             alt={post.title}
                             fill
                             className="object-cover transition-transform duration-500 group-hover:scale-105"
-                            sizes="(max-width: 768px) 100vw, 50vw"
+                            sizes="100px"
                           />
                         </div>
                       ) : (
-                        <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-indigo-950/20 via-muted to-purple-800/20">
-                          <BookOpen
-                            className="h-10 w-10 text-muted-foreground/60"
-                            aria-hidden="true"
-                          />
+                        <div className="flex h-20 w-24 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
+                          <BookOpen className="h-6 w-6 text-blue-500/50" />
                         </div>
                       )}
-                      <CardHeader className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant="outline" className="font-semibold">
-                            {t('guidesHeading')}
-                          </Badge>
-                          {publishedLabel ? (
-                            <span className="text-xs text-muted-foreground">{publishedLabel}</span>
-                          ) : null}
-                        </div>
-                        <CardTitle className="text-lg leading-snug transition-colors group-hover:text-primary sm:text-xl">
+                      <div className="flex flex-col justify-center">
+                        <h4 className="line-clamp-2 text-sm font-bold leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400">
                           {post.title}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <p className="line-clamp-3 text-sm text-muted-foreground">
-                          {post.description || ''}
-                        </p>
-                        <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                          {t('readGuide')}
-                          <ArrowRight
-                            className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
-                            aria-hidden="true"
-                          />
-                        </span>
-                      </CardContent>
-                    </Card>
+                        </h4>
+                        {publishedLabel && (
+                          <span className="mt-1 text-[11px] font-medium text-muted-foreground">
+                            {publishedLabel}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+                <Button asChild variant="outline" className="mt-2 w-full rounded-xl border-dashed">
+                  <Link href="/blog">
+                    {t('viewAllBlog')}
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <EmptySection message={t('guidesEmpty')} />
-          )}
-        </section>
+                </Button>
+              </div>
+            ) : (
+              <EmptySection message={t('guidesEmpty')} />
+            )}
 
-        <section className="border-t pt-10 sm:pt-14">
+            {/* Quick Starts Widget */}
+            <div className="rounded-3xl border bg-gradient-to-br from-muted/50 to-muted/10 p-6 shadow-sm">
+              <h3 className="text-lg font-bold mb-4">{t('quickStartHeading')}</h3>
+              <div className="flex flex-col gap-2">
+                {quickStarts.map(({ href, label, icon: Icon, className }) => (
+                  <Button
+                    key={href}
+                    asChild
+                    variant="ghost"
+                    className="w-full justify-start gap-3 rounded-xl bg-background/50 hover:bg-background shadow-sm"
+                  >
+                    <Link href={href} prefetch={false}>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                        <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+                      </div>
+                      <span className="font-semibold">{label}</span>
+                    </Link>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section className="border-t pt-10 sm:pt-14 px-4 sm:px-0">
           <NewsletterSignup />
         </section>
       </div>
@@ -401,8 +472,13 @@ export default async function LearningHubPage({ params }) {
 
 function EmptySection({ message }) {
   return (
-    <div className="rounded-2xl border border-dashed bg-muted/20 px-5 py-10 text-center">
-      <p className="mx-auto max-w-md text-sm leading-6 text-muted-foreground">{message}</p>
+    <div className="rounded-3xl border border-dashed bg-muted/10 px-5 py-12 text-center">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted/50 mb-4">
+        <WandSparkles className="h-6 w-6 text-muted-foreground" />
+      </div>
+      <p className="mx-auto max-w-md text-sm font-medium leading-6 text-muted-foreground">
+        {message}
+      </p>
     </div>
   );
 }
