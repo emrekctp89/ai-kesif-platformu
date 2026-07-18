@@ -59,6 +59,7 @@ export function MobileNav({ user, isProUser }) {
         { href: '/kesfet', label: t('discover'), icon: Compass },
         { href: '/karsilastir', label: t('compare'), icon: GitCompareArrows },
         { href: '/tavsiye', label: t('aiRecommend'), icon: Lightbulb },
+        { href: '/workmind', label: t('workmind'), icon: BrainCircuit },
         { href: '/random-tools', label: t('randomTools'), icon: Dice5 },
         { href: '/koleksiyonlar', label: t('collections'), icon: FolderOpen },
         { href: '/arastirma', label: t('research'), icon: FlaskConical },

@@ -131,7 +131,23 @@ export function normalizeToolUrl(value) {
 
 export function inferPlatformsFromLink(link) {
   if (!link) return null;
-  return ['Web'];
+  const text = String(link || '').toLowerCase();
+  const platforms = new Set(['Web']);
+
+  if (text.includes('apps.apple.com') || text.includes('itunes.apple.com')) {
+    platforms.add('iOS');
+  }
+  if (text.includes('play.google.com')) {
+    platforms.add('Android');
+  }
+  if (text.includes('chrome.google.com/webstore') || text.includes('chromewebstore.google.com')) {
+    platforms.add('Chrome Uzantısı');
+  }
+  if (text.includes('microsoft.com/store') || text.includes('apps.microsoft.com')) {
+    platforms.add('Windows');
+  }
+
+  return [...platforms];
 }
 
 export function inferPricingModel(description, link = '') {

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Select,
   SelectContent,
@@ -11,16 +12,17 @@ import {
 } from '@/components/ui/select';
 
 export function SortSelect({ value, onValueChange }) {
+  const t = useTranslations('Homepage');
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="w-full md:w-[180px]">
-        <SelectValue placeholder="Sırala..." />
+        <SelectValue placeholder={t('sortPlaceholder')} />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          <SelectItem value="newest">En Yeni</SelectItem>
-          <SelectItem value="rating">En Yüksek Puanlı</SelectItem>
-          <SelectItem value="popularity">En Çok Oylanan</SelectItem>
+          <SelectItem value="newest">{t('sortNewest')}</SelectItem>
+          <SelectItem value="rating">{t('sortRating')}</SelectItem>
+          <SelectItem value="popularity">{t('sortPopularity')}</SelectItem>
         </SelectGroup>
       </SelectContent>
     </Select>

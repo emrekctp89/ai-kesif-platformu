@@ -6,7 +6,7 @@ import { FeaturedTools } from '@/components/FeaturedTools';
 import { ToolOfTheDay } from '@/components/ToolOfTheDay';
 import { TrendingTools } from '@/components/TrendingTools';
 import { CategoryGrid } from '@/components/CategoryGrid';
-import { sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
+import { filterPrimaryCategories, sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { getTranslations } from 'next-intl/server';
 import { getSiteOrigin } from '@/utils/siteUrl';
@@ -34,7 +34,9 @@ async function getPageData(searchParams) {
 
   // Client Component props must be serializable — pass an array, not a Set.
   const favoriteToolIds = favorites?.map((f) => f.tool_id).filter(Boolean) || [];
-  const categories = sortCategoriesByCanonicalOrder(categoriesResult.data || []);
+  const categories = sortCategoriesByCanonicalOrder(
+    filterPrimaryCategories(categoriesResult.data || [])
+  );
 
   return {
     user,

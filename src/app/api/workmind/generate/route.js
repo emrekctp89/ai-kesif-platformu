@@ -1,65 +1,177 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 
-const apiKey = process.env.GEMINI_API_KEY;
-const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+import { PRIMARY_CATEGORIES } from '@/lib/categoryTaxonomy';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const GEMINI_MODELS = [
+  process.env.GEMINI_TEXT_MODEL,
+  'gemini-flash-latest',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+].filter(Boolean);
+
+function parseJsonObject(text) {
+  const raw = String(text || '').trim();
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fenced?.[1] || raw;
+  const firstBrace = candidate.indexOf('{');
+  const lastBrace = candidate.lastIndexOf('}');
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    throw new Error('Model geçerli JSON döndürmedi.');
+  }
+  return JSON.parse(candidate.slice(firstBrace, lastBrace + 1));
+}
+
+function normalizeWorkflow(data) {
+  const nodes = Array.isArray(data?.nodes) ? data.nodes : [];
+  const edges = Array.isArray(data?.edges) ? data.edges : [];
+
+  const cleanNodes = nodes
+    .map((node, index) => {
+      const id = String(node?.id || `step-${index + 1}`).slice(0, 40);
+      const label = String(node?.label || `Adım ${index + 1}`)
+        .trim()
+        .slice(0, 80);
+      const description = String(node?.description || '')
+        .trim()
+        .slice(0, 220);
+      const categorySlug = String(node?.categorySlug || 'diger')
+        .trim()
+        .toLowerCase()
+        .slice(0, 80);
+
+      if (!label) return null;
+      return { id, label, description, categorySlug };
+    })
+    .filter(Boolean)
+    .slice(0, 6);
+
+  const nodeIds = new Set(cleanNodes.map((n) => n.id));
+  let cleanEdges = edges
+    .map((edge, index) => {
+      const source = String(edge?.source || '');
+      const target = String(edge?.target || '');
+      if (!nodeIds.has(source) || !nodeIds.has(target) || source === target) return null;
+      return {
+        id: String(edge?.id || `e-${source}-${target}-${index}`),
+        source,
+        target,
+      };
+    })
+    .filter(Boolean);
+
+  // Ensure a simple chain if model omitted edges
+  if (!cleanEdges.length && cleanNodes.length > 1) {
+    cleanEdges = cleanNodes.slice(0, -1).map((node, index) => ({
+      id: `e-${node.id}-${cleanNodes[index + 1].id}`,
+      source: node.id,
+      target: cleanNodes[index + 1].id,
+    }));
+  }
+
+  return { nodes: cleanNodes, edges: cleanEdges };
+}
 
 export async function POST(req) {
-  if (!genAI) {
-    return NextResponse.json({ error: 'Gemini API key is not configured.' }, { status: 500 });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: 'Gemini API anahtarı yapılandırılmamış.' }, { status: 500 });
   }
 
   try {
-    const { prompt } = await req.json();
+    const body = await req.json();
+    const prompt = String(body?.prompt || '').trim();
 
-    if (!prompt) {
-      return NextResponse.json({ error: 'Prompt is required.' }, { status: 400 });
+    if (prompt.length < 8) {
+      return NextResponse.json(
+        { error: 'Lütfen hedefini en az birkaç kelimeyle yaz.' },
+        { status: 400 }
+      );
     }
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash', // Using flash for speed
-      generationConfig: {
-        responseMimeType: 'application/json',
-      },
-    });
+    if (prompt.length > 800) {
+      return NextResponse.json({ error: 'Prompt çok uzun (max 800 karakter).' }, { status: 400 });
+    }
 
-    const systemInstruction = `
-You are an expert AI workflow architect. Your job is to take a user's request (e.g. "I want to start a podcast") and convert it into a step-by-step workflow of AI tools.
-You must return a valid JSON object matching this schema:
+    const categoryList = PRIMARY_CATEGORIES.map((c) => `${c.slug} (${c.name})`).join(', ');
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    const systemInstruction = `Sen bir AI iş akışı mimarısın (Workmind BETA).
+Kullanıcının hedefini 3-6 adımlık pratik bir iş akışına böl.
+Her adım için platformdaki bir kategori slug'ı seç.
+
+İzinli categorySlug değerleri:
+${categoryList}
+
+Sadece geçerli JSON döndür:
 {
   "nodes": [
     {
-      "id": "string (unique)",
-      "label": "string (title of the step)",
-      "description": "string (short description of what to do)",
-      "categorySlug": "string (a generic slug for the tool category, e.g. 'yazi-ve-icerik-uretimi', 'ses-ve-muzik-uretimi', 'gorsel-uretimi', 'video-uretimi', 'kodlama-ve-yazilim', 'pazarlama-ve-seo', 'uretkenlik', 'egitim')"
+      "id": "step-1",
+      "label": "Kısa adım başlığı",
+      "description": "Bu adımda ne yapılacağını 1-2 cümleyle anlat",
+      "categorySlug": "izinli-slug"
     }
   ],
   "edges": [
-    {
-      "id": "string",
-      "source": "string (node id)",
-      "target": "string (node id)"
-    }
+    { "id": "e1", "source": "step-1", "target": "step-2" }
   ]
 }
 
-Create a linear or slightly branching workflow (max 5-6 nodes). The categorySlug should loosely match typical AI tool categories.
-Example categories: 'yazi-ve-icerik-uretimi', 'ses-ve-muzik-uretimi', 'video-uretimi', 'gorsel-uretimi', 'kodlama-ve-yazilim', 'pazarlama-ve-seo', 'arastirma-ve-veri-analizi', 'uretkenlik', 'egitim'.
-Respond ONLY with the JSON object.
-    `;
+Kurallar:
+- categorySlug yalnızca izinli listeden olmalı; emin değilsen "diger"
+- Linear veya hafif dallı akış
+- Uydurma araç adı yazma; sadece adımlar
+- Türkçe label/description
+- En fazla 6 node`;
 
-    const result = await model.generateContent(`${systemInstruction}\n\nUser Request: ${prompt}`);
-    const response = await result.response;
-    const text = response.text();
+    let lastError = null;
+    let workflowData = null;
 
-    const workflowData = JSON.parse(text);
+    for (const modelName of GEMINI_MODELS) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            responseMimeType: 'application/json',
+          },
+        });
+        const result = await model.generateContent(
+          `${systemInstruction}\n\nKullanıcı hedefi: ${prompt}`
+        );
+        const text = result?.response?.text?.() || '';
+        workflowData = normalizeWorkflow(parseJsonObject(text));
+        if (workflowData.nodes.length > 0) break;
+      } catch (err) {
+        lastError = err;
+      }
+    }
 
-    return NextResponse.json(workflowData);
+    if (!workflowData?.nodes?.length) {
+      console.error('Workmind generate failed:', lastError);
+      return NextResponse.json(
+        {
+          error:
+            'İş akışı üretilemedi. Workmind beta aşamasında; lütfen farklı bir ifadeyle tekrar dene.',
+        },
+        { status: 502 }
+      );
+    }
+
+    return NextResponse.json({
+      ...workflowData,
+      meta: {
+        beta: true,
+        disclaimer: 'Öneriler otomatik üretilir; sonuçlar hatalı veya eksik olabilir.',
+      },
+    });
   } catch (error) {
     console.error('Workmind generate error:', error);
     return NextResponse.json(
-      { error: 'Failed to generate workflow. Please try again.' },
+      { error: 'İş akışı üretilemedi. Lütfen tekrar dene.' },
       { status: 500 }
     );
   }

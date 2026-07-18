@@ -4,6 +4,7 @@ import { slugify } from '@/utils/slugify';
 import { embedGeminiText } from '@/utils/gemini';
 import { getSiteOrigin } from '@/utils/siteUrl';
 import { buildCategoryLookupMap, normalizeCategoryLookupKey } from '@/lib/categoryLookup';
+import { isPrimaryCategorySlug } from '@/lib/categoryTaxonomy';
 import {
   inferPlatformsFromLink,
   inferPricingModel,
@@ -28,13 +29,7 @@ const GEMINI_MODELS = [
   'gemini-2.0-flash',
   'gemini-1.5-flash',
 ].filter(Boolean);
-const ALLOWED_PRICING_MODELS = new Set([
-  'Ücretsiz',
-  'Freemium',
-  'Abonelik',
-  'Tek Seferlik Ödeme',
-  'Bilinmiyor',
-]);
+const ALLOWED_PRICING_MODELS = new Set(['Ücretsiz', 'Freemium', 'Abonelik', 'Tek Seferlik Ödeme']);
 const ALLOWED_PLATFORMS = new Set([
   'Web',
   'iOS',
@@ -67,8 +62,11 @@ function resolveBoolean(value, fallback = false) {
 
 function normalizePricingModel(value, description, link) {
   const normalized = normalizeTextField(value || '');
+  if (normalized === 'Bilinmiyor') {
+    return inferPricingModel(description, link) || 'Freemium';
+  }
   if (ALLOWED_PRICING_MODELS.has(normalized)) return normalized;
-  return inferPricingModel(description, link) || 'Bilinmiyor';
+  return inferPricingModel(description, link) || 'Freemium';
 }
 
 function normalizePlatforms(value, link) {
@@ -353,7 +351,7 @@ Görev:
 - Link mutlaka aracın resmî ana sayfası veya resmî ürün sayfası olmalı.
 - Açıklamalar Türkçe, net ve kullanıcı faydasına odaklı olmalı.
 - Araç kartı ve detay sayfası için fiyat türü, platform, seviye ve teknik detayları hazır doldur.
-- Bilmediğin fiyat bilgisini uydurma; emin değilsen "Bilinmiyor" yaz.
+- Bilmediğin fiyat bilgisini uydurma; emin değilsen "Freemium" (çoğu AI aracı için yaygın) yaz.
 - Mevcut araç listesindeki ürünleri tekrar önerme.
 
 Platform kategorileri:
@@ -370,7 +368,7 @@ ${candidateCount} aday üret. Sadece JSON döndür:
       "description": "Türkçe, 80-220 karakter arası açıklama",
       "link": "https://official-site.example",
       "category": "Platform kategorilerinden en uygunu",
-      "pricing_model": "Ücretsiz | Freemium | Abonelik | Tek Seferlik Ödeme | Bilinmiyor",
+      "pricing_model": "Ücretsiz | Freemium | Abonelik | Tek Seferlik Ödeme",
       "platforms": ["Web | iOS | Android | Windows | macOS | Linux | Chrome Uzantısı"],
       "tier": "Normal",
       "features": ["Kart ve detay sayfasında gösterilecek 3-5 temel özellik"],
@@ -541,9 +539,13 @@ export async function runScheduledToolDiscovery(options = {}) {
 
   if (categoriesError) throw new Error(`Kategoriler okunamadı: ${categoriesError.message}`);
   if (toolsError) throw new Error(`Mevcut araçlar okunamadı: ${toolsError.message}`);
-  if (!categories?.length) throw new Error('Kategori bulunamadı.');
 
-  const categoriesByName = buildCategoryLookupMap(categories);
+  const primaryCategories = (categories || []).filter((category) =>
+    isPrimaryCategorySlug(category.slug)
+  );
+  if (!primaryCategories.length) throw new Error('Primary kategori bulunamadı.');
+
+  const categoriesByName = buildCategoryLookupMap(primaryCategories);
   const existingNames = new Set(
     (existingTools || []).map((tool) =>
       String(tool.name || '')
@@ -555,7 +557,7 @@ export async function runScheduledToolDiscovery(options = {}) {
   const existingSlugs = new Set((existingTools || []).map((tool) => tool.slug).filter(Boolean));
 
   const rawCandidates = await generateCandidatesWithGemini({
-    categories,
+    categories: primaryCategories,
     existingTools: existingTools || [],
     candidateCount,
   });
