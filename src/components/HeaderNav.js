@@ -43,7 +43,6 @@ export function HeaderNav({
   ];
 
   const moreExplore = [
-    { href: '/workmind', label: 'Workmind' },
     { href: '/tavsiye', label: t('aiRecommend') },
     { href: '/workmind', label: t('workmind') },
     { href: '/random-tools', label: t('randomTools') },

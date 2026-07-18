@@ -1,5 +1,4 @@
 import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -30,7 +29,8 @@ import { NewsletterSignup } from '@/components/NewsletterSignup';
 import { generatePageMetadata } from '@/utils/seo';
 import { getSiteOrigin } from '@/utils/siteUrl';
 
-export const revalidate = 3600;
+// Public page uses auth cookies via createClient — force dynamic to avoid static/cookies clashes.
+export const dynamic = 'force-dynamic';
 
 /** Kategori slug → öğrenme rotası tanımı (i18n key + ikon) */
 const CURATED_TRACKS = [
@@ -93,102 +93,121 @@ const CURATED_TRACKS = [
 ];
 
 async function getGuides() {
-  const supabase = await createClient(await cookies());
-  const { data, error } = await supabase
-    .from('posts')
-    .select('title, slug, description, featured_image_url, published_at')
-    .eq('status', 'Yayınlandı')
-    .eq('type', 'Rehber')
-    .order('published_at', { ascending: false });
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('posts')
+      .select('title, slug, description, featured_image_url, published_at')
+      .eq('status', 'Yayınlandı')
+      .eq('type', 'Rehber')
+      .order('published_at', { ascending: false });
 
-  if (error) {
-    console.error('Rehberler çekilirken hata:', error);
+    if (error) {
+      console.error('Rehberler çekilirken hata:', error);
+      return [];
+    }
+    return data || [];
+  } catch (error) {
+    console.error('Rehberler beklenmeyen hata:', error);
     return [];
   }
-  return data || [];
 }
 
 async function getLearningPaths() {
-  const supabase = await createClient(await cookies());
+  try {
+    const supabase = await createClient();
 
-  let { data, error } = await supabase
-    .from('collections')
-    .select('title, slug, description, profiles(username), collection_tools(count)')
-    .eq('is_public', true)
-    .eq('type', 'Öğrenme Yolu')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    const fallback = await supabase
+    let { data, error } = await supabase
       .from('collections')
-      .select('title, slug, description, profiles(username)')
+      .select('title, slug, description, profiles(username), collection_tools(count)')
       .eq('is_public', true)
       .eq('type', 'Öğrenme Yolu')
       .order('created_at', { ascending: false });
 
-    data = fallback.data;
-    error = fallback.error;
-  }
+    if (error) {
+      const fallback = await supabase
+        .from('collections')
+        .select('title, slug, description, profiles(username)')
+        .eq('is_public', true)
+        .eq('type', 'Öğrenme Yolu')
+        .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Öğrenme yolları çekilirken hata:', error);
+      data = fallback.data;
+      error = fallback.error;
+    }
+
+    if (error) {
+      console.error('Öğrenme yolları çekilirken hata:', error);
+      return [];
+    }
+
+    return (data || []).map((path) => {
+      const countRow = Array.isArray(path.collection_tools) ? path.collection_tools[0] : null;
+      const toolsCount = Number(countRow?.count) || 0;
+      const profile = Array.isArray(path.profiles) ? path.profiles[0] : path.profiles;
+      return {
+        title: path.title,
+        slug: path.slug,
+        description: path.description,
+        authorUsername: profile?.username || null,
+        toolsCount,
+      };
+    });
+  } catch (error) {
+    console.error('Öğrenme yolları beklenmeyen hata:', error);
     return [];
   }
-
-  return (data || []).map((path) => {
-    const countRow = Array.isArray(path.collection_tools) ? path.collection_tools[0] : null;
-    const toolsCount = Number(countRow?.count) || 0;
-    const profile = Array.isArray(path.profiles) ? path.profiles[0] : path.profiles;
-    return {
-      title: path.title,
-      slug: path.slug,
-      description: path.description,
-      authorUsername: profile?.username || null,
-      toolsCount,
-    };
-  });
 }
 
 async function getCuratedTracksWithTools() {
-  const supabase = await createClient(await cookies());
-  const slugs = CURATED_TRACKS.map((track) => track.slug);
+  try {
+    const supabase = await createClient();
+    const slugs = CURATED_TRACKS.map((track) => track.slug);
 
-  const { data: categories, error } = await supabase
-    .from('categories')
-    .select('id, name, slug')
-    .in('slug', slugs);
+    const { data: categories, error } = await supabase
+      .from('categories')
+      .select('id, name, slug')
+      .in('slug', slugs);
 
-  if (error || !categories?.length) {
-    if (error) console.error('Kategori öğrenme rotaları hatası:', error);
+    if (error || !categories?.length) {
+      if (error) console.error('Kategori öğrenme rotaları hatası:', error);
+      return CURATED_TRACKS.map((track) => ({
+        ...track,
+        categoryName: null,
+        tools: [],
+      }));
+    }
+
+    const bySlug = new Map(categories.map((category) => [category.slug, category]));
+
+    const tracks = await Promise.all(
+      CURATED_TRACKS.map(async (track) => {
+        const category = bySlug.get(track.slug);
+        if (!category) {
+          return { ...track, categoryName: null, tools: [] };
+        }
+
+        const { data: tools } = await supabase
+          .from('tools')
+          .select('name, slug, description, pricing_model')
+          .eq('category_id', category.id)
+          .eq('is_approved', true)
+          .order('updated_at', { ascending: false })
+          .limit(4);
+
+        return {
+          ...track,
+          categoryName: category.name,
+          tools: tools || [],
+        };
+      })
+    );
+
+    return tracks.filter((track) => track.tools.length > 0 || track.categoryName);
+  } catch (error) {
+    console.error('Kategori rotaları beklenmeyen hata:', error);
     return CURATED_TRACKS.map((track) => ({ ...track, categoryName: null, tools: [] }));
   }
-
-  const bySlug = new Map(categories.map((category) => [category.slug, category]));
-
-  const tracks = await Promise.all(
-    CURATED_TRACKS.map(async (track) => {
-      const category = bySlug.get(track.slug);
-      if (!category) {
-        return { ...track, categoryName: null, tools: [] };
-      }
-
-      const { data: tools } = await supabase
-        .from('tools')
-        .select('name, slug, description, pricing_model')
-        .eq('category_id', category.id)
-        .eq('is_approved', true)
-        .order('updated_at', { ascending: false })
-        .limit(4);
-
-      return {
-        ...track,
-        categoryName: category.name,
-        tools: tools || [],
-      };
-    })
-  );
-
-  return tracks.filter((track) => track.tools.length > 0 || track.categoryName);
 }
 
 function formatDate(value, locale) {
@@ -215,11 +234,19 @@ export async function generateMetadata({ params }) {
 export default async function LearningHubPage({ params }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Learn' });
-  const [guides, learningPaths, curatedTracks] = await Promise.all([
-    getGuides(),
-    getLearningPaths(),
-    getCuratedTracksWithTools(),
-  ]);
+
+  let guides = [];
+  let learningPaths = [];
+  let curatedTracks = [];
+  try {
+    [guides, learningPaths, curatedTracks] = await Promise.all([
+      getGuides(),
+      getLearningPaths(),
+      getCuratedTracksWithTools(),
+    ]);
+  } catch (error) {
+    console.error('Öğren sayfası veri hatası:', error);
+  }
 
   const hasPaths = learningPaths.length > 0;
   const hasGuides = guides.length > 0;
