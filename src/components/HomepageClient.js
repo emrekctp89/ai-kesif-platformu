@@ -304,13 +304,13 @@ export function HomepageClient({
         </section>
       ) : null}
 
+      {customHeader ? <div className="mb-6">{customHeader}</div> : null}
+
       {/* Sticky toolbar — single search instance + filters */}
       <div
         className="sticky top-16 z-40 border-b px-3 py-2.5 text-center sm:px-4
              bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       >
-        {customHeader ? <div className="mb-3">{customHeader}</div> : null}
-
         {!customHeader && !showLandingHero ? (
           <>
             <h1
@@ -328,7 +328,7 @@ export function HomepageClient({
         <div
           className={`grid grid-cols-2 items-center justify-center gap-2 sm:flex sm:gap-2 ${
             !customHeader && !showLandingHero ? 'mt-1.5 sm:mt-2' : ''
-          } ${showLandingHero ? 'mx-auto max-w-3xl' : ''}`}
+          } ${showLandingHero || customHeader ? 'mx-auto max-w-3xl' : ''}`}
         >
           <div className="col-span-2 sm:col-span-1 sm:min-w-0 sm:max-w-xl sm:flex-1">
             <SearchInput key={searchParams.get('search') || 'empty-search'} />
