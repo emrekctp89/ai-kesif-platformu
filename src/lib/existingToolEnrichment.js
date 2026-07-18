@@ -9,13 +9,7 @@ import {
 
 const DEFAULT_LIMIT = 5;
 const MAX_LIMIT = 20;
-const ALLOWED_PRICING_MODELS = new Set([
-  'Ücretsiz',
-  'Freemium',
-  'Abonelik',
-  'Tek Seferlik Ödeme',
-  'Bilinmiyor',
-]);
+const ALLOWED_PRICING_MODELS = new Set(['Ücretsiz', 'Freemium', 'Abonelik', 'Tek Seferlik Ödeme']);
 const ALLOWED_PLATFORMS = new Set([
   'Web',
   'iOS',
@@ -52,8 +46,9 @@ function normalizePlatforms(value, link) {
 
 function normalizePricing(value, description, link) {
   const normalized = normalizeTextField(value || '');
+  if (normalized === 'Bilinmiyor') return null;
   if (ALLOWED_PRICING_MODELS.has(normalized)) return normalized;
-  return inferPricingModel(description, link) || 'Bilinmiyor';
+  return inferPricingModel(description, link) || null;
 }
 
 function buildTechnicalDetails(enrichment) {
@@ -114,7 +109,7 @@ AI Keşif Platformu'ndaki mevcut bir aracın eksik kart ve detay sayfası bilgil
 
 Amaç:
 - Yeni araç keşif pipeline'ı ile aynı kalite seviyesinde Türkçe veri üret.
-- Bilgi uydurma riskini azalt; emin olmadığın fiyat bilgisini "Bilinmiyor" yap.
+- Bilgi uydurma riskini azalt; emin olmadığın fiyat bilgisini boş bırak veya "Freemium" yerine doğru seç.
 - Link resmi ürün sitesiyse, ürünün genel bilinen kullanım alanlarını özetle.
 - Çıktı sadece geçerli JSON olsun.
 
@@ -132,7 +127,7 @@ Mevcut araç:
 JSON şeması:
 {
   "description": "120-320 karakter arası, Türkçe, net ve kartta kullanılabilir açıklama",
-  "pricing_model": "Ücretsiz | Freemium | Abonelik | Tek Seferlik Ödeme | Bilinmiyor",
+  "pricing_model": "Ücretsiz | Freemium | Abonelik | Tek Seferlik Ödeme",
   "platforms": ["Web | iOS | Android | Windows | macOS | Linux | Chrome Uzantısı"],
   "features": ["3-5 temel özellik"],
   "use_cases": ["3-5 kullanım senaryosu"],
@@ -187,15 +182,30 @@ function buildUpdates(tool, enrichment) {
     updates.description = enrichment.description;
   }
 
-  if (!tool.pricing_model && enrichment.pricing_model) {
+  if (
+    !tool.pricing_model &&
+    enrichment.pricing_model &&
+    enrichment.pricing_model !== 'Bilinmiyor'
+  ) {
     updates.pricing_model = enrichment.pricing_model;
   }
 
+  const currentPlatforms = Array.isArray(tool.platforms) ? tool.platforms.filter(Boolean) : [];
+  const isWebOnly =
+    currentPlatforms.length === 0 ||
+    (currentPlatforms.length === 1 && currentPlatforms[0] === 'Web');
   if (
-    (!Array.isArray(tool.platforms) || tool.platforms.length === 0) &&
-    enrichment.platforms?.length
+    enrichment.platforms?.length &&
+    (isWebOnly || enrichment.platforms.length > currentPlatforms.length)
   ) {
-    updates.platforms = enrichment.platforms;
+    // Upgrade sparse/default Web-only metadata when enrichment has richer platforms
+    const enriched = enrichment.platforms;
+    const same =
+      currentPlatforms.length === enriched.length &&
+      currentPlatforms.every((p, i) => p === enriched[i]);
+    if (!same) {
+      updates.platforms = enrichment.platforms;
+    }
   }
 
   if (

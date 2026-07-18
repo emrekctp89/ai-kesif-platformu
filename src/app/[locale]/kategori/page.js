@@ -5,7 +5,7 @@ import { Compass, LayoutGrid, Sparkles } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { CategoryGrid } from '@/components/CategoryGrid';
-import { sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
+import { filterPrimaryCategories, sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
 import { Button } from '@/components/ui/button';
 import { generatePageMetadata } from '@/utils/seo';
 
@@ -19,7 +19,7 @@ async function getCategories() {
     console.error('Kategoriler çekilirken hata:', error);
     return [];
   }
-  return sortCategoriesByCanonicalOrder(data || []);
+  return sortCategoriesByCanonicalOrder(filterPrimaryCategories(data || []));
 }
 
 export async function generateMetadata({ params }) {

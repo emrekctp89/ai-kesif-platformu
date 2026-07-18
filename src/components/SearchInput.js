@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { ArrowRight, LoaderCircle, Search, X } from 'lucide-react';
 import { getSearchSuggestions } from '@/app/actions/tools';
 import ToolIcon from '@/components/ToolIcon';
@@ -10,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { trackEvent } from '@/utils/analytics';
 
 export function SearchInput() {
+  const t = useTranslations('Homepage');
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -124,9 +126,9 @@ export function SearchInput() {
   }, []);
 
   return (
-    <search className="relative w-full" aria-label="Araçlarda ara" ref={containerRef}>
+    <search className="relative w-full" aria-label={t('searchRegionLabel')} ref={containerRef}>
       <label htmlFor="tool-search" className="sr-only">
-        Yapay zeka aracı ara
+        {t('searchLabel')}
       </label>
       <div className="relative">
         <Search
@@ -139,7 +141,7 @@ export function SearchInput() {
           role="combobox"
           autoComplete="off"
           enterKeyHint="search"
-          placeholder="Araç ara… örn. video, kod, ses"
+          placeholder={t('searchPlaceholder')}
           className="block h-9 w-full rounded-lg border border-input bg-background/80 py-1.5 pl-9 pr-9 text-sm shadow-sm backdrop-blur-sm transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 sm:h-9 sm:pl-10"
           value={searchTerm}
           onChange={handleChange}
@@ -177,26 +179,26 @@ export function SearchInput() {
             type="button"
             onClick={handleClear}
             className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label="Aramayı temizle"
+            aria-label={t('searchClear')}
           >
             <X aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         ) : null}
       </div>
       <span id="tool-search-status" className="sr-only" aria-live="polite">
-        {isUpdating ? 'Arama sonuçları güncelleniyor' : 'Arama sonuçları güncel'}
+        {isUpdating ? t('searchUpdating') : t('searchReady')}
       </span>
 
       {showSuggestions && suggestions.length > 0 && (
         <div
           id="tool-search-suggestions"
           role="listbox"
-          aria-label="Önerilen araçlar"
+          aria-label={t('suggestionsLabel')}
           className="glass-panel absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border-primary/20 text-popover-foreground shadow-2xl duration-200 animate-in fade-in slide-in-from-top-2"
         >
           <div className="p-3">
             <h4 className="mb-2 px-2 text-xs font-bold uppercase tracking-wider text-primary">
-              Önerilen Araçlar
+              {t('suggestionsHeading')}
             </h4>
             <div className="flex flex-col gap-1">
               {suggestions.map((tool) => (

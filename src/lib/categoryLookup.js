@@ -2,6 +2,8 @@
  * Kategori adı/slug eşlemesi — discovery, seed ve arama için ortak yardımcı.
  */
 
+import { CATEGORY_MERGE_MAP, resolvePrimarySlug } from '@/lib/categoryTaxonomy';
+
 export function normalizeCategoryLookupKey(value) {
   return String(value || '')
     .trim()
@@ -46,10 +48,31 @@ export function buildCategoryLookupMap(categories = []) {
     addCategoryLookupKeys(map, category);
   }
 
+  // Eski mikro kategori adlarını primary kayıtlara bağla
+  const bySlug = new Map(categories.map((c) => [c.slug, c]));
+  for (const [oldSlug, primarySlug] of Object.entries(CATEGORY_MERGE_MAP)) {
+    const primary = bySlug.get(primarySlug);
+    if (!primary) continue;
+    const normalized = normalizeCategoryLookupKey(oldSlug.replace(/-/g, ' '));
+    if (normalized && !map.has(normalized)) {
+      map.set(normalized, primary);
+    }
+    const slugKey = normalizeCategoryLookupKey(oldSlug);
+    if (slugKey && !map.has(slugKey)) {
+      map.set(slugKey, primary);
+    }
+  }
+
   return map;
 }
 
 export function findCategoryByInput(categories, value) {
   if (!value) return null;
-  return buildCategoryLookupMap(categories).get(normalizeCategoryLookupKey(value)) || null;
+  const map = buildCategoryLookupMap(categories);
+  const direct = map.get(normalizeCategoryLookupKey(value));
+  if (direct) return direct;
+
+  const primarySlug = resolvePrimarySlug(value);
+  if (!primarySlug) return null;
+  return categories.find((c) => c.slug === primarySlug) || null;
 }

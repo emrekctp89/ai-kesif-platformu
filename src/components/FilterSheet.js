@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
   Sheet,
   SheetContent,
@@ -49,6 +50,7 @@ function countActiveFilters(filters) {
 }
 
 export function FilterSheet({ categories, allTags, fixedSearchParams }) {
+  const t = useTranslations('Homepage');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -109,12 +111,12 @@ export function FilterSheet({ categories, allTags, fixedSearchParams }) {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 w-full px-3 text-xs sm:h-9 sm:w-auto sm:text-sm"
+          className="h-9 min-h-9 shrink-0 px-2.5 text-xs sm:px-3 sm:text-sm"
         >
-          <Filter className="mr-2 h-4 w-4" />
-          Filtrele
+          <Filter className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
+          {t('filterTrigger')}
           {appliedFilterCount > 0 && (
-            <Badge variant="secondary" className="ml-2">
+            <Badge variant="secondary" className="ml-1.5 sm:ml-2">
               {appliedFilterCount}
             </Badge>
           )}
@@ -122,15 +124,12 @@ export function FilterSheet({ categories, allTags, fixedSearchParams }) {
       </SheetTrigger>
       <SheetContent side="left" className="w-[92vw] max-w-[400px] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Filtreler</SheetTitle>
-          <SheetDescription>
-            Sonuçları daraltmak için aşağıdaki filtreleri kullanın.
-          </SheetDescription>
+          <SheetTitle>{t('filterTitle')}</SheetTitle>
+          <SheetDescription>{t('filterDescription')}</SheetDescription>
         </SheetHeader>
         {hasFixedCategory && (
           <div className="mt-4 rounded-lg border bg-muted/40 px-3 py-2 text-xs leading-5 text-muted-foreground">
-            Bu kategori sayfasındasın; temizleme işlemi kategori bağlamını korur, yalnızca arama,
-            sıralama ve ek filtreleri kaldırır.
+            {t('fixedCategoryHint')}
           </div>
         )}
         <div className="py-4 space-y-6">
@@ -138,7 +137,7 @@ export function FilterSheet({ categories, allTags, fixedSearchParams }) {
             <>
               <Separator />
               <div className="space-y-2">
-                <Label>Kategori</Label>
+                <Label>{t('categoryHeading')}</Label>
                 <CategorySelect
                   categories={categories}
                   value={tempFilters.category}
@@ -149,7 +148,7 @@ export function FilterSheet({ categories, allTags, fixedSearchParams }) {
           )}
           <Separator />
           <div className="space-y-2">
-            <Label>Sıralama</Label>
+            <Label>{t('sortHeading')}</Label>
             <SortSelect
               value={tempFilters.sort}
               onValueChange={(v) => setTempFilters((f) => ({ ...f, sort: v }))}
@@ -157,7 +156,7 @@ export function FilterSheet({ categories, allTags, fixedSearchParams }) {
           </div>
           <Separator />
           <div className="space-y-2">
-            <Label>Etiketler</Label>
+            <Label>{t('tagsHeading')}</Label>
             <TagFilter
               allTags={allTags}
               selectedTags={tempFilters.tags}
@@ -173,7 +172,7 @@ export function FilterSheet({ categories, allTags, fixedSearchParams }) {
           </div>
           <Separator />
           <div className="space-y-2">
-            <Label>Gelişmiş</Label>
+            <Label>{t('advancedFilters')}</Label>
             <AdvancedFilters
               selectedPricing={tempFilters.pricing}
               selectedPlatforms={tempFilters.platforms}
@@ -183,10 +182,10 @@ export function FilterSheet({ categories, allTags, fixedSearchParams }) {
         </div>
         <SheetFooter className="gap-2 pb-4">
           <Button type="button" variant="ghost" onClick={handleClearFilters}>
-            {hasFixedCategory ? 'Ek filtreleri temizle' : 'Filtreleri temizle'}
+            {hasFixedCategory ? t('clearExtraFilters') : t('clearFilters')}
           </Button>
           <Button onClick={handleApplyFilters}>
-            Filtreleri uygula
+            {t('applyFilters')}
             {pendingFilterCount > 0 && (
               <Badge variant="secondary" className="ml-2">
                 {pendingFilterCount}

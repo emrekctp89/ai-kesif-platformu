@@ -5,12 +5,21 @@ import Image from 'next/image';
 import {
   ArrowRight,
   BookOpen,
+  Bot,
+  Code2,
   Compass,
   GitCompareArrows,
   GraduationCap,
+  ImageIcon,
+  Lightbulb,
   Map,
+  Megaphone,
+  Music,
+  PenTool,
   Sparkles,
+  Video,
   WandSparkles,
+  Zap,
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
@@ -22,6 +31,66 @@ import { generatePageMetadata } from '@/utils/seo';
 import { getSiteOrigin } from '@/utils/siteUrl';
 
 export const revalidate = 3600;
+
+/** Kategori slug → öğrenme rotası tanımı (i18n key + ikon) */
+const CURATED_TRACKS = [
+  {
+    slug: 'chatbotlar',
+    icon: Bot,
+    titleKey: 'trackChatTitle',
+    bodyKey: 'trackChatBody',
+    levelKey: 'levelBeginner',
+  },
+  {
+    slug: 'metin-yazarligi',
+    icon: PenTool,
+    titleKey: 'trackWriteTitle',
+    bodyKey: 'trackWriteBody',
+    levelKey: 'levelBeginner',
+  },
+  {
+    slug: 'gorsel-uretim',
+    icon: ImageIcon,
+    titleKey: 'trackImageTitle',
+    bodyKey: 'trackImageBody',
+    levelKey: 'levelBeginner',
+  },
+  {
+    slug: 'video-uretim',
+    icon: Video,
+    titleKey: 'trackVideoTitle',
+    bodyKey: 'trackVideoBody',
+    levelKey: 'levelIntermediate',
+  },
+  {
+    slug: 'kod-yazilim',
+    icon: Code2,
+    titleKey: 'trackCodeTitle',
+    bodyKey: 'trackCodeBody',
+    levelKey: 'levelIntermediate',
+  },
+  {
+    slug: 'pazarlama',
+    icon: Megaphone,
+    titleKey: 'trackMarketingTitle',
+    bodyKey: 'trackMarketingBody',
+    levelKey: 'levelIntermediate',
+  },
+  {
+    slug: 'uretkenlik',
+    icon: Zap,
+    titleKey: 'trackProductivityTitle',
+    bodyKey: 'trackProductivityBody',
+    levelKey: 'levelBeginner',
+  },
+  {
+    slug: 'ses-muzik',
+    icon: Music,
+    titleKey: 'trackAudioTitle',
+    bodyKey: 'trackAudioBody',
+    levelKey: 'levelIntermediate',
+  },
+];
 
 async function getGuides() {
   const supabase = await createClient(await cookies());
@@ -42,7 +111,6 @@ async function getGuides() {
 async function getLearningPaths() {
   const supabase = await createClient(await cookies());
 
-  // Prefer tool counts; fall back if the nested count select is unavailable.
   let { data, error } = await supabase
     .from('collections')
     .select('title, slug, description, profiles(username), collection_tools(count)')
@@ -81,6 +149,48 @@ async function getLearningPaths() {
   });
 }
 
+async function getCuratedTracksWithTools() {
+  const supabase = await createClient(await cookies());
+  const slugs = CURATED_TRACKS.map((track) => track.slug);
+
+  const { data: categories, error } = await supabase
+    .from('categories')
+    .select('id, name, slug')
+    .in('slug', slugs);
+
+  if (error || !categories?.length) {
+    if (error) console.error('Kategori öğrenme rotaları hatası:', error);
+    return CURATED_TRACKS.map((track) => ({ ...track, categoryName: null, tools: [] }));
+  }
+
+  const bySlug = new Map(categories.map((category) => [category.slug, category]));
+
+  const tracks = await Promise.all(
+    CURATED_TRACKS.map(async (track) => {
+      const category = bySlug.get(track.slug);
+      if (!category) {
+        return { ...track, categoryName: null, tools: [] };
+      }
+
+      const { data: tools } = await supabase
+        .from('tools')
+        .select('name, slug, description, pricing_model')
+        .eq('category_id', category.id)
+        .eq('is_approved', true)
+        .order('updated_at', { ascending: false })
+        .limit(4);
+
+      return {
+        ...track,
+        categoryName: category.name,
+        tools: tools || [],
+      };
+    })
+  );
+
+  return tracks.filter((track) => track.tools.length > 0 || track.categoryName);
+}
+
 function formatDate(value, locale) {
   if (!value) return null;
   return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'tr-TR', {
@@ -105,11 +215,15 @@ export async function generateMetadata({ params }) {
 export default async function LearningHubPage({ params }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Learn' });
-  const [guides, learningPaths] = await Promise.all([getGuides(), getLearningPaths()]);
+  const [guides, learningPaths, curatedTracks] = await Promise.all([
+    getGuides(),
+    getLearningPaths(),
+    getCuratedTracksWithTools(),
+  ]);
 
   const hasPaths = learningPaths.length > 0;
   const hasGuides = guides.length > 0;
-  const isEmpty = !hasPaths && !hasGuides;
+  const hasTracks = curatedTracks.length > 0;
   const siteUrl = getSiteOrigin();
 
   const structuredData = {
@@ -153,6 +267,13 @@ export default async function LearningHubPage({ params }) {
     },
   ];
 
+  const steps = [
+    { title: t('step1Title'), body: t('step1Body'), icon: Compass },
+    { title: t('step2Title'), body: t('step2Body'), icon: Lightbulb },
+    { title: t('step3Title'), body: t('step3Body'), icon: GitCompareArrows },
+    { title: t('step4Title'), body: t('step4Body'), icon: WandSparkles },
+  ];
+
   return (
     <>
       <script
@@ -182,12 +303,76 @@ export default async function LearningHubPage({ params }) {
 
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
               <span className="inline-flex min-h-9 items-center rounded-full border border-border/60 bg-background/70 px-3.5 py-1.5 text-sm font-semibold backdrop-blur-sm">
+                {t('statsTracks', { count: curatedTracks.length })}
+              </span>
+              <span className="inline-flex min-h-9 items-center rounded-full border border-border/60 bg-background/70 px-3.5 py-1.5 text-sm font-semibold backdrop-blur-sm">
                 {t('statsPaths', { count: learningPaths.length })}
               </span>
               <span className="inline-flex min-h-9 items-center rounded-full border border-border/60 bg-background/70 px-3.5 py-1.5 text-sm font-semibold backdrop-blur-sm">
                 {t('statsGuides', { count: guides.length })}
               </span>
             </div>
+
+            <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <Button
+                asChild
+                size="lg"
+                className="ai-tavsiye-gradient min-h-12 rounded-2xl px-6 shadow-xl"
+              >
+                <Link href="/tavsiye" prefetch={false} className="font-semibold">
+                  <Sparkles className="mr-2 h-5 w-5" aria-hidden="true" />
+                  {t('ctaRecommend')}
+                  <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="glass-button min-h-12 rounded-2xl px-6"
+              >
+                <Link href="/kategori" prefetch={false} className="font-semibold">
+                  <Compass className="mr-2 h-5 w-5" aria-hidden="true" />
+                  {t('ctaCategories')}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* How to learn on the platform */}
+        <section aria-labelledby="learn-steps-heading">
+          <div className="mb-5 sm:mb-6">
+            <h2
+              id="learn-steps-heading"
+              className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+            >
+              {t('stepsHeading')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t('stepsSubheading')}</p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {steps.map(({ title, body, icon: Icon }, index) => (
+              <Card
+                key={title}
+                className="glass-panel border-border/50 transition-all hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <CardHeader className="space-y-3 pb-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="rounded-xl border bg-background p-2.5 shadow-sm">
+                      <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                    </div>
+                    <span className="text-xs font-bold text-muted-foreground">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </section>
 
@@ -220,25 +405,92 @@ export default async function LearningHubPage({ params }) {
           </div>
         </section>
 
-        {isEmpty ? (
-          <section className="rounded-3xl border border-dashed bg-muted/20 px-6 py-14 text-center sm:px-10">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-              <WandSparkles className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
+        {/* Curated category tracks with live tools */}
+        {hasTracks ? (
+          <section aria-labelledby="learn-tracks-heading">
+            <div className="mb-5 sm:mb-6">
+              <h2
+                id="learn-tracks-heading"
+                className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+              >
+                <Map className="h-7 w-7 text-primary" aria-hidden="true" />
+                {t('tracksHeading')}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t('tracksSubheading')}</p>
             </div>
-            <h2 className="mt-5 text-xl font-bold tracking-tight">{t('emptyTitle')}</h2>
-            <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
-              {t('emptyBody')}
-            </p>
-            <Button asChild className="brand-gradient mt-6 min-h-11 shadow-md">
-              <Link href="/" prefetch={false}>
-                {t('browseTools')}
-                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-              </Link>
-            </Button>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 sm:gap-5">
+              {curatedTracks.map((track) => {
+                const Icon = track.icon;
+                return (
+                  <Card
+                    key={track.slug}
+                    className="glass-panel overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
+                  >
+                    <CardHeader className="space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="rounded-xl border bg-background p-2 shadow-sm">
+                          <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+                        </div>
+                        <Badge variant="secondary" className="font-semibold">
+                          {t(track.levelKey)}
+                        </Badge>
+                        {track.categoryName ? (
+                          <Badge variant="outline">{track.categoryName}</Badge>
+                        ) : null}
+                      </div>
+                      <CardTitle className="text-lg leading-snug sm:text-xl">
+                        {t(track.titleKey)}
+                      </CardTitle>
+                      <CardDescription className="line-clamp-3">{t(track.bodyKey)}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-0">
+                      {track.tools.length > 0 ? (
+                        <ul className="space-y-2">
+                          {track.tools.map((tool) => (
+                            <li key={tool.slug}>
+                              <Link
+                                href={`/tool/${tool.slug}`}
+                                prefetch={false}
+                                className="group/tool flex items-start justify-between gap-2 rounded-lg border border-transparent bg-muted/30 px-3 py-2 text-sm transition-colors hover:border-primary/30 hover:bg-muted/50"
+                              >
+                                <span className="min-w-0">
+                                  <span className="font-semibold text-foreground group-hover/tool:text-primary">
+                                    {tool.name}
+                                  </span>
+                                  {tool.description ? (
+                                    <span className="mt-0.5 block line-clamp-1 text-xs text-muted-foreground">
+                                      {tool.description}
+                                    </span>
+                                  ) : null}
+                                </span>
+                                <ArrowRight
+                                  className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-hover/tool:translate-x-0.5 group-hover/tool:text-primary"
+                                  aria-hidden="true"
+                                />
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">{t('trackNoTools')}</p>
+                      )}
+
+                      <Button asChild variant="outline" size="sm" className="w-full rounded-xl">
+                        <Link href={`/kategori/${track.slug}`} prefetch={false}>
+                          {t('openCategory')}
+                          <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </section>
         ) : null}
 
-        {/* Learning paths */}
+        {/* Community learning paths from DB */}
         <section aria-labelledby="learn-paths-heading">
           <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -301,7 +553,11 @@ export default async function LearningHubPage({ params }) {
               ))}
             </div>
           ) : (
-            <EmptySection message={t('pathsEmpty')} />
+            <EmptySection
+              message={t('pathsEmpty')}
+              ctaHref="/koleksiyonlar"
+              ctaLabel={t('browseCollections')}
+            />
           )}
         </section>
 
@@ -387,8 +643,37 @@ export default async function LearningHubPage({ params }) {
               })}
             </div>
           ) : (
-            <EmptySection message={t('guidesEmpty')} />
+            <EmptySection message={t('guidesEmpty')} ctaHref="/blog" ctaLabel={t('viewAllBlog')} />
           )}
+        </section>
+
+        {/* Bottom CTA */}
+        <section className="brand-surface relative overflow-hidden rounded-3xl p-6 text-center glass-panel sm:p-8">
+          <div className="relative z-10 mx-auto max-w-2xl">
+            <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{t('ctaBandTitle')}</h2>
+            <p className="mt-2 text-sm text-muted-foreground sm:text-base">{t('ctaBandBody')}</p>
+            <div className="mt-5 flex flex-col items-stretch justify-center gap-3 sm:flex-row">
+              <Button
+                asChild
+                className="ai-tavsiye-gradient min-h-11 rounded-xl border-0 font-semibold"
+              >
+                <Link href="/tavsiye" prefetch={false}>
+                  <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
+                  {t('ctaRecommend')}
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="glass-button min-h-11 rounded-xl font-semibold"
+              >
+                <Link href="/" prefetch={false}>
+                  {t('browseTools')}
+                  <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
+          </div>
         </section>
 
         <section className="border-t pt-10 sm:pt-14">
@@ -399,10 +684,18 @@ export default async function LearningHubPage({ params }) {
   );
 }
 
-function EmptySection({ message }) {
+function EmptySection({ message, ctaHref, ctaLabel }) {
   return (
     <div className="rounded-2xl border border-dashed bg-muted/20 px-5 py-10 text-center">
       <p className="mx-auto max-w-md text-sm leading-6 text-muted-foreground">{message}</p>
+      {ctaHref && ctaLabel ? (
+        <Button asChild variant="outline" size="sm" className="mt-4 rounded-full">
+          <Link href={ctaHref} prefetch={false}>
+            {ctaLabel}
+            <ArrowRight className="ml-1.5 h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
+        </Button>
+      ) : null}
     </div>
   );
 }

@@ -304,13 +304,15 @@ export function HomepageClient({
         </section>
       ) : null}
 
-      {/* Sticky toolbar — single search instance + filters */}
-      <div
-        className="sticky top-16 z-40 border-b px-3 py-2.5 text-center sm:px-4
-             bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-      >
-        {customHeader ? <div className="mb-3">{customHeader}</div> : null}
+      {/* Category / custom page header — outside sticky bar to save vertical space */}
+      {customHeader ? <div className="mb-3 sm:mb-4">{customHeader}</div> : null}
 
+      {/* Sticky toolbar — compact search + filters only */}
+      <div
+        className={`sticky top-16 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${
+          customHeader ? 'px-2 py-1.5 sm:px-3 sm:py-2' : 'px-3 py-2.5 sm:px-4'
+        }`}
+      >
         {!customHeader && !showLandingHero ? (
           <>
             <h1
@@ -326,24 +328,26 @@ export function HomepageClient({
         ) : null}
 
         <div
-          className={`grid grid-cols-2 items-center justify-center gap-2 sm:flex sm:gap-2 ${
+          className={`flex flex-row items-center gap-1.5 sm:gap-2 ${
             !customHeader && !showLandingHero ? 'mt-1.5 sm:mt-2' : ''
-          } ${showLandingHero ? 'mx-auto max-w-3xl' : ''}`}
+          } ${showLandingHero ? 'mx-auto max-w-3xl' : customHeader ? 'mx-auto max-w-5xl' : ''}`}
         >
-          <div className="col-span-2 sm:col-span-1 sm:min-w-0 sm:max-w-xl sm:flex-1">
+          <div className="min-w-0 flex-1">
             <SearchInput key={searchParams.get('search') || 'empty-search'} />
           </div>
-          <FilterSheet
-            categories={categories}
-            allTags={allTags}
-            fixedSearchParams={fixedSearchParams}
-          />
+          <div className="shrink-0">
+            <FilterSheet
+              categories={categories}
+              allTags={allTags}
+              fixedSearchParams={fixedSearchParams}
+            />
+          </div>
           {discoverySections ? (
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowDiscovery(!showDiscovery)}
-              className="brand-gradient h-10 w-full min-h-10 px-3 text-xs shadow-md sm:h-10 sm:w-auto sm:text-sm"
+              className="brand-gradient h-9 min-h-9 shrink-0 px-2.5 text-xs shadow-md sm:h-9 sm:px-3 sm:text-sm"
             >
               {showDiscovery ? (
                 <X className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
@@ -410,7 +414,7 @@ export function HomepageClient({
       ) : null}
 
       <section
-        className="mt-8 sm:mt-10"
+        className={customHeader ? 'mt-4 sm:mt-5' : 'mt-8 sm:mt-10'}
         aria-labelledby={
           showLandingHero || isHomeLanding ? 'all-tools-heading' : 'tools-page-title'
         }
