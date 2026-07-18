@@ -21,11 +21,8 @@ import {
 import { createClient } from '@/utils/supabase/client';
 import { fetchActivityFeed } from '@/app/actions';
 import { Button } from '@/components/ui/button';
-import {
-  ActivityFeedEventCard,
-  FEED_EVENT_META,
-  getFeedEventKey,
-} from '@/components/ActivityFeedEventCard';
+import { ActivityFeedEventCard, FEED_EVENT_META } from '@/components/ActivityFeedEventCard';
+import { getFeedEventKey } from '@/lib/feedEventKey';
 import { cn } from '@/lib/utils';
 
 const FILTER_DEFS = [

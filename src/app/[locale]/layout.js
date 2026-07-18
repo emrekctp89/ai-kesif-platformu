@@ -84,10 +84,11 @@ export default async function LocaleLayout(props) {
           </main>
 
           <Footer />
+          {/* Must stay inside NextIntlClientProvider — uses useTranslations('Common'). */}
+          <AnnouncementBanner />
         </NextIntlClientProvider>
       </div>
 
-      <AnnouncementBanner />
       <Analytics />
     </ThemeProvider>
   );

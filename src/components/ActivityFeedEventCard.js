@@ -163,15 +163,8 @@ function EventBody({ event }) {
   }
 }
 
-export function getFeedEventKey(event, index = 0) {
-  const details = event?.details || {};
-  return [
-    event?.event_type || 'event',
-    event?.username || 'user',
-    details.tool_slug || details.item_id || details.prompt_title || index,
-    event?.event_time || index,
-  ].join('-');
-}
+// Re-export for existing client imports; implementation is shared (server-safe).
+export { getFeedEventKey } from '@/lib/feedEventKey';
 
 export function ActivityFeedEventCard({ event, className }) {
   const t = useTranslations('ActivityFeedPage');

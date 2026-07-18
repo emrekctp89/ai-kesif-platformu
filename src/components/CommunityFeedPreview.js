@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { ArrowRight, Rss } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 import { Button } from '@/components/ui/button';
-import { ActivityFeedEventCard, getFeedEventKey } from '@/components/ActivityFeedEventCard';
+import { ActivityFeedEventCard } from '@/components/ActivityFeedEventCard';
+import { getFeedEventKey } from '@/lib/feedEventKey';
 
 async function getGeneralFeed(limit = 5) {
   const supabase = await createClient();
