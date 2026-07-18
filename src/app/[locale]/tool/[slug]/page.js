@@ -35,6 +35,7 @@ import ToolIcon from '@/components/ToolIcon';
 import { getTranslations } from 'next-intl/server';
 import { formatPricing } from '@/utils/formatPricing';
 import { getSiteOrigin } from '@/utils/siteUrl';
+import { requireProAccess } from '@/lib/proAccess';
 
 export const revalidate = 3600;
 
@@ -235,6 +236,13 @@ export default async function ToolPage(props) {
   const tool = localizeTool(await getToolData(slug, t('aiCategoryFallback')), locale);
 
   if (!tool) notFound();
+
+  if (tool.tier === 'Pro') {
+    await requireProAccess({
+      loginMessage: t('proLoginRequired'),
+      proMessage: t('proAccessRequired'),
+    });
+  }
 
   const shareUrl = `${siteUrl}/tool/${tool.slug}`;
   const linkHealth = getLinkHealthMeta(tool, t, locale);

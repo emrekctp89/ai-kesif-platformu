@@ -1,11 +1,9 @@
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { WandSparkles } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { StudioClient } from '@/components/StudioClient';
 import { generatePageMetadata } from '@/utils/seo';
+import { requireProAccess } from '@/lib/proAccess';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -20,27 +18,10 @@ export async function generateMetadata({ params }) {
 export default async function StudioPage({ params }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'StudioPage' });
-  const supabase = await createClient(await cookies());
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect('/login?message=' + encodeURIComponent(t('loginRequired')));
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('stripe_price_id')
-    .eq('id', user.id)
-    .single();
-
-  const isAdmin = user.email === process.env.ADMIN_EMAIL;
-  const isProUser = !!profile?.stripe_price_id || isAdmin;
-
-  if (!isProUser) {
-    redirect('/uyelik?message=' + encodeURIComponent(t('proRequired')));
-  }
+  await requireProAccess({
+    loginMessage: t('loginRequired'),
+    proMessage: t('proRequired'),
+  });
 
   return (
     <div className="mx-auto max-w-2xl space-y-10 pb-10">

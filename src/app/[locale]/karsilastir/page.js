@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { TrackedExternalLink } from '@/components/TrackedExternalLink';
 import { formatPricing } from '@/utils/formatPricing';
 import { generatePageMetadata } from '@/utils/seo';
+import { requireProAccess } from '@/lib/proAccess';
 
 const getSupabase = () =>
   createSupabaseClient(
@@ -154,6 +155,13 @@ export default async function ComparePage(props) {
   ]);
 
   const comparedTools = rawCompared.map((tool) => localizeTool(tool, locale));
+
+  if (comparedTools.some((tool) => tool.tier === 'Pro')) {
+    await requireProAccess({
+      loginMessage: t('proLoginRequired'),
+      proMessage: t('proAccessRequired'),
+    });
+  }
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 pb-10 sm:space-y-12">
