@@ -13,20 +13,9 @@ const withSerwist = require('@serwist/next').default({
   disable: process.env.NODE_ENV === 'development',
 });
 
-// Feature-flag style kill switch for incomplete / high-risk surfaces.
-// Enabled product surfaces (not listed): home, tools, kesfet, karsilastir,
-// blog, profile, public user pages, eserler, koleksiyonlar, uyelik, auth flows.
-// Olgunlaşmış yüzeyler açıldı: akis, topluluk, leaderboard, random-tools, ogren
-// Hâlâ kapalı: yarışma, stüdyo, mesajlar, ödül avcılığı, launchpad (eksik/riskli)
-const disabledRoutes = [
-  '/register',
-  '/yarisma',
-  '/studyo',
-  '/odul-avciligi/:path*',
-  '/mesajlar/:path*',
-  '/leaderbord',
-  '/launchpad/:path*',
-];
+// Redirect obsolete aliases that do not have a corresponding product page.
+// Active product routes enforce authentication and plan access in their pages.
+const disabledRoutes = ['/register', '/leaderbord'];
 
 /**
  * Build redirect entries for default locale (no prefix) and English (/en).
