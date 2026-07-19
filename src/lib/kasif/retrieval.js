@@ -52,13 +52,25 @@ export function extractSearchTerms(question) {
     .slice(0, 10);
 }
 
-export function buildRetrievalQuery(question, history = []) {
+function hasRecognizedTopic(question) {
+  const normalized = normalizeText(question);
+  return Object.values(KASIF_CONCEPTS).some((words) =>
+    words.some((word) => normalized.includes(normalizeText(word)))
+  );
+}
+
+export function buildRetrievalQuery(question, history = [], { isolateCurrentTopic = false } = {}) {
+  const currentQuestion = String(question || '').trim();
+  if (isolateCurrentTopic && hasRecognizedTopic(currentQuestion)) {
+    return currentQuestion.slice(0, 1600);
+  }
+
   const previousUserTurns = history
     .filter((message) => message?.role === 'user')
     .slice(-2)
     .map((message) => String(message.content || '').trim())
     .filter(Boolean);
-  return [...previousUserTurns, String(question || '').trim()].join(' ').slice(0, 1600);
+  return [...previousUserTurns, currentQuestion].join(' ').slice(0, 1600);
 }
 
 export function expandSearchTerms(query) {
@@ -75,7 +87,9 @@ export function buildSearchFilter(terms) {
 }
 
 export async function retrievePlatformContext(question, history = []) {
-  const terms = expandSearchTerms(buildRetrievalQuery(question, history));
+  const terms = expandSearchTerms(
+    buildRetrievalQuery(question, history, { isolateCurrentTopic: true })
+  );
   if (!terms.length) return [];
   const supabase = await createClient();
   const controller = new AbortController();
