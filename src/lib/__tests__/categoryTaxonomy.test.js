@@ -1,6 +1,16 @@
-import { classifyToolText, nameMatchesKnownTool, haystackHasKeyword } from '../categoryTaxonomy';
+import {
+  classifyToolText,
+  nameMatchesKnownTool,
+  haystackHasKeyword,
+  normalizeProductKey,
+} from '../categoryTaxonomy';
 
 describe('categoryTaxonomy matching', () => {
+  it('normalizes AI without Turkish locale ı', () => {
+    expect(normalizeProductKey('LimeWire AI Studio')).toBe('limewire ai studio');
+    expect(normalizeProductKey('AILipSync.studio')).toBe('ailipsync.studio');
+  });
+
   it('does not match udio inside Studio', () => {
     expect(nameMatchesKnownTool('visual studio code', 'udio')).toBe(false);
     expect(nameMatchesKnownTool('recast studio', 'udio')).toBe(false);
@@ -39,5 +49,23 @@ describe('categoryTaxonomy matching', () => {
     expect(nameMatchesKnownTool('github copilot business', 'github copilot')).toBe(true);
     const result = classifyToolText('GitHub Copilot', 'AI pair programmer', 'https://github.com');
     expect(result.slug).toBe('kod-yazilim');
+  });
+
+  it('classifies LimeWire AI Studio as gorsel-uretim not ses-muzik', () => {
+    const result = classifyToolText(
+      'LimeWire AI Studio',
+      'An AI image generation platform designed to empower creators',
+      'https://limewire.com'
+    );
+    expect(result.slug).toBe('gorsel-uretim');
+  });
+
+  it('classifies Creative Reality Studio as video-uretim', () => {
+    const result = classifyToolText(
+      'Creative Reality Studio',
+      'D-ID talking video platform',
+      'https://www.d-id.com'
+    );
+    expect(result.slug).toBe('video-uretim');
   });
 });

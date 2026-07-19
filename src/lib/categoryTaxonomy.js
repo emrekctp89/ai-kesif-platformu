@@ -487,6 +487,9 @@ export const KNOWN_TOOL_CATEGORIES = {
   udio: 'ses-muzik',
   descript: 'ses-muzik',
   'murf ai': 'ses-muzik',
+  'coqui studio': 'ses-muzik',
+  'recast studio': 'video-uretim',
+  'limewire ai studio': 'gorsel-uretim',
   chatgpt: 'chatbotlar',
   'chat gpt': 'chatbotlar',
   claude: 'chatbotlar',
@@ -496,6 +499,7 @@ export const KNOWN_TOOL_CATEGORIES = {
   'character.ai': 'chatbotlar',
   grok: 'chatbotlar',
   poe: 'chatbotlar',
+  'openai gpt-3': 'chatbotlar',
   'github copilot': 'kod-yazilim',
   'visual studio code': 'kod-yazilim',
   vscode: 'kod-yazilim',
@@ -505,27 +509,66 @@ export const KNOWN_TOOL_CATEGORIES = {
   tabnine: 'kod-yazilim',
   codeium: 'kod-yazilim',
   windsurf: 'kod-yazilim',
+  'code climate': 'kod-yazilim',
+  appcode: 'kod-yazilim',
+  testim: 'kod-yazilim',
+  mabl: 'kod-yazilim',
+  applitools: 'kod-yazilim',
+  functionize: 'kod-yazilim',
+  virtuoso: 'kod-yazilim',
+  sealights: 'kod-yazilim',
+  parasoft: 'kod-yazilim',
   'notion ai': 'uretkenlik',
   notion: 'uretkenlik',
   otter: 'uretkenlik',
   'otter.ai': 'uretkenlik',
   fireflies: 'uretkenlik',
+  trello: 'uretkenlik',
+  'monday.com': 'uretkenlik',
+  evernote: 'uretkenlik',
+  'reclaim.ai': 'uretkenlik',
   quillbot: 'metin-yazarligi',
   jasper: 'metin-yazarligi',
   'copy.ai': 'metin-yazarligi',
   copymatic: 'metin-yazarligi',
   grammarly: 'metin-yazarligi',
+  sumly: 'metin-yazarligi',
+  closerscopy: 'metin-yazarligi',
+  'simplified ai writer': 'metin-yazarligi',
   duolingo: 'egitim',
   khanmigo: 'egitim',
   canva: 'tasarim',
   figma: 'tasarim',
   uizard: 'tasarim',
+  'logomaster.ai': 'tasarim',
+  'design ai': 'tasarim',
+  'tailor brands': 'tasarim',
+  'colorwise.io': 'tasarim',
+  'diagram.ai': 'tasarim',
+  'remove.bg': 'gorsel-uretim',
+  'magic eraser': 'gorsel-uretim',
+  imgupscaler: 'gorsel-uretim',
+  'zyro ai image upscaler': 'gorsel-uretim',
+  'neural love ai image upscaler': 'gorsel-uretim',
+  'icons8 smart upscaler': 'gorsel-uretim',
+  'myheritage deep nostalgia': 'gorsel-uretim',
+  'creative reality studio': 'video-uretim',
+  'd-id': 'video-uretim',
+  'ailipsync.studio': 'video-uretim',
+  avatarify: 'video-uretim',
+  'vmake.ai': 'video-uretim',
+  'simplified ai video editor': 'video-uretim',
   zapier: 'otomasyon-ajan',
   make: 'otomasyon-ajan',
   n8n: 'otomasyon-ajan',
   hubspot: 'satis-crm',
+  'reply.io': 'satis-crm',
+  outreach: 'satis-crm',
   intercom: 'musteri-destek',
   zendesk: 'musteri-destek',
+  tableau: 'veri-analiz',
+  semrush: 'pazarlama',
+  brandwatch: 'pazarlama',
 };
 
 /** @type {Record<string, string[]>} */
@@ -876,13 +919,25 @@ function escapeRegExp(value) {
 }
 
 /**
+ * Locale-safe name key for product matching.
+ * Use English lowercasing so "AI" does not become Turkish "aı".
+ * @param {string} value
+ */
+export function normalizeProductKey(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/ı/g, 'i')
+    .replace(/İ/g, 'i')
+    .trim();
+}
+
+/**
  * Tokenize a tool name for exact known-name matching.
  * Avoids false positives like "udio" matching inside "Studio".
  * @param {string} nameKey
  */
 function tokenizeName(nameKey) {
-  return String(nameKey || '')
-    .toLocaleLowerCase('tr-TR')
+  return normalizeProductKey(nameKey)
     .split(/[\s._\-/+()[\]{}|,]+/)
     .map((t) => t.trim())
     .filter(Boolean);
@@ -895,12 +950,8 @@ function tokenizeName(nameKey) {
  * @param {string} known
  */
 export function nameMatchesKnownTool(nameKey, known) {
-  const name = String(nameKey || '')
-    .toLocaleLowerCase('tr-TR')
-    .trim();
-  const key = String(known || '')
-    .toLocaleLowerCase('tr-TR')
-    .trim();
+  const name = normalizeProductKey(nameKey);
+  const key = normalizeProductKey(known);
   if (!name || !key) return false;
   if (name === key) return true;
 
@@ -943,9 +994,7 @@ export function haystackHasKeyword(haystack, keyword) {
  * @returns {{ slug: string, score: number, matched: string[] }}
  */
 export function classifyToolText(name = '', description = '', link = '') {
-  const nameKey = String(name || '')
-    .toLocaleLowerCase('tr-TR')
-    .trim();
+  const nameKey = normalizeProductKey(name);
 
   // Prefer longer known names first so "visual studio code" wins over short tokens
   const knownEntries = Object.entries(KNOWN_TOOL_CATEGORIES).sort(
@@ -958,6 +1007,7 @@ export function classifyToolText(name = '', description = '', link = '') {
     }
   }
 
+  // Keyword haystack keeps Turkish lowercasing for TR description terms
   const haystack = `${name} ${description} ${link}`.toLocaleLowerCase('tr-TR');
   let best = { slug: 'diger', score: 0, matched: [] };
 
