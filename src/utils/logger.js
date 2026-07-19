@@ -1,18 +1,20 @@
 /**
  * Centralized Logger Utility
  *
- * Usage:
- * - logger.info('Message', { context: 'data' })
+ * Preferred structured usage:
+ * - logger.info('Message', { userId: '…' })
  * - logger.error('Error occurred', { error: err })
- * - logger.warn('Warning message', { details: 'info' })
- * - logger.debug('Debug info', { data: obj }) // Only in dev mode
+ * - logger.warn('Warning message', { details: 'info' }, 'Context')
+ * - logger.debug('Debug info', { data: obj }) // only in dev / DEBUG=true
+ *
+ * Also supports console-style second args (common after console.* migrations):
+ * - logger.error('Something failed:', err)
+ * - logger.warn('hint', 'string detail')
  */
 
-// Determine if we're in production
 const isProduction = process.env.NODE_ENV === 'production';
 const isDebug = process.env.DEBUG === 'true';
 
-// ANSI Color codes for console styling
 const colors = {
   reset: '\x1b[0m',
   bright: '\x1b[1m',
@@ -25,61 +27,132 @@ const colors = {
   gray: '\x1b[90m',
 };
 
-/**
- * Format timestamp as ISO string
- */
+const SENSITIVE_KEY_PATTERN =
+  /password|token|secret|api[_-]?key|authorization|cookie|creditcard|ssn|pin/i;
+
 function getTimestamp() {
   return new Date().toISOString();
 }
 
 /**
- * Sanitize sensitive data before logging
+ * Convert Error (and Error-like) values into plain JSON-safe objects.
  */
-function sanitizeSensitiveData(obj) {
-  if (!obj || typeof obj !== 'object') return obj;
+export function serializeError(err) {
+  if (err == null) return null;
 
-  const sensitiveKeys = [
-    'password',
-    'token',
-    'secret',
-    'api_key',
-    'apiKey',
-    'authorization',
-    'cookie',
-    'creditCard',
-    'ssn',
-    'pin',
-  ];
-
-  const sanitized = Array.isArray(obj) ? [...obj] : { ...obj };
-
-  const sanitizeValue = (val) => {
-    if (typeof val === 'object' && val !== null) {
-      return sanitizeSensitiveData(val);
+  if (err instanceof Error) {
+    const out = {
+      name: err.name,
+      message: err.message,
+      stack: isProduction ? undefined : err.stack,
+    };
+    if (err.cause != null) {
+      out.cause = serializeError(err.cause);
     }
-    return val;
-  };
-
-  if (Array.isArray(sanitized)) {
-    sanitized.forEach((item, index) => {
-      sanitized[index] = sanitizeValue(item);
-    });
-  } else {
-    Object.keys(sanitized).forEach((key) => {
-      if (sensitiveKeys.some((sensitive) => key.toLowerCase().includes(sensitive))) {
-        sanitized[key] = '[REDACTED]';
-      } else {
-        sanitized[key] = sanitizeValue(sanitized[key]);
-      }
-    });
+    // Preserve common non-enumerable / custom fields
+    for (const key of ['code', 'status', 'statusCode', 'digest', 'details']) {
+      if (err[key] !== undefined) out[key] = err[key];
+    }
+    return out;
   }
 
-  return sanitized;
+  if (typeof err === 'object') {
+    // Supabase / PostgREST style: { message, code, details, hint }
+    if (
+      typeof err.message === 'string' ||
+      typeof err.code === 'string' ||
+      typeof err.error === 'string'
+    ) {
+      return {
+        message: err.message ?? err.error,
+        code: err.code,
+        details: err.details,
+        hint: err.hint,
+        status: err.status ?? err.statusCode,
+      };
+    }
+  }
+
+  return err;
 }
 
 /**
- * Format log message with styling
+ * Normalize the free-form second argument into a plain data object.
+ * Accepts Error, string, number, array, plain object, or null/undefined.
  */
+export function normalizeLogData(data) {
+  if (data === undefined || data === null) {
+    return {};
+  }
+
+  if (data instanceof Error) {
+    return { error: serializeError(data) };
+  }
+
+  if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') {
+    return { detail: data };
+  }
+
+  if (Array.isArray(data)) {
+    return { items: data };
+  }
+
+  if (typeof data === 'object') {
+    // Already structured — serialize nested Error fields
+    const out = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (value instanceof Error) {
+        out[key] = serializeError(value);
+      } else {
+        out[key] = value;
+      }
+    }
+    // If someone passed a bare error-like object without wrapping
+    if (Object.keys(out).length === 0 && (data.message != null || data.code != null)) {
+      return { error: serializeError(data) };
+    }
+    return out;
+  }
+
+  return { detail: String(data) };
+}
+
+function hasLogData(data) {
+  return data != null && typeof data === 'object' && Object.keys(data).length > 0;
+}
+
+/**
+ * Sanitize sensitive fields before logging.
+ */
+export function sanitizeSensitiveData(obj, seen = new WeakSet()) {
+  if (obj == null || typeof obj !== 'object') return obj;
+
+  if (seen.has(obj)) return '[Circular]';
+  seen.add(obj);
+
+  if (obj instanceof Error) {
+    return sanitizeSensitiveData(serializeError(obj), seen);
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => sanitizeSensitiveData(item, seen));
+  }
+
+  const sanitized = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (SENSITIVE_KEY_PATTERN.test(key)) {
+      sanitized[key] = '[REDACTED]';
+    } else if (value instanceof Error) {
+      sanitized[key] = sanitizeSensitiveData(serializeError(value), seen);
+    } else if (value && typeof value === 'object') {
+      sanitized[key] = sanitizeSensitiveData(value, seen);
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  return sanitized;
+}
+
 function formatLogMessage(level, message, context, isDev) {
   const timestamp = getTimestamp();
   const prefix = isDev ? `${colors.dim}[${timestamp}]${colors.reset}` : '';
@@ -102,7 +175,7 @@ function formatLogMessage(level, message, context, isDev) {
       levelIndicator = isDev ? `${colors.green}✓ SUCCESS${colors.reset}` : 'SUCCESS';
       break;
     default:
-      levelIndicator = 'LOG';
+      levelIndicator = String(level || 'LOG').toUpperCase();
   }
 
   const contextStr = isDev && context ? `${colors.gray}${context}${colors.reset}` : context;
@@ -111,30 +184,38 @@ function formatLogMessage(level, message, context, isDev) {
   return `${prefix} ${levelIndicator}${contextPart}: ${message}`;
 }
 
-/**
- * Log to console with structured formatting
- */
-function logToConsole(level, message, data = {}, context = '') {
-  const isDev = !isProduction;
-  const formatted = formatLogMessage(level, message, context, isDev);
+function resolveConsoleMethod(level) {
+  if (level === 'success') return 'log';
+  if (typeof console[level] === 'function') return level;
+  return 'log';
+}
 
-  if (data && Object.keys(data).length > 0) {
-    const sanitized = sanitizeSensitiveData(data);
+/**
+ * Log to console with structured formatting.
+ */
+function logToConsole(level, message, data, context = '') {
+  const isDev = !isProduction;
+  const normalized = normalizeLogData(data);
+  const formatted = formatLogMessage(level, message, context, isDev);
+  const method = resolveConsoleMethod(level);
+
+  if (hasLogData(normalized)) {
+    const sanitized = sanitizeSensitiveData(normalized);
     if (isDev) {
-      console[level === 'success' ? 'log' : level](formatted, sanitized);
+      console[method](formatted, sanitized);
     } else {
-      console[level === 'success' ? 'log' : level](
+      console[method](
         JSON.stringify({
           level,
           message,
-          context,
+          context: context || undefined,
           timestamp: getTimestamp(),
           data: sanitized,
         })
       );
     }
   } else {
-    console[level === 'success' ? 'log' : level](formatted);
+    console[method](formatted);
   }
 }
 
@@ -142,108 +223,75 @@ function logToConsole(level, message, data = {}, context = '') {
  * Main Logger Object
  */
 export const logger = {
-  /**
-   * Info level logging
-   */
-  info: (message, data = {}, context = '') => {
+  info: (message, data, context = '') => {
     logToConsole('info', message, data, context);
   },
 
-  /**
-   * Error level logging
-   */
-  error: (message, data = {}, context = '') => {
+  error: (message, data, context = '') => {
     logToConsole('error', message, data, context);
   },
 
-  /**
-   * Warning level logging
-   */
-  warn: (message, data = {}, context = '') => {
+  warn: (message, data, context = '') => {
     logToConsole('warn', message, data, context);
   },
 
   /**
-   * Debug level logging (only in development)
+   * Debug level logging (only in development or when DEBUG=true)
    */
-  debug: (message, data = {}, context = '') => {
+  debug: (message, data, context = '') => {
     if (isDebug || !isProduction) {
       logToConsole('debug', message, data, context);
     }
   },
 
-  /**
-   * Success level logging
-   */
-  success: (message, data = {}, context = '') => {
+  success: (message, data, context = '') => {
     logToConsole('success', message, data, context);
   },
 
-  /**
-   * Group related logs together
-   */
   group: (groupName) => {
     if (!isProduction) {
       console.group(`${colors.bright}${colors.cyan}► ${groupName}${colors.reset}`);
     }
   },
 
-  /**
-   * End a log group
-   */
   groupEnd: () => {
     if (!isProduction) {
       console.groupEnd();
     }
   },
 
-  /**
-   * Performance timing
-   */
   time: (label) => {
     if (!isProduction || isDebug) {
       console.time(`${colors.cyan}⏱ ${label}${colors.reset}`);
     }
   },
 
-  /**
-   * End performance timing
-   */
   timeEnd: (label) => {
     if (!isProduction || isDebug) {
       console.timeEnd(`${colors.cyan}⏱ ${label}${colors.reset}`);
     }
   },
 
-  /**
-   * Table logging for arrays/objects
-   */
   table: (data, context = '') => {
     if (!isProduction) {
       if (context) {
         logger.group(context);
       }
-      const sanitized = sanitizeSensitiveData(data);
-      console.table(sanitized);
+      const sanitized = sanitizeSensitiveData(normalizeLogData(data));
+      console.table(hasLogData(sanitized) ? sanitized : data);
       if (context) {
         logger.groupEnd();
       }
     }
   },
 
-  /**
-   * Clear console
-   */
   clear: () => {
     if (!isProduction) {
       console.clear();
     }
   },
 
-  /**
-   * Log with custom level
-   */
-  custom: (level, message, data = {}, context = '') => {
+  custom: (level, message, data, context = '') => {
     logToConsole(level, message, data, context);
   },
 };
@@ -254,11 +302,10 @@ export const logger = {
 export function createErrorHandler() {
   return (err, req, res, next) => {
     logger.error('Server Error', {
-      message: err.message,
+      error: err,
       statusCode: err.statusCode || 500,
       path: req.path,
       method: req.method,
-      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     });
 
     res.status(err.statusCode || 500).json({
@@ -279,7 +326,7 @@ export function createRequestLogger() {
       path: req.path,
       statusCode: res.statusCode,
       responseTime: `${responseTime}ms`,
-      userAgent: req.get('User-Agent')?.substring(0, 50),
+      userAgent: req.get?.('User-Agent')?.substring(0, 50),
     };
 
     if (res.statusCode >= 400) {
