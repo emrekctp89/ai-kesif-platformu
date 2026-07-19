@@ -1,7 +1,7 @@
 import './globals.css';
 import { Onest } from 'next/font/google';
 import Script from 'next/script';
-import { generateStructuredData } from '@/utils/seo';
+import { generateStructuredData, safeJsonLd } from '@/utils/seo';
 import { getSiteOrigin } from '@/utils/siteUrl';
 
 const siteUrl = getSiteOrigin();
@@ -13,6 +13,41 @@ const onest = Onest({
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
+  applicationName: 'AI Keşif Platformu',
+  title: {
+    default: 'AI Keşif | Yapay Zeka Araçları Rehberi',
+    template: '%s | AI Keşif',
+  },
+  description:
+    'İhtiyacınıza uygun yapay zeka araçlarını keşfedin, karşılaştırın ve doğru aracı daha hızlı bulun.',
+  openGraph: {
+    type: 'website',
+    locale: 'tr_TR',
+    url: siteUrl,
+    siteName: 'AI Keşif Platformu',
+    title: 'AI Keşif | Yapay Zeka Araçları Rehberi',
+    description:
+      'İhtiyacınıza uygun yapay zeka araçlarını keşfedin ve doğru aracı daha hızlı bulun.',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'AI Keşif yapay zeka araçları platformu',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI Keşif | Yapay Zeka Araçları Rehberi',
+    description:
+      'İhtiyacınıza uygun yapay zeka araçlarını keşfedin ve doğru aracı daha hızlı bulun.',
+    images: ['/opengraph-image'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export const viewport = {
@@ -53,11 +88,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationSchema) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteSchema) }}
         />
 
         <meta

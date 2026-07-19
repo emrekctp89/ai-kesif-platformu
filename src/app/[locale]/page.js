@@ -9,6 +9,7 @@ import { CategoryGrid } from '@/components/CategoryGrid';
 import { filterPrimaryCategories, sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { getTranslations } from 'next-intl/server';
+import { generateStructuredData, safeJsonLd, siteConfig } from '@/utils/seo';
 import { getSiteOrigin } from '@/utils/siteUrl';
 
 const siteUrl = getSiteOrigin();
@@ -73,32 +74,22 @@ export default async function HomePage(props) {
     </div>
   );
 
+  const organization = generateStructuredData('Organization');
+  const website = generateStructuredData('WebSite');
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
       {
-        '@type': 'Organization',
+        ...organization,
         '@id': `${siteUrl}/#organization`,
-        name: 'AI Keşif',
-        url: siteUrl,
-        logo: `${siteUrl}/favicon.ico`,
+        name: siteConfig.shortName,
       },
       {
-        '@type': 'WebSite',
+        ...website,
         '@id': `${siteUrl}/#website`,
-        name: 'AI Keşif Platformu',
-        url: siteUrl,
-        inLanguage: 'tr-TR',
+        inLanguage: locale === 'en' ? 'en-US' : 'tr-TR',
         publisher: {
           '@id': `${siteUrl}/#organization`,
-        },
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: {
-            '@type': 'EntryPoint',
-            urlTemplate: `${siteUrl}/?search={search_term_string}`,
-          },
-          'query-input': 'required name=search_term_string',
         },
       },
     ],
@@ -111,7 +102,7 @@ export default async function HomePage(props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData).replace(/</g, '\\u003c'),
+          __html: safeJsonLd(structuredData),
         }}
       />
       {/* Bug fix: HomepageClient useSearchParams() kullanıyor, Next.js bunun

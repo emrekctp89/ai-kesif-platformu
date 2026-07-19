@@ -71,7 +71,7 @@ export default async function LocaleLayout(props) {
       <div className="relative flex min-h-screen flex-col">
         <a
           href="#main-content"
-          className="sr-only fixed left-4 top-4 z-[100] rounded-md bg-background px-4 py-2 font-semibold text-foreground shadow-lg focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className="skip-link sr-only font-semibold focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           İçeriğe geç
         </a>
