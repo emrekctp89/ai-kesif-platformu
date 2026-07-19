@@ -46,13 +46,36 @@ export default async function ContentStudioPage({ params }) {
   const allowed = isAdmin || Boolean(profile?.is_content_creator);
 
   if (!allowed) {
-    const pending = await hasOpenCreatorApplication(user.id);
+    const [pending, dailyQuests] = await Promise.all([
+      hasOpenCreatorApplication(user.id),
+      (async () => {
+        const today = new Date().toISOString().split('T')[0];
+        const { data, error } = await supabase
+          .from('user_daily_quests')
+          .select(
+            `
+            *,
+            quests (
+              description,
+              action_type,
+              target_count,
+              reputation_reward
+            )
+          `
+          )
+          .eq('user_id', user.id)
+          .eq('quest_date', today);
+        if (error) return [];
+        return data || [];
+      })(),
+    ]);
     return (
       <CreatorAccessGate
         reputationPoints={profile?.reputation_points || 0}
         minReputation={MIN_CREATOR_REPUTATION}
         alreadyPending={pending}
         username={profile?.username || null}
+        dailyQuests={dailyQuests}
       />
     );
   }

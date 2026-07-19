@@ -5,12 +5,13 @@ import {
   ArrowRight,
   CheckCircle2,
   Circle,
+  Flame,
   MessageSquare,
   PenLine,
+  Plus,
   Sparkles,
   Star,
   Trophy,
-  UserRound,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -18,28 +19,32 @@ import { CreatorApplyForm } from '@/components/CreatorApplyForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import {
   CREATOR_REPUTATION_ROADMAP,
   MIN_CREATOR_REPUTATION,
+  REPUTATION_AWARDS,
   isReputationEligible,
   reputationProgress,
+  summarizeDailyQuests,
 } from '@/lib/contentCreatorRules';
 
 const ROADMAP_ICONS = {
-  profile: UserRound,
-  explore: Star,
+  quests: Flame,
+  rate: Star,
   comment: MessageSquare,
   submit: Trophy,
+  prompt: Plus,
   learn: Sparkles,
 };
 
 /**
- * Locked content-studio gate: clear requirements + reputation roadmap + apply form.
  * @param {{
  *   reputationPoints?: number,
  *   minReputation?: number,
  *   alreadyPending?: boolean,
  *   username?: string|null,
+ *   dailyQuests?: Array,
  * }} props
  */
 export function CreatorAccessGate({
@@ -47,10 +52,14 @@ export function CreatorAccessGate({
   minReputation = MIN_CREATOR_REPUTATION,
   alreadyPending = false,
   username = null,
+  dailyQuests = [],
 }) {
   const t = useTranslations('ContentStudio');
   const progress = reputationProgress(reputationPoints, minReputation);
   const eligible = isReputationEligible(reputationPoints, minReputation);
+  const quests = summarizeDailyQuests(dailyQuests);
+  const projected = progress.current + quests.availablePoints;
+  const wouldUnlock = !eligible && projected >= progress.target;
 
   const requirements = [
     {
@@ -99,7 +108,7 @@ export function CreatorAccessGate({
         </div>
       </section>
 
-      {/* Prominent reputation requirement */}
+      {/* Reputation requirement */}
       <Card className="glass-panel border-primary/30 shadow-md ring-1 ring-primary/15">
         <CardHeader className="space-y-2 pb-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -161,10 +170,19 @@ export function CreatorAccessGate({
               {t('progressReady')}
             </p>
           )}
+          {!eligible && quests.availablePoints > 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {t('questProjection', {
+                available: quests.availablePoints,
+                projected,
+                unlock: wouldUnlock ? t('questProjectionUnlock') : t('questProjectionPartial'),
+              })}
+            </p>
+          ) : null}
         </CardContent>
       </Card>
 
-      {/* Checklist requirements */}
+      {/* Requirements checklist */}
       <section aria-labelledby="creator-reqs-heading" className="space-y-3">
         <h2 id="creator-reqs-heading" className="text-lg font-bold tracking-tight sm:text-xl">
           {t('requirementsHeading')}
@@ -199,7 +217,67 @@ export function CreatorAccessGate({
         </div>
       </section>
 
-      {/* Roadmap */}
+      {/* Daily quests (live) */}
+      {!eligible && quests.items.length > 0 ? (
+        <section aria-labelledby="creator-quests-heading" className="space-y-3">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2
+                id="creator-quests-heading"
+                className="text-lg font-bold tracking-tight sm:text-xl"
+              >
+                {t('dailyQuestsHeading')}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t('dailyQuestsSubheading')}</p>
+            </div>
+            <Badge variant="secondary" className="font-semibold">
+              {t('dailyQuestsAvailable', { count: quests.availablePoints })}
+            </Badge>
+          </div>
+          <div className="space-y-2">
+            {quests.items.map((quest) => (
+              <Card
+                key={quest.id}
+                className={`border-border/50 ${quest.done ? 'opacity-70' : 'glass-panel'}`}
+              >
+                <CardContent className="space-y-2 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-2">
+                      {quest.done ? (
+                        <CheckCircle2
+                          className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <Circle
+                          className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-medium leading-snug">{quest.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {quest.current}/{quest.target}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-sm font-bold text-primary">+{quest.reward}</span>
+                  </div>
+                  {!quest.done ? <Progress value={quest.progress} className="h-2" /> : null}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <Button asChild className="brand-gradient">
+            <Link href="/profile" prefetch={false}>
+              {t('roadQuestsCta')}
+              <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+            </Link>
+          </Button>
+        </section>
+      ) : null}
+
+      {/* Static roadmap with exact points */}
       {!eligible ? (
         <section aria-labelledby="creator-roadmap-heading" className="space-y-4">
           <div>
@@ -211,6 +289,36 @@ export function CreatorAccessGate({
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">{t('roadmapSubheading')}</p>
           </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              {
+                label: t('awardRate'),
+                value: `+${REPUTATION_AWARDS.rateTool}`,
+              },
+              {
+                label: t('awardComment'),
+                value: `+${REPUTATION_AWARDS.comment}`,
+              },
+              {
+                label: t('awardPrompt'),
+                value: `+${REPUTATION_AWARDS.promptShare}`,
+              },
+              {
+                label: t('awardSubmit'),
+                value: `+${REPUTATION_AWARDS.toolSuggestionApproved}`,
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-2xl border border-border/60 bg-muted/30 px-3 py-3 text-center"
+              >
+                <p className="text-lg font-extrabold text-primary">{item.value}</p>
+                <p className="text-[11px] text-muted-foreground sm:text-xs">{item.label}</p>
+              </div>
+            ))}
+          </div>
+
           <ol className="space-y-3">
             {CREATOR_REPUTATION_ROADMAP.map((step, index) => {
               const Icon = ROADMAP_ICONS[step.id] || Star;
@@ -228,7 +336,7 @@ export function CreatorAccessGate({
                               {String(index + 1).padStart(2, '0')}
                             </span>
                             <p className="font-semibold">{t(step.titleKey)}</p>
-                            <Badge variant="outline" className="text-[11px]">
+                            <Badge variant="outline" className="text-[11px] font-bold">
                               {step.pointsLabel} {t('pointsUnit')}
                             </Badge>
                           </div>
@@ -257,6 +365,11 @@ export function CreatorAccessGate({
             <Button asChild variant="outline">
               <Link href="/profile" prefetch={false}>
                 {t('roadmapProfileCta')}
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/submit" prefetch={false}>
+                {t('roadSubmitCta')}
               </Link>
             </Button>
           </div>
@@ -298,12 +411,19 @@ export function CreatorAccessGate({
                   min: progress.target,
                 })}
               </p>
-              <Button asChild>
-                <Link href="/" prefetch={false}>
-                  {t('roadmapPrimaryCta')}
-                  <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
-                </Link>
-              </Button>
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button asChild>
+                  <Link href="/profile" prefetch={false}>
+                    {t('roadQuestsCta')}
+                    <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/" prefetch={false}>
+                    {t('roadmapPrimaryCta')}
+                  </Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
