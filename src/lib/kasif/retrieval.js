@@ -4,6 +4,7 @@ import { KASIF_CONCEPTS } from './lexicon';
 
 const STOP_WORDS = new Set([
   'acaba',
+  'ai',
   'bana',
   'bir',
   'icin',
@@ -12,6 +13,8 @@ const STOP_WORDS = new Set([
   'olarak',
   'var',
   've',
+  'yapay',
+  'zeka',
   'hangi',
   'nedir',
   'nasil',

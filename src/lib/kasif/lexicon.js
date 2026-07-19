@@ -1,7 +1,8 @@
 export const KASIF_CONCEPTS = {
   'gorsel-uretim': ['görsel', 'resim', 'fotoğraf', 'illüstrasyon', 'image'],
   'video-uretim': ['video', 'animasyon', 'montaj', 'film'],
-  'ses-muzik': ['ses', 'müzik', 'podcast', 'voice', 'audio'],
+  'ses-uretim': ['ses', 'seslendirme', 'dublaj', 'podcast', 'voice', 'audio', 'tts'],
+  'muzik-uretim': ['müzik', 'şarkı', 'beste', 'melodi', 'music', 'song'],
   'metin-yazarligi': ['metin', 'yazı', 'blog', 'içerik', 'çeviri'],
   'kod-yazilim': ['kod', 'yazılım', 'programlama', 'developer', 'test'],
   pazarlama: ['pazarlama', 'seo', 'reklam', 'sosyal medya'],
@@ -60,6 +61,38 @@ export const KASIF_GOALS = {
       'gürültü azalt',
       'yükselten',
     ],
+  },
+  'voice-generation': {
+    queryGroups: [
+      ['ses', 'seslendirme', 'dublaj', 'voice'],
+      ['üret', 'oluştur', 'yap', 'dönüştür', 'klonla'],
+    ],
+    evidence: [
+      'metinden sese',
+      'metni sese',
+      'text to speech',
+      'seslendirme',
+      'ses klonlama',
+      'voice cloning',
+      'dublaj',
+    ],
+    negativeEvidence: ['gürültü azalt', 'transkript', 'toplantı özeti', 'ses temizleme'],
+  },
+  'music-generation': {
+    queryGroups: [
+      ['müzik', 'şarkı', 'beste', 'melodi'],
+      ['üret', 'oluştur', 'yap', 'bestele'],
+    ],
+    evidence: [
+      'müzik üret',
+      'şarkı oluştur',
+      'music generation',
+      'beste',
+      'melodi',
+      'vokal müzik',
+      'enstrümantal müzik',
+    ],
+    negativeEvidence: ['transkript', 'podcast düzenleme', 'gürültü azalt', 'ses temizleme'],
   },
   'presentation-creation': {
     queryGroups: [

@@ -186,6 +186,51 @@ describe('Kâşif engine', () => {
     expect(ranked[0].record.id).toBe(12);
   });
 
+  it('seslendirme isteğinde metinden sese aracını transkripsiyon aracının önüne alır', () => {
+    const voiceRecords = [
+      {
+        id: 14,
+        name: 'Voice Maker',
+        description: 'Metinden sese dönüştürme, seslendirme ve ses klonlama aracı',
+      },
+      {
+        id: 15,
+        name: 'Audio Notes',
+        description: 'Toplantı seslerini transkript ve özet haline getirir',
+      },
+    ];
+
+    const intent = understandQuestion(
+      'Metinden seslendirme ve yapay zeka sesi oluşturmak istiyorum'
+    );
+    const ranked = rankTools(voiceRecords, intent);
+
+    expect(intent.goals).toContain('voice-generation');
+    expect(ranked[0].record.id).toBe(14);
+  });
+
+  it('müzik üretim isteğini tanır ve müzik üreticisini öne alır', () => {
+    const musicRecords = [
+      {
+        id: 16,
+        name: 'Music Maker',
+        description: 'Vokal ve enstrümantal müzik üretir, melodi ve beste oluşturur',
+      },
+      {
+        id: 17,
+        name: 'Podcast Editor',
+        description: 'Podcast düzenleme, transkript ve ses temizleme aracı',
+      },
+    ];
+
+    const intent = understandQuestion('Yapay zeka ile müzik ve şarkı üretmek istiyorum');
+    const ranked = rankTools(musicRecords, intent);
+
+    expect(intent.concepts).toContain('muzik-uretim');
+    expect(intent.goals).toContain('music-generation');
+    expect(ranked[0].record.id).toBe(16);
+  });
+
   it('kod asistanı sorgusunda eğitim ve dönüşüm araçlarını geriye iter', () => {
     const codingRecords = [
       {

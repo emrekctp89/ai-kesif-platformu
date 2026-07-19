@@ -22,6 +22,13 @@ describe('Kâşif semantic retrieval', () => {
     expect(expandSearchTerms('Sunum hazırlamak istiyorum')).toContain('slayt');
   });
 
+  it('genel yapay zeka ifadelerini ayırt edici arama terimi saymaz', () => {
+    const terms = expandSearchTerms('Yapay zeka ile müzik üretmek için AI aracı öner');
+
+    expect(terms).not.toEqual(expect.arrayContaining(['yapay', 'zeka', 'ai']));
+    expect(terms).toEqual(expect.arrayContaining(['muzik', 'müzik', 'şarkı']));
+  });
+
   it('açık konu değişikliğinde geçmiş konuyu retrieval sorgusuna taşımaz', () => {
     const query = buildRetrievalQuery(
       'Hayır, bu kez görsel oluşturmak istiyorum',

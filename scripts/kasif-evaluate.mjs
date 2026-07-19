@@ -87,6 +87,22 @@ const cases = [
     minConfidence: 0.75,
   },
   {
+    name: 'voice-generation',
+    question: 'Metinden seslendirme ve yapay zeka sesi oluşturmak istiyorum',
+    expectedAny: ['ElevenLabs', 'Lovo.ai', 'Murf AI', 'Coqui Studio'],
+    expectedTop: ['ElevenLabs', 'Lovo.ai', 'Murf AI', 'Coqui Studio'],
+    expectedGoal: 'voice-generation',
+    minConfidence: 0.75,
+  },
+  {
+    name: 'music-generation',
+    question: 'Yapay zeka ile müzik ve şarkı üretmek için araç öner',
+    expectedAny: ['Udio', 'Suno AI', 'AudioCraft', 'Amadeus AI'],
+    expectedTop: ['Udio', 'Suno AI', 'AudioCraft', 'Amadeus AI'],
+    expectedGoal: 'music-generation',
+    minConfidence: 0.75,
+  },
+  {
     name: 'coding',
     question: 'Kod yazmak ve yazılım geliştirmek için asistan öner',
     expectedAny: [
