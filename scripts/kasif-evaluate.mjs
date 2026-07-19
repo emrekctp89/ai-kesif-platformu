@@ -34,18 +34,73 @@ const cases = [
     minConfidence: 0.75,
   },
   {
+    name: 'topic-switch-presentation-to-image',
+    question: 'Hayır, bu kez görsel oluşturmak istiyorum',
+    history: [
+      { role: 'user', content: 'Ücretsiz sunum hazırlamak için araç öner' },
+      { role: 'assistant', content: 'Platformdaki sunum araçlarını sıraladım.' },
+    ],
+    expectedAny: [
+      'Bing Image Creator',
+      'Leonardo AI',
+      'Midjourney',
+      'Craiyon (formerly DALL-E mini)',
+      'SeaArt AI',
+    ],
+    expectedTop: [
+      'Bing Image Creator',
+      'Leonardo AI',
+      'Midjourney',
+      'Craiyon (formerly DALL-E mini)',
+      'SeaArt AI',
+    ],
+    expectedGoal: 'image-generation',
+    expectedPrice: 'free',
+    minConfidence: 0.75,
+  },
+  {
     name: 'image-generation',
     question: 'Bir resim çizmek ve görsel üretmek istiyorum',
-    expectedAny: ['Bing Image Creator', 'Leonardo AI', 'Midjourney', 'Craiyon (formerly DALL-E mini)', 'SeaArt AI'],
-    expectedTop: ['Bing Image Creator', 'Leonardo AI', 'Midjourney', 'Craiyon (formerly DALL-E mini)', 'SeaArt AI'],
+    expectedAny: [
+      'Bing Image Creator',
+      'Leonardo AI',
+      'Midjourney',
+      'Craiyon (formerly DALL-E mini)',
+      'SeaArt AI',
+    ],
+    expectedTop: [
+      'Bing Image Creator',
+      'Leonardo AI',
+      'Midjourney',
+      'Craiyon (formerly DALL-E mini)',
+      'SeaArt AI',
+    ],
     expectedGoal: 'image-generation',
     minConfidence: 0.75,
   },
   {
     name: 'coding',
     question: 'Kod yazmak ve yazılım geliştirmek için asistan öner',
-    expectedAny: ['GitHub Copilot', 'Cursor', 'Tabnine', 'Codeium', 'AskCodi', 'CodeGeeX', 'CodePal', 'Amazon CodeWhisperer'],
-    expectedTop: ['GitHub Copilot', 'Cursor', 'Tabnine', 'Codeium', 'AskCodi', 'CodeGeeX', 'CodePal', 'Amazon CodeWhisperer'],
+    expectedAny: [
+      'GitHub Copilot',
+      'Cursor',
+      'Tabnine',
+      'Codeium',
+      'AskCodi',
+      'CodeGeeX',
+      'CodePal',
+      'Amazon CodeWhisperer',
+    ],
+    expectedTop: [
+      'GitHub Copilot',
+      'Cursor',
+      'Tabnine',
+      'Codeium',
+      'AskCodi',
+      'CodeGeeX',
+      'CodePal',
+      'Amazon CodeWhisperer',
+    ],
     expectedGoal: 'coding-assistant',
     minConfidence: 0.75,
   },
@@ -79,29 +134,32 @@ for (const evaluation of cases) {
     const titles = (payload.sources || []).map((source) => source.title);
     const relevant = evaluation.expectedAny.some((title) => titles.includes(title));
     const topRelevant = evaluation.expectedTop.includes(titles[0]);
-    const goalMatched = !evaluation.expectedGoal
-      || payload.intent?.goals?.includes(evaluation.expectedGoal);
-    const priceMatched = !evaluation.expectedPrice
-      || payload.intent?.pricePreference === evaluation.expectedPrice;
+    const goalMatched =
+      !evaluation.expectedGoal || payload.intent?.goals?.includes(evaluation.expectedGoal);
+    const priceMatched =
+      !evaluation.expectedPrice || payload.intent?.pricePreference === evaluation.expectedPrice;
     const confidenceMatched = payload.confidence >= (evaluation.minConfidence || 0);
-    const passed = response.ok
-      && payload.grounded === true
-      && relevant
-      && topRelevant
-      && goalMatched
-      && priceMatched
-      && confidenceMatched
-      && latencyMs <= maxLatencyMs;
+    const passed =
+      response.ok &&
+      payload.grounded === true &&
+      relevant &&
+      topRelevant &&
+      goalMatched &&
+      priceMatched &&
+      confidenceMatched &&
+      latencyMs <= maxLatencyMs;
     if (!passed) failed += 1;
-    console.log(JSON.stringify({
-      case: evaluation.name,
-      passed,
-      latencyMs,
-      confidence: payload.confidence,
-      intent: payload.intent,
-      sources: titles,
-      error: payload.error,
-    }));
+    console.log(
+      JSON.stringify({
+        case: evaluation.name,
+        passed,
+        latencyMs,
+        confidence: payload.confidence,
+        intent: payload.intent,
+        sources: titles,
+        error: payload.error,
+      })
+    );
   } catch (error) {
     failed += 1;
     console.log(JSON.stringify({ case: evaluation.name, passed: false, error: error.message }));
