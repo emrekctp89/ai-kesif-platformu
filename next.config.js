@@ -54,6 +54,8 @@ function buildDisabledRedirects(routes) {
 }
 
 const nextConfig = {
+  // Smaller self-contained image for Docker; Vercel builds leave this unset.
+  ...(process.env.DOCKER_BUILD === '1' ? { output: 'standalone' } : {}),
   outputFileTracingRoot: __dirname,
   serverExternalPackages: ['@supabase/supabase-js'],
   typescript: {

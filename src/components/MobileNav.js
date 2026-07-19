@@ -57,6 +57,7 @@ export function MobileNav({ user, isProUser }) {
         { href: '/', label: t('allTools'), icon: Bot },
         { href: '/kategori', label: t('categories'), icon: LayoutGrid },
         { href: '/kesfet', label: t('discover'), icon: Compass },
+        { href: '/kasif', label: t('kasif'), icon: BrainCircuit },
         { href: '/karsilastir', label: t('compare'), icon: GitCompareArrows },
         { href: '/tavsiye', label: t('aiRecommend'), icon: Lightbulb },
         { href: '/workmind', label: t('workmind'), icon: BrainCircuit },

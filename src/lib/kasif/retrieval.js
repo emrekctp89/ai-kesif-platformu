@@ -1,57 +1,102 @@
 import 'server-only';
 import { createClient } from '@/utils/supabase/server';
+import { KASIF_CONCEPTS } from './lexicon';
 
 const STOP_WORDS = new Set([
   'acaba',
   'bana',
   'bir',
   'icin',
-  'için',
   'ile',
   'olan',
   'olarak',
   'var',
   've',
+  'hangi',
+  'nedir',
+  'nasil',
+  'lutfen',
+  'istiyorum',
+  'peki',
+  'daha',
+  'olanlar',
+  'ucretsiz',
+  'ucretli',
+  'arac',
+  'araci',
+  'araclar',
+  'araclari',
+  'hazirlamak',
+  'kullanmak',
+  'kullanabilirim',
+  'ariyorum',
+  'oner',
+  'oneri',
 ]);
 
-export function extractSearchTerms(question) {
-  return String(question || '')
+export function normalizeText(value) {
+  return String(value || '')
     .toLocaleLowerCase('tr-TR')
-    .replace(/[^a-z0-9çğıöşü\s-]/gi, ' ')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ı/g, 'i')
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function extractSearchTerms(question) {
+  return normalizeText(question)
     .split(/\s+/)
     .filter((term) => term.length >= 3 && !STOP_WORDS.has(term))
-    .slice(0, 6);
+    .slice(0, 10);
 }
 
-export async function retrievePlatformContext(question) {
-  const terms = extractSearchTerms(question);
+export function buildRetrievalQuery(question, history = []) {
+  const previousUserTurns = history
+    .filter((message) => message?.role === 'user')
+    .slice(-2)
+    .map((message) => String(message.content || '').trim())
+    .filter(Boolean);
+  return [...previousUserTurns, String(question || '').trim()].join(' ').slice(0, 1600);
+}
+
+export function expandSearchTerms(query) {
+  const normalized = normalizeText(query);
+  const baseTerms = extractSearchTerms(query);
+  const conceptTerms = Object.values(KASIF_CONCEPTS)
+    .filter((words) => words.some((word) => normalized.includes(normalizeText(word))))
+    .flat();
+  return [...new Set([...baseTerms, ...conceptTerms])].slice(0, 12);
+}
+
+export async function retrievePlatformContext(question, history = []) {
+  const terms = expandSearchTerms(buildRetrievalQuery(question, history));
   if (!terms.length) return [];
-
   const supabase = await createClient();
-  const filters = terms.flatMap((term) => [`name.ilike.%${term}%`, `description.ilike.%${term}%`]);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const results = await Promise.all(
+      terms.map(async (term) => {
+        const filter = `name.ilike.%${term}%,description.ilike.%${term}%`;
+        return supabase
+          .from('tools')
+          .select('id, name, slug, description, pricing_model, category:categories(name)')
+          .eq('is_approved', true)
+          .or(filter)
+          .limit(10)
+          .abortSignal(controller.signal);
+      })
+    );
+    if (results.every(({ error }) => error)) throw new Error('KASIF_RETRIEVAL_FAILED');
 
-  const { data, error } = await supabase
-    .from('tools')
-    .select('id, name, slug, description, pricing_type, is_verified, category:categories(name)')
-    .eq('is_approved', true)
-    .or(filters.join(','))
-    .limit(12);
-
-  if (error) throw new Error('KASIF_RETRIEVAL_FAILED');
-  return data || [];
-}
-
-export function serializeContext(records) {
-  return records
-    .map((item) =>
-      [
-        `SOURCE_ID: tool:${item.id}`,
-        `Ad: ${item.name}`,
-        `Açıklama: ${item.description || 'Belirtilmemiş'}`,
-        `Kategori: ${item.category?.name || 'Belirtilmemiş'}`,
-        `Fiyatlandırma: ${item.pricing_type || 'Belirtilmemiş'}`,
-        `Doğrulanmış: ${item.is_verified ? 'Evet' : 'Hayır'}`,
-      ].join('\n')
-    )
-    .join('\n\n---\n\n');
+    const unique = new Map();
+    for (const { data } of results) {
+      for (const record of data || []) unique.set(String(record.id), record);
+    }
+    return [...unique.values()].slice(0, 60);
+  } finally {
+    clearTimeout(timeout);
+  }
 }

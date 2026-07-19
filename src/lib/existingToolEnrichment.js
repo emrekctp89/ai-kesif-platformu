@@ -3,12 +3,13 @@ import { generateGeminiText } from '@/utils/gemini';
 import {
   inferPlatformsFromLink,
   inferPricingModel,
+  isLikelyEnglishDescription,
   normalizeTextField,
   normalizeToolUrl,
 } from '@/lib/toolQuality';
 
 const DEFAULT_LIMIT = 5;
-const MAX_LIMIT = 20;
+const MAX_LIMIT = 100;
 const ALLOWED_PRICING_MODELS = new Set(['Ücretsiz', 'Freemium', 'Abonelik', 'Tek Seferlik Ödeme']);
 const ALLOWED_PLATFORMS = new Set([
   'Web',
@@ -88,19 +89,64 @@ function parseJsonFromText(text) {
   return JSON.parse(candidate.slice(firstBrace, lastBrace + 1));
 }
 
+export function isGenericSeedDescription(description) {
+  const text = String(description || '');
+  return (
+    /üzerinden erişilebilen bir yapay zeka aracıdır/i.test(text) ||
+    /günlük iş akışlarında daha hızlı ve verimli sonuç üretmeye yardımcı olur/i.test(text)
+  );
+}
+
 function getQualityScore(tool) {
   let score = 0;
-  if (String(tool.description || '').trim().length >= 140) score += 2;
+  const description = String(tool.description || '').trim();
+  if (description.length >= 140) score += 2;
   if (tool.pricing_model) score += 1;
   if (Array.isArray(tool.platforms) && tool.platforms.length > 0) score += 1;
   if (String(tool.technical_details || '').trim().length >= 240) score += 4;
   if (String(tool.description_en || '').trim()) score += 1;
+  // Penalize low-quality copy so English/template tools keep needing enrichment
+  if (isLikelyEnglishDescription(description)) score = Math.max(0, score - 3);
+  if (isGenericSeedDescription(description)) score = Math.max(0, score - 4);
   return score;
+}
+
+/**
+ * Higher = enrich sooner.
+ */
+export function getEnrichmentPriority(tool) {
+  const description = String(tool.description || '').trim();
+  let priority = 0;
+  if (isGenericSeedDescription(description)) priority += 100;
+  if (isLikelyEnglishDescription(description)) priority += 80;
+  if (description.length > 0 && description.length < 100) priority += 40;
+  if (!String(tool.technical_details || '').trim()) priority += 25;
+  if (!tool.pricing_model) priority += 10;
+  if (!Array.isArray(tool.platforms) || tool.platforms.length === 0) priority += 8;
+  // Prefer older records when priority ties
+  const updatedAt = Date.parse(tool.updated_at || 0) || 0;
+  priority += Math.max(0, 20 - Math.floor((Date.now() - updatedAt) / (1000 * 60 * 60 * 24 * 30)));
+  return priority;
 }
 
 function needsEnrichment(tool, { includeGoodQuality = false } = {}) {
   if (includeGoodQuality) return true;
+  const description = String(tool.description || '').trim();
+  if (isGenericSeedDescription(description)) return true;
+  if (isLikelyEnglishDescription(description)) return true;
   return getQualityScore(tool) < 7;
+}
+
+function shouldReplaceDescription(currentDescription, nextDescription) {
+  const current = normalizeTextField(currentDescription || '');
+  const next = normalizeTextField(nextDescription || '');
+  if (!next || next.length < 80) return false;
+  if (!current) return true;
+  if (isGenericSeedDescription(current)) return true;
+  if (isLikelyEnglishDescription(current) && !isLikelyEnglishDescription(next)) return true;
+  if (current.length < 140) return true;
+  if (next.length > current.length + 20) return true;
+  return false;
 }
 
 function buildPrompt(tool) {
@@ -174,12 +220,19 @@ function buildUpdates(tool, enrichment) {
     preserveNewLines: true,
   });
 
+  // Keep English original when we replace with Turkish
   if (
     enrichment.description &&
-    enrichment.description !== currentDescription &&
-    (currentDescription.length < 140 || enrichment.description.length > currentDescription.length)
+    shouldReplaceDescription(currentDescription, enrichment.description) &&
+    enrichment.description !== currentDescription
   ) {
     updates.description = enrichment.description;
+    if (
+      isLikelyEnglishDescription(currentDescription) &&
+      !normalizeTextField(tool.description_en || '')
+    ) {
+      updates.description_en = currentDescription;
+    }
   }
 
   if (
@@ -224,6 +277,7 @@ export async function enrichExistingTools(options = {}) {
   const limit = clampLimit(options.limit);
   const includeGoodQuality = Boolean(options.includeGoodQuality);
   const supabaseAdmin = createAdminClient();
+  const scanMultiplier = Math.min(50, Math.max(8, Math.ceil(limit / 2)));
 
   const { data: tools, error } = await supabaseAdmin
     .from('tools')
@@ -244,7 +298,7 @@ export async function enrichExistingTools(options = {}) {
     )
     .eq('is_approved', true)
     .order('updated_at', { ascending: true })
-    .limit(limit * 4);
+    .limit(Math.min(1000, limit * scanMultiplier));
 
   if (error) {
     throw new Error(`Araçlar okunamadı: ${error.message}`);
@@ -255,8 +309,10 @@ export async function enrichExistingTools(options = {}) {
       ...tool,
       category_name: tool.category_name || tool.categories?.name || null,
       quality_score: getQualityScore(tool),
+      priority: getEnrichmentPriority(tool),
     }))
     .filter((tool) => needsEnrichment(tool, { includeGoodQuality }))
+    .sort((a, b) => b.priority - a.priority || a.quality_score - b.quality_score)
     .slice(0, limit);
 
   const results = [];

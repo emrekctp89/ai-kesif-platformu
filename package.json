@@ -18,6 +18,7 @@
     "catalog:seed-sparse": "node ./scripts/seed-sparse-categories.mjs --apply",
     "catalog:platforms": "node ./scripts/update-platforms.mjs --apply --gemini --limit=300",
     "catalog:platforms:dry-run": "node ./scripts/update-platforms.mjs --dry-run",
+    "kasif:evaluate": "node ./scripts/kasif-evaluate.mjs",
     "tools:audit-links": "node ./scripts/tool-link-audit.mjs",
     "tools:audit-links:dry-run": "node ./scripts/tool-link-audit.mjs --dry-run",
     "tools:audit-links:deactivate": "node ./scripts/tool-link-audit.mjs --deactivate --confirm=DEACTIVATE_INVALID_TOOLS",

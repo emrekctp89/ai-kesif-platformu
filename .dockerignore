@@ -1,0 +1,33 @@
+# Dependencies & build
+node_modules
+.next
+out
+build
+coverage
+playwright-report
+test-results
+
+# Git / IDE
+.git
+.github
+.vscode
+.idea
+*.md
+!README.md
+
+# Env & secrets (inject at runtime)
+.env
+.env.*
+!.env.example
+google-credentials.json
+
+# Vercel / local tooling
+.vercel
+.turbo
+*.log
+.DS_Store
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore

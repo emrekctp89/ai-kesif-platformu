@@ -11,6 +11,7 @@
  *   node scripts/catalog-overhaul.mjs --apply
  *   node scripts/catalog-overhaul.mjs --apply --enrich --limit=80
  *   node scripts/catalog-overhaul.mjs --apply --discover --discover-limit=10
+ *   node scripts/catalog-overhaul.mjs --apply --discover-only --discover-limit=15
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -107,6 +108,7 @@ function parseArgs(argv) {
     dryRun: true,
     enrich: false,
     discover: false,
+    discoverOnly: false,
     purgeEmpty: true,
     limit: 100,
     discoverLimit: 10,
@@ -117,7 +119,10 @@ function parseArgs(argv) {
     else if (arg === '--dry-run') options.dryRun = true;
     else if (arg === '--enrich') options.enrich = true;
     else if (arg === '--discover') options.discover = true;
-    else if (arg === '--no-purge') options.purgeEmpty = false;
+    else if (arg === '--discover-only') {
+      options.discover = true;
+      options.discoverOnly = true;
+    } else if (arg === '--no-purge') options.purgeEmpty = false;
     else if (arg.startsWith('--limit=')) options.limit = Number(arg.split('=')[1]) || 100;
     else if (arg.startsWith('--discover-limit='))
       options.discoverLimit = Number(arg.split('=')[1]) || 10;
@@ -549,7 +554,6 @@ ${limit} yeni araç öner. Sadece JSON:
     if (!name || name.length < 2 || description.length < 60) continue;
     if (!/^https?:\/\//i.test(link)) link = `https://${link}`;
     try {
-      // eslint-disable-next-line no-new
       new URL(link);
     } catch {
       continue;
@@ -667,31 +671,38 @@ async function main() {
   // refresh slug map after ensure
   for (const c of allCats || []) slugToCategory.set(c.slug, c);
 
-  console.log('\n2) Reclassify tools');
-  const tools = await fetchAllTools(sb);
-  console.log(`  total tools: ${tools.length}`);
-  const reclass = await reclassifyTools(sb, tools, slugToCategory, categoriesById, options.dryRun);
-
-  console.log('\n3) Fill missing pricing / platforms');
-  // refresh tools after reclass if applied
-  const toolsForPricing = options.dryRun ? tools : await fetchAllTools(sb);
-  const pricing = await fillPricing(
-    sb,
-    toolsForPricing,
-    options.dryRun,
-    options.enrich,
-    options.limit
-  );
-
+  let reclass = { moves: [], distribution: {} };
+  let pricing = { updated: 0, inferred: 0, geminiFilled: 0, candidates: 0 };
   let purged = 0;
-  if (options.purgeEmpty) {
-    console.log('\n4) Purge empty non-primary categories');
-    purged = await purgeEmptyNonPrimary(sb, options.dryRun);
+  let discovery = { inserted: 0 };
+
+  if (!options.discoverOnly) {
+    console.log('\n2) Reclassify tools');
+    const tools = await fetchAllTools(sb);
+    console.log(`  total tools: ${tools.length}`);
+    reclass = await reclassifyTools(sb, tools, slugToCategory, categoriesById, options.dryRun);
+
+    console.log('\n3) Fill missing pricing / platforms');
+    // refresh tools after reclass if applied
+    const toolsForPricing = options.dryRun ? tools : await fetchAllTools(sb);
+    pricing = await fillPricing(
+      sb,
+      toolsForPricing,
+      options.dryRun,
+      options.enrich,
+      options.limit
+    );
+
+    if (options.purgeEmpty) {
+      console.log('\n4) Purge empty non-primary categories');
+      purged = await purgeEmptyNonPrimary(sb, options.dryRun);
+    }
+  } else {
+    console.log('\n2-4) Skipped (discover-only mode)');
   }
 
-  let discovery = { inserted: 0 };
   if (options.discover) {
-    console.log('\n5) Discover new tools');
+    console.log(`\n${options.discoverOnly ? '2' : '5'}) Discover new tools`);
     // refresh slug map
     const { data: cats2 } = await sb.from('categories').select('id,name,slug');
     const map2 = new Map((cats2 || []).map((c) => [c.slug, c]));
@@ -703,6 +714,7 @@ async function main() {
     JSON.stringify(
       {
         dryRun: options.dryRun,
+        discoverOnly: options.discoverOnly,
         reclassified: reclass.moves.length,
         distribution: reclass.distribution,
         pricing,
