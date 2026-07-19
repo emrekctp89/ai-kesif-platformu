@@ -209,7 +209,7 @@ export async function adminReviewCreatorPost(formData) {
   const admin = createAdminClient();
   const { data: existing, error: loadError } = await admin
     .from('posts')
-    .select('id, status, slug, published_at')
+    .select('id, status, slug, published_at, author_id, title')
     .eq('id', id)
     .maybeSingle();
   if (loadError || !existing) return { error: 'Yazı bulunamadı.' };
@@ -230,6 +230,31 @@ export async function adminReviewCreatorPost(formData) {
   if (updateError) {
     logger.error('adminReviewCreatorPost', updateError);
     return { error: 'İnceleme kaydedilemedi.' };
+  }
+
+  // Notify creator when preference allows (column may be missing on old schemas).
+  if (existing.author_id) {
+    try {
+      const { data: authorProfile } = await admin
+        .from('profiles')
+        .select('notify_on_content_approval')
+        .eq('id', existing.author_id)
+        .maybeSingle();
+      if (authorProfile?.notify_on_content_approval !== false) {
+        const published = decision === 'publish';
+        await admin.from('notifications').insert({
+          user_id: existing.author_id,
+          event_type: published ? 'content_published' : 'content_rejected',
+          message: published
+            ? `"${existing.title}" yayınlandı.`
+            : `"${existing.title}" incelemeye alındı/reddedildi.${note ? ` Not: ${note}` : ''}`,
+          link: published && existing.slug ? `/blog/${existing.slug}` : '/icerik',
+          is_read: false,
+        });
+      }
+    } catch (notifyError) {
+      logger.error('content review notify failed', notifyError);
+    }
   }
 
   revalidatePath('/admin');
