@@ -94,6 +94,51 @@ export const KASIF_GOALS = {
     ],
     negativeEvidence: ['transkript', 'podcast düzenleme', 'gürültü azalt', 'ses temizleme'],
   },
+  'workflow-automation': {
+    queryGroups: [
+      ['otomasyon', 'workflow', 'iş akışı', 'ajan', 'agent'],
+      ['otomatikleştir', 'bağla', 'tekrarlayan', 'entegrasyon', 'görev'],
+    ],
+    evidence: [
+      'iş akışı otomasyonu',
+      'workflow automation',
+      'tekrarlayan görev',
+      'iş akışları',
+      'uygulamaları birbirine bağ',
+      'entegrasyon',
+      'otomatikleştir',
+      'no-code otomasyon',
+    ],
+    negativeEvidence: ['görsel oluştur', 'video çözünürlük', 'fotoğraf üret', 'görüntü kalitesi'],
+  },
+  'data-analysis': {
+    queryGroups: [
+      ['veri', 'csv', 'excel', 'sql', 'dataset'],
+      ['analiz', 'rapor', 'grafik', 'görselleştir', 'dashboard'],
+    ],
+    evidence: [
+      'veri analizi',
+      'data analysis',
+      'csv',
+      'veri set',
+      'elektronik tablo',
+      'veri görselleştirme',
+      'dashboard',
+      'grafik oluştur',
+      'grafik çiz',
+      'istatistiksel model',
+      'iş zekası',
+    ],
+    negativeEvidence: [
+      'seo analizi',
+      'içerik optimizasyon',
+      'görsel üret',
+      'fotoğraf oluştur',
+      'reklam materyalleri',
+      'proje yönetimi',
+      'zaman takip',
+    ],
+  },
   'presentation-creation': {
     queryGroups: [
       ['sunum', 'slayt'],

@@ -107,7 +107,7 @@ export async function retrievePlatformContext(question, history = []) {
       .or(buildSearchFilter(terms))
       .order('is_featured', { ascending: false })
       .order('id', { ascending: true })
-      .limit(100)
+      .limit(250)
       .abortSignal(controller.signal);
     if (error) throw new Error('KASIF_RETRIEVAL_FAILED');
 

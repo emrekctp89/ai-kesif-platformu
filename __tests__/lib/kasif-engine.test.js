@@ -231,6 +231,50 @@ describe('Kâşif engine', () => {
     expect(ranked[0].record.id).toBe(16);
   });
 
+  it('workflow otomasyon isteğinde entegrasyon aracını görsel aracının önüne alır', () => {
+    const automationRecords = [
+      {
+        id: 18,
+        name: 'Workflow Builder',
+        description: 'Uygulamaları birbirine bağlar ve tekrarlayan görevleri otomatikleştirir',
+      },
+      {
+        id: 19,
+        name: 'AI Designer',
+        description: 'Yapay zeka ile görsel oluşturur ve fotoğraf üretir',
+      },
+    ];
+
+    const intent = understandQuestion(
+      'Tekrarlayan işlerimi otomatikleştirecek bir workflow aracı öner'
+    );
+    const ranked = rankTools(automationRecords, intent);
+
+    expect(intent.goals).toContain('workflow-automation');
+    expect(ranked[0].record.id).toBe(18);
+  });
+
+  it('veri analizi isteğinde CSV analiz aracını SEO aracının önüne alır', () => {
+    const analysisRecords = [
+      {
+        id: 23,
+        name: 'Data Analyst',
+        description: 'CSV verilerini analiz eder, dashboard ve grafik oluşturur',
+      },
+      {
+        id: 24,
+        name: 'SEO Analyzer',
+        description: 'SEO analizi ve içerik optimizasyon raporu sunar',
+      },
+    ];
+
+    const intent = understandQuestion('CSV verilerimi analiz edip grafik oluşturmak istiyorum');
+    const ranked = rankTools(analysisRecords, intent);
+
+    expect(intent.goals).toContain('data-analysis');
+    expect(ranked[0].record.id).toBe(23);
+  });
+
   it('kod asistanı sorgusunda eğitim ve dönüşüm araçlarını geriye iter', () => {
     const codingRecords = [
       {
