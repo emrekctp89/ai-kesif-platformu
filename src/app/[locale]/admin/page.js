@@ -155,7 +155,22 @@ async function getAdminData() {
     approvedTools: normalizedApprovedTools,
     categories: sortCategoriesByCanonicalOrder(categoriesResult.data || []),
     allTags: tagsResult.data || [],
-    allPosts: postsResult.data || [],
+    allPosts: await (async () => {
+      const posts = postsResult.data || [];
+      const authorIds = [
+        ...new Set(posts.map((p) => p.author_id).filter((id) => typeof id === 'string' && id)),
+      ];
+      if (!authorIds.length) return posts;
+      const { data: authors } = await supabaseAdmin
+        .from('profiles')
+        .select('id, username, email')
+        .in('id', authorIds);
+      const map = new Map((authors || []).map((a) => [a.id, a]));
+      return posts.map((post) => ({
+        ...post,
+        author: post.author_id ? map.get(post.author_id) || null : null,
+      }));
+    })(),
     challenges: challengesResult.data || [],
     reportedLinks: reportedLinksResult.data || [],
     adminAlerts: adminAlertsResult.data || [],

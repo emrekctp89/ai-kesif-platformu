@@ -314,6 +314,10 @@ export async function updateCreatorPost(formData) {
     return { error: 'Geçersiz durum. Yayınlama yalnızca admin onayından sonra yapılır.' };
   }
 
+  const categoryRaw = formData.get('category_id');
+  const categoryId =
+    categoryRaw === '' || categoryRaw == null ? null : parseInt(String(categoryRaw), 10);
+
   const updates = {
     title: String(formData.get('title') || '').trim(),
     slug: String(formData.get('slug') || existing.slug).trim(),
@@ -321,6 +325,7 @@ export async function updateCreatorPost(formData) {
     description: String(formData.get('description') || '').trim(),
     type: String(formData.get('type') || 'Yazı').trim(),
     status: nextStatus,
+    category_id: Number.isFinite(categoryId) ? categoryId : null,
     updated_at: new Date().toISOString(),
   };
 

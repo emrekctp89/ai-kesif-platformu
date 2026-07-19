@@ -82,7 +82,12 @@
     "statTotal": "Toplam",
     "statDraft": "Taslak",
     "statReview": "İncelemede",
-    "statPublished": "Yayında"
+    "statPublished": "Yayında",
+    "statRejected": "Reddedildi",
+    "filterAll": "Tümü",
+    "filterAria": "Yazı durumu filtresi",
+    "emptyFiltered": "Bu filtrede yazı yok.",
+    "viewLive": "Canlıda gör"
   },
   "SoftLanding": {
     "heroChip": "Geçici olarak pasif",

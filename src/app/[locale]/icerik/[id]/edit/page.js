@@ -30,7 +30,10 @@ export default async function CreatorEditPostPage({ params }) {
     if (!profile?.is_content_creator) redirect('/icerik');
   }
 
-  const { data: post, error } = await admin.from('posts').select('*').eq('id', id).maybeSingle();
+  const [{ data: post, error }, { data: categories }] = await Promise.all([
+    admin.from('posts').select('*').eq('id', id).maybeSingle(),
+    admin.from('categories').select('id, name').order('name', { ascending: true }),
+  ]);
   if (error || !post) notFound();
   if (!isAdmin && post.author_id !== user.id) redirect('/icerik');
 
@@ -51,7 +54,7 @@ export default async function CreatorEditPostPage({ params }) {
           <p className="mt-1 text-sm text-muted-foreground">{post.title}</p>
         </div>
       </div>
-      <CreatorPostEditor post={post} />
+      <CreatorPostEditor post={post} categories={categories || []} />
     </div>
   );
 }

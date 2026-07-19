@@ -82,7 +82,12 @@
     "statTotal": "Total",
     "statDraft": "Drafts",
     "statReview": "In review",
-    "statPublished": "Published"
+    "statPublished": "Published",
+    "statRejected": "Rejected",
+    "filterAll": "All",
+    "filterAria": "Post status filter",
+    "emptyFiltered": "No posts in this filter.",
+    "viewLive": "View live"
   },
   "SoftLanding": {
     "heroChip": "Temporarily paused",

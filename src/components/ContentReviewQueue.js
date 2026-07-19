@@ -43,7 +43,12 @@ export function ContentReviewQueue({ posts }) {
     <div className="space-y-3">
       {posts.map((post) => {
         const authorLabel =
-          post.profiles?.username || post.profiles?.email || post.author_id?.slice(0, 8) || '—';
+          post.author?.username ||
+          post.author?.email ||
+          post.profiles?.username ||
+          post.profiles?.email ||
+          post.author_id?.slice?.(0, 8) ||
+          '—';
         return (
           <Card key={post.id} className="glass-panel">
             <CardHeader className="pb-2">
@@ -52,7 +57,10 @@ export function ContentReviewQueue({ posts }) {
                 <Badge variant="secondary">{post.type}</Badge>
                 <Badge variant="outline">İncelemede</Badge>
               </div>
-              <p className="text-xs text-muted-foreground">Yazar: {authorLabel}</p>
+              <p className="text-xs text-muted-foreground">
+                Yazar: {authorLabel}
+                {post.submitted_at ? ` · ${new Date(post.submitted_at).toLocaleString()}` : ''}
+              </p>
             </CardHeader>
             <CardContent>
               <form

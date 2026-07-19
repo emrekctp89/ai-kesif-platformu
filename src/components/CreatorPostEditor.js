@@ -2,7 +2,10 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { ExternalLink } from 'lucide-react';
 import { submitCreatorPostForReview, updateCreatorPost } from '@/app/actions/contentCreators';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,10 +23,17 @@ import {
 const SimpleMDE = dynamic(() => import('react-simplemde-editor'), { ssr: false });
 import 'easymde/dist/easymde.min.css';
 
-export function CreatorPostEditor({ post }) {
+/**
+ * @param {{ post: object, categories?: Array<{ id: number, name: string }> }} props
+ */
+export function CreatorPostEditor({ post, categories = [] }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [content, setContent] = useState(post.content || '');
   const [type, setType] = useState(post.type || 'Yazı');
+  const [categoryId, setCategoryId] = useState(
+    post.category_id != null ? String(post.category_id) : 'none'
+  );
 
   const editorOptions = useMemo(
     () => ({
@@ -49,24 +59,35 @@ export function CreatorPostEditor({ post }) {
 
   const lockedPublished = post.status === 'Yayınlandı';
 
-  function save(formData) {
+  function withMeta(formData) {
     formData.set('content', content);
     formData.set('type', type);
+    formData.set('category_id', categoryId === 'none' ? '' : categoryId);
+    return formData;
+  }
+
+  function save(formData) {
+    withMeta(formData);
     formData.set('status', post.status === 'İncelemede' ? 'İncelemede' : 'Taslak');
     startTransition(async () => {
       const result = await updateCreatorPost(formData);
       if (result.error) toast.error(result.error);
-      else toast.success(result.success || 'Kaydedildi');
+      else {
+        toast.success(result.success || 'Kaydedildi');
+        router.refresh();
+      }
     });
   }
 
   function submitReview(formData) {
-    formData.set('content', content);
-    formData.set('type', type);
+    withMeta(formData);
     startTransition(async () => {
       const result = await submitCreatorPostForReview(formData);
       if (result.error) toast.error(result.error);
-      else toast.success(result.success || 'İncelemeye gönderildi');
+      else {
+        toast.success(result.success || 'İncelemeye gönderildi');
+        router.refresh();
+      }
     });
   }
 
@@ -76,8 +97,16 @@ export function CreatorPostEditor({ post }) {
         <CardHeader>
           <CardTitle>Yayınlandı</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Bu yazı yayınlanmış. Düzenleme için admin ile iletişime geçin.
+        <CardContent className="space-y-3 text-sm text-muted-foreground">
+          <p>Bu yazı yayınlanmış. Düzenleme için admin ile iletişime geçin.</p>
+          {post.slug ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                Yayındaki yazıyı gör
+              </Link>
+            </Button>
+          ) : null}
         </CardContent>
       </Card>
     );
@@ -129,6 +158,24 @@ export function CreatorPostEditor({ post }) {
                   </SelectContent>
                 </Select>
               </div>
+              {categories.length > 0 ? (
+                <div className="space-y-2">
+                  <Label>Kategori (opsiyonel)</Label>
+                  <Select value={categoryId} onValueChange={setCategoryId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Kategori seç" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Kategori yok</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={String(cat.id)}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : null}
               <p className="text-xs text-muted-foreground">
                 Durum: <span className="font-semibold text-foreground">{post.status}</span>
               </p>
