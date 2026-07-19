@@ -10,6 +10,7 @@ import { DashboardClient } from '@/components/DashboardClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserManagementTable } from '@/components/UserManagementTable';
 import { CreatorApplicationsPanel } from '@/components/CreatorApplicationsPanel';
+import { ReassignQuestsButton } from '@/components/ReassignQuestsButton';
 import { AiBriefingCard } from '@/components/AiBriefingCard';
 import { getCreatorApplications } from '@/app/actions/contentCreators';
 import { Badge } from '@/components/ui/badge';
@@ -147,6 +148,19 @@ export default async function DashboardPage({ params }) {
       <AiBriefingCard briefing={latestBriefing} />
 
       <DashboardClient stats={stats} linkHealthStats={linkHealthStats} />
+
+      <Card className="glass-panel border-border/50">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle>Günlük görevler</CardTitle>
+            <CardDescription>
+              Bugünkü atamaları silip aktif katalogdan (araç yorumu / favori / puan vb.) yeniden
+              dağıtır. Topluluk soft-landing sonrası kullan.
+            </CardDescription>
+          </div>
+          <ReassignQuestsButton />
+        </CardHeader>
+      </Card>
 
       <Card className="glass-panel border-border/50">
         <CardHeader>

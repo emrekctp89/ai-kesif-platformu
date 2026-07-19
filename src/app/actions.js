@@ -24,3 +24,4 @@ export * from './actions/translationActions';
 export * from './actions/moderation';
 export * from './actions/subscribe';
 export * from './actions/contentCreators';
+export * from './actions/quests';
