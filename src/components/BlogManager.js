@@ -138,7 +138,14 @@ export function BlogManager({ posts }) {
         <h3 className="text-lg font-medium mb-2">Mevcut Yazılar</h3>
         <div className="space-y-2">
           {posts.map((post) => {
-            const isPublished = post.status === 'Yayınlandı';
+            const statusVariant =
+              post.status === 'Yayınlandı'
+                ? 'default'
+                : post.status === 'İncelemede'
+                  ? 'secondary'
+                  : post.status === 'Reddedildi'
+                    ? 'destructive'
+                    : 'outline';
             // DEĞİŞİKLİK: editUrl artık her zaman yeni, merkezi sayfayı işaret ediyor.
             const editUrl = `/admin/posts/${post.id}/edit`;
 
@@ -150,7 +157,7 @@ export function BlogManager({ posts }) {
                 <div>
                   <p className="font-medium">{post.title}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge variant={isPublished ? 'default' : 'secondary'}>{post.status}</Badge>
+                    <Badge variant={statusVariant}>{post.status}</Badge>
                     <Badge variant="outline">{post.type}</Badge>
                   </div>
                 </div>

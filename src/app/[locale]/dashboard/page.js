@@ -9,7 +9,10 @@ import { getTranslations } from 'next-intl/server';
 import { DashboardClient } from '@/components/DashboardClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserManagementTable } from '@/components/UserManagementTable';
+import { CreatorApplicationsPanel } from '@/components/CreatorApplicationsPanel';
 import { AiBriefingCard } from '@/components/AiBriefingCard';
+import { getCreatorApplications } from '@/app/actions/contentCreators';
+import { Badge } from '@/components/ui/badge';
 import { generatePageMetadata } from '@/utils/seo';
 
 // DEĞİŞİKLİK: Bu fonksiyonlar artık "Süper Admin" yetkileriyle çalışacak
@@ -113,12 +116,15 @@ export default async function DashboardPage({ params }) {
     redirect('/');
   }
 
-  const [stats, allUsers, latestBriefing, linkHealthStats] = await Promise.all([
-    getDashboardData(),
-    getAllUsersData(),
-    getLatestBriefing(),
-    getLinkHealthStats(),
-  ]);
+  const [stats, allUsers, latestBriefing, linkHealthStats, creatorApplications] = await Promise.all(
+    [
+      getDashboardData(),
+      getAllUsersData(),
+      getLatestBriefing(),
+      getLinkHealthStats(),
+      getCreatorApplications(),
+    ]
+  );
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-8">
@@ -141,6 +147,22 @@ export default async function DashboardPage({ params }) {
       <AiBriefingCard briefing={latestBriefing} />
 
       <DashboardClient stats={stats} linkHealthStats={linkHealthStats} />
+
+      <Card className="glass-panel border-border/50">
+        <CardHeader>
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            İçerik üretici başvuruları
+            <Badge variant="secondary">{creatorApplications.length}</Badge>
+          </CardTitle>
+          <CardDescription>
+            Üyelerden gelen üretici başvurularını onayla veya reddet. Onaylananlar /icerik
+            stüdyosuna erişir.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CreatorApplicationsPanel applications={creatorApplications} />
+        </CardContent>
+      </Card>
 
       <Card className="glass-panel border-border/50">
         <CardHeader>

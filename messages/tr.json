@@ -72,7 +72,16 @@
     "reviewNote": "Admin notu",
     "edit": "Düzenle",
     "backToStudio": "Stüdyoya dön",
-    "editTitle": "Taslağı düzenle"
+    "editTitle": "Taslağı düzenle",
+    "applyPitchLabel": "Neden içerik üretmek istiyorsun?",
+    "applyPitchPlaceholder": "Örn. AI araçları üzerine rehber yazıyorum, blog için haftalık özet hazırlayabilirim…",
+    "applySubmit": "Üretici olmak için başvur",
+    "applySubmitting": "Gönderiliyor…",
+    "applyPending": "Başvurun incelemede. Onaylandığında bildirim alacaksın.",
+    "statTotal": "Toplam",
+    "statDraft": "Taslak",
+    "statReview": "İncelemede",
+    "statPublished": "Yayında"
   },
   "SoftLanding": {
     "heroChip": "Geçici olarak pasif",

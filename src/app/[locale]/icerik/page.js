@@ -6,8 +6,12 @@ import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
 import { ContentStudioClient } from '@/components/ContentStudioClient';
+import { CreatorApplyForm } from '@/components/CreatorApplyForm';
 import { Button } from '@/components/ui/button';
-import { getCreatorPostsForCurrentUser } from '@/app/actions/contentCreators';
+import {
+  getCreatorPostsForCurrentUser,
+  hasOpenCreatorApplication,
+} from '@/app/actions/contentCreators';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { generatePageMetadata } from '@/utils/seo';
 
@@ -43,17 +47,30 @@ export default async function ContentStudioPage({ params }) {
   const allowed = isAdmin || Boolean(profile?.is_content_creator);
 
   if (!allowed) {
+    const pending = await hasOpenCreatorApplication(user.id);
     return (
       <div className="mx-auto max-w-2xl space-y-6 pb-12 pt-6 text-center">
         <div className="brand-surface glass-panel rounded-3xl p-8">
           <PenLine className="mx-auto h-10 w-10 text-muted-foreground" aria-hidden="true" />
           <h1 className="mt-4 text-2xl font-extrabold tracking-tight">{t('lockedTitle')}</h1>
           <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">{t('lockedBody')}</p>
+          <div className="mt-6">
+            <CreatorApplyForm
+              alreadyPending={pending}
+              labels={{
+                pitchLabel: t('applyPitchLabel'),
+                pitchPlaceholder: t('applyPitchPlaceholder'),
+                submit: t('applySubmit'),
+                submitting: t('applySubmitting'),
+                pendingMessage: t('applyPending'),
+              }}
+            />
+          </div>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             <Button asChild variant="outline">
               <Link href="/blog">{t('ctaBlog')}</Link>
             </Button>
-            <Button asChild>
+            <Button asChild variant="ghost">
               <Link href="/ogren">{t('ctaLearn')}</Link>
             </Button>
           </div>

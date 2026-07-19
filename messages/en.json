@@ -72,7 +72,16 @@
     "reviewNote": "Admin note",
     "edit": "Edit",
     "backToStudio": "Back to studio",
-    "editTitle": "Edit draft"
+    "editTitle": "Edit draft",
+    "applyPitchLabel": "Why do you want to create content?",
+    "applyPitchPlaceholder": "e.g. I write AI tool guides and can contribute weekly roundups…",
+    "applySubmit": "Apply to become a creator",
+    "applySubmitting": "Submitting…",
+    "applyPending": "Your application is under review. You’ll be notified when approved.",
+    "statTotal": "Total",
+    "statDraft": "Drafts",
+    "statReview": "In review",
+    "statPublished": "Published"
   },
   "SoftLanding": {
     "heroChip": "Temporarily paused",

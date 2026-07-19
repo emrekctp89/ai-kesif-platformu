@@ -68,14 +68,153 @@ export async function setContentCreatorStatus({ userId, enabled, note } = {}) {
     return { error: 'İçerik üretici durumu güncellenemedi.' };
   }
 
+  // Always close open application alerts for this user when admin acts.
+  try {
+    const { data: openAlerts } = await admin
+      .from('admin_alerts')
+      .select('id, metadata')
+      .eq('alert_type', 'content_creator_application')
+      .eq('status', 'Açık')
+      .limit(50);
+    const ids = (openAlerts || [])
+      .filter((row) => row?.metadata?.user_id === targetId)
+      .map((row) => row.id);
+    if (ids.length) {
+      await admin
+        .from('admin_alerts')
+        .update({ status: 'Çözüldü', resolved_at: new Date().toISOString() })
+        .in('id', ids);
+    }
+  } catch (alertError) {
+    logger.error('close creator application alerts', alertError);
+  }
+
+  try {
+    await admin.from('notifications').insert({
+      user_id: targetId,
+      event_type: enabled ? 'content_creator_approved' : 'content_creator_revoked',
+      message: enabled
+        ? 'İçerik üretici başvurun onaylandı. İçerik stüdyosundan yazı gönderebilirsin.'
+        : note === 'application_rejected'
+          ? 'İçerik üretici başvurun şu an onaylanmadı. Daha sonra tekrar deneyebilirsin.'
+          : 'İçerik üretici yetkin kaldırıldı.',
+      link: enabled ? '/icerik' : '/blog',
+      is_read: false,
+    });
+  } catch (notifyError) {
+    logger.error('creator status notify', notifyError);
+  }
+
   revalidatePath('/dashboard');
+  revalidatePath('/admin');
   revalidatePath('/icerik');
   return {
     success: true,
     message: enabled
       ? 'Kullanıcı içerik üretici olarak onaylandı.'
-      : 'İçerik üretici yetkisi kaldırıldı.',
+      : note === 'application_rejected'
+        ? 'Başvuru reddedildi.'
+        : 'İçerik üretici yetkisi kaldırıldı.',
   };
+}
+
+/**
+ * Logged-in member requests content creator access.
+ * Creates an admin_alert (no extra schema required).
+ */
+export async function requestContentCreatorAccess(formData) {
+  const { user, error } = await requireUser();
+  if (error) return { error };
+
+  if (isAdminUser(user)) {
+    return { error: 'Admin zaten tüm içerik yetkilerine sahip.' };
+  }
+
+  const profile = await getProfileFlags(user.id);
+  if (profile?.is_content_creator) {
+    return { error: 'Zaten içerik üreticisisin.', success: true };
+  }
+
+  const pitch = String(formData?.get?.('pitch') || formData?.pitch || '')
+    .trim()
+    .slice(0, 800);
+  if (pitch.length < 20) {
+    return { error: 'Kısa bir tanıtım yaz (en az 20 karakter).' };
+  }
+
+  const admin = createAdminClient();
+
+  // Prevent spam: one open application at a time.
+  const { data: openAlerts } = await admin
+    .from('admin_alerts')
+    .select('id, metadata, status')
+    .eq('alert_type', 'content_creator_application')
+    .eq('status', 'Açık')
+    .limit(100);
+  const alreadyOpen = (openAlerts || []).some((row) => row?.metadata?.user_id === user.id);
+  if (alreadyOpen) {
+    return {
+      success: true,
+      message: 'Başvurun zaten incelemede. Onaylandığında bildirim alacaksın.',
+    };
+  }
+
+  const username = profile?.username || null;
+  const email = profile?.email || user.email || null;
+  const { error: alertError } = await admin.from('admin_alerts').insert({
+    alert_type: 'content_creator_application',
+    description: `İçerik üretici başvurusu: ${username || email || user.id} — ${pitch}`,
+    link: '/dashboard',
+    status: 'Açık',
+    metadata: {
+      user_id: user.id,
+      email,
+      username,
+      pitch,
+    },
+  });
+
+  if (alertError) {
+    logger.error('requestContentCreatorAccess', alertError);
+    return { error: 'Başvuru kaydedilemedi. Biraz sonra tekrar dene.' };
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/dashboard');
+  revalidatePath('/icerik');
+  return {
+    success: true,
+    message: 'Başvurun alındı. Admin onayından sonra içerik stüdyosu açılacak.',
+  };
+}
+
+export async function hasOpenCreatorApplication(userId) {
+  if (!userId) return false;
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from('admin_alerts')
+    .select('id, metadata, status')
+    .eq('alert_type', 'content_creator_application')
+    .eq('status', 'Açık')
+    .limit(100);
+  return (data || []).some((row) => row?.metadata?.user_id === userId);
+}
+
+export async function getCreatorApplications() {
+  const { user, error } = await requireUser();
+  if (error || !isAdminUser(user)) return [];
+  const admin = createAdminClient();
+  const { data, error: qError } = await admin
+    .from('admin_alerts')
+    .select('id, description, metadata, status, created_at')
+    .eq('alert_type', 'content_creator_application')
+    .eq('status', 'Açık')
+    .order('created_at', { ascending: true });
+  if (qError) {
+    logger.error('getCreatorApplications', qError);
+    return [];
+  }
+  return data || [];
 }
 
 export async function createCreatorPost(formData) {

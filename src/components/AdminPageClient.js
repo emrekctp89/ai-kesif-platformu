@@ -1636,7 +1636,12 @@ export function AdminPageClient({ data }) {
         <ChallengeManager challenges={challenges} />
         <Card className="glass-panel border-border/50">
           <CardHeader>
-            <CardTitle>İçerik inceleme kuyruğu</CardTitle>
+            <CardTitle className="flex flex-wrap items-center gap-2">
+              İçerik inceleme kuyruğu
+              <Badge variant="secondary">
+                {(allPosts || []).filter((post) => post.status === 'İncelemede').length}
+              </Badge>
+            </CardTitle>
             <CardDescription>
               Onaylı üreticilerden gelen yazı/rehber taslaklarını yayınla veya reddet.
             </CardDescription>

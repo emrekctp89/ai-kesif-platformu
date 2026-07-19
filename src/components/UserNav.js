@@ -39,7 +39,6 @@ import { useCommunityPanelPref } from '@/hooks/useCommunityPanelPref';
 export function UserNav({ user, profile, isProUser, isAdmin }) {
   const t = useTranslations('Navigation');
   const { communityPanelEnabled, setCommunityPanelEnabled } = useCommunityPanelPref();
-  const isContentCreator = Boolean(isAdmin || profile?.is_content_creator);
 
   return (
     <DropdownMenu>
@@ -84,14 +83,12 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
             <span>{t('workmind')}</span>
           </Link>
         </DropdownMenuItem>
-        {isContentCreator ? (
-          <DropdownMenuItem asChild>
-            <Link href="/icerik">
-              <PenLine className="mr-2 h-4 w-4" />
-              <span>{t('contentStudio')}</span>
-            </Link>
-          </DropdownMenuItem>
-        ) : null}
+        <DropdownMenuItem asChild>
+          <Link href="/icerik">
+            <PenLine className="mr-2 h-4 w-4" />
+            <span>{t('contentStudio')}</span>
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/kategori">
             <LayoutGrid className="mr-2 h-4 w-4" />

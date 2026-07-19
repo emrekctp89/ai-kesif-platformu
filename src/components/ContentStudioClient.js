@@ -31,8 +31,32 @@ export function ContentStudioClient({ posts }) {
   const [isPending, startTransition] = useTransition();
   const [type, setType] = useState('Yazı');
 
+  const stats = {
+    total: posts.length,
+    draft: posts.filter((p) => p.status === 'Taslak').length,
+    review: posts.filter((p) => p.status === 'İncelemede').length,
+    published: posts.filter((p) => p.status === 'Yayınlandı').length,
+    rejected: posts.filter((p) => p.status === 'Reddedildi').length,
+  };
+
   return (
     <div className="space-y-8">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: t('statTotal'), value: stats.total },
+          { label: t('statDraft'), value: stats.draft },
+          { label: t('statReview'), value: stats.review },
+          { label: t('statPublished'), value: stats.published },
+        ].map((item) => (
+          <Card key={item.label} className="glass-panel border-border/50">
+            <CardContent className="py-4 text-center">
+              <p className="text-2xl font-extrabold tracking-tight">{item.value}</p>
+              <p className="text-xs text-muted-foreground">{item.label}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <Card className="glass-panel border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
