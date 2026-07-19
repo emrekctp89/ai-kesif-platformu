@@ -70,6 +70,10 @@ export function expandSearchTerms(query) {
   return [...new Set([...baseTerms, ...conceptTerms])].slice(0, 12);
 }
 
+export function buildSearchFilter(terms) {
+  return terms.flatMap((term) => [`name.ilike.%${term}%`, `description.ilike.%${term}%`]).join(',');
+}
+
 export async function retrievePlatformContext(question, history = []) {
   const terms = expandSearchTerms(buildRetrievalQuery(question, history));
   if (!terms.length) return [];
@@ -77,25 +81,20 @@ export async function retrievePlatformContext(question, history = []) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
-    const results = await Promise.all(
-      terms.map(async (term) => {
-        const filter = `name.ilike.%${term}%,description.ilike.%${term}%`;
-        return supabase
-          .from('tools')
-          .select('id, name, slug, description, pricing_model, category:categories(name)')
-          .eq('is_approved', true)
-          .or(filter)
-          .limit(10)
-          .abortSignal(controller.signal);
-      })
-    );
-    if (results.every(({ error }) => error)) throw new Error('KASIF_RETRIEVAL_FAILED');
+    const { data, error } = await supabase
+      .from('tools')
+      .select(
+        'id, name, slug, link, description, pricing_model, is_featured, tier, category:categories(name)'
+      )
+      .eq('is_approved', true)
+      .or(buildSearchFilter(terms))
+      .order('is_featured', { ascending: false })
+      .order('id', { ascending: true })
+      .limit(100)
+      .abortSignal(controller.signal);
+    if (error) throw new Error('KASIF_RETRIEVAL_FAILED');
 
-    const unique = new Map();
-    for (const { data } of results) {
-      for (const record of data || []) unique.set(String(record.id), record);
-    }
-    return [...unique.values()].slice(0, 60);
+    return data || [];
   } finally {
     clearTimeout(timeout);
   }

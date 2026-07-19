@@ -21,20 +21,18 @@ function escapeXml(value) {
 
 export async function GET() {
   const generatedAt = new Date().toISOString();
+  // Paused community/explore surfaces intentionally omitted (soft landing + noindex).
   const urls = [
     { url: withBase('/'), lastModified: generatedAt },
     { url: withBase('/kategori'), lastModified: generatedAt },
-    { url: withBase('/kesfet'), lastModified: generatedAt },
+    { url: withBase('/ogren'), lastModified: generatedAt },
+    { url: withBase('/workmind'), lastModified: generatedAt },
+    { url: withBase('/blog'), lastModified: generatedAt },
+    { url: withBase('/arastirma'), lastModified: generatedAt },
     { url: withBase('/karsilastir'), lastModified: generatedAt },
     { url: withBase('/tavsiye'), lastModified: generatedAt },
-    { url: withBase('/blog'), lastModified: generatedAt },
     { url: withBase('/bulten'), lastModified: generatedAt },
-    { url: withBase('/eserler'), lastModified: generatedAt },
     { url: withBase('/koleksiyonlar'), lastModified: generatedAt },
-    { url: withBase('/topluluk'), lastModified: generatedAt },
-    { url: withBase('/leaderboard'), lastModified: generatedAt },
-    { url: withBase('/ogren'), lastModified: generatedAt },
-    { url: withBase('/random-tools'), lastModified: generatedAt },
     { url: withBase('/hakkimizda'), lastModified: generatedAt },
     { url: withBase('/iletisim'), lastModified: generatedAt },
     { url: withBase('/gizlilik'), lastModified: generatedAt },

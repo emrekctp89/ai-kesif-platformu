@@ -8,20 +8,12 @@ import {
   PlusCircle,
   Info,
   Mail,
-  Compass,
   GitCompareArrows,
   Newspaper,
-  Images,
   Crown,
   LogIn,
-  Rss,
-  Users,
   LayoutGrid,
-  Trophy,
-  Dice5,
   GraduationCap,
-  Rocket,
-  Target,
   FlaskConical,
   MessageSquareHeart,
   WandSparkles,
@@ -30,6 +22,12 @@ import {
   Scale,
   FolderOpen,
   BrainCircuit,
+  Users,
+  Rss,
+  Trophy,
+  Images,
+  Rocket,
+  Target,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
@@ -44,44 +42,53 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from './ui/button';
 import { FutureAiGlyph } from '@/components/FutureAiGlyph';
+import { filterNavLinks } from '@/lib/navFeatures';
+import { useCommunityPanelPref } from '@/hooks/useCommunityPanelPref';
 
 export function MobileNav({ user, isProUser }) {
   const t = useTranslations('Navigation');
   const tc = useTranslations('Common');
   const [open, setOpen] = React.useState(false);
+  const { communityPanelEnabled } = useCommunityPanelPref();
 
   const sections = [
     {
       title: t('groupExplore'),
-      links: [
-        { href: '/', label: t('allTools'), icon: Bot },
-        { href: '/kategori', label: t('categories'), icon: LayoutGrid },
-        { href: '/kesfet', label: t('discover'), icon: Compass },
-        { href: '/kasif', label: t('kasif'), icon: BrainCircuit },
-        { href: '/karsilastir', label: t('compare'), icon: GitCompareArrows },
-        { href: '/tavsiye', label: t('aiRecommend'), icon: Lightbulb },
-        { href: '/workmind', label: t('workmind'), icon: BrainCircuit },
-        { href: '/random-tools', label: t('randomTools'), icon: Dice5 },
-        { href: '/koleksiyonlar', label: t('collections'), icon: FolderOpen },
-        { href: '/arastirma', label: t('research'), icon: FlaskConical },
-      ],
+      links: filterNavLinks(
+        [
+          { href: '/', label: t('allTools'), icon: Bot },
+          { href: '/kategori', label: t('categories'), icon: LayoutGrid },
+          { href: '/ogren', label: t('learn'), icon: GraduationCap },
+          { href: '/workmind', label: t('workmind'), icon: BrainCircuit },
+          { href: '/kasif', label: t('kasif'), icon: BrainCircuit },
+          { href: '/karsilastir', label: t('compare'), icon: GitCompareArrows },
+          { href: '/tavsiye', label: t('aiRecommend'), icon: Lightbulb },
+          { href: '/koleksiyonlar', label: t('collections'), icon: FolderOpen },
+          { href: '/arastirma', label: t('research'), icon: FlaskConical },
+          { href: '/kesfet', label: t('discover'), icon: Bot },
+          { href: '/random-tools', label: t('randomTools'), icon: Bot },
+        ],
+        { allowCommunity: false }
+      ),
     },
     {
       title: t('groupCommunity'),
-      links: [
-        ...(user ? [{ href: '/akis', label: t('feed'), icon: Rss }] : []),
-        { href: '/topluluk', label: t('community'), icon: Users },
-        { href: '/leaderboard', label: t('leaderboard'), icon: Trophy },
-        { href: '/eserler', label: t('showcase'), icon: Images },
-        { href: '/launchpad', label: t('launchpad'), icon: Rocket },
-        { href: '/yarisma', label: t('challenge'), icon: Trophy },
-        { href: '/odul-avciligi', label: t('bounties'), icon: Target },
-      ],
+      links: filterNavLinks(
+        [
+          ...(user ? [{ href: '/akis', label: t('feed'), icon: Rss }] : []),
+          { href: '/topluluk', label: t('community'), icon: Users },
+          { href: '/leaderboard', label: t('leaderboard'), icon: Trophy },
+          { href: '/eserler', label: t('showcase'), icon: Images },
+          { href: '/launchpad', label: t('launchpad'), icon: Rocket },
+          { href: '/yarisma', label: t('challenge'), icon: Trophy },
+          { href: '/odul-avciligi', label: t('bounties'), icon: Target },
+        ],
+        { allowCommunity: Boolean(user && communityPanelEnabled) }
+      ),
     },
     {
       title: t('groupContent'),
       links: [
-        { href: '/ogren', label: t('learn'), icon: GraduationCap },
         { href: '/blog', label: t('blog'), icon: Newspaper },
         { href: '/bulten', label: t('newsletter'), icon: Mail },
       ],
@@ -103,7 +110,7 @@ export function MobileNav({ user, isProUser }) {
         ...(!user ? [{ href: '/login', label: tc('login'), icon: LogIn }] : []),
       ],
     },
-  ];
+  ].filter((section) => section.links.length > 0);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -137,6 +144,7 @@ export function MobileNav({ user, isProUser }) {
               <div className="flex flex-col gap-1">
                 {section.links.map(({ href, label, icon: Icon }) => {
                   const isAiTavsiye = href === '/tavsiye';
+                  const isFeatured = href === '/ogren' || href === '/workmind';
                   return (
                     <Link
                       key={`${href}-${label}`}
@@ -146,7 +154,9 @@ export function MobileNav({ user, isProUser }) {
                       className={
                         isAiTavsiye
                           ? 'ai-tavsiye-gradient flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold shadow-md'
-                          : 'flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
+                          : isFeatured
+                            ? 'flex min-h-11 items-center gap-3 rounded-lg bg-primary/10 px-3 py-2 text-sm font-semibold text-foreground'
+                            : 'flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
                       }
                     >
                       <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />

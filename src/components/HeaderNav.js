@@ -18,6 +18,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { filterNavLinks } from '@/lib/navFeatures';
+import { useCommunityPanelPref } from '@/hooks/useCommunityPanelPref';
 
 export function HeaderNav({
   user,
@@ -30,35 +32,45 @@ export function HeaderNav({
 }) {
   const t = useTranslations('Navigation');
   const tc = useTranslations('Common');
+  const { communityPanelEnabled } = useCommunityPanelPref();
 
+  // Lean primary bar: promote Learn + Workmind; pause community / keşfet / eserler / rastgele.
   const primaryLinks = [
     { href: '/', label: t('home') },
     { href: '/kategori', label: t('categories') },
-    { href: '/kesfet', label: t('discover') },
-    { href: '/ogren', label: t('learn') },
-    { href: '/karsilastir', label: t('compare') },
-    { href: '/topluluk', label: t('community'), className: 'hidden lg:inline' },
-    { href: '/blog', label: t('blog') },
-    { href: '/eserler', label: t('showcase') },
+    { href: '/ogren', label: t('learn'), emphasize: true },
+    { href: '/workmind', label: t('workmind'), emphasize: true },
+    { href: '/blog', label: t('blog'), className: 'hidden lg:inline' },
+    { href: '/arastirma', label: t('research'), className: 'hidden xl:inline' },
+    { href: '/karsilastir', label: t('compare'), className: 'hidden xl:inline' },
   ];
 
-  const moreExplore = [
-    { href: '/kasif', label: t('kasif') },
-    { href: '/tavsiye', label: t('aiRecommend') },
-    { href: '/workmind', label: t('workmind') },
-    { href: '/random-tools', label: t('randomTools') },
-    { href: '/koleksiyonlar', label: t('collections') },
-    { href: '/arastirma', label: t('research') },
-    { href: '/bulten', label: t('newsletter') },
-  ];
+  const moreExplore = filterNavLinks(
+    [
+      { href: '/kasif', label: t('kasif') },
+      { href: '/tavsiye', label: t('aiRecommend') },
+      { href: '/koleksiyonlar', label: t('collections') },
+      { href: '/arastirma', label: t('research') },
+      { href: '/bulten', label: t('newsletter') },
+      // Paused for now — kept listed only if flags re-enabled in navFeatures:
+      { href: '/kesfet', label: t('discover') },
+      { href: '/random-tools', label: t('randomTools') },
+    ],
+    { allowCommunity: false }
+  );
 
-  const moreCommunity = [
-    ...(user ? [{ href: '/akis', label: t('feed') }] : []),
-    { href: '/leaderboard', label: t('leaderboard') },
-    { href: '/launchpad', label: t('launchpad') },
-    { href: '/yarisma', label: t('challenge') },
-    { href: '/odul-avciligi', label: t('bounties') },
-  ];
+  const moreCommunity = filterNavLinks(
+    [
+      ...(user ? [{ href: '/akis', label: t('feed') }] : []),
+      { href: '/topluluk', label: t('community') },
+      { href: '/leaderboard', label: t('leaderboard') },
+      { href: '/eserler', label: t('showcase') },
+      { href: '/launchpad', label: t('launchpad') },
+      { href: '/yarisma', label: t('challenge') },
+      { href: '/odul-avciligi', label: t('bounties') },
+    ],
+    { allowCommunity: Boolean(user && communityPanelEnabled) }
+  );
 
   const morePlatform = [
     { href: '/developer', label: t('developer') },
@@ -83,7 +95,9 @@ export function HeaderNav({
           <Link
             key={link.href}
             href={link.href}
-            className={`text-muted-foreground transition-colors hover:text-foreground ${link.className || ''}`}
+            className={`transition-colors hover:text-foreground ${
+              link.emphasize ? 'font-semibold text-foreground' : 'text-muted-foreground'
+            } ${link.className || ''}`}
           >
             {link.label}
           </Link>
@@ -109,15 +123,19 @@ export function HeaderNav({
                 </Link>
               </DropdownMenuItem>
             ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>{t('groupCommunity')}</DropdownMenuLabel>
-            {moreCommunity.map((link) => (
-              <DropdownMenuItem key={link.href} asChild>
-                <Link href={link.href} prefetch={false}>
-                  {link.label}
-                </Link>
-              </DropdownMenuItem>
-            ))}
+            {moreCommunity.length > 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>{t('groupCommunity')}</DropdownMenuLabel>
+                {moreCommunity.map((link) => (
+                  <DropdownMenuItem key={link.href} asChild>
+                    <Link href={link.href} prefetch={false}>
+                      {link.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuLabel>{t('groupPlatform')}</DropdownMenuLabel>
             {morePlatform.map((link) => (
@@ -139,6 +157,11 @@ export function HeaderNav({
             </Link>
           </Button>
           <Button asChild variant="secondary">
+            <Link href="/workmind" prefetch={false}>
+              {t('workmind')}
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
             <Link href="/submit" prefetch={false}>
               {t('addTool')}
             </Link>

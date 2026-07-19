@@ -12,6 +12,7 @@ import {
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from './ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { signOut } from '@/app/actions';
 import {
   User,
@@ -27,10 +28,17 @@ import {
   Rocket,
   Target,
   WandSparkles,
+  GraduationCap,
+  BrainCircuit,
+  Images,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useCommunityPanelPref } from '@/hooks/useCommunityPanelPref';
 
-// Bu bileşen, Header'dan gelen kullanıcı bilgilerini kullanarak menüyü oluşturur.
 export function UserNav({ user, profile, isProUser, isAdmin }) {
+  const t = useTranslations('Navigation');
+  const { communityPanelEnabled, setCommunityPanelEnabled } = useCommunityPanelPref();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -41,7 +49,7 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-64" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <div className="flex items-center gap-2">
@@ -59,61 +67,37 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
         <DropdownMenuItem asChild>
           <Link href="/profile">
             <User className="mr-2 h-4 w-4" />
-            <span>Profilim & Ayarlar</span>
+            <span>{t('profileSettings')}</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/akis">
-            <Rss className="mr-2 h-4 w-4" />
-            <span>Akışım</span>
+          <Link href="/ogren">
+            <GraduationCap className="mr-2 h-4 w-4" />
+            <span>{t('learn')}</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/workmind">
+            <BrainCircuit className="mr-2 h-4 w-4" />
+            <span>{t('workmind')}</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/kategori">
             <LayoutGrid className="mr-2 h-4 w-4" />
-            <span>Kategoriler</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/topluluk">
-            <Users className="mr-2 h-4 w-4" />
-            <span>Topluluk</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/leaderboard">
-            <Trophy className="mr-2 h-4 w-4" />
-            <span>Liderlik</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/launchpad">
-            <Rocket className="mr-2 h-4 w-4" />
-            <span>Launchpad</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/odul-avciligi">
-            <Target className="mr-2 h-4 w-4" />
-            <span>Ödül Avcılığı</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/yarisma">
-            <Trophy className="mr-2 h-4 w-4" />
-            <span>Yarışma</span>
+            <span>{t('categories')}</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/submit">
             <PlusCircle className="mr-2 h-4 w-4" />
-            <span>Yeni Araç Öner</span>
+            <span>{t('submitTool')}</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/developer">
             <Sparkles className="mr-2 h-4 w-4" />
-            <span>Geliştirici Portalı</span>
+            <span>{t('developer')}</span>
           </Link>
         </DropdownMenuItem>
 
@@ -121,7 +105,7 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
           <DropdownMenuItem asChild>
             <Link href="/studyo">
               <WandSparkles className="mr-2 h-4 w-4 text-purple-500" />
-              <span>AI Stüdyo</span>
+              <span>{t('studio')}</span>
             </Link>
           </DropdownMenuItem>
         )}
@@ -130,13 +114,84 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
           <DropdownMenuItem asChild>
             <Link href="/uyelik">
               <Crown className="mr-2 h-4 w-4 text-purple-500" />
-              <span>Pro&apos;ya Yükselt</span>
+              <span>{t('upgradePro')}</span>
             </Link>
           </DropdownMenuItem>
         )}
 
+        <DropdownMenuSeparator />
+        <div
+          className="flex items-center justify-between gap-3 px-2 py-2"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <div className="min-w-0">
+            <p className="text-sm font-medium leading-none">{t('communityPanelToggle')}</p>
+            <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+              {t('communityPanelToggleHint')}
+            </p>
+          </div>
+          <Switch
+            checked={communityPanelEnabled}
+            onCheckedChange={setCommunityPanelEnabled}
+            aria-label={t('communityPanelToggle')}
+          />
+        </div>
+
+        {communityPanelEnabled && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs text-muted-foreground">
+              {t('groupCommunity')}
+            </DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+              <Link href="/akis">
+                <Rss className="mr-2 h-4 w-4" />
+                <span>{t('feed')}</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/topluluk">
+                <Users className="mr-2 h-4 w-4" />
+                <span>{t('community')}</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/leaderboard">
+                <Trophy className="mr-2 h-4 w-4" />
+                <span>{t('leaderboard')}</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/eserler">
+                <Images className="mr-2 h-4 w-4" />
+                <span>{t('showcase')}</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/launchpad">
+                <Rocket className="mr-2 h-4 w-4" />
+                <span>{t('launchpad')}</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/odul-avciligi">
+                <Target className="mr-2 h-4 w-4" />
+                <span>{t('bounties')}</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/yarisma">
+                <Trophy className="mr-2 h-4 w-4" />
+                <span>{t('challenge')}</span>
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
+
         {isAdmin && (
           <>
+            <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/admin">
                 <User className="mr-2 h-4 w-4 text-red-500" />
@@ -156,7 +211,7 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
           <DropdownMenuItem asChild>
             <button type="submit" className="flex w-full cursor-pointer items-center text-left">
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Çıkış Yap</span>
+              <span>{t('signOut')}</span>
             </button>
           </DropdownMenuItem>
         </form>

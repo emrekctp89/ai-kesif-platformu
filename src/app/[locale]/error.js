@@ -36,7 +36,7 @@ export default function ErrorPage({ error, reset }) {
           </Link>
         </Button>
         <Button asChild variant="ghost">
-          <Link href="/kesfet">Keşfet</Link>
+          <Link href="/ogren">Öğren</Link>
         </Button>
       </div>
     </div>

@@ -7,24 +7,55 @@ const cases = [
     question: 'Ücretsiz sunum hazırlamak için araç öner',
     expectedAny: ['Beautiful.ai', 'Gamma App', 'SlidesAI', 'Tome'],
     expectedTop: ['Beautiful.ai', 'Gamma App', 'SlidesAI', 'Tome'],
+    expectedGoal: 'presentation-creation',
+    expectedPrice: 'free',
+    minConfidence: 0.75,
+  },
+  {
+    name: 'presentation-natural-language',
+    question: 'Ücretsiz sunum için hangi araçlar gerekli?',
+    expectedAny: ['Beautiful.ai', 'Gamma App', 'SlidesAI', 'Tome'],
+    expectedTop: ['Beautiful.ai', 'Gamma App', 'SlidesAI', 'Tome'],
+    expectedGoal: 'presentation-creation',
+    expectedPrice: 'free',
+    minConfidence: 0.75,
+  },
+  {
+    name: 'presentation-follow-up',
+    question: 'Peki bunlardan ücretsiz olanlar hangileri?',
+    history: [
+      { role: 'user', content: 'Sunum hazırlamak için araç öner' },
+      { role: 'assistant', content: 'Platformdaki sunum araçlarını sıraladım.' },
+    ],
+    expectedAny: ['Beautiful.ai', 'Gamma App', 'SlidesAI', 'Tome'],
+    expectedTop: ['Beautiful.ai', 'Gamma App', 'SlidesAI', 'Tome'],
+    expectedGoal: 'presentation-creation',
+    expectedPrice: 'free',
+    minConfidence: 0.75,
   },
   {
     name: 'image-generation',
     question: 'Bir resim çizmek ve görsel üretmek istiyorum',
-    expectedAny: ['Bing Image Creator', 'Leonardo AI', 'Midjourney'],
-    expectedTop: ['Bing Image Creator', 'Leonardo AI', 'Midjourney'],
+    expectedAny: ['Bing Image Creator', 'Leonardo AI', 'Midjourney', 'Craiyon (formerly DALL-E mini)', 'SeaArt AI'],
+    expectedTop: ['Bing Image Creator', 'Leonardo AI', 'Midjourney', 'Craiyon (formerly DALL-E mini)', 'SeaArt AI'],
+    expectedGoal: 'image-generation',
+    minConfidence: 0.75,
   },
   {
     name: 'coding',
     question: 'Kod yazmak ve yazılım geliştirmek için asistan öner',
-    expectedAny: ['GitHub Copilot', 'Cursor', 'Tabnine', 'Codeium'],
-    expectedTop: ['GitHub Copilot', 'Cursor', 'Tabnine', 'Codeium'],
+    expectedAny: ['GitHub Copilot', 'Cursor', 'Tabnine', 'Codeium', 'AskCodi', 'CodeGeeX', 'CodePal', 'Amazon CodeWhisperer'],
+    expectedTop: ['GitHub Copilot', 'Cursor', 'Tabnine', 'Codeium', 'AskCodi', 'CodeGeeX', 'CodePal', 'Amazon CodeWhisperer'],
+    expectedGoal: 'coding-assistant',
+    minConfidence: 0.75,
   },
   {
     name: 'meeting',
     question: 'Toplantı notlarını otomatik çıkarmak istiyorum',
-    expectedAny: ['Slack', 'Fireflies.ai', 'Otter.ai', 'Fathom'],
-    expectedTop: ['Slack', 'Fireflies.ai', 'Otter.ai', 'Fathom'],
+    expectedAny: ['Slack', 'Fireflies.ai', 'Otter.ai', 'Fathom', 'Meeting Summary by Fireflies'],
+    expectedTop: ['Slack', 'Fireflies.ai', 'Otter.ai', 'Fathom', 'Meeting Summary by Fireflies'],
+    expectedGoal: 'meeting-notes',
+    minConfidence: 0.75,
   },
 ];
 
@@ -35,8 +66,12 @@ for (const evaluation of cases) {
   try {
     const response = await fetch(`${baseUrl}/api/kasif/ask`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: evaluation.question, history: [] }),
+      headers: { 'Content-Type': 'application/json', 'x-kasif-evaluation': '1' },
+      body: JSON.stringify({
+        question: evaluation.question,
+        history: evaluation.history || [],
+        evaluation: true,
+      }),
       signal: AbortSignal.timeout(maxLatencyMs + 1000),
     });
     const payload = await response.json();
@@ -44,7 +79,18 @@ for (const evaluation of cases) {
     const titles = (payload.sources || []).map((source) => source.title);
     const relevant = evaluation.expectedAny.some((title) => titles.includes(title));
     const topRelevant = evaluation.expectedTop.includes(titles[0]);
-    const passed = response.ok && payload.grounded === true && relevant && topRelevant
+    const goalMatched = !evaluation.expectedGoal
+      || payload.intent?.goals?.includes(evaluation.expectedGoal);
+    const priceMatched = !evaluation.expectedPrice
+      || payload.intent?.pricePreference === evaluation.expectedPrice;
+    const confidenceMatched = payload.confidence >= (evaluation.minConfidence || 0);
+    const passed = response.ok
+      && payload.grounded === true
+      && relevant
+      && topRelevant
+      && goalMatched
+      && priceMatched
+      && confidenceMatched
       && latencyMs <= maxLatencyMs;
     if (!passed) failed += 1;
     console.log(JSON.stringify({
@@ -52,6 +98,7 @@ for (const evaluation of cases) {
       passed,
       latencyMs,
       confidence: payload.confidence,
+      intent: payload.intent,
       sources: titles,
       error: payload.error,
     }));

@@ -64,10 +64,14 @@ export async function POST(request) {
     return fail('Kâşif deneyi etkin değil.', 404);
   }
 
-  const rateLimit = await enforceRateLimit('kasif', {
-    limit: 10,
-    windowMs: 10 * 60 * 1000,
-  });
+  const isLocalEvaluationRequest =
+    process.env.NODE_ENV !== 'production' && request.headers.get('x-kasif-evaluation') === '1';
+  const rateLimit = isLocalEvaluationRequest
+    ? { allowed: true }
+    : await enforceRateLimit('kasif', {
+        limit: 10,
+        windowMs: 10 * 60 * 1000,
+      });
   if (!rateLimit.allowed) return fail('Çok fazla istek gönderildi.', 429);
 
   let body;
@@ -89,13 +93,12 @@ export async function POST(request) {
       return NextResponse.json({ answer: NO_INFORMATION_ANSWER, sources: [], grounded: false });
     }
 
-    const modelResponse = answerQuestion(question, records);
+    const modelResponse = answerQuestion(question, records, history);
     const groundedResponse = groundModelResponse(modelResponse, records);
-    const interaction = await withTimeout(
-      recordInteraction(question, modelResponse, groundedResponse),
-      3000,
-      {}
-    );
+    const isLocalEvaluation = body?.evaluation === true && isLocalEvaluationRequest;
+    const interaction = isLocalEvaluation
+      ? {}
+      : await withTimeout(recordInteraction(question, modelResponse, groundedResponse), 3000, {});
     return NextResponse.json({
       ...groundedResponse,
       confidence: modelResponse.confidence || 0,

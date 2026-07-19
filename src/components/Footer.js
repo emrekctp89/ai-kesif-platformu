@@ -2,6 +2,7 @@
 
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
+import { filterNavLinks } from '@/lib/navFeatures';
 
 export default function Footer() {
   const t = useTranslations('Navigation');
@@ -10,32 +11,24 @@ export default function Footer() {
   const groups = [
     {
       title: t('groupExplore'),
-      links: [
-        { href: '/kategori', label: t('categories') },
-        { href: '/kesfet', label: t('discover') },
-        { href: '/karsilastir', label: t('compare') },
-        { href: '/tavsiye', label: t('aiRecommend') },
-        { href: '/random-tools', label: t('randomTools') },
-        { href: '/koleksiyonlar', label: t('collections') },
-        { href: '/arastirma', label: t('research') },
-      ],
-    },
-    {
-      title: t('groupCommunity'),
-      links: [
-        { href: '/topluluk', label: t('community') },
-        { href: '/leaderboard', label: t('leaderboard') },
-        { href: '/eserler', label: t('showcase') },
-        { href: '/launchpad', label: t('launchpad') },
-        { href: '/yarisma', label: t('challenge') },
-        { href: '/odul-avciligi', label: t('bounties') },
-        { href: '/akis', label: t('feed') },
-      ],
+      links: filterNavLinks(
+        [
+          { href: '/kategori', label: t('categories') },
+          { href: '/ogren', label: t('learn') },
+          { href: '/workmind', label: t('workmind') },
+          { href: '/karsilastir', label: t('compare') },
+          { href: '/tavsiye', label: t('aiRecommend') },
+          { href: '/koleksiyonlar', label: t('collections') },
+          { href: '/arastirma', label: t('research') },
+          { href: '/kesfet', label: t('discover') },
+          { href: '/random-tools', label: t('randomTools') },
+        ],
+        { allowCommunity: false }
+      ),
     },
     {
       title: t('groupContent'),
       links: [
-        { href: '/ogren', label: t('learn') },
         { href: '/blog', label: t('blog') },
         { href: '/bulten', label: t('newsletter') },
       ],
@@ -46,7 +39,6 @@ export default function Footer() {
         { href: '/submit', label: t('submitTool') },
         { href: '/developer', label: t('developer') },
         { href: '/uyelik', label: t('membership') },
-        { href: '/studyo', label: t('studio') },
         { href: '/feedback', label: t('feedback') },
         { href: '/hakkimizda', label: t('about') },
         { href: '/iletisim', label: t('contact') },
@@ -70,7 +62,7 @@ export default function Footer() {
             <p className="mt-1 text-xs text-muted-foreground">by Emre KOCATEPE</p>
           </div>
 
-          <nav aria-label={t('footerAria')} className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+          <nav aria-label={t('footerAria')} className="grid grid-cols-2 gap-8 sm:grid-cols-3">
             {groups.map((group) => (
               <div key={group.title}>
                 <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground">

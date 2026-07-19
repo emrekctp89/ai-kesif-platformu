@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, BookOpen, Calendar } from 'lucide-react';
+import { ArrowLeft, BookOpen, Calendar, FlaskConical, GraduationCap } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { Badge } from '@/components/ui/badge';
@@ -167,13 +167,27 @@ export default async function PostPage(props0) {
           </ReactMarkdown>
         </div>
 
-        <footer className="flex flex-col gap-4 border-t border-border/60 pt-8 sm:flex-row sm:items-center sm:justify-between">
+        <footer className="space-y-5 border-t border-border/60 pt-8">
           <p className="text-xs text-muted-foreground">{t('shareHint')}</p>
-          <Button asChild variant="outline" className="self-start sm:self-auto">
-            <Link href="/blog" prefetch={false}>
-              {t('relatedCta')}
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <Link href="/blog" prefetch={false}>
+                {t('relatedCta')}
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/ogren" prefetch={false}>
+                <GraduationCap className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                {t('ctaLearn')}
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/arastirma" prefetch={false}>
+                <FlaskConical className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                {t('ctaResearch')}
+              </Link>
+            </Button>
+          </div>
         </footer>
       </article>
     </>

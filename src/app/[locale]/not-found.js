@@ -54,7 +54,7 @@ export default async function NotFound() {
               </Link>
             </Button>
             <Button asChild variant="outline" className="glass-button min-h-11 gap-2">
-              <Link href="/kesfet" prefetch={false}>
+              <Link href="/ogren" prefetch={false}>
                 <Search className="h-4 w-4" aria-hidden="true" />
                 {t('ctaDiscover')}
               </Link>

@@ -65,7 +65,7 @@ export default async function CategoriesIndexPage({ params }) {
               size="sm"
               className="glass-button min-h-9 rounded-full"
             >
-              <Link href="/kesfet" prefetch={false}>
+              <Link href="/ogren" prefetch={false}>
                 <Compass className="mr-1.5 h-4 w-4" aria-hidden="true" />
                 {t('ctaDiscover')}
               </Link>

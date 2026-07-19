@@ -1,34 +1,10 @@
-/*
- * ---------------------------------------------------
- * 2. YENİ SAYFA: /admin/challenges/[id]/edit/page.js
- * Bu, tek bir yarışmayı düzenlemek için kullanılacak olan sayfadır.
- * ---------------------------------------------------
- */
-import { createClient } from '@/utils/supabase/server';
-import { notFound, redirect } from 'next/navigation';
-import { ChallengeEditor } from '@/components/ChallengeEditor'; // Bu bileşeni bir sonraki adımda oluşturacağız
+import { SoftLandingPage, softLandingMetadata } from '@/components/SoftLandingPage';
 
-async function getChallenge(id) {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from('challenges').select('*').eq('id', id).single();
-  if (error || !data) notFound();
-  return data;
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  return softLandingMetadata({ featureKey: 'showcase', path: '/eserler', locale });
 }
 
-export default async function EditChallengePage(props) {
-  const params = await props.params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user || user.email !== process.env.ADMIN_EMAIL) redirect('/');
-
-  const challenge = await getChallenge(params.id);
-
-  return (
-    <div className="container mx-auto max-w-2xl py-8">
-      <h1 className="text-3xl font-bold mb-6">Yarışmayı Düzenle</h1>
-      <ChallengeEditor challenge={challenge} />
-    </div>
-  );
+export default function EserlerEditSoftLandingPage() {
+  return <SoftLandingPage featureKey="showcase" path="/eserler" />;
 }

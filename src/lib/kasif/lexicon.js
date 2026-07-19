@@ -25,6 +25,7 @@ export const KASIF_GOALS = {
       ['yaz', 'geliştir', 'asistan', 'tamamla'],
     ],
     evidence: ['kod yaz', 'kod üret', 'kod tamamlama', 'programlama', 'geliştirici asistan'],
+    negativeEvidence: ['arasında kod dönüşümü', 'programlama dillerini öğreten', 'eğitim deneyimi'],
   },
   'image-generation': {
     queryGroups: [
@@ -38,12 +39,13 @@ export const KASIF_GOALS = {
       'image generation',
       'illüstrasyon',
     ],
+    negativeEvidence: ['çözünürlüğünü artır', 'parazit temizler', 'görsel büyüt'],
   },
   'presentation-creation': {
     queryGroups: [
       ['sunum', 'slayt'],
-      ['hazırla', 'oluştur', 'üret', 'yap', 'öner'],
+      ['hazırla', 'oluştur', 'üret', 'yap', 'öner', 'araç', 'gerekli'],
     ],
-    evidence: ['sunum oluştur', 'sunum hazırla', 'slayt oluştur', 'presentation'],
+    evidence: ['sunum oluştur', 'sunum hazırla', 'slayt oluştur', 'presentation', 'sunum', 'slayt'],
   },
 };

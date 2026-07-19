@@ -16,6 +16,15 @@ Kâşif varsayılan olarak açıktır. Gerektiğinde `.env.local` dosyasında
 4. İsim, kategori, açıklama, fiyat tercihi, doğrulama ve puan sinyalleri ağırlıklandırılır.
 5. Cevap ve bağlantılar yalnızca sıralanan veritabanı kayıtlarından üretilir.
 
+Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
+fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır.
+
+## Değerlendirme
+
+Yerel geliştirme sunucusu çalışırken `npm run kasif:evaluate` komutu sunum, görsel üretim, kodlama,
+toplantı notları, doğal dil varyantları ve takip sorularını doğrular. Yerel değerlendirme çağrıları
+`kasif_interactions` tablosuna analitik kaydı eklemez.
+
 Bu sürüm platforma özel bir öneri motorudur; genel amaçlı serbest metin üreten temel dil
 modeli değildir. Gerçek kullanım geri bildirimleri biriktikçe ağırlıklar çevrimdışı olarak
 öğrenilebilir ve motor sürümlenmiş bir değerlendirme veri setiyle geliştirilebilir.

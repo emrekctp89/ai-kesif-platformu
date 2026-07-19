@@ -1,7 +1,7 @@
 jest.mock('server-only', () => ({}));
 jest.mock('@/utils/supabase/server', () => ({ createClient: jest.fn() }));
 
-import { expandSearchTerms, normalizeText } from '@/lib/kasif/retrieval';
+import { buildSearchFilter, expandSearchTerms, normalizeText } from '@/lib/kasif/retrieval';
 
 describe('Kâşif semantic retrieval', () => {
   it('Türkçe metni aksanlardan bağımsız normalize eder', () => {
@@ -15,5 +15,11 @@ describe('Kâşif semantic retrieval', () => {
 
   it('sunum sorgusuna slayt varyantını ekler', () => {
     expect(expandSearchTerms('Sunum hazırlamak istiyorum')).toContain('slayt');
+  });
+
+  it('tüm terimleri tek PostgREST OR filtresinde birleştirir', () => {
+    expect(buildSearchFilter(['sunum', 'slayt'])).toBe(
+      'name.ilike.%sunum%,description.ilike.%sunum%,name.ilike.%slayt%,description.ilike.%slayt%'
+    );
   });
 });

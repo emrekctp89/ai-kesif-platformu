@@ -1,4 +1,4 @@
-import { extractSearchTerms, normalizeText } from './retrieval';
+import { buildRetrievalQuery, extractSearchTerms, normalizeText } from './retrieval';
 import { FREE_WORDS, KASIF_CONCEPTS, KASIF_GOALS, PAID_WORDS } from './lexicon';
 
 function pricingOf(record) {
@@ -21,6 +21,32 @@ function pricingLabel(record) {
   if (pricing === 'paid' || pricing === 'ucretli') return 'Ücretli';
   if (pricing === 'open source' || pricing === 'acik kaynak') return 'Açık kaynak';
   return record.pricing_type || record.pricing_model;
+}
+
+const SHARED_TOOL_HOSTS = new Set([
+  'apps.apple.com',
+  'chrome.google.com',
+  'github.com',
+  'huggingface.co',
+  'play.google.com',
+]);
+
+function toolFamily(record) {
+  try {
+    const hostname = new URL(record.link).hostname.replace(/^www\./, '');
+    return hostname && !SHARED_TOOL_HOSTS.has(hostname) ? hostname : null;
+  } catch {
+    return null;
+  }
+}
+
+function isPrimaryToolPage(record) {
+  try {
+    const pathname = new URL(record.link).pathname.replace(/\/+$/, '');
+    return pathname === '';
+  } catch {
+    return false;
+  }
 }
 
 export function understandQuestion(question) {
@@ -56,6 +82,25 @@ export function understandQuestion(question) {
   };
 }
 
+export function understandConversation(question, history = []) {
+  const currentIntent = understandQuestion(question);
+  const contextualIntent = understandQuestion(buildRetrievalQuery(question, history));
+  const currentHasPricePreference = currentIntent.wantsFree || currentIntent.wantsPaid;
+  const currentHasTopic = currentIntent.concepts.length > 0;
+  const currentHasGoal = currentIntent.goals.length > 0;
+
+  return {
+    ...contextualIntent,
+    tokens: currentHasTopic ? currentIntent.tokens : contextualIntent.tokens,
+    concepts: currentHasTopic ? currentIntent.concepts : contextualIntent.concepts,
+    signals: currentHasTopic ? currentIntent.signals : contextualIntent.signals,
+    goals: currentHasGoal ? currentIntent.goals : currentHasTopic ? [] : contextualIntent.goals,
+    wantsFree: currentHasPricePreference ? currentIntent.wantsFree : contextualIntent.wantsFree,
+    wantsPaid: currentHasPricePreference ? currentIntent.wantsPaid : contextualIntent.wantsPaid,
+    wantsComparison: currentIntent.wantsComparison,
+  };
+}
+
 export function scoreTool(record, intent) {
   const name = normalizeText(record.name);
   const description = normalizeText(record.description);
@@ -73,12 +118,16 @@ export function scoreTool(record, intent) {
     if (searchable.includes(signal)) score += 6;
   }
   for (const goalName of intent.goals) {
-    const evidence = KASIF_GOALS[goalName].evidence.map(normalizeText);
+    const goal = KASIF_GOALS[goalName];
+    const evidence = goal.evidence.map(normalizeText);
     const evidenceMatches = evidence.filter((phrase) => searchable.includes(phrase)).length;
     if (evidenceMatches > 0) {
       score += 10 + Math.min(evidenceMatches - 1, 2) * 3;
       reasons.push('istenen göreve doğrudan uygun');
     }
+    const negativeEvidence = (goal.negativeEvidence || []).map(normalizeText);
+    const negativeMatches = negativeEvidence.filter((phrase) => searchable.includes(phrase)).length;
+    score -= Math.min(negativeMatches, 2) * 16;
   }
   if (intent.wantsFree && isFreePricing(record)) {
     score += 7;
@@ -89,6 +138,8 @@ export function scoreTool(record, intent) {
     score += 2;
     reasons.push('platformda doğrulanmış');
   }
+  if (record.is_featured) score += 2;
+  if (isPrimaryToolPage(record)) score += 1;
   const rating = Number(record.average_rating);
   if (Number.isFinite(rating) && rating > 0) score += Math.min(rating, 5) / 2;
   return { record, score, reasons };
@@ -103,16 +154,23 @@ export function rankTools(records, intent, limit = 5) {
     : intent.wantsPaid
       ? scored.filter(({ record }) => isPaidPricing(record))
       : scored;
-  return (preferred.length > 0 ? preferred : scored)
-    .sort(
-      (a, b) =>
-        b.score - a.score || String(a.record.name).localeCompare(String(b.record.name), 'tr')
-    )
-    .slice(0, limit);
+  const sorted = (preferred.length > 0 ? preferred : scored).sort(
+    (a, b) => b.score - a.score || String(a.record.name).localeCompare(String(b.record.name), 'tr')
+  );
+  const families = new Set();
+  const diverse = [];
+  for (const item of sorted) {
+    const family = toolFamily(item.record);
+    if (family && families.has(family)) continue;
+    if (family) families.add(family);
+    diverse.push(item);
+    if (diverse.length >= limit) break;
+  }
+  return diverse;
 }
 
-export function answerQuestion(question, records) {
-  const intent = understandQuestion(question);
+export function answerQuestion(question, records, history = []) {
+  const intent = understandConversation(question, history);
   const ranked = rankTools(records, intent, intent.wantsComparison ? 4 : 5);
   if (!ranked.length) {
     return { answer: '', sourceIds: [], insufficientContext: true, confidence: 0, intent };
