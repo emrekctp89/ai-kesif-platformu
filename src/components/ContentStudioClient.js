@@ -203,7 +203,7 @@ export function ContentStudioClient({ posts }) {
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/icerik/${post.id}/edit`}>
                         <FilePenLine className="mr-1.5 h-4 w-4" aria-hidden="true" />
-                        {t('edit')}
+                        {post.status === 'İncelemede' ? t('editOrWithdraw') : t('edit')}
                       </Link>
                     </Button>
                   </div>

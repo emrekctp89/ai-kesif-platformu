@@ -87,7 +87,8 @@
     "filterAll": "Tümü",
     "filterAria": "Yazı durumu filtresi",
     "emptyFiltered": "Bu filtrede yazı yok.",
-    "viewLive": "Canlıda gör"
+    "viewLive": "Canlıda gör",
+    "editOrWithdraw": "Düzenle / geri çek"
   },
   "SoftLanding": {
     "heroChip": "Geçici olarak pasif",
@@ -249,7 +250,9 @@
     "hubRecommendBody": "İhtiyacına göre doğru aracı saniyeler içinde bul.",
     "hubCta": "Git",
     "byAuthor": "Yazar:",
-    "defaultAuthor": "AI Keşif"
+    "defaultAuthor": "AI Keşif",
+    "filterCategory": "Kategori",
+    "filterCategoryAll": "Tüm kategoriler"
   },
   "Community": {
     "metaTitle": "Topluluk",

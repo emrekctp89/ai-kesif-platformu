@@ -6,9 +6,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { ExternalLink } from 'lucide-react';
-import { submitCreatorPostForReview, updateCreatorPost } from '@/app/actions/contentCreators';
+import {
+  assignCreatorPostTags,
+  submitCreatorPostForReview,
+  updateCreatorPost,
+  withdrawCreatorPostFromReview,
+} from '@/app/actions/contentCreators';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,9 +30,19 @@ const SimpleMDE = dynamic(() => import('react-simplemde-editor'), { ssr: false }
 import 'easymde/dist/easymde.min.css';
 
 /**
- * @param {{ post: object, categories?: Array<{ id: number, name: string }> }} props
+ * @param {{
+ *   post: object,
+ *   categories?: Array<{ id: number, name: string }>,
+ *   tags?: Array<{ id: number, name: string }>,
+ *   selectedTagIds?: number[],
+ * }} props
  */
-export function CreatorPostEditor({ post, categories = [] }) {
+export function CreatorPostEditor({
+  post,
+  categories = [],
+  tags = [],
+  selectedTagIds: initialTagIds = [],
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [content, setContent] = useState(post.content || '');
@@ -34,6 +50,7 @@ export function CreatorPostEditor({ post, categories = [] }) {
   const [categoryId, setCategoryId] = useState(
     post.category_id != null ? String(post.category_id) : 'none'
   );
+  const [selectedTags, setSelectedTags] = useState(() => new Set(initialTagIds.map(Number)));
 
   const editorOptions = useMemo(
     () => ({
@@ -58,6 +75,7 @@ export function CreatorPostEditor({ post, categories = [] }) {
   );
 
   const lockedPublished = post.status === 'Yayınlandı';
+  const inReview = post.status === 'İncelemede';
 
   function withMeta(formData) {
     formData.set('content', content);
@@ -66,14 +84,34 @@ export function CreatorPostEditor({ post, categories = [] }) {
     return formData;
   }
 
+  function tagsFormData(postId) {
+    const fd = new FormData();
+    fd.set('postId', String(postId));
+    selectedTags.forEach((id) => fd.append('tagId', String(id)));
+    return fd;
+  }
+
+  function toggleTag(tagId) {
+    setSelectedTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(tagId)) next.delete(tagId);
+      else next.add(tagId);
+      return next;
+    });
+  }
+
   function save(formData) {
     withMeta(formData);
-    formData.set('status', post.status === 'İncelemede' ? 'İncelemede' : 'Taslak');
+    formData.set('status', inReview ? 'İncelemede' : 'Taslak');
     startTransition(async () => {
-      const result = await updateCreatorPost(formData);
-      if (result.error) toast.error(result.error);
-      else {
-        toast.success(result.success || 'Kaydedildi');
+      const [postResult, tagsResult] = await Promise.all([
+        updateCreatorPost(formData),
+        assignCreatorPostTags(tagsFormData(post.id)),
+      ]);
+      if (postResult.error || tagsResult.error) {
+        toast.error(postResult.error || tagsResult.error);
+      } else {
+        toast.success(postResult.success || 'Kaydedildi');
         router.refresh();
       }
     });
@@ -82,10 +120,23 @@ export function CreatorPostEditor({ post, categories = [] }) {
   function submitReview(formData) {
     withMeta(formData);
     startTransition(async () => {
+      await assignCreatorPostTags(tagsFormData(post.id));
       const result = await submitCreatorPostForReview(formData);
       if (result.error) toast.error(result.error);
       else {
         toast.success(result.success || 'İncelemeye gönderildi');
+        router.refresh();
+      }
+    });
+  }
+
+  function withdraw(formData) {
+    withMeta(formData);
+    startTransition(async () => {
+      const result = await withdrawCreatorPostFromReview(formData);
+      if (result.error) toast.error(result.error);
+      else {
+        toast.success(result.success || 'İnceleme geri çekildi');
         router.refresh();
       }
     });
@@ -176,6 +227,31 @@ export function CreatorPostEditor({ post, categories = [] }) {
                   </Select>
                 </div>
               ) : null}
+
+              {tags.length > 0 ? (
+                <div className="space-y-2">
+                  <Label>Etiketler</Label>
+                  <div className="max-h-40 space-y-2 overflow-y-auto rounded-lg border p-2">
+                    {tags.map((tag) => {
+                      const checked = selectedTags.has(tag.id);
+                      return (
+                        <label
+                          key={tag.id}
+                          className="flex cursor-pointer items-center gap-2 text-sm"
+                        >
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={() => toggleTag(tag.id)}
+                            aria-label={tag.name}
+                          />
+                          <span>{tag.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
               <p className="text-xs text-muted-foreground">
                 Durum: <span className="font-semibold text-foreground">{post.status}</span>
               </p>
@@ -195,17 +271,31 @@ export function CreatorPostEditor({ post, categories = [] }) {
                 >
                   Taslağı kaydet
                 </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={isPending}
-                  onClick={(e) => {
-                    const form = e.currentTarget.closest('form');
-                    if (form) submitReview(new FormData(form));
-                  }}
-                >
-                  İncelemeye gönder
-                </Button>
+                {inReview ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isPending}
+                    onClick={(e) => {
+                      const form = e.currentTarget.closest('form');
+                      if (form) withdraw(new FormData(form));
+                    }}
+                  >
+                    İncelemeyi geri çek
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={isPending}
+                    onClick={(e) => {
+                      const form = e.currentTarget.closest('form');
+                      if (form) submitReview(new FormData(form));
+                    }}
+                  >
+                    İncelemeye gönder
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

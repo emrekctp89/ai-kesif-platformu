@@ -25,7 +25,9 @@ async function getPublishedPosts() {
   const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from('posts')
-    .select('title, slug, description, featured_image_url, published_at, type, author_id')
+    .select(
+      'title, slug, description, featured_image_url, published_at, type, author_id, category_id'
+    )
     .eq('status', 'Yayınlandı')
     .order('published_at', { ascending: false });
 
@@ -36,6 +38,29 @@ async function getPublishedPosts() {
 
   const { attachAuthorsToPosts } = await import('@/lib/contentAuthors');
   return attachAuthorsToPosts(supabase, data || []);
+}
+
+async function getBlogCategories(posts) {
+  const ids = [
+    ...new Set(
+      (posts || [])
+        .map((p) => p.category_id)
+        .filter((id) => id != null && Number.isFinite(Number(id)))
+        .map(Number)
+    ),
+  ];
+  if (!ids.length) return [];
+  const supabase = await createClient(await cookies());
+  const { data, error } = await supabase
+    .from('categories')
+    .select('id, name, slug')
+    .in('id', ids)
+    .order('name', { ascending: true });
+  if (error) {
+    logger.error('Blog kategorileri çekilirken hata:', error);
+    return [];
+  }
+  return data || [];
 }
 
 export async function generateMetadata({ params }) {
@@ -52,6 +77,7 @@ export default async function BlogPage({ params }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'Blog' });
   const posts = await getPublishedPosts();
+  const categories = await getBlogCategories(posts);
   const guidesCount = posts.filter((p) => p.type === 'Rehber').length;
   const articlesCount = posts.length - guidesCount;
   const siteUrl = getSiteOrigin();
@@ -158,7 +184,7 @@ export default async function BlogPage({ params }) {
 
         {posts.length > 0 ? (
           <section aria-label={t('title')}>
-            <BlogListingClient posts={posts} locale={locale} />
+            <BlogListingClient posts={posts} locale={locale} categories={categories} />
           </section>
         ) : (
           <section className="rounded-3xl border border-dashed bg-muted/20 px-6 py-14 text-center">

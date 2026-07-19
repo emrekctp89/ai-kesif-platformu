@@ -30,12 +30,18 @@ export default async function CreatorEditPostPage({ params }) {
     if (!profile?.is_content_creator) redirect('/icerik');
   }
 
-  const [{ data: post, error }, { data: categories }] = await Promise.all([
-    admin.from('posts').select('*').eq('id', id).maybeSingle(),
-    admin.from('categories').select('id, name').order('name', { ascending: true }),
-  ]);
+  const [{ data: post, error }, { data: categories }, { data: tags }, { data: postTags }] =
+    await Promise.all([
+      admin.from('posts').select('*').eq('id', id).maybeSingle(),
+      admin.from('categories').select('id, name').order('name', { ascending: true }),
+      admin.from('tags').select('id, name').order('name', { ascending: true }),
+      admin.from('post_tags').select('tag_id').eq('post_id', id),
+    ]);
+
   if (error || !post) notFound();
   if (!isAdmin && post.author_id !== user.id) redirect('/icerik');
+
+  const selectedTagIds = (postTags || []).map((row) => row.tag_id).filter(Boolean);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
@@ -54,7 +60,12 @@ export default async function CreatorEditPostPage({ params }) {
           <p className="mt-1 text-sm text-muted-foreground">{post.title}</p>
         </div>
       </div>
-      <CreatorPostEditor post={post} categories={categories || []} />
+      <CreatorPostEditor
+        post={post}
+        categories={categories || []}
+        tags={tags || []}
+        selectedTagIds={selectedTagIds}
+      />
     </div>
   );
 }

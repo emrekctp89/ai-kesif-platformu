@@ -87,7 +87,8 @@
     "filterAll": "All",
     "filterAria": "Post status filter",
     "emptyFiltered": "No posts in this filter.",
-    "viewLive": "View live"
+    "viewLive": "View live",
+    "editOrWithdraw": "Edit / withdraw"
   },
   "SoftLanding": {
     "heroChip": "Temporarily paused",
@@ -249,7 +250,9 @@
     "hubRecommendBody": "Find the right tool for your need in seconds.",
     "hubCta": "Go",
     "byAuthor": "By",
-    "defaultAuthor": "AI Keşif"
+    "defaultAuthor": "AI Keşif",
+    "filterCategory": "Category",
+    "filterCategoryAll": "All categories"
   },
   "Community": {
     "metaTitle": "Community",

@@ -10,6 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { authorDisplayName } from '@/lib/contentAuthors';
 
 function formatDate(value, locale) {
@@ -113,12 +120,13 @@ function PostCard({ post, locale, t, featured = false }) {
 }
 
 /**
- * @param {{ posts: Array, locale: string }} props
+ * @param {{ posts: Array, locale: string, categories?: Array<{id:number,name:string,slug?:string}> }} props
  */
-export function BlogListingClient({ posts, locale }) {
+export function BlogListingClient({ posts, locale, categories = [] }) {
   const t = useTranslations('Blog');
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all'); // all | guide | post
+  const [categoryId, setCategoryId] = useState('all');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('tr-TR');
@@ -126,11 +134,14 @@ export function BlogListingClient({ posts, locale }) {
       const isGuide = post.type === 'Rehber';
       if (filter === 'guide' && !isGuide) return false;
       if (filter === 'post' && isGuide) return false;
+      if (categoryId !== 'all' && String(post.category_id || '') !== String(categoryId)) {
+        return false;
+      }
       if (!q) return true;
       const hay = `${post.title || ''} ${post.description || ''}`.toLocaleLowerCase('tr-TR');
       return hay.includes(q);
     });
-  }, [posts, query, filter]);
+  }, [posts, query, filter, categoryId]);
 
   const featured = filtered[0] || null;
   const rest = featured ? filtered.slice(1) : [];
@@ -143,7 +154,7 @@ export function BlogListingClient({ posts, locale }) {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div
           className="inline-flex flex-wrap gap-1 rounded-full border border-border/60 bg-background/70 p-1"
           role="tablist"
@@ -168,18 +179,39 @@ export function BlogListingClient({ posts, locale }) {
           })}
         </div>
 
-        <div className="relative w-full sm:max-w-xs">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t('searchPlaceholder')}
-            className="min-h-10 pl-9"
-            aria-label={t('searchPlaceholder')}
-          />
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto">
+          {categories.length > 0 ? (
+            <Select value={categoryId} onValueChange={setCategoryId}>
+              <SelectTrigger
+                className="min-h-10 w-full sm:w-[200px]"
+                aria-label={t('filterCategory')}
+              >
+                <SelectValue placeholder={t('filterCategory')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('filterCategoryAll')}</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={String(cat.id)}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
+
+          <div className="relative w-full sm:max-w-xs">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('searchPlaceholder')}
+              className="min-h-10 pl-9"
+              aria-label={t('searchPlaceholder')}
+            />
+          </div>
         </div>
       </div>
 
@@ -201,6 +233,7 @@ export function BlogListingClient({ posts, locale }) {
             onClick={() => {
               setQuery('');
               setFilter('all');
+              setCategoryId('all');
             }}
           >
             {t('clearFilters')}

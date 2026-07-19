@@ -363,6 +363,67 @@ export async function submitCreatorPostForReview(formData) {
   return { success: 'İncelemeye gönderildi. Admin onayından sonra yayınlanır.' };
 }
 
+/** Pull a post back from review into draft. */
+export async function withdrawCreatorPostFromReview(formData) {
+  const id = String(formData.get('id') || '').trim();
+  if (!id) return { error: 'Yazı bulunamadı.' };
+
+  const payload = new FormData();
+  for (const [k, v] of formData.entries()) payload.set(k, v);
+  payload.set('status', 'Taslak');
+  const result = await updateCreatorPost(payload);
+  if (result.error) return result;
+  return { success: 'İnceleme geri çekildi. Yazı tekrar taslak.' };
+}
+
+/** Assign tags to a creator-owned post (admin client after auth checks). */
+export async function assignCreatorPostTags(formData) {
+  const { user, error } = await requireUser();
+  if (error) return { error };
+
+  const postId = String(formData.get('postId') || formData.get('id') || '').trim();
+  if (!postId) return { error: "Yazı ID'si bulunamadı." };
+
+  const tagIds = formData
+    .getAll('tagId')
+    .map((id) => parseInt(String(id), 10))
+    .filter((id) => Number.isFinite(id));
+
+  const admin = createAdminClient();
+  const { data: existing, error: loadError } = await admin
+    .from('posts')
+    .select('id, author_id, status')
+    .eq('id', postId)
+    .maybeSingle();
+  if (loadError || !existing) return { error: 'Yazı bulunamadı.' };
+
+  const adminUser = isAdminUser(user);
+  if (!adminUser && existing.author_id !== user.id) return { error: 'Yetkiniz yok.' };
+  if (!adminUser && !CREATOR_EDITABLE_STATUSES.has(existing.status)) {
+    return { error: 'Yayınlanmış yazının etiketleri üretici tarafından değiştirilemez.' };
+  }
+  if (!adminUser) {
+    const profile = await getProfileFlags(user.id);
+    if (!profile?.is_content_creator) return { error: 'İçerik üretici yetkisi yok.' };
+  }
+
+  await admin.from('post_tags').delete().eq('post_id', postId);
+  if (tagIds.length > 0) {
+    const { error: insertError } = await admin
+      .from('post_tags')
+      .insert(tagIds.map((tagId) => ({ post_id: postId, tag_id: tagId })));
+    if (insertError) {
+      logger.error('assignCreatorPostTags', insertError);
+      return { error: 'Etiketler kaydedilemedi.' };
+    }
+  }
+
+  revalidatePath(`/icerik/${postId}/edit`);
+  revalidatePath('/icerik');
+  revalidatePath('/blog');
+  return { success: true };
+}
+
 export async function adminReviewCreatorPost(formData) {
   const { user, error } = await requireUser();
   if (error) return { error };
