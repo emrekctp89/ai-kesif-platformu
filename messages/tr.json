@@ -78,6 +78,7 @@
     "applySubmit": "Üretici olmak için başvur",
     "applySubmitting": "Gönderiliyor…",
     "applyPending": "Başvurun incelemede. Onaylandığında bildirim alacaksın.",
+    "applyReputationHint": "Başvuru için yaklaşık {min} itibar puanı gerekir. Yorum, favori ve katkılarla puan kazanabilirsin.",
     "statTotal": "Toplam",
     "statDraft": "Taslak",
     "statReview": "İncelemede",
@@ -110,7 +111,11 @@
     "shareHint": "Bu yazıyı paylaşmak için sayfa adresini kopyalayabilirsin.",
     "readTime": "Yaklaşık {minutes} dk okuma",
     "ctaLearn": "Öğrenme merkezi",
-    "ctaResearch": "Araştırma"
+    "ctaResearch": "Araştırma",
+    "ctaCreate": "İçerik üret",
+    "defaultAuthor": "AI Keşif",
+    "relatedHeading": "İlgini çekebilir",
+    "readMore": "Oku"
   },
   "LeaderboardPage": {
     "metaTitle": "Liderlik Tablosu",
@@ -237,7 +242,9 @@
     "hubResearchBody": "Bilimsel makaleler ve akademik arka plan.",
     "hubRecommendTitle": "AI Tavsiye",
     "hubRecommendBody": "İhtiyacına göre doğru aracı saniyeler içinde bul.",
-    "hubCta": "Git"
+    "hubCta": "Git",
+    "byAuthor": "Yazar:",
+    "defaultAuthor": "AI Keşif"
   },
   "Community": {
     "metaTitle": "Topluluk",

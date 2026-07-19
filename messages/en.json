@@ -78,6 +78,7 @@
     "applySubmit": "Apply to become a creator",
     "applySubmitting": "Submitting…",
     "applyPending": "Your application is under review. You’ll be notified when approved.",
+    "applyReputationHint": "Applications typically need about {min} reputation points. Earn points via comments, favorites, and contributions.",
     "statTotal": "Total",
     "statDraft": "Drafts",
     "statReview": "In review",
@@ -110,7 +111,11 @@
     "shareHint": "Copy the page URL to share this post.",
     "readTime": "About {minutes} min read",
     "ctaLearn": "Learning hub",
-    "ctaResearch": "Research"
+    "ctaResearch": "Research",
+    "ctaCreate": "Create content",
+    "defaultAuthor": "AI Keşif",
+    "relatedHeading": "You may also like",
+    "readMore": "Read"
   },
   "LeaderboardPage": {
     "metaTitle": "Leaderboard",
@@ -237,7 +242,9 @@
     "hubResearchBody": "Scientific papers and academic background.",
     "hubRecommendTitle": "AI Recommend",
     "hubRecommendBody": "Find the right tool for your need in seconds.",
-    "hubCta": "Go"
+    "hubCta": "Go",
+    "byAuthor": "By",
+    "defaultAuthor": "AI Keşif"
   },
   "Community": {
     "metaTitle": "Community",

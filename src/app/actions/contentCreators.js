@@ -6,8 +6,11 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { slugify } from '@/utils/slugify';
+import { contentEmailHtml, sendContentEventEmail } from '@/lib/contentNotify';
 
 const CREATOR_EDITABLE_STATUSES = new Set(['Taslak', 'İncelemede', 'Reddedildi']);
+/** Soft gate: users below this reputation still can be admin-approved manually. */
+const MIN_CREATOR_REPUTATION = Number(process.env.CONTENT_CREATOR_MIN_REPUTATION || 10);
 
 async function requireUser() {
   const supabase = await createClient();
@@ -26,7 +29,7 @@ async function getProfileFlags(userId) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from('profiles')
-    .select('is_content_creator, username, email')
+    .select('is_content_creator, username, email, reputation_points')
     .eq('id', userId)
     .maybeSingle();
   if (error) {
@@ -89,20 +92,36 @@ export async function setContentCreatorStatus({ userId, enabled, note } = {}) {
     logger.error('close creator application alerts', alertError);
   }
 
+  const statusMessage = enabled
+    ? 'İçerik üretici başvurun onaylandı. İçerik stüdyosundan yazı gönderebilirsin.'
+    : note === 'application_rejected'
+      ? 'İçerik üretici başvurun şu an onaylanmadı. Daha sonra tekrar deneyebilirsin.'
+      : 'İçerik üretici yetkin kaldırıldı.';
+
   try {
     await admin.from('notifications').insert({
       user_id: targetId,
       event_type: enabled ? 'content_creator_approved' : 'content_creator_revoked',
-      message: enabled
-        ? 'İçerik üretici başvurun onaylandı. İçerik stüdyosundan yazı gönderebilirsin.'
-        : note === 'application_rejected'
-          ? 'İçerik üretici başvurun şu an onaylanmadı. Daha sonra tekrar deneyebilirsin.'
-          : 'İçerik üretici yetkin kaldırıldı.',
+      message: statusMessage,
       link: enabled ? '/icerik' : '/blog',
       is_read: false,
     });
   } catch (notifyError) {
     logger.error('creator status notify', notifyError);
+  }
+
+  const targetProfile = await getProfileFlags(targetId);
+  if (targetProfile?.email) {
+    await sendContentEventEmail({
+      to: targetProfile.email,
+      subject: enabled ? 'İçerik üretici onayın' : 'İçerik üretici başvurun',
+      html: contentEmailHtml({
+        title: enabled ? 'Onaylandın 🎉' : 'Başvuru güncellemesi',
+        body: statusMessage,
+        ctaLabel: enabled ? 'İçerik stüdyosuna git' : 'Blogu incele',
+        ctaUrl: enabled ? '/icerik' : '/blog',
+      }),
+    });
   }
 
   revalidatePath('/dashboard');
@@ -140,6 +159,13 @@ export async function requestContentCreatorAccess(formData) {
     .slice(0, 800);
   if (pitch.length < 20) {
     return { error: 'Kısa bir tanıtım yaz (en az 20 karakter).' };
+  }
+
+  const reputation = Number(profile?.reputation_points || 0);
+  if (reputation < MIN_CREATOR_REPUTATION) {
+    return {
+      error: `Üretici başvurusu için en az ${MIN_CREATOR_REPUTATION} itibar puanı önerilir (şu an: ${reputation}). Yorum, favori ve katkı ile puanını yükseltip tekrar dene.`,
+    };
   }
 
   const admin = createAdminClient();
@@ -371,25 +397,39 @@ export async function adminReviewCreatorPost(formData) {
     return { error: 'İnceleme kaydedilemedi.' };
   }
 
-  // Notify creator when preference allows (column may be missing on old schemas).
+  // Notify creator (in-app + email) when preference allows.
   if (existing.author_id) {
     try {
       const { data: authorProfile } = await admin
         .from('profiles')
-        .select('notify_on_content_approval')
+        .select('notify_on_content_approval, email, username')
         .eq('id', existing.author_id)
         .maybeSingle();
       if (authorProfile?.notify_on_content_approval !== false) {
         const published = decision === 'publish';
+        const message = published
+          ? `"${existing.title}" yayınlandı.`
+          : `"${existing.title}" reddedildi.${note ? ` Not: ${note}` : ''}`;
+        const link = published && existing.slug ? `/blog/${existing.slug}` : '/icerik';
         await admin.from('notifications').insert({
           user_id: existing.author_id,
           event_type: published ? 'content_published' : 'content_rejected',
-          message: published
-            ? `"${existing.title}" yayınlandı.`
-            : `"${existing.title}" incelemeye alındı/reddedildi.${note ? ` Not: ${note}` : ''}`,
-          link: published && existing.slug ? `/blog/${existing.slug}` : '/icerik',
+          message,
+          link,
           is_read: false,
         });
+        if (authorProfile.email) {
+          await sendContentEventEmail({
+            to: authorProfile.email,
+            subject: published ? 'Yazın yayınlandı' : 'Yazın hakkında güncelleme',
+            html: contentEmailHtml({
+              title: published ? 'Yayında ✨' : 'İnceleme sonucu',
+              body: message,
+              ctaLabel: published ? 'Yazıyı oku' : 'Stüdyoya dön',
+              ctaUrl: link,
+            }),
+          });
+        }
       }
     } catch (notifyError) {
       logger.error('content review notify failed', notifyError);

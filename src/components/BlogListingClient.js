@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
-import { ArrowRight, BookOpen, Search } from 'lucide-react';
+import { ArrowRight, BookOpen, Search, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { authorDisplayName } from '@/lib/contentAuthors';
 
 function formatDate(value, locale) {
   if (!value) return null;
@@ -23,6 +24,8 @@ function formatDate(value, locale) {
 function PostCard({ post, locale, t, featured = false }) {
   const dateLabel = formatDate(post.published_at, locale);
   const isGuide = post.type === 'Rehber';
+  const authorName = authorDisplayName(post, t('defaultAuthor'));
+  const authorHref = post.author?.username ? `/u/${post.author.username}` : null;
 
   return (
     <Link
@@ -75,6 +78,19 @@ function PostCard({ post, locale, t, featured = false }) {
             >
               {post.title}
             </CardTitle>
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>
+                {t('byAuthor')}{' '}
+                {authorHref ? (
+                  <span className="font-medium text-foreground/80 group-hover:text-primary">
+                    {authorName}
+                  </span>
+                ) : (
+                  <span className="font-medium text-foreground/80">{authorName}</span>
+                )}
+              </span>
+            </p>
           </CardHeader>
           <CardContent className="flex flex-1 flex-col pt-0">
             <p

@@ -5,12 +5,22 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, BookOpen, Calendar, FlaskConical, GraduationCap } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  Calendar,
+  FlaskConical,
+  GraduationCap,
+  User,
+} from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { generateBlogMetadata, generateStructuredData } from '@/utils/seo';
+import { attachAuthorsToPosts, authorDisplayName } from '@/lib/contentAuthors';
 
 export const revalidate = 3600;
 
@@ -24,7 +34,37 @@ async function getPost(slug) {
     .maybeSingle();
 
   if (error || !data) return null;
-  return data;
+  const [withAuthor] = await attachAuthorsToPosts(supabase, [data]);
+  return withAuthor || data;
+}
+
+async function getRelatedPosts(post) {
+  if (!post?.id) return [];
+  const supabase = await createClient(await cookies());
+
+  // Prefer same type; fall back to latest published posts.
+  const primary = await supabase
+    .from('posts')
+    .select('id, title, slug, description, type, published_at, author_id, featured_image_url')
+    .eq('status', 'Yayınlandı')
+    .eq('type', post.type || 'Yazı')
+    .neq('id', post.id)
+    .order('published_at', { ascending: false })
+    .limit(3);
+
+  let rows = primary.data || [];
+  if (!rows.length) {
+    const fallback = await supabase
+      .from('posts')
+      .select('id, title, slug, description, type, published_at, author_id, featured_image_url')
+      .eq('status', 'Yayınlandı')
+      .neq('id', post.id)
+      .order('published_at', { ascending: false })
+      .limit(3);
+    rows = fallback.data || [];
+  }
+
+  return attachAuthorsToPosts(supabase, rows);
 }
 
 function formatDate(value, locale) {
@@ -44,7 +84,7 @@ function estimateReadMinutes(content) {
 
 export async function generateMetadata(props) {
   const params = await props.params;
-  const { slug, locale } = params;
+  const { slug } = params;
   const post = await getPost(slug);
 
   if (!post) {
@@ -58,7 +98,7 @@ export async function generateMetadata(props) {
     image: post.featured_image_url,
     publishedDate: post.published_at,
     modifiedDate: post.updated_at || post.published_at,
-    author: post.author_name || 'AI Keşif Platformu',
+    author: authorDisplayName(post, 'AI Keşif Platformu'),
   });
 }
 
@@ -73,12 +113,15 @@ export default async function PostPage(props0) {
   const dateLabel = formatDate(post.published_at, locale);
   const isGuide = post.type === 'Rehber';
   const minutes = estimateReadMinutes(post.content);
+  const authorName = authorDisplayName(post, t('defaultAuthor'));
+  const authorHref = post.author?.username ? `/u/${post.author.username}` : null;
+  const related = await getRelatedPosts(post);
 
   const structuredData = generateStructuredData('Article', {
     title: post.title,
     description: post.description,
     image: post.featured_image_url,
-    author: post.author_name || 'AI Keşif Platformu',
+    author: authorName,
     publishedDate: post.published_at,
     modifiedDate: post.updated_at || post.published_at,
   });
@@ -126,12 +169,28 @@ export default async function PostPage(props0) {
               </p>
             ) : null}
 
-            {dateLabel ? (
-              <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4" aria-hidden="true" />
-                <time dateTime={post.published_at}>{t('publishedOn', { date: dateLabel })}</time>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+              {dateLabel ? (
+                <p className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" aria-hidden="true" />
+                  <time dateTime={post.published_at}>{t('publishedOn', { date: dateLabel })}</time>
+                </p>
+              ) : null}
+              <p className="flex items-center gap-2">
+                <User className="h-4 w-4" aria-hidden="true" />
+                {authorHref ? (
+                  <Link
+                    href={authorHref}
+                    className="font-medium text-foreground hover:text-primary hover:underline"
+                    prefetch={false}
+                  >
+                    {authorName}
+                  </Link>
+                ) : (
+                  <span className="font-medium text-foreground">{authorName}</span>
+                )}
               </p>
-            ) : null}
+            </div>
           </header>
         </div>
 
@@ -167,6 +226,47 @@ export default async function PostPage(props0) {
           </ReactMarkdown>
         </div>
 
+        {related.length > 0 ? (
+          <section
+            aria-labelledby="related-posts-heading"
+            className="space-y-4 border-t border-border/60 pt-8"
+          >
+            <h2 id="related-posts-heading" className="text-xl font-bold tracking-tight">
+              {t('relatedHeading')}
+            </h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {related.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/blog/${item.slug}`}
+                  prefetch={false}
+                  className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Card className="glass-panel h-full border-border/50 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+                    <CardHeader className="space-y-2 pb-2">
+                      <Badge variant="outline" className="w-fit">
+                        {item.type === 'Rehber' ? t('guideBadge') : t('postBadge')}
+                      </Badge>
+                      <CardTitle className="text-base leading-snug group-hover:text-primary">
+                        {item.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="line-clamp-2 text-xs text-muted-foreground">
+                        {item.description || ''}
+                      </p>
+                      <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                        {t('readMore')}
+                        <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                      </span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         <footer className="space-y-5 border-t border-border/60 pt-8">
           <p className="text-xs text-muted-foreground">{t('shareHint')}</p>
           <div className="flex flex-wrap gap-2">
@@ -185,6 +285,11 @@ export default async function PostPage(props0) {
               <Link href="/arastirma" prefetch={false}>
                 <FlaskConical className="mr-1.5 h-4 w-4" aria-hidden="true" />
                 {t('ctaResearch')}
+              </Link>
+            </Button>
+            <Button asChild variant="secondary">
+              <Link href="/icerik" prefetch={false}>
+                {t('ctaCreate')}
               </Link>
             </Button>
           </div>

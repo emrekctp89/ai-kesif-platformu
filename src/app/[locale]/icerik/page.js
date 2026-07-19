@@ -54,6 +54,9 @@ export default async function ContentStudioPage({ params }) {
           <PenLine className="mx-auto h-10 w-10 text-muted-foreground" aria-hidden="true" />
           <h1 className="mt-4 text-2xl font-extrabold tracking-tight">{t('lockedTitle')}</h1>
           <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">{t('lockedBody')}</p>
+          <p className="mx-auto mt-2 max-w-md text-xs text-muted-foreground">
+            {t('applyReputationHint', { min: 10 })}
+          </p>
           <div className="mt-6">
             <CreatorApplyForm
               alreadyPending={pending}

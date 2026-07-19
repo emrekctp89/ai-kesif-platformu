@@ -25,7 +25,7 @@ async function getPublishedPosts() {
   const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from('posts')
-    .select('title, slug, description, featured_image_url, published_at, type')
+    .select('title, slug, description, featured_image_url, published_at, type, author_id')
     .eq('status', 'Yayınlandı')
     .order('published_at', { ascending: false });
 
@@ -33,7 +33,9 @@ async function getPublishedPosts() {
     logger.error('Yazılar çekilirken hata:', error);
     return [];
   }
-  return data || [];
+
+  const { attachAuthorsToPosts } = await import('@/lib/contentAuthors');
+  return attachAuthorsToPosts(supabase, data || []);
 }
 
 export async function generateMetadata({ params }) {
