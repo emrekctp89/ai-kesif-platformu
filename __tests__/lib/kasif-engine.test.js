@@ -165,6 +165,27 @@ describe('Kâşif engine', () => {
     expect(ranked[0].record.id).toBe(10);
   });
 
+  it('video üretim sorgusunda enhancer araçlarını üreticilerin gerisine iter', () => {
+    const videoRecords = [
+      {
+        id: 12,
+        name: 'Video Üretici',
+        description: 'Metinden video üretir ve animasyon oluşturur',
+      },
+      {
+        id: 13,
+        name: 'Video Enhancer',
+        description: 'Düşük çözünürlüklü videoları 8K seviyesine yükselten iyileştirme aracı',
+      },
+    ];
+
+    const intent = understandQuestion('Metinden video ve animasyon oluşturmak istiyorum');
+    const ranked = rankTools(videoRecords, intent);
+
+    expect(intent.goals).toContain('video-generation');
+    expect(ranked[0].record.id).toBe(12);
+  });
+
   it('kod asistanı sorgusunda eğitim ve dönüşüm araçlarını geriye iter', () => {
     const codingRecords = [
       {

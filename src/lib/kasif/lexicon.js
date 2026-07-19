@@ -41,6 +41,26 @@ export const KASIF_GOALS = {
     ],
     negativeEvidence: ['çözünürlüğünü artır', 'parazit temizler', 'görsel büyüt'],
   },
+  'video-generation': {
+    queryGroups: [
+      ['video', 'animasyon', 'film'],
+      ['üret', 'oluştur', 'yap', 'dönüştür'],
+    ],
+    evidence: [
+      'metinden video',
+      'video üret',
+      'video oluştur',
+      'text to video',
+      'animasyon oluştur',
+    ],
+    negativeEvidence: [
+      'çözünürlüğünü artır',
+      'çözünürlüklü videoları',
+      'video iyileştir',
+      'gürültü azalt',
+      'yükselten',
+    ],
+  },
   'presentation-creation': {
     queryGroups: [
       ['sunum', 'slayt'],

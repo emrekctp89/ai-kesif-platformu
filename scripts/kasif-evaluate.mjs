@@ -79,6 +79,14 @@ const cases = [
     minConfidence: 0.75,
   },
   {
+    name: 'video-generation',
+    question: 'Metinden video ve animasyon oluşturmak için bir AI aracı öner',
+    expectedAny: ['Pictory', 'Kaiber', 'Pika', 'Colossyan Creator', 'Synthesia', 'Runway'],
+    expectedTop: ['Pictory', 'Kaiber', 'Pika', 'Colossyan Creator', 'Synthesia', 'Runway'],
+    expectedGoal: 'video-generation',
+    minConfidence: 0.75,
+  },
+  {
     name: 'coding',
     question: 'Kod yazmak ve yazılım geliştirmek için asistan öner',
     expectedAny: [
