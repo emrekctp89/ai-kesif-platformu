@@ -68,13 +68,10 @@ export async function reassignTodayDailyQuests(options = {}) {
   }
 
   // Delete today's assignments (scoped if single user).
+  // Note: user_daily_quests has no single-column id PK in some schemas.
   let deleteQuery = admin.from('user_daily_quests').delete().eq('quest_date', today);
   if (userId) deleteQuery = deleteQuery.eq('user_id', userId);
-  const { error: deleteError, count: deletedCount } = await deleteQuery.select('id', {
-    count: 'exact',
-    head: false,
-  });
-  // Some clients return deleted rows in data; count may be null.
+  const { error: deleteError } = await deleteQuery;
   if (deleteError) {
     logger.error('reassignTodayDailyQuests delete', deleteError);
     return { error: 'Bugünkü görevler silinemedi.' };
@@ -119,7 +116,6 @@ export async function reassignTodayDailyQuests(options = {}) {
     message: `${userIds.length} kullanıcı için bugünkü görevler yenilendi.`,
     assignedUsers: userIds.length,
     insertedRows: inserted,
-    deletedHint: deletedCount ?? null,
     questCatalogSize: allQuests.length,
     date: today,
   };
