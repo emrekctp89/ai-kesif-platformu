@@ -26,20 +26,31 @@ export default async function Header() {
   const isAdmin = user && user.email === process.env.ADMIN_EMAIL;
 
   // Gerekli tüm verileri sunucuda çekiyoruz
-  const [profile, notificationsResult, totalUnreadMessages] = await Promise.all([
+  const [profileResult, notificationsResult, totalUnreadMessages] = await Promise.all([
     user
       ? supabase
           .from('profiles')
-          .select('username, avatar_url, stripe_price_id')
+          .select('username, avatar_url, stripe_price_id, is_content_creator')
           .eq('id', user.id)
           .single()
-      : Promise.resolve({ data: null }),
+      : Promise.resolve({ data: null, error: null }),
     user ? getNotifications() : Promise.resolve({ notifications: [], unreadCount: 0 }),
     getTotalUnreadMessages(supabase, user?.id),
   ]);
 
+  // Fallback if migration not applied yet (column missing).
+  let profile = profileResult?.data || null;
+  if (user && profileResult?.error) {
+    const fallback = await supabase
+      .from('profiles')
+      .select('username, avatar_url, stripe_price_id')
+      .eq('id', user.id)
+      .single();
+    profile = fallback.data ? { ...fallback.data, is_content_creator: false } : null;
+  }
+
   // DEĞİŞİKLİK: Adminler de artık her zaman "Pro" kullanıcı sayılır.
-  const isProUser = !!profile?.data?.stripe_price_id || isAdmin;
+  const isProUser = !!profile?.stripe_price_id || isAdmin;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -63,7 +74,7 @@ export default async function Header() {
           notifications={notificationsResult.notifications}
           unreadCount={notificationsResult.unreadCount}
           totalUnreadMessages={totalUnreadMessages}
-          profile={profile?.data}
+          profile={profile}
         />
       </div>
     </header>

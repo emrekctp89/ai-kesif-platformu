@@ -30,7 +30,22 @@ async function getAllUsersData() {
     logger.error('Kullanıcı detayları çekilirken hata:', error);
     return [];
   }
-  return data;
+  const users = data || [];
+  const { data: creatorFlags, error: flagsError } = await supabaseAdmin
+    .from('profiles')
+    .select('id, is_content_creator');
+  if (flagsError) {
+    // Column may not exist until migration is applied.
+    logger.error('İçerik üretici bayrakları okunamadı:', flagsError.message);
+    return users.map((user) => ({ ...user, is_content_creator: false }));
+  }
+  const flagMap = new Map(
+    (creatorFlags || []).map((row) => [row.id, Boolean(row.is_content_creator)])
+  );
+  return users.map((user) => ({
+    ...user,
+    is_content_creator: flagMap.get(user.id) || false,
+  }));
 }
 
 async function getLinkHealthStats() {

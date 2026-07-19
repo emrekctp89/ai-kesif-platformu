@@ -22,12 +22,14 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { deleteUserFromAdmin } from '@/app/actions';
+import { setContentCreatorStatus } from '@/app/actions/contentCreators';
 import toast from 'react-hot-toast';
-import { Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { PenLine, Trash2 } from 'lucide-react';
 
 function DeleteUserButton({ user, adminId }) {
-  // Adminin kendi kendini silememesi için butonu devre dışı bırak
   const isAdminItself = user.id === adminId;
 
   const handleFormAction = async (formData) => {
@@ -55,8 +57,8 @@ function DeleteUserButton({ user, adminId }) {
         <AlertDialogHeader>
           <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
           <AlertDialogDescription>
-            Bu işlem geri alınamaz. "{user.email}" kullanıcısı kalıcı olarak silinecektir. Bu
-            kullanıcının tüm verileri (yorumlar, favoriler, eserler vb.) de kaybolacaktır.
+            Bu işlem geri alınamaz. &quot;{user.email}&quot; kullanıcısı kalıcı olarak silinecektir.
+            Bu kullanıcının tüm verileri (yorumlar, favoriler, eserler vb.) de kaybolacaktır.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -71,6 +73,38 @@ function DeleteUserButton({ user, adminId }) {
   );
 }
 
+function CreatorToggleButton({ user }) {
+  const router = useRouter();
+  const [pending, startTransition] = React.useTransition();
+  const enabled = Boolean(user.is_content_creator);
+
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant={enabled ? 'secondary' : 'outline'}
+      disabled={pending}
+      className="gap-1"
+      onClick={() => {
+        startTransition(async () => {
+          const result = await setContentCreatorStatus({
+            userId: user.id,
+            enabled: !enabled,
+          });
+          if (result.error) toast.error(result.error);
+          else {
+            toast.success(result.message || 'Güncellendi');
+            router.refresh();
+          }
+        });
+      }}
+    >
+      <PenLine className="h-3.5 w-3.5" aria-hidden="true" />
+      {enabled ? 'Üretici' : 'Üretici yap'}
+    </Button>
+  );
+}
+
 export function UserManagementTable({ users, adminId }) {
   return (
     <Table>
@@ -78,6 +112,7 @@ export function UserManagementTable({ users, adminId }) {
         <TableRow>
           <TableHead>Kullanıcı</TableHead>
           <TableHead>İtibar</TableHead>
+          <TableHead className="hidden md:table-cell">Rol</TableHead>
           <TableHead className="hidden md:table-cell">Yorum</TableHead>
           <TableHead className="hidden md:table-cell">Favori</TableHead>
           <TableHead className="hidden md:table-cell">Eser</TableHead>
@@ -92,12 +127,19 @@ export function UserManagementTable({ users, adminId }) {
               <div className="flex items-center gap-3">
                 <Avatar>
                   <AvatarImage src={user.avatar_url} />
-                  <AvatarFallback>{user.email.substring(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback>{user.email?.substring(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="font-medium">{user.email}</div>
               </div>
             </TableCell>
             <TableCell className="font-bold">{user.reputation_points}</TableCell>
+            <TableCell className="hidden md:table-cell">
+              {user.is_content_creator ? (
+                <Badge variant="secondary">İçerik üretici</Badge>
+              ) : (
+                <span className="text-xs text-muted-foreground">Üye</span>
+              )}
+            </TableCell>
             <TableCell className="hidden md:table-cell">{user.comment_count}</TableCell>
             <TableCell className="hidden md:table-cell">{user.favorite_count}</TableCell>
             <TableCell className="hidden md:table-cell">{user.showcase_count}</TableCell>
@@ -105,7 +147,10 @@ export function UserManagementTable({ users, adminId }) {
               {new Date(user.created_at).toLocaleDateString()}
             </TableCell>
             <TableCell className="text-right">
-              <DeleteUserButton user={user} adminId={adminId} />
+              <div className="flex items-center justify-end gap-2">
+                <CreatorToggleButton user={user} />
+                <DeleteUserButton user={user} adminId={adminId} />
+              </div>
             </TableCell>
           </TableRow>
         ))}

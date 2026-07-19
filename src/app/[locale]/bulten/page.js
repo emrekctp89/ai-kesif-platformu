@@ -68,11 +68,10 @@ export default async function BultenPage({ params }) {
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             {t('subtitle')}
           </p>
+          <div className="mt-7">
+            <NewsletterSignup compact />
+          </div>
         </div>
-      </section>
-
-      <section>
-        <NewsletterSignup />
       </section>
 
       <section aria-labelledby="bulten-arsiv-heading">

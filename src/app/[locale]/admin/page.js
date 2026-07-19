@@ -98,7 +98,7 @@ async function getAdminData() {
     supabaseAdmin.from('tags').select('*').order('name'),
     supabaseAdmin
       .from('posts')
-      .select('id, title, slug, status, type')
+      .select('id, title, slug, status, type, submitted_at, updated_at, author_id')
       .order('created_at', { ascending: false }),
     supabaseAdmin.from('challenges').select('*').order('created_at', { ascending: false }),
     supabaseAdmin

@@ -45,6 +45,7 @@ import { deleteReportedComment, dismissAlert } from '@/app/actions/moderation';
 import { AiToolFactory } from './AiToolFactory';
 import { BlogManager } from './BlogManager';
 import { ChallengeManager } from './ChallengeManager';
+import { ContentReviewQueue } from './ContentReviewQueue';
 import { NewsletterManager } from './NewsletterManager';
 import { TagManager } from './TagManager';
 import { CategoryManager } from './CategoryManager';
@@ -1633,6 +1634,19 @@ export function AdminPageClient({ data }) {
       <TabsContent value="content_management" className="mt-6 space-y-6">
         <AiToolFactory categories={categories} />
         <ChallengeManager challenges={challenges} />
+        <Card className="glass-panel border-border/50">
+          <CardHeader>
+            <CardTitle>İçerik inceleme kuyruğu</CardTitle>
+            <CardDescription>
+              Onaylı üreticilerden gelen yazı/rehber taslaklarını yayınla veya reddet.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ContentReviewQueue
+              posts={(allPosts || []).filter((post) => post.status === 'İncelemede')}
+            />
+          </CardContent>
+        </Card>
         <BlogManager posts={allPosts} />
         <Card className="glass-panel border-border/50">
           <CardHeader>
