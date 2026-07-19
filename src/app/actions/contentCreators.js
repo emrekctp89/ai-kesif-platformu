@@ -376,6 +376,56 @@ export async function withdrawCreatorPostFromReview(formData) {
   return { success: 'İnceleme geri çekildi. Yazı tekrar taslak.' };
 }
 
+/**
+ * Delete a creator-owned draft (not published).
+ * Allowed statuses: Taslak, Reddedildi, İncelemede (withdraws by delete).
+ */
+export async function deleteCreatorPost(formData) {
+  const { user, error } = await requireUser();
+  if (error) return { error };
+
+  const id = String(formData.get('id') || '').trim();
+  if (!id) return { error: 'Yazı bulunamadı.' };
+
+  const admin = createAdminClient();
+  const { data: existing, error: loadError } = await admin
+    .from('posts')
+    .select('id, author_id, status, slug')
+    .eq('id', id)
+    .maybeSingle();
+  if (loadError || !existing) return { error: 'Yazı bulunamadı.' };
+
+  const adminUser = isAdminUser(user);
+  if (!adminUser && existing.author_id !== user.id) return { error: 'Yetkiniz yok.' };
+  if (!adminUser) {
+    const profile = await getProfileFlags(user.id);
+    if (!profile?.is_content_creator) return { error: 'İçerik üretici yetkisi yok.' };
+    if (existing.status === 'Yayınlandı') {
+      return { error: 'Yayınlanmış yazı silinemez. Admin ile iletişime geç.' };
+    }
+  }
+
+  // Clean join tables then post.
+  await admin.from('post_tags').delete().eq('post_id', id);
+  try {
+    await admin.from('post_tools').delete().eq('post_id', id);
+  } catch {
+    // optional table
+  }
+
+  const { error: deleteError } = await admin.from('posts').delete().eq('id', id);
+  if (deleteError) {
+    logger.error('deleteCreatorPost', deleteError);
+    return { error: 'Yazı silinemedi.' };
+  }
+
+  revalidatePath('/icerik');
+  revalidatePath('/admin');
+  revalidatePath('/blog');
+  if (existing.slug) revalidatePath(`/blog/${existing.slug}`);
+  return { success: 'Yazı silindi.' };
+}
+
 /** Assign tags to a creator-owned post (admin client after auth checks). */
 export async function assignCreatorPostTags(formData) {
   const { user, error } = await requireUser();

@@ -120,13 +120,19 @@ function PostCard({ post, locale, t, featured = false }) {
 }
 
 /**
- * @param {{ posts: Array, locale: string, categories?: Array<{id:number,name:string,slug?:string}> }} props
+ * @param {{
+ *   posts: Array,
+ *   locale: string,
+ *   categories?: Array<{id:number,name:string,slug?:string}>,
+ *   tags?: Array<{id:number|string,name:string}>,
+ * }} props
  */
-export function BlogListingClient({ posts, locale, categories = [] }) {
+export function BlogListingClient({ posts, locale, categories = [], tags = [] }) {
   const t = useTranslations('Blog');
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all'); // all | guide | post
   const [categoryId, setCategoryId] = useState('all');
+  const [tagId, setTagId] = useState('all');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('tr-TR');
@@ -137,11 +143,16 @@ export function BlogListingClient({ posts, locale, categories = [] }) {
       if (categoryId !== 'all' && String(post.category_id || '') !== String(categoryId)) {
         return false;
       }
+      if (tagId !== 'all') {
+        const postTags = Array.isArray(post.tags) ? post.tags : [];
+        const hasTag = postTags.some((tag) => String(tag.id) === String(tagId));
+        if (!hasTag) return false;
+      }
       if (!q) return true;
       const hay = `${post.title || ''} ${post.description || ''}`.toLocaleLowerCase('tr-TR');
       return hay.includes(q);
     });
-  }, [posts, query, filter, categoryId]);
+  }, [posts, query, filter, categoryId, tagId]);
 
   const featured = filtered[0] || null;
   const rest = featured ? filtered.slice(1) : [];
@@ -183,7 +194,7 @@ export function BlogListingClient({ posts, locale, categories = [] }) {
           {categories.length > 0 ? (
             <Select value={categoryId} onValueChange={setCategoryId}>
               <SelectTrigger
-                className="min-h-10 w-full sm:w-[200px]"
+                className="min-h-10 w-full sm:w-[180px]"
                 aria-label={t('filterCategory')}
               >
                 <SelectValue placeholder={t('filterCategory')} />
@@ -193,6 +204,22 @@ export function BlogListingClient({ posts, locale, categories = [] }) {
                 {categories.map((cat) => (
                   <SelectItem key={cat.id} value={String(cat.id)}>
                     {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
+
+          {tags.length > 0 ? (
+            <Select value={tagId} onValueChange={setTagId}>
+              <SelectTrigger className="min-h-10 w-full sm:w-[180px]" aria-label={t('filterTag')}>
+                <SelectValue placeholder={t('filterTag')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('filterTagAll')}</SelectItem>
+                {tags.map((tag) => (
+                  <SelectItem key={tag.id} value={String(tag.id)}>
+                    {tag.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -234,6 +261,7 @@ export function BlogListingClient({ posts, locale, categories = [] }) {
               setQuery('');
               setFilter('all');
               setCategoryId('all');
+              setTagId('all');
             }}
           >
             {t('clearFilters')}

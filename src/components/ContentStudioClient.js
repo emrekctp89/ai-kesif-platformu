@@ -2,10 +2,11 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useTranslations } from 'next-intl';
-import { ExternalLink, FilePenLine, Plus } from 'lucide-react';
-import { createCreatorPost } from '@/app/actions/contentCreators';
+import { ExternalLink, Eye, FilePenLine, Plus, Trash2 } from 'lucide-react';
+import { createCreatorPost, deleteCreatorPost } from '@/app/actions/contentCreators';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,12 +19,64 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 function statusVariant(status) {
   if (status === 'Yayınlandı') return 'default';
   if (status === 'İncelemede') return 'secondary';
   if (status === 'Reddedildi') return 'destructive';
   return 'outline';
+}
+
+function DeleteDraftButton({ postId, label, confirmTitle, confirmBody, cancelLabel, deleteLabel }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button type="button" variant="destructive" size="sm" disabled={isPending}>
+          <Trash2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
+          {label}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{confirmTitle}</AlertDialogTitle>
+          <AlertDialogDescription>{confirmBody}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              startTransition(async () => {
+                const fd = new FormData();
+                fd.set('id', String(postId));
+                const result = await deleteCreatorPost(fd);
+                if (result.error) toast.error(result.error);
+                else {
+                  toast.success(result.success || 'Silindi');
+                  router.refresh();
+                }
+              });
+            }}
+          >
+            {deleteLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }
 
 export function ContentStudioClient({ posts }) {
@@ -199,13 +252,30 @@ export function ContentStudioClient({ posts }) {
                           {t('viewLive')}
                         </Link>
                       </Button>
-                    ) : null}
+                    ) : (
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/icerik/${post.id}/preview`}>
+                          <Eye className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                          {t('preview')}
+                        </Link>
+                      </Button>
+                    )}
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/icerik/${post.id}/edit`}>
                         <FilePenLine className="mr-1.5 h-4 w-4" aria-hidden="true" />
                         {post.status === 'İncelemede' ? t('editOrWithdraw') : t('edit')}
                       </Link>
                     </Button>
+                    {post.status !== 'Yayınlandı' ? (
+                      <DeleteDraftButton
+                        postId={post.id}
+                        label={t('delete')}
+                        confirmTitle={t('deleteConfirmTitle')}
+                        confirmBody={t('deleteConfirmBody')}
+                        cancelLabel={t('deleteCancel')}
+                        deleteLabel={t('deleteConfirmAction')}
+                      />
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>

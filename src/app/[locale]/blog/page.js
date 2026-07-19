@@ -26,7 +26,7 @@ async function getPublishedPosts() {
   const { data, error } = await supabase
     .from('posts')
     .select(
-      'title, slug, description, featured_image_url, published_at, type, author_id, category_id'
+      'id, title, slug, description, featured_image_url, published_at, type, author_id, category_id'
     )
     .eq('status', 'Yayınlandı')
     .order('published_at', { ascending: false });
@@ -36,8 +36,9 @@ async function getPublishedPosts() {
     return [];
   }
 
-  const { attachAuthorsToPosts } = await import('@/lib/contentAuthors');
-  return attachAuthorsToPosts(supabase, data || []);
+  const { attachAuthorsToPosts, attachTagsToPosts } = await import('@/lib/contentAuthors');
+  const withAuthors = await attachAuthorsToPosts(supabase, data || []);
+  return attachTagsToPosts(supabase, withAuthors);
 }
 
 async function getBlogCategories(posts) {
@@ -78,6 +79,8 @@ export default async function BlogPage({ params }) {
   const t = await getTranslations({ locale, namespace: 'Blog' });
   const posts = await getPublishedPosts();
   const categories = await getBlogCategories(posts);
+  const { collectTagsFromPosts } = await import('@/lib/contentAuthors');
+  const tags = collectTagsFromPosts(posts);
   const guidesCount = posts.filter((p) => p.type === 'Rehber').length;
   const articlesCount = posts.length - guidesCount;
   const siteUrl = getSiteOrigin();
@@ -184,7 +187,7 @@ export default async function BlogPage({ params }) {
 
         {posts.length > 0 ? (
           <section aria-label={t('title')}>
-            <BlogListingClient posts={posts} locale={locale} categories={categories} />
+            <BlogListingClient posts={posts} locale={locale} categories={categories} tags={tags} />
           </section>
         ) : (
           <section className="rounded-3xl border border-dashed bg-muted/20 px-6 py-14 text-center">

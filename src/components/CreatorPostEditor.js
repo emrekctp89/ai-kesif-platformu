@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Eye } from 'lucide-react';
 import {
   assignCreatorPostTags,
   submitCreatorPostForReview,
@@ -270,6 +270,12 @@ export function CreatorPostEditor({
                   }}
                 >
                   Taslağı kaydet
+                </Button>
+                <Button asChild type="button" variant="outline">
+                  <Link href={`/icerik/${post.id}/preview`}>
+                    <Eye className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                    Önizleme
+                  </Link>
                 </Button>
                 {inReview ? (
                   <Button
