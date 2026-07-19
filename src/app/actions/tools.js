@@ -10,6 +10,7 @@ import { getEmbedding } from './ai';
 import { NewToolSuggestionEmail } from '@/components/emails/NewToolSuggestionEmail';
 import { cookies } from 'next/headers';
 import { logServerError } from '@/utils/serverLogger';
+import logger from '@/utils/logger';
 import { enforceRateLimit, validateHumanForm } from '@/utils/antiAbuse';
 import {
   inferPlatformsFromLink,

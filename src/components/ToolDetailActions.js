@@ -1,5 +1,6 @@
+'use client';
+
 import logger from '@/utils/logger';
-('use client');
 
 import { useEffect, useState } from 'react';
 import FavoriteButton from '@/components/FavoriteButton';

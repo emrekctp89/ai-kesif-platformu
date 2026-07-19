@@ -1,5 +1,6 @@
+'use client';
+
 import logger from '@/utils/logger';
-('use client');
 
 import React, { useCallback, useState } from 'react';
 import {

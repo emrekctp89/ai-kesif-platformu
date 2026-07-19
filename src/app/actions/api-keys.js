@@ -1,5 +1,6 @@
+'use server';
+
 import logger from '@/utils/logger';
-('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import crypto from 'crypto';

@@ -1,5 +1,6 @@
+'use client';
+
 import logger from '@/utils/logger';
-('use client');
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';

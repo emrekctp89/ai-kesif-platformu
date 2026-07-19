@@ -1,5 +1,6 @@
+'use client';
+
 import logger from '@/utils/logger';
-('use client');
 
 import * as React from 'react';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';

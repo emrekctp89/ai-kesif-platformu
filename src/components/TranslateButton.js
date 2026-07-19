@@ -1,5 +1,6 @@
+'use client';
+
 import logger from '@/utils/logger';
-('use client');
 
 import { useState } from 'react';
 import { Languages, LoaderCircle } from 'lucide-react';

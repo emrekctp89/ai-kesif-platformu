@@ -1,5 +1,6 @@
+'use server';
+
 import logger from '@/utils/logger';
-('use server');
 
 import { createAdminClient } from '@/utils/supabase/admin';
 import { Resend } from 'resend';
