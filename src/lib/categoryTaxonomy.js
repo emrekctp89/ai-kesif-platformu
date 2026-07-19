@@ -483,6 +483,7 @@ export const KNOWN_TOOL_CATEGORIES = {
   sora: 'video-uretim',
   elevenlabs: 'ses-muzik',
   suno: 'ses-muzik',
+  // exact music product "Udio" — matched with word boundaries only
   udio: 'ses-muzik',
   descript: 'ses-muzik',
   'murf ai': 'ses-muzik',
@@ -496,6 +497,9 @@ export const KNOWN_TOOL_CATEGORIES = {
   grok: 'chatbotlar',
   poe: 'chatbotlar',
   'github copilot': 'kod-yazilim',
+  'visual studio code': 'kod-yazilim',
+  vscode: 'kod-yazilim',
+  'vs code': 'kod-yazilim',
   cursor: 'kod-yazilim',
   replit: 'kod-yazilim',
   tabnine: 'kod-yazilim',
@@ -509,6 +513,7 @@ export const KNOWN_TOOL_CATEGORIES = {
   quillbot: 'metin-yazarligi',
   jasper: 'metin-yazarligi',
   'copy.ai': 'metin-yazarligi',
+  copymatic: 'metin-yazarligi',
   grammarly: 'metin-yazarligi',
   duolingo: 'egitim',
   khanmigo: 'egitim',
@@ -863,6 +868,77 @@ export function resolvePrimarySlug(slugOrName) {
 }
 
 /**
+ * Escape a string for safe use inside RegExp.
+ * @param {string} value
+ */
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Tokenize a tool name for exact known-name matching.
+ * Avoids false positives like "udio" matching inside "Studio".
+ * @param {string} nameKey
+ */
+function tokenizeName(nameKey) {
+  return String(nameKey || '')
+    .toLocaleLowerCase('tr-TR')
+    .split(/[\s._\-/+()[\]{}|,]+/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+}
+
+/**
+ * True when known tool key matches the name as a whole word / phrase.
+ * Short single-token keys (e.g. "udio") never match as substrings.
+ * @param {string} nameKey
+ * @param {string} known
+ */
+export function nameMatchesKnownTool(nameKey, known) {
+  const name = String(nameKey || '')
+    .toLocaleLowerCase('tr-TR')
+    .trim();
+  const key = String(known || '')
+    .toLocaleLowerCase('tr-TR')
+    .trim();
+  if (!name || !key) return false;
+  if (name === key) return true;
+
+  // Multi-word product names: allow phrase includes (e.g. "github copilot")
+  if (key.includes(' ')) {
+    return name.includes(key);
+  }
+
+  // Single token: require exact token equality (prevents studio→udio)
+  const tokens = tokenizeName(name);
+  return tokens.includes(key);
+}
+
+/**
+ * Keyword hit with word-boundary protection for short tokens.
+ * Trailing/leading spaces in keyword definitions are preserved as soft boundaries.
+ * @param {string} haystack
+ * @param {string} keyword
+ */
+export function haystackHasKeyword(haystack, keyword) {
+  const kw = String(keyword || '').toLocaleLowerCase('tr-TR');
+  if (!kw) return false;
+
+  // Explicit spaced keywords like "ui " / "bi " already encode a boundary
+  if (kw !== kw.trim() || kw.includes(' ')) {
+    return haystack.includes(kw);
+  }
+
+  // Short tokens false-positive easily ("udio"⊂"studio", "ses"⊂"proses", "ide"⊂"video")
+  if (kw.length <= 4) {
+    const re = new RegExp(`(?:^|[^\\p{L}\\p{N}])${escapeRegExp(kw)}(?:$|[^\\p{L}\\p{N}])`, 'iu');
+    return re.test(haystack);
+  }
+
+  return haystack.includes(kw);
+}
+
+/**
  * İsim + açıklama ile en uygun primary slug tahmini.
  * @returns {{ slug: string, score: number, matched: string[] }}
  */
@@ -871,8 +947,13 @@ export function classifyToolText(name = '', description = '', link = '') {
     .toLocaleLowerCase('tr-TR')
     .trim();
 
-  for (const [known, slug] of Object.entries(KNOWN_TOOL_CATEGORIES)) {
-    if (nameKey === known || nameKey.includes(known)) {
+  // Prefer longer known names first so "visual studio code" wins over short tokens
+  const knownEntries = Object.entries(KNOWN_TOOL_CATEGORIES).sort(
+    (a, b) => b[0].length - a[0].length
+  );
+
+  for (const [known, slug] of knownEntries) {
+    if (nameMatchesKnownTool(nameKey, known)) {
       return { slug, score: 20, matched: [`known:${known}`] };
     }
   }
@@ -885,7 +966,7 @@ export function classifyToolText(name = '', description = '', link = '') {
     const matched = [];
     let score = 0;
     for (const kw of keywords) {
-      if (haystack.includes(kw.toLocaleLowerCase('tr-TR'))) {
+      if (haystackHasKeyword(haystack, kw.toLocaleLowerCase('tr-TR'))) {
         matched.push(kw);
         // longer / more specific keywords weigh more
         score += Math.max(1, Math.min(4, Math.ceil(kw.length / 6)));
