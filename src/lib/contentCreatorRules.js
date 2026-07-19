@@ -170,4 +170,3 @@ export function summarizeDailyQuests(quests, linkOpts = {}) {
     totalPossible: availablePoints + completedPoints,
   };
 }
-

@@ -66,9 +66,9 @@ describe('contentCreatorRules', () => {
   });
 
   it('maps quest action types to deep links', () => {
-    expect(
-      questActionDeepLink('favorite', { featuredToolSlug: 'notion-ai' }).href
-    ).toBe('/tool/notion-ai');
+    expect(questActionDeepLink('favorite', { featuredToolSlug: 'notion-ai' }).href).toBe(
+      '/tool/notion-ai'
+    );
     expect(questActionDeepLink('rating', { popularToolSlug: 'chatgpt' }).href).toBe(
       '/tool/chatgpt'
     );
@@ -77,4 +77,3 @@ describe('contentCreatorRules', () => {
     );
   });
 });
-
