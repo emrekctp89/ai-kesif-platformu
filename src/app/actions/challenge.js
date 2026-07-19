@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
@@ -27,7 +28,7 @@ export async function submitToShowcaseChallenge(formData) {
 
   if (error) {
     if (error.code === '23505') return { error: 'Bu eseri bu yarışmaya zaten göndermişsiniz.' };
-    console.error('Yarışmaya eser gönderme hatası:', error);
+    logger.error('Yarışmaya eser gönderme hatası:', error);
     return { error: 'Eser gönderilirken bir hata oluştu.' };
   }
 
@@ -97,7 +98,7 @@ export async function createChallengeManually(formData) {
   });
 
   if (error) {
-    console.error('Manuel yarışma oluşturma hatası:', error);
+    logger.error('Manuel yarışma oluşturma hatası:', error);
     return { error: 'Yarışma oluşturulurken bir hata oluştu.' };
   }
 
@@ -154,7 +155,7 @@ export async function generateChallengeIdeasWithAi(topic) {
       return { error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.' };
     }
   } catch (e) {
-    console.error('Yarışma fikri üretme hatası:', e.message);
+    logger.error('Yarışma fikri üretme hatası:', e.message);
     return { error: `Bir hata oluştu.` };
   }
 }
@@ -187,7 +188,7 @@ export async function updateChallenge(formData) {
     .eq('id', id);
 
   if (error) {
-    console.error('Yarışma güncelleme hatası:', error);
+    logger.error('Yarışma güncelleme hatası:', error);
     return { error: 'Yarışma güncellenirken bir hata oluştu.' };
   }
 
@@ -244,7 +245,7 @@ export async function submitShowcaseToChallenge(formData) {
     if (error.code === '23505') {
       return { error: 'Bu eseri bu yarışmaya zaten göndermişsiniz.' };
     }
-    console.error('Yarışmaya gönderme hatası:', error);
+    logger.error('Yarışmaya gönderme hatası:', error);
     return { error: 'Eser yarışmaya gönderilirken bir hata oluştu.' };
   }
 

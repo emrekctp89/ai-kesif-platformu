@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { Storage } from '@google-cloud/storage';
 import { getGoogleClientOptions, getGcsBucketName } from '@/utils/googleCredentials';
 
@@ -122,7 +123,7 @@ export const uploadToGCS = async (destination, file, contentType, options = {}) 
     } catch (error) {
       // Uniform bucket-level access disallows per-object ACLs — bucket policy must allow public read.
       if (process.env.NODE_ENV !== 'production') {
-        console.warn(
+        logger.warn(
           '[gcs] makePublic skipped (bucket may use uniform access):',
           error?.message || error
         );
@@ -145,7 +146,7 @@ export const deleteFromGCS = async (filePathOrUrl) => {
     await getBucket().file(objectPath).delete({ ignoreNotFound: true });
   } catch (error) {
     if (error?.code !== 404) {
-      console.error('GCS Silme Hatası:', error);
+      logger.error('GCS Silme Hatası:', error);
     }
   }
 };

@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
@@ -35,7 +36,7 @@ export async function submitLaunch(formData) {
         const publicUrl = await uploadToGCS(gcsPath, imageFile, imageFile.type || 'image/jpeg');
         imageUrls.push(publicUrl);
       } catch (uploadError) {
-        console.error('Lansman görseli yükleme hatası (GCS):', uploadError);
+        logger.error('Lansman görseli yükleme hatası (GCS):', uploadError);
         return { error: 'Görseller yüklenirken bir hata oluştu.' };
       }
     }
@@ -57,7 +58,7 @@ export async function submitLaunch(formData) {
     .single();
 
   if (insertError) {
-    console.error('Lansman kaydetme hatası:', insertError);
+    logger.error('Lansman kaydetme hatası:', insertError);
     return { error: 'Lansmanınız kaydedilirken bir hata oluştu.' };
   }
 

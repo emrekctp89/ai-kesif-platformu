@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import { useState } from 'react';
 import { Languages, LoaderCircle } from 'lucide-react';
@@ -60,7 +61,7 @@ export function TranslateButton({
       const lang = LANGUAGE_OPTIONS.find((item) => item.code === langCode)?.label;
       toast.success(`Metin ${lang || langCode} diline çevrildi.`);
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       toast.error('Çeviri sırasında bir hata oluştu.');
     } finally {
       setIsTranslating(false);

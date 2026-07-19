@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -41,7 +42,7 @@ export async function createPost(formData) {
     .single();
 
   if (error) {
-    console.error('Yazı oluşturma hatası:', error);
+    logger.error('Yazı oluşturma hatası:', error);
     return { error: 'Yazı oluşturulurken bir hata oluştu.' };
   }
 
@@ -86,7 +87,7 @@ export async function updatePost(formData) {
   const { error } = await supabase.from('posts').update(postData).eq('id', id);
 
   if (error) {
-    console.error('Yazı güncelleme hatası:', error);
+    logger.error('Yazı güncelleme hatası:', error);
     return { error: `Veritabanı Hatası: ${error.message}` };
   }
 
@@ -118,7 +119,7 @@ export async function deletePost(formData) {
   const { error } = await supabase.from('posts').delete().eq('id', id);
 
   if (error) {
-    console.error('Yazı silme hatası:', error);
+    logger.error('Yazı silme hatası:', error);
     return { error: 'Yazı silinirken bir hata oluştu.' };
   }
 
@@ -189,7 +190,7 @@ export async function togglePostPublish(formData) {
     .single();
 
   if (error) {
-    console.error('Yayın durumu güncelleme hatası:', error);
+    logger.error('Yayın durumu güncelleme hatası:', error);
     return { error: 'Durum güncellenirken bir hata oluştu.' };
   }
 
@@ -220,7 +221,7 @@ export async function createCollection(formData) {
     .single();
 
   if (error) {
-    console.error('Koleksiyon oluşturma hatası:', error);
+    logger.error('Koleksiyon oluşturma hatası:', error);
     return { error: 'Koleksiyon oluşturulurken bir hata oluştu.' };
   }
 
@@ -249,7 +250,7 @@ export async function updateCollection(formData) {
     .eq('id', id);
 
   if (error) {
-    console.error('Koleksiyon güncelleme hatası:', error);
+    logger.error('Koleksiyon güncelleme hatası:', error);
     return { error: 'Koleksiyon güncellenirken bir hata oluştu.' };
   }
 
@@ -266,7 +267,7 @@ export async function deleteCollection(formData) {
   const { error } = await supabase.from('collections').delete().eq('id', id);
 
   if (error) {
-    console.error('Koleksiyon silme hatası:', error);
+    logger.error('Koleksiyon silme hatası:', error);
     return { error: 'Koleksiyon silinirken bir hata oluştu.' };
   }
 
@@ -287,7 +288,7 @@ export async function updateCollectionTools(formData) {
     .eq('collection_id', collectionId);
 
   if (deleteError) {
-    console.error('Eski koleksiyon araçlarını silme hatası:', deleteError);
+    logger.error('Eski koleksiyon araçlarını silme hatası:', deleteError);
     return { error: 'Koleksiyondaki araçlar güncellenirken bir hata oluştu.' };
   }
 
@@ -301,7 +302,7 @@ export async function updateCollectionTools(formData) {
     const { error: insertError } = await supabase.from('collection_tools').insert(newLinks);
 
     if (insertError) {
-      console.error('Yeni koleksiyon araçlarını ekleme hatası:', insertError);
+      logger.error('Yeni koleksiyon araçlarını ekleme hatası:', insertError);
       return {
         error: 'Koleksiyondaki araçlar güncellenirken bir hata oluştu.',
       };
@@ -338,7 +339,7 @@ export async function uploadBlogImage(formData) {
   try {
     publicUrl = await uploadToGCS(gcsPath, file, file.type || 'image/jpeg');
   } catch (uploadError) {
-    console.error('Blog görseli yükleme hatası (GCS):', uploadError);
+    logger.error('Blog görseli yükleme hatası (GCS):', uploadError);
     return { error: 'Görsel yüklenirken bir hata oluştu.' };
   }
 

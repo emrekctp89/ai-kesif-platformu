@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 const SENSITIVE_KEY_PATTERN =
   /email|token|secret|password|authorization|cookie|customer|user|prompt|message/i;
 
@@ -20,5 +21,5 @@ export function logServerError(context, error, details) {
     timestamp: new Date().toISOString(),
   };
 
-  console.error('[app-error]', JSON.stringify(payload));
+  logger.error('[app-error]', JSON.stringify(payload));
 }

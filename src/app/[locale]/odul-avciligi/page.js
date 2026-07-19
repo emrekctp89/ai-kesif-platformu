@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import { ArrowRight, Award, Clock, Search, Sparkles, Target, Trophy, Users } from 'lucide-react';
@@ -31,12 +32,12 @@ async function getActiveBounties() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Aktif ödüller çekilirken hata:', error);
+      logger.error('Aktif ödüller çekilirken hata:', error);
       return [];
     }
     return data || [];
   } catch (error) {
-    console.error('Aktif ödüller beklenmeyen hata:', error);
+    logger.error('Aktif ödüller beklenmeyen hata:', error);
     return [];
   }
 }

@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { cookies } from 'next/headers';
@@ -49,7 +50,7 @@ async function getAdminData() {
       }));
     }
 
-    console.error(
+    logger.error(
       `[admin] tools(is_approved=${isApproved}) with variants failed:`,
       primary.error.message
     );
@@ -62,7 +63,7 @@ async function getAdminData() {
       .order('created_at', { ascending });
 
     if (fallback.error) {
-      console.error(
+      logger.error(
         `[admin] tools(is_approved=${isApproved}) fallback failed:`,
         fallback.error.message
       );
@@ -113,25 +114,25 @@ async function getAdminData() {
   ]);
 
   if (unapprovedShowcaseResult.error) {
-    console.error('[admin] showcase:', unapprovedShowcaseResult.error.message);
+    logger.error('[admin] showcase:', unapprovedShowcaseResult.error.message);
   }
   if (categoriesResult.error) {
-    console.error('[admin] categories:', categoriesResult.error.message);
+    logger.error('[admin] categories:', categoriesResult.error.message);
   }
   if (tagsResult.error) {
-    console.error('[admin] tags:', tagsResult.error.message);
+    logger.error('[admin] tags:', tagsResult.error.message);
   }
   if (postsResult.error) {
-    console.error('[admin] posts:', postsResult.error.message);
+    logger.error('[admin] posts:', postsResult.error.message);
   }
   if (challengesResult.error) {
-    console.error('[admin] challenges:', challengesResult.error.message);
+    logger.error('[admin] challenges:', challengesResult.error.message);
   }
   if (reportedLinksResult.error) {
-    console.error('[admin] link reports:', reportedLinksResult.error.message);
+    logger.error('[admin] link reports:', reportedLinksResult.error.message);
   }
   if (adminAlertsResult.error) {
-    console.error('[admin] alerts:', adminAlertsResult.error.message);
+    logger.error('[admin] alerts:', adminAlertsResult.error.message);
   }
 
   const normalizedApprovedTools = (approvedTools || []).map((tool) => ({
@@ -186,7 +187,7 @@ export default async function AdminPage({ params }) {
   try {
     adminData = await getAdminData();
   } catch (error) {
-    console.error('[admin] getAdminData failed:', error);
+    logger.error('[admin] getAdminData failed:', error);
     adminData = {
       unapprovedTools: [],
       unapprovedShowcaseItems: [],

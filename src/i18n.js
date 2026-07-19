@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { getRequestConfig } from 'next-intl/server';
 import { routing } from './i18n/routing';
 
@@ -15,7 +16,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     messages: (await import(`../messages/${locale}.json`)).default,
     onError(error) {
       // Surface missing/invalid message keys in server logs (prod digests are empty).
-      console.error('[next-intl]', error.code, error.originalMessage || error.message);
+      logger.error('[next-intl]', error.code, error.originalMessage || error.message);
     },
     getMessageFallback({ namespace, key }) {
       return `${namespace}.${key}`;

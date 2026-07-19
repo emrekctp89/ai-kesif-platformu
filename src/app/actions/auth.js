@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -16,7 +17,7 @@ export async function signOut() {
   try {
     await supabase.auth.signOut();
   } catch (error) {
-    console.error('[signOut] failed:', error?.message || error);
+    logger.error('[signOut] failed:', error?.message || error);
   }
   revalidatePath('/', 'layout');
   redirect('/login');
@@ -51,7 +52,7 @@ export async function signIn(formData) {
       password,
     }));
   } catch (err) {
-    console.error('[signIn] unexpected:', err?.message || err);
+    logger.error('[signIn] unexpected:', err?.message || err);
     return redirect(
       `/login?message=${encodeURIComponent(
         'Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.'
@@ -60,7 +61,7 @@ export async function signIn(formData) {
   }
 
   if (error || !data?.user) {
-    console.error('[signIn] auth error:', error?.message || 'no user');
+    logger.error('[signIn] auth error:', error?.message || 'no user');
     const errorMessage =
       error?.message === 'Email not confirmed'
         ? 'E-posta adresiniz henüz doğrulanmamış. Lütfen gelen kutunuzu kontrol edin.'
@@ -71,7 +72,7 @@ export async function signIn(formData) {
   // Ensure session cookie was actually written (getAll/setAll path)
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData?.session) {
-    console.error('[signIn] session missing after successful password auth');
+    logger.error('[signIn] session missing after successful password auth');
     return redirect(
       `/login?message=${encodeURIComponent(
         'Oturum kaydedilemedi. Çerezleri etkinleştirip tekrar deneyin.'
@@ -105,7 +106,7 @@ export async function oAuthSignIn(provider) {
   });
 
   if (error || !data?.url) {
-    console.error('[oAuthSignIn] error:', error?.message || 'no url');
+    logger.error('[oAuthSignIn] error:', error?.message || 'no url');
     return redirect(
       `/login?message=${encodeURIComponent(
         'Sağlayıcı ile giriş yapılamadı. Lütfen tekrar deneyin.'
@@ -152,7 +153,7 @@ export async function signUp(formData) {
       },
     }));
   } catch (err) {
-    console.error('[signUp] unexpected:', err?.message || err);
+    logger.error('[signUp] unexpected:', err?.message || err);
     return redirect(
       `/signup?message=${encodeURIComponent(
         'Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.'
@@ -177,7 +178,7 @@ export async function signUp(formData) {
       });
     }
   } catch (emailError) {
-    console.error('Hoş geldiniz e-postası gönderme hatası:', emailError);
+    logger.error('Hoş geldiniz e-postası gönderme hatası:', emailError);
   }
 
   const successMessage = 'Hesabınızı doğrulamak için e-postanızı kontrol edin.';
@@ -257,7 +258,7 @@ export async function deleteUser() {
     const supabaseAdmin = createAdminClient();
     ({ error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id));
   } catch (err) {
-    console.error('Hesap silme hatası (admin client):', err?.message || err);
+    logger.error('Hesap silme hatası (admin client):', err?.message || err);
     return redirect(
       `/profile?message=${encodeURIComponent(
         'Hesap silme şu an kullanılamıyor. Lütfen daha sonra tekrar deneyin.'
@@ -266,7 +267,7 @@ export async function deleteUser() {
   }
 
   if (deleteError) {
-    console.error('Hesap silme hatası:', deleteError);
+    logger.error('Hesap silme hatası:', deleteError);
     const errorMessage = 'Hesabınız silinirken bir hata oluştu.';
     return redirect(`/profile?message=${encodeURIComponent(errorMessage)}`);
   }
@@ -282,7 +283,7 @@ export async function deleteUser() {
       });
     }
   } catch (emailError) {
-    console.error('Veda e-postası gönderme hatası:', emailError);
+    logger.error('Veda e-postası gönderme hatası:', emailError);
   }
 
   try {

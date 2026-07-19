@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
@@ -26,7 +27,7 @@ export async function getNotifications() {
     .limit(10);
 
   if (error || notificationsError) {
-    console.error('Bildirimleri çekerken hata:', error || notificationsError);
+    logger.error('Bildirimleri çekerken hata:', error || notificationsError);
     return { notifications: [], unreadCount: 0 };
   }
 
@@ -69,7 +70,7 @@ export async function savePushSubscription(subscriptionJSON) {
   );
 
   if (upsertError) {
-    console.error('Push aboneliği kaydetme hatası:', upsertError);
+    logger.error('Push aboneliği kaydetme hatası:', upsertError);
     return { error: 'Abonelik kaydedilemedi.' };
   }
 
@@ -115,7 +116,7 @@ export async function fetchActivityFeed(options = {}) {
   const { data, error } = await supabase.rpc('get_community_activity_feed', rpcArgs);
 
   if (error) {
-    console.error('Aktivite akışı yeniden çekilirken hata:', error);
+    logger.error('Aktivite akışı yeniden çekilirken hata:', error);
     return [];
   }
   return Array.isArray(data) ? data : [];

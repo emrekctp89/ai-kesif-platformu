@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
@@ -72,7 +73,7 @@ export async function deleteComment(formData) {
     .eq('user_id', user.id);
 
   if (error) {
-    console.error('Yorum silme hatası:', error);
+    logger.error('Yorum silme hatası:', error);
     return { error: 'Yorum silinirken bir hata oluştu.' };
   }
 
@@ -187,7 +188,7 @@ export async function deletePrompt(formData) {
     .eq('user_id', user.id);
 
   if (error) {
-    console.error('Prompt silme hatası:', error);
+    logger.error('Prompt silme hatası:', error);
     return { error: 'Prompt silinirken bir hata oluştu.' };
   }
 
@@ -230,7 +231,7 @@ export async function toggleFollowUser(formData) {
     .maybeSingle();
 
   if (checkError) {
-    console.error('Takip kontrolü hatası:', checkError);
+    logger.error('Takip kontrolü hatası:', checkError);
     return { error: 'İşlem sırasında bir veritabanı hatası oluştu.' };
   }
 
@@ -241,7 +242,7 @@ export async function toggleFollowUser(formData) {
       .match({ follower_id: currentUser.id, following_id: targetUserId });
 
     if (unfollowError) {
-      console.error('Takipten çıkma hatası:', unfollowError);
+      logger.error('Takipten çıkma hatası:', unfollowError);
       return { error: 'Takipten çıkılırken bir hata oluştu.' };
     }
   } else {
@@ -250,7 +251,7 @@ export async function toggleFollowUser(formData) {
       .insert({ follower_id: currentUser.id, following_id: targetUserId });
 
     if (followError) {
-      console.error('Takip etme hatası:', followError);
+      logger.error('Takip etme hatası:', followError);
       return { error: 'Takip edilirken bir hata oluştu.' };
     }
 
@@ -319,7 +320,7 @@ export async function reportComment(formData) {
   });
 
   if (error) {
-    console.error('Yorum şikayet hatası:', error);
+    logger.error('Yorum şikayet hatası:', error);
     return { error: 'Şikayet gönderilirken bir hata oluştu.' };
   }
 

@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createAdminClient } from '@/utils/supabase/admin';
 import { normalizeNewsletterEmail } from '@/lib/newsletterRecipients';
@@ -40,7 +41,7 @@ export async function subscribeToNewsletter(formData) {
 
     return { success: true, message: 'Bültene başarıyla abone oldunuz! Teşekkürler.' };
   } catch (error) {
-    console.error('Newsletter subscription error:', error);
+    logger.error('Newsletter subscription error:', error);
     return {
       error: 'Abonelik işlemi sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin.',
     };

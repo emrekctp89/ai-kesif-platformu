@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
@@ -45,7 +46,7 @@ async function findAdminUserId(supabaseAdmin) {
     );
     return adminUser?.id || null;
   } catch (error) {
-    console.error("Admin kullanıcı ID'si bulunurken hata:", error);
+    logger.error("Admin kullanıcı ID'si bulunurken hata:", error);
     return null;
   }
 }
@@ -79,7 +80,7 @@ async function notifyAdminAboutLinkReport({ reportId, tool, reason, reporterEmai
   });
 
   if (alertError) {
-    console.error('Admin link raporu uyarısı oluşturulamadı:', alertError);
+    logger.error('Admin link raporu uyarısı oluşturulamadı:', alertError);
   }
 
   const adminUserId = await findAdminUserId(supabaseAdmin);
@@ -94,7 +95,7 @@ async function notifyAdminAboutLinkReport({ reportId, tool, reason, reporterEmai
   });
 
   if (notificationError) {
-    console.error('Admin link raporu bildirimi oluşturulamadı:', notificationError);
+    logger.error('Admin link raporu bildirimi oluşturulamadı:', notificationError);
   }
 }
 
@@ -174,7 +175,7 @@ export async function submitToolLinkReport(formData) {
   });
 
   if (error) {
-    console.error('Link raporu kaydedilirken hata:', error);
+    logger.error('Link raporu kaydedilirken hata:', error);
     return { error: 'Rapor kaydedilirken bir hata oluştu.' };
   }
 
@@ -186,7 +187,7 @@ export async function submitToolLinkReport(formData) {
       reporterEmail: finalReporterEmail,
     });
   } catch (notificationError) {
-    console.error('Link raporu bildirimi oluşturulurken hata:', notificationError);
+    logger.error('Link raporu bildirimi oluşturulurken hata:', notificationError);
   }
 
   revalidatePath(`/tool/${toolSlug}`);
@@ -235,7 +236,7 @@ export async function updateToolLinkReportStatus(formData) {
     .eq('id', reportId);
 
   if (error) {
-    console.error('Link raporu güncellenirken hata:', error);
+    logger.error('Link raporu güncellenirken hata:', error);
     return { error: 'Rapor durumu güncellenemedi.' };
   }
 

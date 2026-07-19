@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -40,13 +41,13 @@ async function getDiscoverData() {
 
   // Partial failure: still render whatever we have.
   if (mainError) {
-    console.error('Keşfet ana verisi hatası:', mainError);
+    logger.error('Keşfet ana verisi hatası:', mainError);
   }
   if (collectionsError) {
-    console.error('Keşfet koleksiyon hatası:', collectionsError);
+    logger.error('Keşfet koleksiyon hatası:', collectionsError);
   }
   if (learningPathsError) {
-    console.error('Keşfet öğrenme yolu hatası:', learningPathsError);
+    logger.error('Keşfet öğrenme yolu hatası:', learningPathsError);
   }
 
   if (mainError && !mainData) {

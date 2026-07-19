@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -9,7 +10,7 @@ async function getTrendingData() {
   const supabase = await createClient(await cookies());
   const { data, error } = await supabase.rpc('get_trending_tools');
   if (error) {
-    console.error('Trend olan araçlar çekilirken hata:', error);
+    logger.error('Trend olan araçlar çekilirken hata:', error);
     return [];
   }
   return data;

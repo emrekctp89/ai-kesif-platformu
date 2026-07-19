@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { Link } from '@/i18n/routing';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -12,7 +13,7 @@ async function getTotalUnreadMessages(supabase, userId) {
   if (!userId) return 0;
   const { data, error } = await supabase.rpc('get_total_unread_count', { p_user_id: userId });
   if (error) {
-    console.error('Toplam okunmamış mesaj sayısı çekilirken hata:', error);
+    logger.error('Toplam okunmamış mesaj sayısı çekilirken hata:', error);
     return 0;
   }
   return data;

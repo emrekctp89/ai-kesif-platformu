@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import createIntlMiddleware from 'next-intl/middleware';
@@ -79,7 +80,7 @@ export async function middleware(request) {
       clearSupabaseAuthCookies(request, response);
     }
   } catch (error) {
-    console.error('[middleware] auth session refresh failed:', error?.message || error);
+    logger.error('[middleware] auth session refresh failed:', error?.message || error);
   }
 
   // 4. Security headers — CORS (header values must be ByteString / Latin-1)

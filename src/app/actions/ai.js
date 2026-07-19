@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -11,7 +12,7 @@ export async function getEmbedding(text) {
   try {
     return await embedGeminiText(text);
   } catch (error) {
-    console.error('Gemini Embedding Hatası:', error);
+    logger.error('Gemini Embedding Hatası:', error);
     throw new Error(
       error?.message ||
         "API'den geçerli bir embedding vektörü alınamadı. Lütfen API yapılandırmanızı kontrol edin."
@@ -27,7 +28,7 @@ async function getAllToolsForAI() {
     .eq('is_approved', true);
 
   if (error) {
-    console.error('AI için araçlar çekilirken hata:', error);
+    logger.error('AI için araçlar çekilirken hata:', error);
     return [];
   }
   return data;
@@ -77,7 +78,7 @@ export async function getAiRecommendation(userPrompt) {
     });
 
     if (matchError) {
-      console.error('Vektör arama hatası:', matchError);
+      logger.error('Vektör arama hatası:', matchError);
       return { success: false, error: 'Tavsiye motoru veritabanına erişemedi.' };
     }
 
@@ -139,7 +140,7 @@ export async function getAiRecommendation(userPrompt) {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error('Gemini API Hatası:', errorBody);
+      logger.error('Gemini API Hatası:', errorBody);
       return {
         success: false,
         error: `Yapay zeka modelinden bir hata alındı. (Status: ${response.status})`,
@@ -188,7 +189,7 @@ export async function getAiRecommendation(userPrompt) {
       };
     }
   } catch (e) {
-    console.error('Tavsiye fonksiyonunda genel hata:', e);
+    logger.error('Tavsiye fonksiyonunda genel hata:', e);
     return {
       success: false,
       error: 'Tavsiye alınırken beklenmedik bir hata oluştu.',
@@ -260,7 +261,7 @@ export async function getAiComparison(tools) {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error('Gemini Karşılaştırma Hatası:', errorBody);
+      logger.error('Gemini Karşılaştırma Hatası:', errorBody);
       return { error: `Yapay zeka modelinden hata alındı.` };
     }
 
@@ -279,7 +280,7 @@ export async function getAiComparison(tools) {
       };
     }
   } catch (e) {
-    console.error('Karşılaştırma fonksiyonunda genel hata:', e);
+    logger.error('Karşılaştırma fonksiyonunda genel hata:', e);
     return { error: 'Analiz oluşturulurken beklenmedik bir hata oluştu.' };
   }
 }
@@ -323,7 +324,7 @@ export async function generateTextWithGemini(userPrompt) {
       };
     }
   } catch (e) {
-    console.error('Metin üretme hatası:', e);
+    logger.error('Metin üretme hatası:', e);
     return { error: 'Metin üretilirken beklenmedik bir hata oluştu.' };
   }
 }
@@ -354,7 +355,7 @@ export async function generateImageWithImagen(userPrompt) {
 
     if (!response.ok) {
       const errorBody = await response.json();
-      console.error('Imagen API Hatası:', errorBody);
+      logger.error('Imagen API Hatası:', errorBody);
       const errorMessage =
         errorBody.error?.message || 'Görsel üretme servisinden bilinmeyen bir hata alındı.';
       return { error: `Hata: ${errorMessage}` };
@@ -368,7 +369,7 @@ export async function generateImageWithImagen(userPrompt) {
       return { error: 'Yapay zeka modelinden bir görsel alınamadı.' };
     }
   } catch (e) {
-    console.error('Görsel üretme hatası:', e);
+    logger.error('Görsel üretme hatası:', e);
     return { error: 'Görsel üretilirken beklenmedik bir hata oluştu.' };
   }
 }
@@ -480,7 +481,7 @@ export async function getAdminCoPilotResponse(userPrompt, history) {
       return { error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.' };
     }
   } catch (e) {
-    console.error('AI Co-Pilot fonksiyonunda genel hata:', e.message);
+    logger.error('AI Co-Pilot fonksiyonunda genel hata:', e.message);
     return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
   }
 }
@@ -503,7 +504,7 @@ export async function runOmniSearch(query) {
     });
 
     if (error) {
-      console.error('Gelişmiş Omni-search hatası:', error);
+      logger.error('Gelişmiş Omni-search hatası:', error);
       return [];
     }
 
@@ -515,7 +516,7 @@ export async function runOmniSearch(query) {
 
     return formattedData;
   } catch (e) {
-    console.error('runOmniSearch fonksiyonunda hata:', e.message);
+    logger.error('runOmniSearch fonksiyonunda hata:', e.message);
     return [];
   }
 }
@@ -551,7 +552,7 @@ export async function runAdvancedOmniSearch(query) {
 
     return { results: [], suggestions: (suggestions || []).map(formatItem), error: null };
   } catch (e) {
-    console.error('Gelişmiş Omni-Search hatası:', e.message);
+    logger.error('Gelişmiş Omni-Search hatası:', e.message);
     return { results: [], suggestions: [], error: e.message };
   }
 }
@@ -657,7 +658,7 @@ export async function getAiCodeReview(codeToReview) {
       };
     }
   } catch (e) {
-    console.error('AI Kod İnceleme fonksiyonunda hata:', e.message);
+    logger.error('AI Kod İnceleme fonksiyonunda hata:', e.message);
     return {
       error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}`,
     };
@@ -785,7 +786,7 @@ Cevabını SADECE JSON formatında ver:
     revalidatePath('/admin');
     return { success: true, count: toolsToInsert.length };
   } catch (e) {
-    console.error('DeepSearch AI Araç Hatası:', e.message);
+    logger.error('DeepSearch AI Araç Hatası:', e.message);
     return { error: 'Araçlar üretilirken beklenmedik bir hata oluştu.' };
   }
 }
@@ -862,7 +863,7 @@ export async function handleOnboardingStep(history, userAnswer) {
         .eq('id', user.id);
 
       if (updateError) {
-        console.error('Onboarding tamamlama hatası:', updateError);
+        logger.error('Onboarding tamamlama hatası:', updateError);
         return {
           error: 'Profiliniz güncellenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.',
         };
@@ -872,7 +873,7 @@ export async function handleOnboardingStep(history, userAnswer) {
 
     return { success: true, data: aiResponse };
   } catch (e) {
-    console.error('Onboarding Asistanı hatası:', e.message);
+    logger.error('Onboarding Asistanı hatası:', e.message);
     return { error: `Bir hata oluştu: ${e.message}` };
   }
 }
@@ -940,7 +941,7 @@ export async function getVoiceAgentResponse(userQuery) {
       return { error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.' };
     }
   } catch (e) {
-    console.error('Sesli Agent fonksiyonunda hata:', e.message);
+    logger.error('Sesli Agent fonksiyonunda hata:', e.message);
     return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
   }
 }
@@ -1033,7 +1034,7 @@ export async function getAdvancedVoiceAgentResponse(userQuery, history) {
       return { error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.' };
     }
   } catch (e) {
-    console.error('Gelişmiş Sesli Agent fonksiyonunda hata:', e.message);
+    logger.error('Gelişmiş Sesli Agent fonksiyonunda hata:', e.message);
     return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
   }
 }
@@ -1114,7 +1115,7 @@ export async function getAiConciergeResponse(userQuery, history) {
       return { error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.' };
     }
   } catch (e) {
-    console.error('AI Konsiyerj fonksiyonunda hata:', e.message);
+    logger.error('AI Konsiyerj fonksiyonunda hata:', e.message);
     return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
   }
 }
@@ -1198,7 +1199,7 @@ export async function getAiMentorFeedback(userPrompt) {
       return { error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.' };
     }
   } catch (e) {
-    console.error('AI Mentor fonksiyonunda hata:', e.message);
+    logger.error('AI Mentor fonksiyonunda hata:', e.message);
     return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
   }
 }

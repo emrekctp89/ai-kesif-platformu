@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -39,7 +40,7 @@ async function getPublicCollections() {
   }
 
   if (error) {
-    console.error('Herkese açık koleksiyonlar çekilirken hata:', error);
+    logger.error('Herkese açık koleksiyonlar çekilirken hata:', error);
     return [];
   }
 

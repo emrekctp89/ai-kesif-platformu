@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { v2 } from '@google-cloud/translate';
 import { getGoogleClientOptions } from '@/utils/googleCredentials';
 
@@ -28,7 +29,7 @@ export async function translateText(text, targetLanguage = 'tr') {
     const [translations] = await translate.translate(text, targetLanguage);
     return translations;
   } catch (error) {
-    console.error('Google Cloud Translation Hatası:', error);
+    logger.error('Google Cloud Translation Hatası:', error);
     throw new Error('Çeviri işlemi sırasında bir hata oluştu.');
   }
 }

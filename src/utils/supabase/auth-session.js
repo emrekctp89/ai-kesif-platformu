@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 /**
  * Auth session helpers — invalid sessions must not 500 the app,
  * and valid chunked cookies must never be deleted by mistake.
@@ -98,7 +99,7 @@ export function installSafeAuthGetUser(supabase) {
       }
       return result;
     } catch (error) {
-      console.error('[supabase.auth.getUser] recovered from error:', error?.message || error);
+      logger.error('[supabase.auth.getUser] recovered from error:', error?.message || error);
       return { data: { user: null }, error };
     }
   };

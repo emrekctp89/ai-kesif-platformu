@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
 import { getSiteOrigin } from '@/utils/siteUrl';
 
@@ -73,24 +74,24 @@ export async function GET() {
     ]);
 
     if (toolsResult.error) {
-      console.error('Araçlar alınamadı:', toolsResult.error);
+      logger.error('Araçlar alınamadı:', toolsResult.error);
     } else {
       toolsData = toolsResult.data || [];
     }
 
     if (categoriesResult.error) {
-      console.error('Kategoriler alınamadı:', categoriesResult.error);
+      logger.error('Kategoriler alınamadı:', categoriesResult.error);
     } else {
       categoriesData = categoriesResult.data || [];
     }
 
     if (newslettersResult.error) {
-      console.error('Bültenler alınamadı:', newslettersResult.error);
+      logger.error('Bültenler alınamadı:', newslettersResult.error);
     } else {
       newslettersData = newslettersResult.data || [];
     }
   } catch (error) {
-    console.error('Sitemap fetch failed (likely during build):', error);
+    logger.error('Sitemap fetch failed (likely during build):', error);
   }
 
   categoriesData.forEach((category) => {

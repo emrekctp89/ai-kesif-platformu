@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { Resend } from 'resend';
@@ -85,7 +86,7 @@ export async function sendFeedback(formData) {
     });
     if (error) throw error;
   } catch (emailError) {
-    console.error('Geri bildirim gönderme hatası:', emailError);
+    logger.error('Geri bildirim gönderme hatası:', emailError);
     return { error: 'Geri bildirim gönderilirken bir hata oluştu.' };
   }
 
@@ -148,7 +149,7 @@ export async function sendContactMessage(formData) {
     });
     if (error) throw error;
   } catch (error) {
-    console.error('İletişim formu e-postası gönderme hatası:', error);
+    logger.error('İletişim formu e-postası gönderme hatası:', error);
     return { error: 'Mesajınız gönderilirken bir hata oluştu.' };
   }
 

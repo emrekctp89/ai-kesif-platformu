@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import { ChatWindow } from '@/components/ChatWindow';
@@ -18,7 +19,7 @@ async function getMessages(conversationId) {
     .order('created_at');
 
   if (error) {
-    console.error('Mesajlar çekilirken hata:', error);
+    logger.error('Mesajlar çekilirken hata:', error);
     return [];
   }
   return data;
@@ -35,7 +36,7 @@ async function getOtherParticipant(conversationId, currentUserId) {
     .single();
 
   if (error) {
-    console.error('Diğer katılımcı çekilirken hata:', error);
+    logger.error('Diğer katılımcı çekilirken hata:', error);
     return null;
   }
   return data.profiles;

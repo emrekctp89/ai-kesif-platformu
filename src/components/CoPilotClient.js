@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import * as React from 'react';
 import { useTransition, useRef, useEffect } from 'react';
@@ -134,7 +135,7 @@ export function CoPilotClient() {
               code_suggestion: { ...result.data.code_suggestion, code: formattedCode },
             };
           } catch (error) {
-            console.error('Kod formatlama hatası:', error);
+            logger.error('Kod formatlama hatası:', error);
           }
         }
         setMessages((prev) => [

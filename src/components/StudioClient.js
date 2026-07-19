@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import * as React from 'react';
 import { useTransition } from 'react';
@@ -111,7 +112,7 @@ function ImageGeneratorTab() {
           files: [file],
         });
       } catch (error) {
-        console.error('Paylaşma hatası:', error);
+        logger.error('Paylaşma hatası:', error);
         toast.error('Görsel paylaşılamadı.');
       }
     } else {

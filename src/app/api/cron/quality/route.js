@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { NextResponse } from 'next/server';
 import { runToolQualityAutomation } from '@/app/actions/tools';
 import { isCronAuthorized } from '@/utils/cron';
@@ -14,7 +15,7 @@ export const maxDuration = 60;
 export async function GET(request) {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret && process.env.NODE_ENV === 'production') {
-    console.error('[cron/quality] CRON_SECRET is not configured');
+    logger.error('[cron/quality] CRON_SECRET is not configured');
     return NextResponse.json({ error: 'Sunucu yapılandırması eksik.' }, { status: 500 });
   }
 
@@ -42,7 +43,7 @@ export async function GET(request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('[cron/quality] failed:', error);
+    logger.error('[cron/quality] failed:', error);
     return NextResponse.json({ error: 'İşlem sırasında bir hata oluştu.' }, { status: 500 });
   }
 }

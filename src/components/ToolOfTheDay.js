@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -15,7 +16,7 @@ async function getToolOfTheDayData() {
   const { data, error } = await supabase.rpc('get_tool_of_the_day').single();
 
   if (error) {
-    console.error('Günün aracı çekilirken hata:', error);
+    logger.error('Günün aracı çekilirken hata:', error);
     return null;
   }
   return data;

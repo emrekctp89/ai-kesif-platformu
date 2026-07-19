@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
@@ -43,7 +44,7 @@ export async function createBounty(formData) {
     .single();
 
   if (error) {
-    console.error('Ödül oluşturma hatası:', error);
+    logger.error('Ödül oluşturma hatası:', error);
     return { error: 'Ödül ilanı oluşturulurken bir hata oluştu.' };
   }
 
@@ -77,7 +78,7 @@ export async function submitToBounty(formData) {
     if (error.code === '23505') {
       return { error: 'Bu araç bu ödüle zaten önerilmiş.' };
     }
-    console.error('Öneri gönderme hatası:', error);
+    logger.error('Öneri gönderme hatası:', error);
     return { error: 'Öneri gönderilirken bir hata oluştu.' };
   }
 
@@ -103,7 +104,7 @@ export async function acceptBountySubmission(formData) {
   });
 
   if (error) {
-    console.error('Öneri kabul etme hatası:', error);
+    logger.error('Öneri kabul etme hatası:', error);
     return { error: error.message };
   }
 

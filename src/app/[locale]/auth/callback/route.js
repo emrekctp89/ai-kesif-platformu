@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 
@@ -18,7 +19,7 @@ export async function GET(request) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
-        console.error('[auth/callback] exchangeCodeForSession failed:', error.message);
+        logger.error('[auth/callback] exchangeCodeForSession failed:', error.message);
         return NextResponse.redirect(
           `${origin}/login?message=${encodeURIComponent('Giriş yapılamadı: ' + error.message)}`
         );
@@ -26,7 +27,7 @@ export async function GET(request) {
 
       return NextResponse.redirect(`${origin}${safeNext}`);
     } catch (error) {
-      console.error('[auth/callback] unexpected error:', error?.message || error);
+      logger.error('[auth/callback] unexpected error:', error?.message || error);
       return NextResponse.redirect(
         `${origin}/login?message=${encodeURIComponent('Giriş sırasında bir hata oluştu.')}`
       );

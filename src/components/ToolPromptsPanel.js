@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -44,7 +45,7 @@ export function ToolPromptsPanel({ toolId, toolSlug }) {
       setPrompts(promptsResult.data || []);
       setUserVotes(votesResult.data || []);
     } catch (error) {
-      console.error('Prompt paneli yüklenemedi:', error);
+      logger.error('Prompt paneli yüklenemedi:', error);
       setPrompts([]);
       setUserVotes([]);
     } finally {

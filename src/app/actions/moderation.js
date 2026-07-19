@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
@@ -35,7 +36,7 @@ export async function deleteReportedComment(alertId, commentId) {
     const { error: deleteError } = await supabase.from('comments').delete().eq('id', commentId);
 
     if (deleteError) {
-      console.error('Yorum silinirken hata:', deleteError);
+      logger.error('Yorum silinirken hata:', deleteError);
       return { error: 'Yorum silinemedi: ' + deleteError.message };
     }
 
@@ -46,14 +47,14 @@ export async function deleteReportedComment(alertId, commentId) {
       .eq('id', alertId);
 
     if (alertError) {
-      console.error('Uyarı güncellenirken hata:', alertError);
+      logger.error('Uyarı güncellenirken hata:', alertError);
       return { error: 'Yorum silindi ancak uyarı güncellenemedi.' };
     }
 
     revalidatePath('/admin');
     return { success: 'Yorum başarıyla silindi ve şikayet kapatıldı.' };
   } catch (err) {
-    console.error('Moderasyon hatası:', err);
+    logger.error('Moderasyon hatası:', err);
     return { error: 'Beklenmeyen bir hata oluştu.' };
   }
 }
@@ -97,7 +98,7 @@ export async function dismissAlert(alertId) {
     revalidatePath('/admin');
     return { success: 'Uyarı başarıyla kapatıldı (Geçersiz sayıldı).' };
   } catch (err) {
-    console.error('Dismiss hatası:', err);
+    logger.error('Dismiss hatası:', err);
     return { error: 'Beklenmeyen bir hata oluştu.' };
   }
 }

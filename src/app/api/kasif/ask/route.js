@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { NextResponse } from 'next/server';
 import { enforceRateLimit } from '@/utils/antiAbuse';
 import { assertKasifEnabled } from '@/lib/kasif/config';
@@ -48,7 +49,7 @@ export async function POST(request) {
     });
     return NextResponse.json(groundModelResponse(modelResponse, records));
   } catch (error) {
-    console.error('Kâşif local AI error:', error);
+    logger.error('Kâşif local AI error:', error);
     const unavailable = ['LOCAL_MODEL_TIMEOUT', 'fetch failed'].some((code) =>
       String(error?.message).includes(code)
     );

@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { Resend } from 'resend';
 import { createAdminClient } from '@/utils/supabase/admin';
 
@@ -315,7 +316,7 @@ async function findAdminUserId(supabaseAdmin) {
     );
     return adminUser?.id || null;
   } catch (error) {
-    console.error("Admin kullanıcı ID'si bulunurken hata:", error);
+    logger.error("Admin kullanıcı ID'si bulunurken hata:", error);
     return null;
   }
 }
@@ -348,7 +349,7 @@ async function notifyAdminAboutAudit(supabaseAdmin, report) {
   });
 
   if (alertError) {
-    console.error('Link audit admin uyarısı oluşturulamadı:', alertError);
+    logger.error('Link audit admin uyarısı oluşturulamadı:', alertError);
   }
 
   const adminUserId = await findAdminUserId(supabaseAdmin);
@@ -362,7 +363,7 @@ async function notifyAdminAboutAudit(supabaseAdmin, report) {
     });
 
     if (notificationError) {
-      console.error('Link audit admin bildirimi oluşturulamadı:', notificationError);
+      logger.error('Link audit admin bildirimi oluşturulamadı:', notificationError);
     }
   }
 
@@ -402,7 +403,7 @@ async function sendAuditEmail(report, message) {
       text,
     });
   } catch (error) {
-    console.error('Link audit e-posta bildirimi gönderilemedi:', error);
+    logger.error('Link audit e-posta bildirimi gönderilemedi:', error);
   }
 }
 

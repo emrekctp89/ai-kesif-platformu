@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { unstable_cache } from 'next/cache';
 import Link from 'next/link';
@@ -44,7 +45,7 @@ const getCachedComparisonData = unstable_cache(
       .eq('is_approved', true);
 
     if (error) {
-      console.error('Karşılaştırma verisi çekilirken hata:', error);
+      logger.error('Karşılaştırma verisi çekilirken hata:', error);
       return [];
     }
     return toolSlugs.map((slug) => data.find((tool) => tool.slug === slug)).filter(Boolean);
@@ -63,7 +64,7 @@ const getCachedAllToolsForSelect = unstable_cache(
       .order('name');
 
     if (error) {
-      console.error('Tüm araçlar çekilirken hata:', error);
+      logger.error('Tüm araçlar çekilirken hata:', error);
       return [];
     }
     return data || [];

@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createAdminClient } from '@/utils/supabase/admin';
 import { Resend } from 'resend';
@@ -61,7 +62,7 @@ async function createUniqueNewsletterSlug(supabaseAdmin, baseTitle) {
       .maybeSingle();
 
     if (error) {
-      console.error('Bülten slug kontrolü hatası:', error);
+      logger.error('Bülten slug kontrolü hatası:', error);
       // Fail open with a timestamp suffix so archive insert can still proceed
       return `${baseSlug}-${Date.now()}`;
     }
@@ -98,7 +99,7 @@ async function archiveSentNewsletter({ supabaseAdmin, newsletterData, htmlConten
     .single();
 
   if (error) {
-    console.error('Bülten arşive kaydedilirken hata:', error);
+    logger.error('Bülten arşive kaydedilirken hata:', error);
     return { error: 'Bülten gönderildi ancak web arşivine kaydedilemedi.' };
   }
 
@@ -114,7 +115,7 @@ export async function previewNewsletter() {
     const { data: newsletterData, error } = await supabaseAdmin.rpc('get_weekly_newsletter_data');
 
     if (error || !newsletterData) {
-      console.error('Bülten verisi çekilirken hata:', error);
+      logger.error('Bülten verisi çekilirken hata:', error);
       return {
         error: 'Bülten verisi oluşturulurken bir veritabanı hatası oluştu.',
       };
@@ -124,7 +125,7 @@ export async function previewNewsletter() {
 
     return { success: true, data: newsletterData, html };
   } catch (e) {
-    console.error('previewNewsletter hatası:', e);
+    logger.error('previewNewsletter hatası:', e);
     return { error: 'Önizleme verisi alınırken beklenmedik bir hata oluştu.' };
   }
 }
@@ -170,7 +171,7 @@ export async function sendNewsletter() {
       html: htmlContent,
     });
   } catch (emailError) {
-    console.error('Bülten gönderme hatası:', emailError);
+    logger.error('Bülten gönderme hatası:', emailError);
     return { error: 'Bülten gönderilirken bir hata oluştu.' };
   }
 

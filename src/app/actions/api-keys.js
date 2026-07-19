@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import crypto from 'crypto';
@@ -36,7 +37,7 @@ export async function generateApiKey(name) {
     .single();
 
   if (error) {
-    console.error('API key generation error:', error);
+    logger.error('API key generation error:', error);
     return { error: 'API anahtarı oluşturulamadı.' };
   }
 
@@ -63,7 +64,7 @@ export async function getApiKeys() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Fetch API keys error:', error);
+    logger.error('Fetch API keys error:', error);
     return { error: 'API anahtarları getirilemedi.' };
   }
 
@@ -86,7 +87,7 @@ export async function revokeApiKey(id) {
   const { error } = await supabase.from('api_keys').delete().eq('id', id).eq('user_id', user.id);
 
   if (error) {
-    console.error('Revoke API key error:', error);
+    logger.error('Revoke API key error:', error);
     return { error: 'API anahtarı silinemedi.' };
   }
 

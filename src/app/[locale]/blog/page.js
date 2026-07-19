@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -22,7 +23,7 @@ async function getPublishedPosts() {
     .order('published_at', { ascending: false });
 
   if (error) {
-    console.error('Yazılar çekilirken hata:', error);
+    logger.error('Yazılar çekilirken hata:', error);
     return [];
   }
   return data || [];

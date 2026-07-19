@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -18,10 +19,10 @@ async function getActivityFeedData(userId) {
   const [followingResult, generalResult] = await Promise.all([followingPromise, generalPromise]);
 
   if (followingResult.error) {
-    console.error('Takip akışı çekilirken hata:', followingResult.error);
+    logger.error('Takip akışı çekilirken hata:', followingResult.error);
   }
   if (generalResult.error) {
-    console.error('Genel akış çekilirken hata:', generalResult.error);
+    logger.error('Genel akış çekilirken hata:', generalResult.error);
   }
 
   return {

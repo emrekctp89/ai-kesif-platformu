@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import crypto from 'crypto';
 import { rateLimit, getClientIp } from '@/lib/rateLimit';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -91,11 +92,11 @@ export async function GET(request) {
       .eq('id', apiKey.id)
       .then(({ error: updateError }) => {
         if (updateError) {
-          console.error('API v1 tools: last_used_at update failed:', updateError);
+          logger.error('API v1 tools: last_used_at update failed:', updateError);
         }
       })
       .catch((updateError) => {
-        console.error('API v1 tools: last_used_at update failed:', updateError);
+        logger.error('API v1 tools: last_used_at update failed:', updateError);
       });
 
     // Fetch approved tools
@@ -144,7 +145,7 @@ export async function GET(request) {
       },
     });
   } catch (error) {
-    console.error('API v1 tools error:', error);
+    logger.error('API v1 tools error:', error);
     return jsonResponse({ error: 'Sunucu hatası.' }, 500);
   }
 }

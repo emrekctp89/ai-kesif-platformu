@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
@@ -19,7 +20,7 @@ async function getFeaturedTools() {
     .limit(3);
 
   if (error) {
-    console.error('Öne çıkan araçlar çekilirken hata:', error);
+    logger.error('Öne çıkan araçlar çekilirken hata:', error);
     return [];
   }
 

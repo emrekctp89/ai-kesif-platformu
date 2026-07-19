@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -18,7 +19,7 @@ async function getThreeRandomTools() {
   });
 
   if (error) {
-    console.error('Rastgele araçlar çekilirken hata:', error);
+    logger.error('Rastgele araçlar çekilirken hata:', error);
     return [];
   }
   return data || [];

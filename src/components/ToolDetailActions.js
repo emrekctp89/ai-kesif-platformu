@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import { useEffect, useState } from 'react';
 import FavoriteButton from '@/components/FavoriteButton';
@@ -58,7 +59,7 @@ export function ToolDetailActions({ toolId, toolSlug }) {
         setIsFavorited(Boolean(favoriteResult.data?.tool_id));
         setUserRating(Number(ratingResult.data?.rating) || 0);
       } catch (error) {
-        console.error('Araç detay kullanıcı durumu yüklenemedi:', error);
+        logger.error('Araç detay kullanıcı durumu yüklenemedi:', error);
       } finally {
         if (!cancelled) setReady(true);
       }

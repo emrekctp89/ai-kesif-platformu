@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import { ArrowRight, CalendarDays, Images, Sparkles, Target, Trophy, Users } from 'lucide-react';
@@ -38,12 +39,12 @@ async function getActiveChallenge() {
       .maybeSingle();
 
     if (error) {
-      console.error('Aktif yarışma çekilirken hata:', error);
+      logger.error('Aktif yarışma çekilirken hata:', error);
       return null;
     }
     return data;
   } catch (error) {
-    console.error('Aktif yarışma beklenmeyen hata:', error);
+    logger.error('Aktif yarışma beklenmeyen hata:', error);
     return null;
   }
 }

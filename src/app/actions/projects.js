@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -31,7 +32,7 @@ export async function createProject(formData) {
     .single();
 
   if (error) {
-    console.error('Proje oluşturma hatası:', error);
+    logger.error('Proje oluşturma hatası:', error);
     return { error: 'Proje oluşturulurken bir hata oluştu.' };
   }
 
@@ -52,7 +53,7 @@ export async function updateProject(formData) {
     .eq('id', id);
 
   if (error) {
-    console.error('Proje güncelleme hatası:', error);
+    logger.error('Proje güncelleme hatası:', error);
     return { error: 'Proje güncellenirken bir hata oluştu.' };
   }
 
@@ -69,7 +70,7 @@ export async function deleteProject(formData) {
   const { error } = await supabase.from('projects').delete().eq('id', id);
 
   if (error) {
-    console.error('Proje silme hatası:', error);
+    logger.error('Proje silme hatası:', error);
     return { error: 'Proje silinirken bir hata oluştu.' };
   }
 
@@ -93,7 +94,7 @@ export async function updateProjectItems(formData) {
     .eq('project_id', projectId);
 
   if (deleteError) {
-    console.error('Eski proje içerikleri silme hatası:', deleteError);
+    logger.error('Eski proje içerikleri silme hatası:', deleteError);
     return { error: 'Proje güncellenirken bir hata oluştu.' };
   }
 
@@ -107,7 +108,7 @@ export async function updateProjectItems(formData) {
     const { error: insertError } = await supabase.from('project_items').insert(newItems);
 
     if (insertError) {
-      console.error('Yeni proje içerikleri ekleme hatası:', insertError);
+      logger.error('Yeni proje içerikleri ekleme hatası:', insertError);
       return { error: 'Proje güncellenirken bir hata oluştu.' };
     }
   }
@@ -225,7 +226,7 @@ export async function getAiProjectStrategy(projectId) {
       };
     }
   } catch (e) {
-    console.error('AI Stratejist fonksiyonunda genel hata:', e);
+    logger.error('AI Stratejist fonksiyonunda genel hata:', e);
     return { error: 'Analiz oluşturulurken beklenmedik bir hata oluştu.' };
   }
 }

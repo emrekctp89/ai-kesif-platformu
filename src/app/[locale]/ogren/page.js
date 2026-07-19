@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -103,12 +104,12 @@ async function getGuides() {
       .order('published_at', { ascending: false });
 
     if (error) {
-      console.error('Rehberler çekilirken hata:', error);
+      logger.error('Rehberler çekilirken hata:', error);
       return [];
     }
     return data || [];
   } catch (error) {
-    console.error('Rehberler beklenmeyen hata:', error);
+    logger.error('Rehberler beklenmeyen hata:', error);
     return [];
   }
 }
@@ -137,7 +138,7 @@ async function getLearningPaths() {
     }
 
     if (error) {
-      console.error('Öğrenme yolları çekilirken hata:', error);
+      logger.error('Öğrenme yolları çekilirken hata:', error);
       return [];
     }
 
@@ -154,7 +155,7 @@ async function getLearningPaths() {
       };
     });
   } catch (error) {
-    console.error('Öğrenme yolları beklenmeyen hata:', error);
+    logger.error('Öğrenme yolları beklenmeyen hata:', error);
     return [];
   }
 }
@@ -170,7 +171,7 @@ async function getCuratedTracksWithTools() {
       .in('slug', slugs);
 
     if (error || !categories?.length) {
-      if (error) console.error('Kategori öğrenme rotaları hatası:', error);
+      if (error) logger.error('Kategori öğrenme rotaları hatası:', error);
       return CURATED_TRACKS.map((track) => ({
         ...track,
         categoryName: null,
@@ -205,7 +206,7 @@ async function getCuratedTracksWithTools() {
 
     return tracks.filter((track) => track.tools.length > 0 || track.categoryName);
   } catch (error) {
-    console.error('Kategori rotaları beklenmeyen hata:', error);
+    logger.error('Kategori rotaları beklenmeyen hata:', error);
     return CURATED_TRACKS.map((track) => ({ ...track, categoryName: null, tools: [] }));
   }
 }
@@ -245,7 +246,7 @@ export default async function LearningHubPage({ params }) {
       getCuratedTracksWithTools(),
     ]);
   } catch (error) {
-    console.error('Öğren sayfası veri hatası:', error);
+    logger.error('Öğren sayfası veri hatası:', error);
   }
 
   const hasPaths = learningPaths.length > 0;

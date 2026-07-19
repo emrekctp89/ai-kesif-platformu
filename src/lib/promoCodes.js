@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import 'server-only';
 
 export function normalizePromoCode(raw) {
@@ -12,7 +13,7 @@ function parsePromoCodes() {
   try {
     return JSON.parse(raw);
   } catch (error) {
-    console.error('PROMO_CODES_JSON parse edilemedi:', error);
+    logger.error('PROMO_CODES_JSON parse edilemedi:', error);
     return {};
   }
 }

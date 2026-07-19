@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
@@ -40,7 +41,7 @@ export async function updateUserProfile(formData) {
         error: 'Bu kullanıcı adı zaten alınmış. Lütfen başka bir tane deneyin.',
       };
     }
-    console.error('Profil güncelleme hatası:', error);
+    logger.error('Profil güncelleme hatası:', error);
     return { error: 'Profiliniz güncellenirken bir hata oluştu.' };
   }
 
@@ -78,7 +79,7 @@ export async function updateAvatar(formData) {
   try {
     publicUrl = await uploadToGCS(gcsPath, file, file.type || 'image/jpeg');
   } catch (uploadError) {
-    console.error('Avatar yükleme hatası (GCS):', uploadError);
+    logger.error('Avatar yükleme hatası (GCS):', uploadError);
     return { error: 'Avatar yüklenirken bir hata oluştu.' };
   }
 
@@ -88,7 +89,7 @@ export async function updateAvatar(formData) {
     .eq('id', user.id);
 
   if (profileError) {
-    console.error('Profil güncelleme hatası:', profileError);
+    logger.error('Profil güncelleme hatası:', profileError);
     await deleteFromGCS(gcsPath);
     return { error: 'Profil fotoğrafı güncellenirken bir hata oluştu.' };
   }

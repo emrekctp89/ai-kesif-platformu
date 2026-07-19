@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { cookies } from 'next/headers';
 
@@ -58,7 +59,7 @@ export async function getToolsByCategorySlug(categorySlug) {
     .limit(4);
 
   if (error) {
-    console.error('Workmind tools fetch error:', error);
+    logger.error('Workmind tools fetch error:', error);
     return [];
   }
 
@@ -98,7 +99,7 @@ export async function saveWorkflow(prompt, nodes, edges, isPublic = false) {
     .single();
 
   if (error) {
-    console.error('Save workflow error:', error);
+    logger.error('Save workflow error:', error);
     // Table may not exist yet in some environments
     if (String(error.message || '').includes('workflows') || error.code === '42P01') {
       return {

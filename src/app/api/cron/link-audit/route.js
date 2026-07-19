@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { NextResponse } from 'next/server';
 import { runScheduledLinkAudit } from '@/lib/linkAuditCron';
 import { getIntegerParam, isCronAuthorized } from '@/utils/cron';
@@ -23,7 +24,7 @@ export async function GET(request) {
 
     return NextResponse.json({ success: true, report });
   } catch (error) {
-    console.error('Scheduled link audit failed:', error);
+    logger.error('Scheduled link audit failed:', error);
     return NextResponse.json(
       {
         success: false,

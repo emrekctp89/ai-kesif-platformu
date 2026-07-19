@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { BookOpen, Building, FlaskConical, Users } from 'lucide-react';
@@ -11,7 +12,7 @@ async function getResearchPapers() {
   const { data, error } = await supabase.rpc('get_all_published_papers');
 
   if (error) {
-    console.error('Araştırma makaleleri çekilirken hata:', error);
+    logger.error('Araştırma makaleleri çekilirken hata:', error);
     return [];
   }
   return data || [];

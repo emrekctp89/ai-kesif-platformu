@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import * as React from 'react';
 import { useTransition } from 'react';
@@ -103,7 +104,7 @@ export function VoiceAgent() {
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
     recognition.onerror = (event) => {
-      console.error('Ses tanıma hatası:', event.error);
+      logger.error('Ses tanıma hatası:', event.error);
       setIsListening(false);
     };
 

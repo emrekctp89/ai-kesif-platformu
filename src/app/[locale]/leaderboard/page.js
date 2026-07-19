@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -29,7 +30,7 @@ async function getTopUsers() {
       .limit(25);
 
     if (fallback.error) {
-      console.error('Liderlik tablosu çekilirken hata:', fallback.error);
+      logger.error('Liderlik tablosu çekilirken hata:', fallback.error);
       return [];
     }
     return fallback.data || [];

@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import Link from 'next/link';
 import { ArrowRight, Rss } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
@@ -10,7 +11,7 @@ async function getGeneralFeed(limit = 5) {
   const { data, error } = await supabase.rpc('get_community_activity_feed');
 
   if (error) {
-    console.error('Topluluk akışı özeti çekilirken hata:', error);
+    logger.error('Topluluk akışı özeti çekilirken hata:', error);
     return [];
   }
 

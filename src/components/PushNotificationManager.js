@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
@@ -39,7 +40,7 @@ export function PushNotificationManager({ initialSubscriptionStatus }) {
         });
       })
       .catch((error) => {
-        console.error('Service Worker registration failed:', error);
+        logger.error('Service Worker registration failed:', error);
       });
   }, []);
 
@@ -65,7 +66,7 @@ export function PushNotificationManager({ initialSubscriptionStatus }) {
           setIsSubscribed(false);
         }
       } catch (error) {
-        console.error('Push subscription failed:', error);
+        logger.error('Push subscription failed:', error);
         toast.error(t('pushPermissionError'));
         setIsSubscribed(false);
       }
@@ -80,7 +81,7 @@ export function PushNotificationManager({ initialSubscriptionStatus }) {
         toast.success(t('pushDisabled'));
         setIsSubscribed(false);
       } catch (error) {
-        console.error('Push unsubscribe failed:', error);
+        logger.error('Push unsubscribe failed:', error);
         toast.error(t('pushPermissionError'));
       }
     }

@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -20,12 +21,12 @@ async function getBountyDetails(bountyId) {
     });
 
     if (error || !data) {
-      console.error('Ödül detayları çekilirken hata:', error);
+      logger.error('Ödül detayları çekilirken hata:', error);
       return null;
     }
     return data;
   } catch (error) {
-    console.error('Ödül detayları beklenmeyen hata:', error);
+    logger.error('Ödül detayları beklenmeyen hata:', error);
     return null;
   }
 }

@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
@@ -54,7 +55,7 @@ async function getSimilarTools(currentTool, labels) {
   }
 
   if (error) {
-    console.error('Benzer araçlar çekilirken hata:', error);
+    logger.error('Benzer araçlar çekilirken hata:', error);
     return [];
   }
 

@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 /**
  * Resolve Google Cloud credentials for local + Vercel/serverless.
  *
@@ -24,10 +25,7 @@ function parseServiceAccountJson(raw) {
     }
     return JSON.parse(trimmed);
   } catch (error) {
-    console.error(
-      '[googleCredentials] Failed to parse Google service-account JSON:',
-      error.message
-    );
+    logger.error('[googleCredentials] Failed to parse Google service-account JSON:', error.message);
     return null;
   }
 }

@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import React, { useCallback, useState } from 'react';
 import {
@@ -108,7 +109,7 @@ export function WorkflowBuilder() {
       toast.success(t('toastGenerated'));
     } catch (error) {
       toast.error(error?.message || t('errorGenerate'));
-      console.error(error);
+      logger.error(error);
     } finally {
       setIsLoading(false);
     }

@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { cookies } from 'next/headers';
@@ -16,7 +17,7 @@ async function getDashboardData() {
   const supabaseAdmin = createAdminClient();
   const { data, error } = await supabaseAdmin.rpc('get_dashboard_stats');
   if (error) {
-    console.error('Dashboard verileri çekilirken hata:', error);
+    logger.error('Dashboard verileri çekilirken hata:', error);
     return null;
   }
   return data;
@@ -26,7 +27,7 @@ async function getAllUsersData() {
   const supabaseAdmin = createAdminClient();
   const { data, error } = await supabaseAdmin.rpc('get_all_user_details');
   if (error) {
-    console.error('Kullanıcı detayları çekilirken hata:', error);
+    logger.error('Kullanıcı detayları çekilirken hata:', error);
     return [];
   }
   return data;
@@ -40,7 +41,7 @@ async function getLinkHealthStats() {
     .eq('is_approved', true);
 
   if (error) {
-    console.error('Link health verileri çekilirken hata:', error);
+    logger.error('Link health verileri çekilirken hata:', error);
     return null;
   }
 

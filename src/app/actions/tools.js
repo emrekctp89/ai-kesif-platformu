@@ -72,7 +72,7 @@ async function getOtherToolsForAI(currentToolId) {
     .neq('id', currentToolId);
 
   if (error) {
-    console.error('AI için diğer araçlar çekilirken hata:', error);
+    logger.error('AI için diğer araçlar çekilirken hata:', error);
     return [];
   }
   return data;
@@ -248,7 +248,7 @@ export async function submitTool(formData) {
     const embedding = await getEmbedding(textToEmbed);
     toolData.embedding = `[${embedding.join(',')}]`;
   } catch (err) {
-    console.error('Embedding generation error on submit:', err);
+    logger.error('Embedding generation error on submit:', err);
   }
 
   const { error } = await supabase.from('tools').insert([toolData]);
@@ -275,7 +275,7 @@ export async function submitTool(formData) {
       }),
     });
   } catch (emailError) {
-    console.error('E-posta gönderme hatası:', emailError);
+    logger.error('E-posta gönderme hatası:', emailError);
   }
 
   return redirect('/submit?status=success');
@@ -307,7 +307,7 @@ export async function approveTool(formData) {
     .maybeSingle();
 
   if (pendingToolError) {
-    console.error('Onay bekleyen araç okunamadı:', pendingToolError);
+    logger.error('Onay bekleyen araç okunamadı:', pendingToolError);
     return { error: 'Araç bilgileri doğrulanamadı.' };
   }
 
@@ -346,7 +346,7 @@ export async function approveTool(formData) {
     .maybeSingle();
 
   if (error) {
-    console.error('Araç onaylama hatası:', error);
+    logger.error('Araç onaylama hatası:', error);
     return { error: 'Araç onaylanırken bir hata oluştu.' };
   }
 
@@ -384,7 +384,7 @@ export async function rejectTool(formData) {
     .maybeSingle();
 
   if (error) {
-    console.error('Araç reddetme hatası:', error);
+    logger.error('Araç reddetme hatası:', error);
     return { error: 'Araç reddedilirken bir hata oluştu.' };
   }
 
@@ -415,7 +415,7 @@ export async function rateTool(formData) {
   });
 
   if (error) {
-    console.error('Puanlama ve puan verme hatası:', error);
+    logger.error('Puanlama ve puan verme hatası:', error);
     return { error: 'İşlem sırasında bir hata oluştu.' };
   }
 
@@ -443,7 +443,7 @@ export async function toggleFavorite(toolId, toolSlug, isFavorited) {
       .eq('tool_id', toolId);
 
     if (error) {
-      console.error('Favori silme hatası:', error);
+      logger.error('Favori silme hatası:', error);
       return { error: 'Araç favorilerden çıkarılırken bir hata oluştu.' };
     }
 
@@ -458,7 +458,7 @@ export async function toggleFavorite(toolId, toolSlug, isFavorited) {
     });
 
     if (error) {
-      console.error('Favori ekleme hatası:', error);
+      logger.error('Favori ekleme hatası:', error);
       return { error: 'Araç favorilere eklenirken bir hata oluştu.' };
     }
 
@@ -494,7 +494,7 @@ export async function toggleFeatured(formData) {
     .eq('id', toolId);
 
   if (error) {
-    console.error('Öne çıkan durumu güncelleme hatası:', error);
+    logger.error('Öne çıkan durumu güncelleme hatası:', error);
     return { error: 'Durum güncellenirken bir hata oluştu.' };
   }
 
@@ -618,13 +618,13 @@ export async function updateTool(formData) {
     const embedding = await getEmbedding(textToEmbed);
     updatedData.embedding = `[${embedding.join(',')}]`;
   } catch (err) {
-    console.error('Embedding generation error on update:', err);
+    logger.error('Embedding generation error on update:', err);
   }
 
   const { error } = await supabase.from('tools').update(updatedData).eq('id', toolId);
 
   if (error) {
-    console.error('Araç güncelleme hatası:', error);
+    logger.error('Araç güncelleme hatası:', error);
     return { error: 'Araç güncellenirken bir hata oluştu.' };
   }
 
@@ -665,7 +665,7 @@ export async function runToolDiscoveryAdmin(options = {}) {
     });
     return { success: true, report };
   } catch (error) {
-    console.error('Admin tool discovery failed:', error);
+    logger.error('Admin tool discovery failed:', error);
     return {
       error: error instanceof Error ? error.message : 'Keşif çalıştırılamadı.',
     };
@@ -708,7 +708,7 @@ export async function runExistingToolEnrichmentAdmin(options = {}) {
 
     return { success: true, report };
   } catch (error) {
-    console.error('Existing tool enrichment failed:', error);
+    logger.error('Existing tool enrichment failed:', error);
     return {
       error: error instanceof Error ? error.message : 'Mevcut araçlar zenginleştirilemedi.',
     };
@@ -743,7 +743,7 @@ export async function bulkTranslateToolsToEnglish(options = {}) {
     .limit(limit);
 
   if (toolsError) {
-    console.error('bulkTranslateToolsToEnglish load error:', toolsError);
+    logger.error('bulkTranslateToolsToEnglish load error:', toolsError);
     return { error: 'Araçlar okunamadı.' };
   }
 
@@ -782,7 +782,7 @@ export async function bulkTranslateToolsToEnglish(options = {}) {
 
       if (updateError) {
         failedCount += 1;
-        console.error('bulk EN update failed', tool.id, updateError);
+        logger.error('bulk EN update failed', tool.id, updateError);
         continue;
       }
 
@@ -794,7 +794,7 @@ export async function bulkTranslateToolsToEnglish(options = {}) {
       }
     } catch (error) {
       failedCount += 1;
-      console.error('bulk EN translate failed', tool.id, error);
+      logger.error('bulk EN translate failed', tool.id, error);
     }
   }
 
@@ -844,7 +844,7 @@ export async function runToolQualityAutomation(options = {}) {
     .eq('is_approved', true);
 
   if (toolsError) {
-    console.error('Kalite otomasyonu için araçlar okunamadı:', toolsError);
+    logger.error('Kalite otomasyonu için araçlar okunamadı:', toolsError);
     return { error: 'Araçlar okunamadı. Lütfen tekrar deneyin.' };
   }
 
@@ -1012,7 +1012,7 @@ export async function runToolQualityAutomation(options = {}) {
 
     if (updateError) {
       failedCount += 1;
-      console.error(`Kalite otomasyonu güncelleme hatası (tool:${tool.id}):`, updateError);
+      logger.error(`Kalite otomasyonu güncelleme hatası (tool:${tool.id}):`, updateError);
       if (updates.pricing_model) inferredPricingCount -= 1;
       if (updates.platforms) defaultedPlatformCount -= 1;
       continue;
@@ -1072,7 +1072,7 @@ export async function deleteTool(formData) {
   const { error } = await supabase.from('tools').delete().eq('id', toolId);
 
   if (error) {
-    console.error('Araç silme hatası:', error);
+    logger.error('Araç silme hatası:', error);
     return { error: 'Araç silinirken bir hata oluştu.' };
   }
 
@@ -1154,7 +1154,7 @@ export async function getSimilarTools(currentTool) {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error('Gemini API Hatası (Benzer Araçlar):', errorBody);
+      logger.error('Gemini API Hatası (Benzer Araçlar):', errorBody);
       return { success: false, error: 'Yapay zeka modelinden hata alındı.' };
     }
 
@@ -1175,7 +1175,7 @@ export async function getSimilarTools(currentTool) {
       };
     }
   } catch (e) {
-    console.error('Benzer araçlar fonksiyonunda genel hata:', e);
+    logger.error('Benzer araçlar fonksiyonunda genel hata:', e);
     return {
       success: false,
       error: 'Tavsiye alınırken beklenmedik bir hata oluştu.',
@@ -1197,7 +1197,7 @@ export async function getRandomTool() {
     .single();
 
   if (error || !data) {
-    console.error('Rastgele araç çekilirken hata:', error);
+    logger.error('Rastgele araç çekilirken hata:', error);
     return redirect('/');
   }
 
@@ -1240,7 +1240,7 @@ export async function fetchMoreTools({ page = 0, searchParams }) {
   });
 
   if (error) {
-    console.error('Araç çekerken hata:', error.message);
+    logger.error('Araç çekerken hata:', error.message);
     return [];
   }
 
@@ -1358,7 +1358,7 @@ export async function generateToolVariants(toolId) {
       };
     }
   } catch (e) {
-    console.error('AI Varyant Üretme fonksiyonunda hata:', e.message);
+    logger.error('AI Varyant Üretme fonksiyonunda hata:', e.message);
     return {
       error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}`,
     };
@@ -1392,7 +1392,7 @@ export async function updateToolVariants(formData) {
     .eq('is_original', false);
 
   if (deleteError) {
-    console.error('Eski varyantları silme hatası:', deleteError);
+    logger.error('Eski varyantları silme hatası:', deleteError);
     return { error: 'Varyantlar güncellenirken bir hata oluştu.' };
   }
 
@@ -1410,7 +1410,7 @@ export async function updateToolVariants(formData) {
       .insert(variantsToInsert);
 
     if (insertError) {
-      console.error('Yeni varyantları ekleme hatası:', insertError);
+      logger.error('Yeni varyantları ekleme hatası:', insertError);
       return { error: 'Varyantlar güncellenirken bir hata oluştu.' };
     }
   }
@@ -1446,7 +1446,7 @@ export async function applyWinningVariant(formData) {
     .eq('id', toolId);
 
   if (updateError) {
-    console.error('Kazanan varyant uygulanırken hata:', updateError);
+    logger.error('Kazanan varyant uygulanırken hata:', updateError);
     return { error: 'Araç güncellenirken bir hata oluştu.' };
   }
 
@@ -1475,7 +1475,7 @@ export async function getToolPreviewData(toolSlug) {
     .single();
 
   if (error || !tool) {
-    console.error('Önizleme verisi çekilirken hata:', error);
+    logger.error('Önizleme verisi çekilirken hata:', error);
     return { error: 'Araç detayları alınamadı.' };
   }
 
@@ -1499,7 +1499,7 @@ export async function recordToolVisit(toolId) {
   });
 
   if (error) {
-    console.error('Araç ziyareti görevi güncellenirken hata:', error);
+    logger.error('Araç ziyareti görevi güncellenirken hata:', error);
   }
 }
 
@@ -1546,7 +1546,7 @@ export async function getToolDetailsForPreview(toolId) {
       },
     };
   } catch (e) {
-    console.error('Araç önizleme verisi çekilirken hata:', e.message);
+    logger.error('Araç önizleme verisi çekilirken hata:', e.message);
     return { error: `Veri alınırken bir hata oluştu: ${e.message}` };
   }
 }
@@ -1577,7 +1577,7 @@ export async function upsertRating(formData) {
   });
 
   if (error) {
-    console.error('Puanlama hatası:', error);
+    logger.error('Puanlama hatası:', error);
     return { error: 'Puanınız kaydedilirken bir hata oluştu.' };
   }
 
@@ -1596,7 +1596,7 @@ export async function getSearchSuggestions(query) {
     .ilike('name', `%${query}%`)
     .limit(5);
   if (error) {
-    console.error('Arama önerileri hatası:', error);
+    logger.error('Arama önerileri hatası:', error);
     return [];
   }
   return data || [];

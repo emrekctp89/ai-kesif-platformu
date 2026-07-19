@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -16,7 +17,7 @@ async function getCategories() {
   const { data, error } = await supabase.from('categories').select('name, slug').order('name');
 
   if (error) {
-    console.error('Kategoriler çekilirken hata:', error);
+    logger.error('Kategoriler çekilirken hata:', error);
     return [];
   }
   return sortCategoriesByCanonicalOrder(filterPrimaryCategories(data || []));

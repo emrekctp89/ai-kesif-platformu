@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -18,7 +19,7 @@ async function getLaunches(startDate, endDate, userId) {
   });
 
   if (error) {
-    console.error('Lansmanlar çekilirken hata:', error);
+    logger.error('Lansmanlar çekilirken hata:', error);
     return [];
   }
   return data || [];

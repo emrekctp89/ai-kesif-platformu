@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
@@ -28,7 +29,7 @@ export async function startConversation(recipientUserId) {
   });
 
   if (error) {
-    console.error('Sohbet başlatma hatası:', error);
+    logger.error('Sohbet başlatma hatası:', error);
     return redirect(`/profile?message=${encodeURIComponent('Sohbet başlatılamadı.')}`);
   }
 
@@ -61,7 +62,7 @@ export async function sendMessage(formData) {
   });
 
   if (messageError) {
-    console.error('Mesaj gönderme hatası:', messageError);
+    logger.error('Mesaj gönderme hatası:', messageError);
     return { error: 'Mesajınız gönderilirken bir hata oluştu.' };
   }
 
@@ -92,7 +93,7 @@ export async function searchUsers(searchTerm) {
     .limit(5);
 
   if (error) {
-    console.error('Kullanıcı arama hatası:', error);
+    logger.error('Kullanıcı arama hatası:', error);
     return [];
   }
   return data;
@@ -134,7 +135,7 @@ export async function getRecentConversationsForShare() {
     .limit(5);
 
   if (participantsError) {
-    console.error('Son sohbetler çekilirken hata (katılımcılar):', participantsError);
+    logger.error('Son sohbetler çekilirken hata (katılımcılar):', participantsError);
     return [];
   }
 
@@ -171,7 +172,7 @@ export async function sendMessageWithSharedContent(formData) {
       );
 
       if (convoError || !conversationId) {
-        console.error('Sohbet oluşturma/bulma hatası:', convoError);
+        logger.error('Sohbet oluşturma/bulma hatası:', convoError);
         return { error: 'Sohbet odası oluşturulamadı.' };
       }
 
@@ -183,7 +184,7 @@ export async function sendMessageWithSharedContent(formData) {
       });
 
       if (messageError) {
-        console.error('Mesaj ekleme hatası:', messageError);
+        logger.error('Mesaj ekleme hatası:', messageError);
         return { error: 'Mesaj gönderilirken bir veritabanı hatası oluştu.' };
       }
 
@@ -193,11 +194,11 @@ export async function sendMessageWithSharedContent(formData) {
         .eq('id', conversationId);
 
       if (updateError) {
-        console.error('Sohbet zamanı güncelleme hatası:', updateError);
+        logger.error('Sohbet zamanı güncelleme hatası:', updateError);
       }
     }
   } catch (error) {
-    console.error('Paylaşım mesajı gönderme hatası (catch):', error);
+    logger.error('Paylaşım mesajı gönderme hatası (catch):', error);
     return { error: 'Mesajlar gönderilirken beklenmedik bir hata oluştu.' };
   }
 
@@ -223,7 +224,7 @@ export async function markConversationAsRead(conversationId) {
   });
 
   if (error) {
-    console.error('Mesajları okundu olarak işaretleme hatası:', error);
+    logger.error('Mesajları okundu olarak işaretleme hatası:', error);
     return { error: 'Mesajlar okunmuş olarak işaretlenemedi.' };
   }
 

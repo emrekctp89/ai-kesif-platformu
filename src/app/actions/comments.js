@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
@@ -12,7 +13,7 @@ export async function getComments(toolId) {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching comments:', error);
+    logger.error('Error fetching comments:', error);
     return [];
   }
   return data;
@@ -45,7 +46,7 @@ export async function addComment(toolId, toolSlug, content) {
     .single();
 
   if (error) {
-    console.error('Error adding comment:', error);
+    logger.error('Error adding comment:', error);
     return { error: 'Yorum eklenirken bir hata oluştu.' };
   }
 
@@ -70,7 +71,7 @@ export async function deleteComment(commentId, toolSlug) {
     .eq('user_id', user.id);
 
   if (error) {
-    console.error('Error deleting comment:', error);
+    logger.error('Error deleting comment:', error);
     return { error: 'Yorum silinirken bir hata oluştu.' };
   }
 

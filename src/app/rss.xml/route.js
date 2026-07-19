@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
 import { getSiteOrigin } from '@/utils/siteUrl';
 
@@ -52,7 +53,7 @@ export async function GET() {
       if (postsResult.data) postsData = postsResult.data;
     }
   } catch (error) {
-    console.error('RSS fetch failed:', error);
+    logger.error('RSS fetch failed:', error);
   }
 
   const items = [];

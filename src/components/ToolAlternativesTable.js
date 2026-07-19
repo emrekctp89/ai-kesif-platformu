@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
@@ -59,7 +60,7 @@ async function getAlternatives(currentTool) {
   }
 
   if (error) {
-    console.error('Alternatif araçlar çekilirken hata:', error);
+    logger.error('Alternatif araçlar çekilirken hata:', error);
     return [];
   }
 

@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 
@@ -151,7 +152,7 @@ Kurallar:
     }
 
     if (!workflowData?.nodes?.length) {
-      console.error('Workmind generate failed:', lastError);
+      logger.error('Workmind generate failed:', lastError);
       return NextResponse.json(
         {
           error:
@@ -169,7 +170,7 @@ Kurallar:
       },
     });
   } catch (error) {
-    console.error('Workmind generate error:', error);
+    logger.error('Workmind generate error:', error);
     return NextResponse.json(
       { error: 'İş akışı üretilemedi. Lütfen tekrar dene.' },
       { status: 500 }

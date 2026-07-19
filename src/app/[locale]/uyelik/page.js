@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import {
@@ -45,7 +46,7 @@ async function getProducts() {
     .order('name');
 
   if (error) {
-    console.error('Failed to load membership products:', error);
+    logger.error('Failed to load membership products:', error);
     return [];
   }
   return data || [];

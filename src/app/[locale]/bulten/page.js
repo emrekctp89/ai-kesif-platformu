@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { Link } from '@/i18n/routing';
@@ -19,7 +20,7 @@ async function getPublishedNewsletters() {
     .order('sent_at', { ascending: false });
 
   if (error) {
-    console.error('Bülten arşivi çekilirken hata:', error);
+    logger.error('Bülten arşivi çekilirken hata:', error);
     return [];
   }
 

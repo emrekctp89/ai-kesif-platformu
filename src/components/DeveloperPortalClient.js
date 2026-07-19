@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,7 @@ export function DeveloperPortalClient() {
         setKeys(data);
       }
     } catch (err) {
-      console.error('fetchKeys failed:', err);
+      logger.error('fetchKeys failed:', err);
       toast.error('Beklenmeyen bir hata oluştu: ' + (err.message || ''));
     } finally {
       setLoading(false);
@@ -60,7 +61,7 @@ export function DeveloperPortalClient() {
         setKeys([data, ...keys]);
       }
     } catch (err) {
-      console.error('handleGenerate failed:', err);
+      logger.error('handleGenerate failed:', err);
       toast.error('Sunucu hatası: ' + (err.message || ''));
     } finally {
       setGenerating(false);
@@ -79,7 +80,7 @@ export function DeveloperPortalClient() {
         setKeys(keys.filter((k) => k.id !== id));
       }
     } catch (err) {
-      console.error('handleRevoke failed:', err);
+      logger.error('handleRevoke failed:', err);
       toast.error('Sunucu hatası: ' + (err.message || ''));
     }
   };

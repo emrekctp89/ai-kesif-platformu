@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -78,7 +79,7 @@ export function SearchInput() {
           setSuggestions(safeResults);
           setShowSuggestions(safeResults.length > 0);
         } catch (error) {
-          console.error('Arama önerileri alınamadı:', error);
+          logger.error('Arama önerileri alınamadı:', error);
           if (requestIdRef.current !== requestId) return;
           closeSuggestions();
         }

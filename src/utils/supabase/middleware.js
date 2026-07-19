@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import {
@@ -41,7 +42,7 @@ export async function updateSession(request) {
       clearSupabaseAuthCookies(request, response);
     }
   } catch (error) {
-    console.error('[updateSession] failed:', error?.message || error);
+    logger.error('[updateSession] failed:', error?.message || error);
   }
 
   return response;

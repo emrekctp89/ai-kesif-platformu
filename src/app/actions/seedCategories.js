@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
@@ -22,7 +23,7 @@ export async function seedExpandedCategories() {
   const { data: existing, error: existingError } = await supabase.from('categories').select('slug');
 
   if (existingError) {
-    console.error('Kategori okuma hatası:', existingError);
+    logger.error('Kategori okuma hatası:', existingError);
     return { error: 'Mevcut kategoriler okunamadı.' };
   }
 
@@ -36,7 +37,7 @@ export async function seedExpandedCategories() {
   const { error } = await supabase.from('categories').insert(toInsert);
 
   if (error) {
-    console.error('Kategori seed hatası:', error);
+    logger.error('Kategori seed hatası:', error);
     return { error: 'Kategoriler eklenirken hata oluştu: ' + error.message };
   }
 

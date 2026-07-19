@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -103,7 +104,7 @@ export function ActivityFeedClient({
         setModeItems(targetMode, newItems);
         setLastUpdatedAt(new Date());
       } catch (error) {
-        console.error('Activity feed refresh failed:', error);
+        logger.error('Activity feed refresh failed:', error);
       } finally {
         refreshInFlight.current = false;
         if (!silent) setIsRefreshing(false);

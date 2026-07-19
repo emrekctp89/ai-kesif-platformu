@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -30,7 +31,7 @@ export async function addCategory(formData) {
     if (error.code === '23505') {
       return { error: 'Bu kategori adı veya slug zaten mevcut.' };
     }
-    console.error('Kategori ekleme hatası:', error);
+    logger.error('Kategori ekleme hatası:', error);
     return { error: 'Kategori eklenirken bir hata oluştu.' };
   }
 
@@ -62,7 +63,7 @@ export async function updateCategory(formData) {
   const { error } = await supabase.from('categories').update({ name, slug }).eq('id', id);
 
   if (error) {
-    console.error('Kategori güncelleme hatası:', error);
+    logger.error('Kategori güncelleme hatası:', error);
     return { error: 'Kategori güncellenirken bir hata oluştu.' };
   }
 
@@ -91,7 +92,7 @@ export async function deleteCategory(formData) {
   const { error } = await supabase.from('categories').delete().eq('id', id);
 
   if (error) {
-    console.error('Kategori silme hatası:', error);
+    logger.error('Kategori silme hatası:', error);
     return {
       error: 'Kategori silinirken bir hata oluştu. Bu kategoriye ait araçlar olabilir.',
     };
@@ -126,7 +127,7 @@ export async function addTag(formData) {
     if (error.code === '23505') {
       return { error: 'Bu etiket zaten mevcut.' };
     }
-    console.error('Etiket ekleme hatası:', error);
+    logger.error('Etiket ekleme hatası:', error);
     return { error: 'Etiket eklenirken bir veritabanı hatası oluştu.' };
   }
 
@@ -155,7 +156,7 @@ export async function deleteTag(formData) {
   const { error } = await supabaseAdmin.from('tags').delete().eq('id', id);
 
   if (error) {
-    console.error('Etiket silme hatası:', error);
+    logger.error('Etiket silme hatası:', error);
     return { error: 'Etiket silinirken bir veritabanı hatası oluştu.' };
   }
 
@@ -189,7 +190,7 @@ export async function assignTagsToTool(formData) {
     .eq('tool_id', toolId);
 
   if (deleteError) {
-    console.error('Eski etiketleri silme hatası:', deleteError);
+    logger.error('Eski etiketleri silme hatası:', deleteError);
     return { error: 'Etiketler güncellenirken bir veritabanı hatası oluştu.' };
   }
 
@@ -202,7 +203,7 @@ export async function assignTagsToTool(formData) {
     const { error: insertError } = await supabaseAdmin.from('tool_tags').insert(newLinks);
 
     if (insertError) {
-      console.error('Yeni etiketleri ekleme hatası:', insertError);
+      logger.error('Yeni etiketleri ekleme hatası:', insertError);
       return {
         error: 'Etiketler güncellenirken bir veritabanı hatası oluştu.',
       };

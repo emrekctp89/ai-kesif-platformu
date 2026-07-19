@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -38,7 +39,7 @@ async function getApprovedToolCountForCategory(categoryId) {
     .eq('is_approved', true);
 
   if (error) {
-    console.error('Kategori araç sayısı okunamadı:', error.message);
+    logger.error('Kategori araç sayısı okunamadı:', error.message);
     return 0;
   }
 

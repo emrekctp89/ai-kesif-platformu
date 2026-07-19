@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import { useState, useEffect, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
@@ -248,7 +249,7 @@ export function InfiniteToolsList({
         setHasMore(false);
       }
     } catch (error) {
-      console.error('Daha fazla araç yüklenemedi:', error);
+      logger.error('Daha fazla araç yüklenemedi:', error);
       // Pause auto-load; user can retry without an infinite error loop.
       setLoadError(true);
     } finally {

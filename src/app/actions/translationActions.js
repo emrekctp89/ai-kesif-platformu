@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { translateText } from '@/utils/translate';
@@ -44,7 +45,7 @@ export async function autoTranslateAction(input) {
       targetLanguage,
     };
   } catch (err) {
-    console.error('Action çeviri hatası:', err);
+    logger.error('Action çeviri hatası:', err);
     return { error: 'Çeviri başarısız oldu. GCP Translation API ve yetkileri kontrol edin.' };
   }
 }

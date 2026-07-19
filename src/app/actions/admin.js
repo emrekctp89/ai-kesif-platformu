@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -29,7 +30,7 @@ export async function deleteUserFromAdmin(formData) {
   const { error } = await supabaseAdmin.auth.admin.deleteUser(userIdToDelete);
 
   if (error) {
-    console.error('Admin panelinden kullanıcı silme hatası:', error);
+    logger.error('Admin panelinden kullanıcı silme hatası:', error);
     return { error: 'Kullanıcı silinirken bir hata oluştu.' };
   }
 
@@ -67,7 +68,7 @@ export async function updateAdminAlertStatus(formData) {
     .eq('id', alertId);
 
   if (error) {
-    console.error('Uyarı durumu güncellenirken hata:', error);
+    logger.error('Uyarı durumu güncellenirken hata:', error);
     return { error: 'Uyarı durumu güncellenemedi.' };
   }
 

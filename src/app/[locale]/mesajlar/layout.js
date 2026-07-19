@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -22,7 +23,7 @@ async function getConversations(userId) {
   });
 
   if (error) {
-    console.error('Sohbetler çekilirken hata:', error);
+    logger.error('Sohbetler çekilirken hata:', error);
     return [];
   }
   return data || [];

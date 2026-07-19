@@ -1,4 +1,5 @@
-'use server';
+import logger from '@/utils/logger';
+('use server');
 
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -42,7 +43,7 @@ export async function submitShowcaseItem(formData) {
     try {
       imageUrl = await uploadToGCS(gcsPath, imageFile, imageFile.type || 'image/jpeg');
     } catch (uploadError) {
-      console.error('Eser görseli yükleme hatası (GCS):', uploadError);
+      logger.error('Eser görseli yükleme hatası (GCS):', uploadError);
       return { error: 'Görsel yüklenirken bir hata oluştu.' };
     }
   }
@@ -61,7 +62,7 @@ export async function submitShowcaseItem(formData) {
   const { error: insertError } = await supabase.from('showcase_items').insert([showcaseData]);
 
   if (insertError) {
-    console.error('Eser kaydetme hatası:', insertError);
+    logger.error('Eser kaydetme hatası:', insertError);
     if (imageUrl) {
       await deleteFromGCS(gcsPathFromUrl(imageUrl) || imageUrl);
     }
@@ -102,7 +103,7 @@ export async function deleteShowcaseItem(formData) {
     .eq('user_id', user.id);
 
   if (dbError) {
-    console.error('Eser silme veritabanı hatası:', dbError);
+    logger.error('Eser silme veritabanı hatası:', dbError);
     return { error: 'Eser silinirken bir veritabanı hatası oluştu.' };
   }
 
@@ -110,7 +111,7 @@ export async function deleteShowcaseItem(formData) {
     try {
       await deleteFromGCS(gcsPathFromUrl(imageUrl) || imageUrl);
     } catch (storageError) {
-      console.error('Eser görseli silme hatası (GCS):', storageError);
+      logger.error('Eser görseli silme hatası (GCS):', storageError);
     }
   }
 
@@ -143,7 +144,7 @@ export async function approveShowcaseItem(formData) {
     .eq('id', itemId);
 
   if (error) {
-    console.error('Eser onaylama hatası:', error);
+    logger.error('Eser onaylama hatası:', error);
     return { error: 'Eser onaylanırken bir veritabanı hatası oluştu.' };
   }
 
@@ -187,7 +188,7 @@ export async function updateShowcaseItem(formData) {
     .eq('user_id', user.id);
 
   if (error) {
-    console.error('Eser güncelleme hatası:', error);
+    logger.error('Eser güncelleme hatası:', error);
     return { error: 'Eser güncellenirken bir hata oluştu.' };
   }
 
@@ -231,7 +232,7 @@ export async function addShowcaseComment(formData) {
   });
 
   if (error) {
-    console.error('Eser yorumu ekleme hatası:', error);
+    logger.error('Eser yorumu ekleme hatası:', error);
     return { error: 'Yorumunuz eklenirken bir hata oluştu.' };
   }
 
@@ -263,7 +264,7 @@ export async function deleteShowcaseComment(formData) {
     .eq('user_id', user.id);
 
   if (error) {
-    console.error('Eser yorumu silme hatası:', error);
+    logger.error('Eser yorumu silme hatası:', error);
     return { error: 'Yorum silinirken bir hata oluştu.' };
   }
 
@@ -326,7 +327,7 @@ export async function toggleShowcaseVote(formData) {
   }
 
   if (finalError) {
-    console.error('Eser oylama hatası:', finalError);
+    logger.error('Eser oylama hatası:', finalError);
     return { error: `Hata: ${finalError.message}` };
   }
 

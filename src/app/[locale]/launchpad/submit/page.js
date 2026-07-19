@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -17,7 +18,7 @@ async function getLaunchableTools(userId) {
     .select('tool_id');
 
   if (launchedError) {
-    console.error('Lansmanı yapılmış araçlar çekilirken hata:', launchedError);
+    logger.error('Lansmanı yapılmış araçlar çekilirken hata:', launchedError);
     return [];
   }
 
@@ -36,7 +37,7 @@ async function getLaunchableTools(userId) {
   const { data, error } = await query;
 
   if (error) {
-    console.error('Lansmanı yapılabilecek araçlar çekilirken hata:', error);
+    logger.error('Lansmanı yapılabilecek araçlar çekilirken hata:', error);
     return [];
   }
   return data || [];

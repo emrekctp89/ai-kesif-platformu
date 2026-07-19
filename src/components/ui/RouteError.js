@@ -1,4 +1,5 @@
-'use client';
+import logger from '@/utils/logger';
+('use client');
 
 import * as React from 'react';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
@@ -13,7 +14,7 @@ export function RouteError({
 }) {
   React.useEffect(() => {
     // Hatayı logla (örn. Sentry'e gönderebilir)
-    console.error('RouteError caught:', error);
+    logger.error('RouteError caught:', error);
   }, [error]);
 
   return (

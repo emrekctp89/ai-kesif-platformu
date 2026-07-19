@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { Resend } from 'resend';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { slugify } from '@/utils/slugify';
@@ -330,7 +331,7 @@ async function buildEmbeddingValue({ name, description }) {
     const values = await embedGeminiText(`${name}. ${description}`);
     return `[${values.join(',')}]`;
   } catch (error) {
-    console.error('Tool discovery embedding üretilemedi:', error?.message || error);
+    logger.error('Tool discovery embedding üretilemedi:', error?.message || error);
     return null;
   }
 }
@@ -469,7 +470,7 @@ async function notifyAdmin({ insertedTools, skippedCount }) {
       },
     });
   } catch (error) {
-    console.error('Tool discovery admin alert oluşturulamadı:', error);
+    logger.error('Tool discovery admin alert oluşturulamadı:', error);
   }
 
   if (
@@ -498,7 +499,7 @@ async function notifyAdmin({ insertedTools, skippedCount }) {
       `,
     });
   } catch (error) {
-    console.error('Tool discovery e-postası gönderilemedi:', error);
+    logger.error('Tool discovery e-postası gönderilemedi:', error);
   }
 }
 

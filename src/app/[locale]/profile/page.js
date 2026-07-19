@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -30,7 +31,7 @@ async function getUserProfile(userId) {
     .single();
 
   if (error) {
-    console.error('Profil verisi çekilirken hata:', error);
+    logger.error('Profil verisi çekilirken hata:', error);
     return null;
   }
   return data;
@@ -46,7 +47,7 @@ async function getUserReputationEvents(userId) {
     .limit(5);
 
   if (error) {
-    console.error('Kullanıcı puan geçmişi çekilirken hata:', error);
+    logger.error('Kullanıcı puan geçmişi çekilirken hata:', error);
     return [];
   }
   return data;
@@ -60,7 +61,7 @@ async function getUserCollections(userId) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) {
-    console.error('Koleksiyonlar çekilirken hata:', error);
+    logger.error('Koleksiyonlar çekilirken hata:', error);
     return [];
   }
   return data;
@@ -72,7 +73,7 @@ async function getUserShowcaseItems(userId) {
     p_user_id: userId,
   });
   if (error) {
-    console.error('Kullanıcı eserleri çekilirken hata:', error);
+    logger.error('Kullanıcı eserleri çekilirken hata:', error);
     return [];
   }
   return data;
@@ -86,7 +87,7 @@ async function getUserPrompts(userId) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) {
-    console.error("Kullanıcı prompt'ları çekilirken hata:", error);
+    logger.error("Kullanıcı prompt'ları çekilirken hata:", error);
     return [];
   }
   return data;
@@ -100,7 +101,7 @@ async function getUserComments(userId) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) {
-    console.error('Kullanıcı yorumları çekilirken hata:', error);
+    logger.error('Kullanıcı yorumları çekilirken hata:', error);
     return [];
   }
   return data;
@@ -114,7 +115,7 @@ async function getUserFavoriteTools(userId) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) {
-    console.error('Favori araçlar çekilirken hata:', error);
+    logger.error('Favori araçlar çekilirken hata:', error);
     return [];
   }
   return data.map((item) => item.tools);
@@ -128,7 +129,7 @@ async function getUserRatedTools(userId) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) {
-    console.error('Puanlanan araçlar çekilirken hata:', error);
+    logger.error('Puanlanan araçlar çekilirken hata:', error);
     return [];
   }
   return data.map((item) => ({ ...item.tools, user_rating: item.rating }));
@@ -144,7 +145,7 @@ async function getUserProjects(userId) {
     .order('updated_at', { ascending: false, nullsFirst: false });
 
   if (error) {
-    console.error('Projeler çekilirken hata:', error);
+    logger.error('Projeler çekilirken hata:', error);
     return [];
   }
   return data;
@@ -172,7 +173,7 @@ async function getUserDailyQuests(userId) {
     .eq('quest_date', today);
 
   if (error) {
-    console.error('Günlük görevler çekilirken hata:', error);
+    logger.error('Günlük görevler çekilirken hata:', error);
     return [];
   }
   return data;

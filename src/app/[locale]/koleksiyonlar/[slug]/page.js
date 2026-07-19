@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
@@ -49,7 +50,7 @@ async function getCollectionDetails(slug) {
     .eq('is_approved', true);
 
   if (toolsError) {
-    console.error('Koleksiyon araçları çekilirken hata:', toolsError);
+    logger.error('Koleksiyon araçları çekilirken hata:', toolsError);
     return { collection, tools: [] };
   }
 

@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
@@ -27,9 +28,9 @@ async function getDiscoveryData(userId) {
       : Promise.resolve({ data: [] }),
   ]);
 
-  if (weeklyError) console.error('Haftalık yıldızlar hatası:', weeklyError);
-  if (popularError) console.error('Popüler üyeler hatası:', popularError);
-  if (newestError) console.error('Yeni üyeler hatası:', newestError);
+  if (weeklyError) logger.error('Haftalık yıldızlar hatası:', weeklyError);
+  if (popularError) logger.error('Popüler üyeler hatası:', popularError);
+  if (newestError) logger.error('Yeni üyeler hatası:', newestError);
 
   const followingSet = new Set(followingList?.map((f) => f.following_id) || []);
 

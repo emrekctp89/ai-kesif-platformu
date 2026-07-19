@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { NextResponse } from 'next/server';
 import { enrichExistingTools } from '@/lib/existingToolEnrichment';
 import { getBooleanParam, getIntegerParam, isCronAuthorized } from '@/utils/cron';
@@ -22,7 +23,7 @@ export async function GET(request) {
 
     return NextResponse.json({ success: true, report });
   } catch (error) {
-    console.error('Scheduled tool enrichment failed:', error);
+    logger.error('Scheduled tool enrichment failed:', error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Tool enrichment failed',

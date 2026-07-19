@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { NextResponse } from 'next/server';
 import { runScheduledToolDiscovery } from '@/lib/toolDiscoveryCron';
 import { getBooleanParam, getIntegerParam, isCronAuthorized } from '@/utils/cron';
@@ -24,7 +25,7 @@ export async function GET(request) {
 
     return NextResponse.json({ success: true, report });
   } catch (error) {
-    console.error('Scheduled tool discovery failed:', error);
+    logger.error('Scheduled tool discovery failed:', error);
     return NextResponse.json(
       {
         success: false,
