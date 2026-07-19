@@ -275,6 +275,49 @@ describe('Kâşif engine', () => {
     expect(ranked[0].record.id).toBe(23);
   });
 
+  it('blog yazımı isteğinde içerik üreticisini görsel aracının önüne alır', () => {
+    const writingRecords = [
+      {
+        id: 25,
+        name: 'Content Writer',
+        description: 'SEO uyumlu blog yazısı, makale ve pazarlama metni üretir',
+      },
+      {
+        id: 26,
+        name: 'Image Writer',
+        description: 'Metin komutlarından görsel üretir ve video oluşturur',
+      },
+    ];
+
+    const intent = understandQuestion('SEO uyumlu blog yazısı ve pazarlama metni oluştur');
+    const ranked = rankTools(writingRecords, intent);
+
+    expect(intent.goals).toContain('content-writing');
+    expect(ranked[0].record.id).toBe(25);
+  });
+
+  it('metin çevirisi isteğinde dil aracını kod çeviricisinin önüne alır', () => {
+    const translationRecords = [
+      {
+        id: 27,
+        name: 'Language Translator',
+        description: 'Metin çeviri ve diller arası çeviri yapar',
+      },
+      {
+        id: 28,
+        name: 'Code Translator',
+        description: 'Programlama dilleri arasında kod çeviri ve kod anlama sağlar',
+      },
+    ];
+
+    const intent = understandQuestion('Uzun bir metni Türkçeye çevirmek istiyorum');
+    const ranked = rankTools(translationRecords, intent);
+
+    expect(intent.concepts).toContain('metin-yazarligi');
+    expect(intent.goals).toContain('translation');
+    expect(ranked[0].record.id).toBe(27);
+  });
+
   it('kod asistanı sorgusunda eğitim ve dönüşüm araçlarını geriye iter', () => {
     const codingRecords = [
       {

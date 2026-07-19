@@ -46,10 +46,10 @@ export default async function ContentStudioPage({ params }) {
   const allowed = isAdmin || Boolean(profile?.is_content_creator);
 
   if (!allowed) {
-    const [pending, dailyQuests] = await Promise.all([
+    const today = new Date().toISOString().split('T')[0];
+    const [pending, dailyQuests, featuredTool, popularTool, sampleProfile] = await Promise.all([
       hasOpenCreatorApplication(user.id),
       (async () => {
-        const today = new Date().toISOString().split('T')[0];
         const { data, error } = await supabase
           .from('user_daily_quests')
           .select(
@@ -68,6 +68,30 @@ export default async function ContentStudioPage({ params }) {
         if (error) return [];
         return data || [];
       })(),
+      admin
+        .from('tools')
+        .select('slug')
+        .eq('is_approved', true)
+        .eq('is_featured', true)
+        .not('slug', 'is', null)
+        .limit(1)
+        .maybeSingle(),
+      admin
+        .from('tools')
+        .select('slug')
+        .eq('is_approved', true)
+        .not('slug', 'is', null)
+        .order('is_featured', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      admin
+        .from('profiles')
+        .select('username')
+        .not('username', 'is', null)
+        .neq('id', user.id)
+        .order('reputation_points', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
     return (
       <CreatorAccessGate
@@ -76,6 +100,11 @@ export default async function ContentStudioPage({ params }) {
         alreadyPending={pending}
         username={profile?.username || null}
         dailyQuests={dailyQuests}
+        questLinkOpts={{
+          featuredToolSlug: featuredTool?.data?.slug || null,
+          popularToolSlug: popularTool?.data?.slug || featuredTool?.data?.slug || null,
+          sampleUsername: sampleProfile?.data?.username || null,
+        }}
       />
     );
   }

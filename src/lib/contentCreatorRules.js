@@ -92,10 +92,38 @@ export function reputationProgress(points, min = MIN_CREATOR_REPUTATION) {
 }
 
 /**
+ * Deep-link targets for daily quest action types.
+ * @param {string} actionType
+ * @param {{ featuredToolSlug?: string|null, popularToolSlug?: string|null, sampleUsername?: string|null }} [opts]
+ */
+export function questActionDeepLink(actionType, opts = {}) {
+  const featured = opts.featuredToolSlug ? `/tool/${opts.featuredToolSlug}` : '/';
+  const popular = opts.popularToolSlug ? `/tool/${opts.popularToolSlug}` : '/';
+  const profileUser = opts.sampleUsername ? `/u/${opts.sampleUsername}` : '/profile';
+
+  switch (String(actionType || '')) {
+    case 'rating':
+      return { href: popular, ctaKey: 'questCtaRate' };
+    case 'comment':
+      // Showcase is paused; tool comments still award points.
+      return { href: popular, ctaKey: 'questCtaComment' };
+    case 'favorite':
+      return { href: featured, ctaKey: 'questCtaFavorite' };
+    case 'visit_tool':
+      return { href: '/', ctaKey: 'questCtaVisit' };
+    case 'follow_user':
+      return { href: profileUser, ctaKey: 'questCtaFollow' };
+    default:
+      return { href: '/', ctaKey: 'questCtaDefault' };
+  }
+}
+
+/**
  * Summarize daily quests for the creator gate.
  * @param {Array} quests - user_daily_quests rows with nested quests
+ * @param {{ featuredToolSlug?: string|null, popularToolSlug?: string|null, sampleUsername?: string|null }} [linkOpts]
  */
-export function summarizeDailyQuests(quests) {
+export function summarizeDailyQuests(quests, linkOpts = {}) {
   const list = Array.isArray(quests) ? quests : [];
   let availablePoints = 0;
   let completedPoints = 0;
@@ -107,6 +135,8 @@ export function summarizeDailyQuests(quests) {
     const target = Number(row?.quests?.target_count || 1);
     const current = Number(row?.current_progress || 0);
     const done = Boolean(row?.is_completed);
+    const actionType = row?.quests?.action_type || '';
+    const deep = questActionDeepLink(actionType, linkOpts);
     if (done) {
       doneCount += 1;
       completedPoints += reward;
@@ -117,14 +147,19 @@ export function summarizeDailyQuests(quests) {
     return {
       id: row.quest_id || row.id,
       description: row?.quests?.description || '',
-      actionType: row?.quests?.action_type || '',
+      actionType,
       reward,
       target,
       current,
       done,
       progress: target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0,
+      href: deep.href,
+      ctaKey: deep.ctaKey,
     };
   });
+
+  // Incomplete quests first so “Tamamla” actions are visible.
+  items.sort((a, b) => Number(a.done) - Number(b.done));
 
   return {
     items,
@@ -135,3 +170,4 @@ export function summarizeDailyQuests(quests) {
     totalPossible: availablePoints + completedPoints,
   };
 }
+

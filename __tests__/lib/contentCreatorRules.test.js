@@ -2,6 +2,7 @@ import {
   MIN_CREATOR_REPUTATION,
   REPUTATION_AWARDS,
   isReputationEligible,
+  questActionDeepLink,
   reputationProgress,
   summarizeDailyQuests,
 } from '@/lib/contentCreatorRules';
@@ -37,18 +38,43 @@ describe('contentCreatorRules', () => {
         quest_id: 1,
         is_completed: false,
         current_progress: 1,
-        quests: { description: 'Rate 3', target_count: 3, reputation_reward: 10 },
+        quests: {
+          description: 'Rate 3',
+          action_type: 'rating',
+          target_count: 3,
+          reputation_reward: 10,
+        },
       },
       {
         quest_id: 2,
         is_completed: true,
         current_progress: 1,
-        quests: { description: 'Favorite', target_count: 1, reputation_reward: 5 },
+        quests: {
+          description: 'Favorite',
+          action_type: 'favorite',
+          target_count: 1,
+          reputation_reward: 5,
+        },
       },
     ]);
     expect(summary.openCount).toBe(1);
     expect(summary.doneCount).toBe(1);
     expect(summary.availablePoints).toBe(10);
     expect(summary.completedPoints).toBe(5);
+    expect(summary.items[0].done).toBe(false);
+    expect(summary.items[0].href).toBeTruthy();
+  });
+
+  it('maps quest action types to deep links', () => {
+    expect(
+      questActionDeepLink('favorite', { featuredToolSlug: 'notion-ai' }).href
+    ).toBe('/tool/notion-ai');
+    expect(questActionDeepLink('rating', { popularToolSlug: 'chatgpt' }).href).toBe(
+      '/tool/chatgpt'
+    );
+    expect(questActionDeepLink('follow_user', { sampleUsername: 'inventor' }).href).toBe(
+      '/u/inventor'
+    );
   });
 });
+

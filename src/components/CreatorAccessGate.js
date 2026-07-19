@@ -53,11 +53,12 @@ export function CreatorAccessGate({
   alreadyPending = false,
   username = null,
   dailyQuests = [],
+  questLinkOpts = {},
 }) {
   const t = useTranslations('ContentStudio');
   const progress = reputationProgress(reputationPoints, minReputation);
   const eligible = isReputationEligible(reputationPoints, minReputation);
-  const quests = summarizeDailyQuests(dailyQuests);
+  const quests = summarizeDailyQuests(dailyQuests, questLinkOpts);
   const projected = progress.current + quests.availablePoints;
   const wouldUnlock = !eligible && projected >= progress.target;
 
@@ -240,7 +241,7 @@ export function CreatorAccessGate({
                 key={quest.id}
                 className={`border-border/50 ${quest.done ? 'opacity-70' : 'glass-panel'}`}
               >
-                <CardContent className="space-y-2 p-4">
+                <CardContent className="space-y-3 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-start gap-2">
                       {quest.done ? (
@@ -258,22 +259,45 @@ export function CreatorAccessGate({
                         <p className="font-medium leading-snug">{quest.description}</p>
                         <p className="text-xs text-muted-foreground">
                           {quest.current}/{quest.target}
+                          {quest.done ? ` · ${t('questDone')}` : ''}
                         </p>
                       </div>
                     </div>
                     <span className="shrink-0 text-sm font-bold text-primary">+{quest.reward}</span>
                   </div>
-                  {!quest.done ? <Progress value={quest.progress} className="h-2" /> : null}
+                  {!quest.done ? (
+                    <>
+                      <Progress value={quest.progress} className="h-2" />
+                      <Button asChild size="sm" className="w-full sm:w-auto">
+                        <Link href={quest.href || '/'} prefetch={false}>
+                          {t(quest.ctaKey || 'questCtaDefault')}
+                          <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+                        </Link>
+                      </Button>
+                    </>
+                  ) : null}
                 </CardContent>
               </Card>
             ))}
           </div>
-          <Button asChild className="brand-gradient">
-            <Link href="/profile" prefetch={false}>
-              {t('roadQuestsCta')}
-              <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {quests.items
+              .filter((q) => !q.done)
+              .slice(0, 1)
+              .map((q) => (
+                <Button key={`primary-${q.id}`} asChild className="brand-gradient">
+                  <Link href={q.href || '/'} prefetch={false}>
+                    {t('questPrimaryCta')}
+                    <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+              ))}
+            <Button asChild variant="outline">
+              <Link href="/profile" prefetch={false}>
+                {t('roadQuestsCta')}
+              </Link>
+            </Button>
+          </div>
         </section>
       ) : null}
 

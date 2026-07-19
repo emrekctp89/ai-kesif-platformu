@@ -141,6 +141,22 @@ const cases = [
     minConfidence: 0.75,
   },
   {
+    name: 'content-writing',
+    question: 'SEO uyumlu blog yazısı ve pazarlama metni oluşturacak araç öner',
+    expectedAny: ['Contenda', 'Content Edge', 'Contents.com', 'ClosersCopy', 'Jasper'],
+    expectedTop: ['Contenda', 'Content Edge', 'Contents.com', 'ClosersCopy', 'Jasper'],
+    expectedGoal: 'content-writing',
+    minConfidence: 0.75,
+  },
+  {
+    name: 'translation',
+    question: 'Uzun bir metni Türkçeye çevirmek için yapay zeka aracı öner',
+    expectedAny: ['OpenAI GPT-3', 'Google Bard', 'ElevenLabs'],
+    expectedTop: ['OpenAI GPT-3', 'Google Bard', 'ElevenLabs'],
+    expectedGoal: 'translation',
+    minConfidence: 0.65,
+  },
+  {
     name: 'coding',
     question: 'Kod yazmak ve yazılım geliştirmek için asistan öner',
     expectedAny: [
