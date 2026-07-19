@@ -26,7 +26,7 @@ async function getUserProfile(userId) {
   const supabase = await createClient(await cookies());
   const { data, error } = await supabase
     .from('profiles')
-    .select('avatar_url, reputation_points, username, bio')
+    .select('avatar_url, reputation_points, username, bio, daily_streak')
     .eq('id', userId)
     .single();
 
@@ -210,6 +210,9 @@ export default async function ProfilePage({ params }) {
     ratedTools,
     projects,
     dailyQuests,
+    featuredTool,
+    popularTool,
+    sampleProfile,
   ] = await Promise.all([
     getUserProfile(user.id),
     getUserReputationEvents(user.id),
@@ -221,7 +224,37 @@ export default async function ProfilePage({ params }) {
     getUserRatedTools(user.id),
     getUserProjects(user.id),
     getUserDailyQuests(user.id),
+    supabase
+      .from('tools')
+      .select('slug')
+      .eq('is_approved', true)
+      .eq('is_featured', true)
+      .not('slug', 'is', null)
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('tools')
+      .select('slug')
+      .eq('is_approved', true)
+      .not('slug', 'is', null)
+      .order('is_featured', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('profiles')
+      .select('username')
+      .not('username', 'is', null)
+      .neq('id', user.id)
+      .order('reputation_points', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
+
+  const questLinkOpts = {
+    featuredToolSlug: featuredTool?.data?.slug || null,
+    popularToolSlug: popularTool?.data?.slug || featuredTool?.data?.slug || null,
+    sampleUsername: sampleProfile?.data?.username || null,
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 pb-10">
@@ -239,7 +272,11 @@ export default async function ProfilePage({ params }) {
 
       <div className="grid gap-8 md:grid-cols-3">
         <div className="space-y-6 md:col-span-2">
-          <DailyQuests quests={dailyQuests} streak={profile?.daily_streak || 0} />
+          <DailyQuests
+            quests={dailyQuests}
+            streak={profile?.daily_streak || 0}
+            questLinkOpts={questLinkOpts}
+          />
           <ProfileEditor user={user} profile={profile} />
         </div>
         <div>

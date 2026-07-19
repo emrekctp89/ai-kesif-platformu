@@ -105,7 +105,7 @@ export function questActionDeepLink(actionType, opts = {}) {
     case 'rating':
       return { href: popular, ctaKey: 'questCtaRate' };
     case 'comment':
-      // Showcase is paused; tool comments still award points.
+      // Community showcase is soft-landed; complete via tool page comments.
       return { href: popular, ctaKey: 'questCtaComment' };
     case 'favorite':
       return { href: featured, ctaKey: 'questCtaFavorite' };

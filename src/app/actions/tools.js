@@ -420,7 +420,16 @@ export async function rateTool(formData) {
     return { error: 'İşlem sırasında bir hata oluştu.' };
   }
 
+  try {
+    const { bumpQuestProgress } = await import('@/lib/questProgress');
+    await bumpQuestProgress(supabase, user.id, 'rating');
+  } catch (questError) {
+    logger.error('Puanlama sonrası quest progress hatası:', questError);
+  }
+
   revalidatePath(`/tool/${formData.get('toolSlug')}`);
+  revalidatePath('/profile');
+  revalidatePath('/icerik');
   return { success: 'Oyunuz kaydedildi.' };
 }
 
@@ -463,8 +472,16 @@ export async function toggleFavorite(toolId, toolSlug, isFavorited) {
       return { error: 'Araç favorilere eklenirken bir hata oluştu.' };
     }
 
+    try {
+      const { bumpQuestProgress } = await import('@/lib/questProgress');
+      await bumpQuestProgress(supabase, user.id, 'favorite');
+    } catch (questError) {
+      logger.error('Favori sonrası quest progress hatası:', questError);
+    }
+
     revalidatePath(`/tool/${toolSlug}`);
     revalidatePath('/profile');
+    revalidatePath('/icerik');
 
     return { success: 'added' };
   }

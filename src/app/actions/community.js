@@ -271,11 +271,20 @@ export async function toggleFollowUser(formData) {
         link: `/u/${currentUserProfile.username}`,
       });
     }
+
+    try {
+      const { bumpQuestProgress } = await import('@/lib/questProgress');
+      await bumpQuestProgress(supabase, currentUser.id, 'follow_user');
+    } catch (questError) {
+      logger.error('Takip sonrası quest progress hatası:', questError);
+    }
   }
 
   if (targetUsername) {
     revalidatePath(`/u/${targetUsername}`);
   }
+  revalidatePath('/profile');
+  revalidatePath('/icerik');
 
   return { success: true };
 }

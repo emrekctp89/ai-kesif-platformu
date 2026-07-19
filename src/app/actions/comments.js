@@ -4,6 +4,7 @@ import logger from '@/utils/logger';
 
 import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
+import { bumpQuestProgress } from '@/lib/questProgress';
 
 export async function getComments(toolId) {
   const supabase = await createClient();
@@ -51,7 +52,11 @@ export async function addComment(toolId, toolSlug, content) {
     return { error: 'Yorum eklenirken bir hata oluştu.' };
   }
 
+  await bumpQuestProgress(supabase, user.id, 'comment');
+
   revalidatePath(`/tool/${toolSlug}`);
+  revalidatePath('/profile');
+  revalidatePath('/icerik');
   return { success: true, comment: data };
 }
 
