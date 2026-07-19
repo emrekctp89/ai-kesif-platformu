@@ -19,29 +19,53 @@ function escapeXml(value) {
     .replaceAll("'", '&apos;');
 }
 
+/** Static marketing / product routes (TR + optional EN mirror). */
+const STATIC_ROUTES = [
+  { path: '/', priority: 1.0, changeFrequency: 'daily' },
+  { path: '/kesfet', priority: 0.9, changeFrequency: 'daily' },
+  { path: '/kategori', priority: 0.8, changeFrequency: 'weekly' },
+  { path: '/karsilastir', priority: 0.8, changeFrequency: 'weekly' },
+  { path: '/tavsiye', priority: 0.7, changeFrequency: 'weekly' },
+  { path: '/blog', priority: 0.7, changeFrequency: 'daily' },
+  { path: '/bulten', priority: 0.6, changeFrequency: 'weekly' },
+  { path: '/eserler', priority: 0.6, changeFrequency: 'weekly' },
+  { path: '/koleksiyonlar', priority: 0.6, changeFrequency: 'weekly' },
+  { path: '/topluluk', priority: 0.6, changeFrequency: 'daily' },
+  { path: '/leaderboard', priority: 0.5, changeFrequency: 'daily' },
+  { path: '/ogren', priority: 0.6, changeFrequency: 'weekly' },
+  { path: '/random-tools', priority: 0.5, changeFrequency: 'weekly' },
+  { path: '/workmind', priority: 0.5, changeFrequency: 'weekly' },
+  { path: '/hakkimizda', priority: 0.4, changeFrequency: 'monthly' },
+  { path: '/iletisim', priority: 0.4, changeFrequency: 'monthly' },
+  { path: '/gizlilik', priority: 0.3, changeFrequency: 'yearly' },
+  { path: '/kullanim-kosullari', priority: 0.3, changeFrequency: 'yearly' },
+  { path: '/submit', priority: 0.5, changeFrequency: 'monthly' },
+  { path: '/developer', priority: 0.4, changeFrequency: 'monthly' },
+];
+
+function pushLocalizedStatic(urls, generatedAt) {
+  for (const route of STATIC_ROUTES) {
+    urls.push({
+      url: withBase(route.path === '/' ? '' : route.path),
+      lastModified: generatedAt,
+      changeFrequency: route.changeFrequency,
+      priority: route.priority,
+    });
+    // English mirrors (default locale is unprefixed TR)
+    const enPath = route.path === '/' ? '/en' : `/en${route.path}`;
+    urls.push({
+      url: withBase(enPath),
+      lastModified: generatedAt,
+      changeFrequency: route.changeFrequency,
+      priority: Math.max(0.1, Number((route.priority - 0.05).toFixed(2))),
+    });
+  }
+}
+
 export async function GET() {
   const generatedAt = new Date().toISOString();
-  const urls = [
-    { url: withBase('/'), lastModified: generatedAt },
-    { url: withBase('/kategori'), lastModified: generatedAt },
-    { url: withBase('/kesfet'), lastModified: generatedAt },
-    { url: withBase('/karsilastir'), lastModified: generatedAt },
-    { url: withBase('/tavsiye'), lastModified: generatedAt },
-    { url: withBase('/blog'), lastModified: generatedAt },
-    { url: withBase('/bulten'), lastModified: generatedAt },
-    { url: withBase('/eserler'), lastModified: generatedAt },
-    { url: withBase('/koleksiyonlar'), lastModified: generatedAt },
-    { url: withBase('/topluluk'), lastModified: generatedAt },
-    { url: withBase('/leaderboard'), lastModified: generatedAt },
-    { url: withBase('/ogren'), lastModified: generatedAt },
-    { url: withBase('/random-tools'), lastModified: generatedAt },
-    { url: withBase('/hakkimizda'), lastModified: generatedAt },
-    { url: withBase('/iletisim'), lastModified: generatedAt },
-    { url: withBase('/gizlilik'), lastModified: generatedAt },
-    { url: withBase('/kullanim-kosullari'), lastModified: generatedAt },
-    { url: withBase('/submit'), lastModified: generatedAt },
-    { url: withBase('/developer'), lastModified: generatedAt },
-  ];
+  const urls = [];
+  pushLocalizedStatic(urls, generatedAt);
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return createSitemapResponse(urls);
@@ -61,9 +85,10 @@ export async function GET() {
   let toolsData = [];
   let categoriesData = [];
   let newslettersData = [];
+  let postsData = [];
 
   try {
-    const [toolsResult, categoriesResult, newslettersResult] = await Promise.all([
+    const [toolsResult, categoriesResult, newslettersResult, postsResult] = await Promise.all([
       supabase
         .from('tools')
         .select('slug, updated_at')
@@ -71,6 +96,11 @@ export async function GET() {
         .not('slug', 'is', null),
       supabase.from('categories').select('slug').not('slug', 'is', null),
       supabase.from('newsletters').select('slug, sent_at, updated_at').not('slug', 'is', null),
+      supabase
+        .from('posts')
+        .select('slug, published_at, updated_at')
+        .eq('status', 'Yayınlandı')
+        .not('slug', 'is', null),
     ]);
 
     if (toolsResult.error) {
@@ -90,6 +120,13 @@ export async function GET() {
     } else {
       newslettersData = newslettersResult.data || [];
     }
+
+    if (postsResult.error) {
+      // posts table may be empty / restricted — non-fatal
+      logger.warn('Blog yazıları sitemap için alınamadı:', postsResult.error);
+    } else {
+      postsData = postsResult.data || [];
+    }
   } catch (error) {
     logger.error('Sitemap fetch failed (likely during build):', error);
   }
@@ -98,13 +135,30 @@ export async function GET() {
     urls.push({
       url: withBase(`/kategori/${category.slug}`),
       lastModified: generatedAt,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    });
+    urls.push({
+      url: withBase(`/en/kategori/${category.slug}`),
+      lastModified: generatedAt,
+      changeFrequency: 'weekly',
+      priority: 0.65,
     });
   });
 
   toolsData.forEach((tool) => {
+    const lastModified = tool.updated_at || generatedAt;
     urls.push({
       url: withBase(`/tool/${tool.slug}`),
-      lastModified: tool.updated_at || generatedAt,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    });
+    urls.push({
+      url: withBase(`/en/tool/${tool.slug}`),
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.75,
     });
   });
 
@@ -112,6 +166,24 @@ export async function GET() {
     urls.push({
       url: withBase(`/bulten/${item.slug}`),
       lastModified: item.updated_at || item.sent_at || generatedAt,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    });
+  });
+
+  postsData.forEach((post) => {
+    const lastModified = post.updated_at || post.published_at || generatedAt;
+    urls.push({
+      url: withBase(`/blog/${post.slug}`),
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    });
+    urls.push({
+      url: withBase(`/en/blog/${post.slug}`),
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.55,
     });
   });
 
@@ -122,13 +194,20 @@ function createSitemapResponse(urls) {
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls
-  .map(
-    ({ url, lastModified }) => `
+  .map(({ url, lastModified, changeFrequency, priority }) => {
+    const lastmod = escapeXml(
+      lastModified instanceof Date
+        ? lastModified.toISOString()
+        : new Date(lastModified || Date.now()).toISOString()
+    );
+    return `
   <url>
     <loc>${escapeXml(url)}</loc>
-    <lastmod>${escapeXml(lastModified)}</lastmod>
-  </url>`
-  )
+    <lastmod>${lastmod}</lastmod>
+    ${changeFrequency ? `<changefreq>${escapeXml(changeFrequency)}</changefreq>` : ''}
+    ${priority != null ? `<priority>${escapeXml(priority)}</priority>` : ''}
+  </url>`;
+  })
   .join('')}
 </urlset>`;
 

@@ -6,14 +6,16 @@ import { getTranslations } from 'next-intl/server';
 import { ExternalLink, GitCompareArrows, Star, Table2 } from 'lucide-react';
 
 import { AiComparison } from '@/components/AiComparison';
+import { AnalyticsEvent } from '@/components/AnalyticsEvent';
 import { ToolSelectForComparison } from '@/components/ToolSelectForComparison';
 import ToolIcon from '@/components/ToolIcon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrackedExternalLink } from '@/components/TrackedExternalLink';
+import { AnalyticsEvents } from '@/utils/analytics';
 import { formatPricing } from '@/utils/formatPricing';
-import { generatePageMetadata } from '@/utils/seo';
+import { generatePageMetadata, generateStructuredData, safeJsonLd } from '@/utils/seo';
 import { requireProAccess } from '@/lib/proAccess';
 
 const getSupabase = () =>
@@ -164,8 +166,39 @@ export default async function ComparePage(props) {
     });
   }
 
+  const comparisonSchema =
+    comparedTools.length >= 2
+      ? generateStructuredData('ItemList', {
+          name: t('metaTitleNamed', {
+            names: comparedTools.map((tool) => tool.displayName).join(' vs '),
+          }),
+          description: t('metaDescriptionNamed', {
+            names: comparedTools.map((tool) => tool.displayName).join(' vs '),
+          }),
+          items: comparedTools.map((tool) => ({
+            name: tool.displayName,
+            url: `/tool/${tool.slug}`,
+          })),
+        })
+      : null;
+
   return (
     <div className="mx-auto max-w-7xl space-y-10 pb-10 sm:space-y-12">
+      <AnalyticsEvent
+        name={AnalyticsEvents.COMPARISON_VIEW}
+        parameters={{
+          tool_count: comparedTools.length,
+          tool_slugs: toolSlugs.join(','),
+          locale,
+        }}
+      />
+      {comparisonSchema ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(comparisonSchema) }}
+        />
+      ) : null}
+
       {/* Hero */}
       <section className="brand-surface relative overflow-hidden rounded-3xl p-6 text-center shadow-xl glass-panel sm:p-8 lg:p-10">
         <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />

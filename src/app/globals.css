@@ -58,8 +58,35 @@
   body {
     @apply bg-background text-foreground;
   }
-  :where(a, button, input, select, textarea):focus-visible {
+  :where(a, button, input, select, textarea, summary, [role='button']):focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Ensure keyboard skip-link is visible when focused (paired with .sr-only) */
+  .skip-link:focus,
+  .skip-link:focus-visible {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    z-index: 100;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    border-radius: 0.5rem;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  }
+
+  /* Comfortable tap targets on touch devices without breaking desktop density */
+  @media (pointer: coarse) {
+    :where(button, [role='button'], a.inline-flex, .tap-target) {
+      min-height: 44px;
+    }
   }
 }
 
