@@ -7,10 +7,9 @@ import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { slugify } from '@/utils/slugify';
 import { contentEmailHtml, sendContentEventEmail } from '@/lib/contentNotify';
+import { MIN_CREATOR_REPUTATION } from '@/lib/contentCreatorRules';
 
 const CREATOR_EDITABLE_STATUSES = new Set(['Taslak', 'İncelemede', 'Reddedildi']);
-/** Soft gate: users below this reputation still can be admin-approved manually. */
-const MIN_CREATOR_REPUTATION = Number(process.env.CONTENT_CREATOR_MIN_REPUTATION || 10);
 
 async function requireUser() {
   const supabase = await createClient();
@@ -163,8 +162,9 @@ export async function requestContentCreatorAccess(formData) {
 
   const reputation = Number(profile?.reputation_points || 0);
   if (reputation < MIN_CREATOR_REPUTATION) {
+    const remaining = MIN_CREATOR_REPUTATION - reputation;
     return {
-      error: `Üretici başvurusu için en az ${MIN_CREATOR_REPUTATION} itibar puanı önerilir (şu an: ${reputation}). Yorum, favori ve katkı ile puanını yükseltip tekrar dene.`,
+      error: `Üretici başvurusu için en az ${MIN_CREATOR_REPUTATION} itibar puanı gerekir (şu an: ${reputation}, kalan: ${remaining}). Ana sayfadan araçlara puan ver, yorum yaz veya /submit ile araç önererek puan kazan.`,
     };
   }
 
