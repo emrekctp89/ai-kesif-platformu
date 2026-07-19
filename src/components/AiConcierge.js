@@ -37,7 +37,7 @@ export function AiConcierge({ user }) {
   const [messages, setMessages] = React.useState([
     {
       role: 'ai',
-      content: 'Merhaba! Ben platformun AI konsiyerjiyim. Size nasıl yardımcı olabilirim?',
+      content: 'Merhaba! Ben Kâşif. Platformdaki doğru aracı bulmana nasıl yardımcı olabilirim?',
     },
   ]);
   const [input, setInput] = React.useState('');
@@ -104,7 +104,7 @@ export function AiConcierge({ user }) {
             className="fixed bottom-24 right-6 z-[100] w-[90vw] max-w-sm h-[70vh] bg-card border rounded-lg shadow-2xl flex flex-col"
           >
             <header className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold">AI Konsiyerj</h3>
+              <h3 className="font-semibold">Kâşif</h3>
               <Button
                 onClick={() => setIsOpen(false)}
                 variant="ghost"

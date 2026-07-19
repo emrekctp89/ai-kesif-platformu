@@ -8,6 +8,11 @@ import { revalidatePath } from 'next/cache';
 import { enforceRateLimit } from '@/utils/antiAbuse';
 import * as cheerio from 'cheerio';
 import { embedGeminiText } from '@/utils/gemini';
+import {
+  compareSelectedToolsWithKasif,
+  getKasifAssistantAnswer,
+  getKasifRecommendations,
+} from '@/lib/kasif/integrations';
 
 export async function getEmbedding(text) {
   try {
@@ -36,6 +41,38 @@ async function getAllToolsForAI() {
 }
 
 export async function getAiRecommendation(userPrompt) {
+  'use server';
+
+  const rateLimit = await enforceRateLimit('ai-recommendation', {
+    limit: 8,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      error: `Çok sık tavsiye istediniz. ${rateLimit.retryAfterSeconds} saniye sonra tekrar deneyin.`,
+    };
+  }
+
+  const normalizedPrompt = String(userPrompt || '').trim();
+  if (normalizedPrompt.length < 10 || normalizedPrompt.length > 800) {
+    return { success: false, error: 'İhtiyacınızı 10–800 karakter arasında anlatın.' };
+  }
+
+  try {
+    const { recommendations } = await getKasifRecommendations(normalizedPrompt);
+    if (!recommendations.length) {
+      return { success: false, error: 'İsteğinize uygun doğrulanmış araç bulunamadı.' };
+    }
+    return { success: true, data: recommendations };
+  } catch (error) {
+    logger.error('Kâşif tavsiye entegrasyonu hatası:', error);
+    return { success: false, error: 'Kâşif tavsiye üretirken beklenmedik bir hata oluştu.' };
+  }
+}
+
+// Geçiş döneminde hızlı geri dönüş için önceki Gemini akışını koruyoruz.
+export async function getLegacyAiRecommendation(userPrompt) {
   'use server';
 
   const rateLimit = await enforceRateLimit('ai-recommendation', {
@@ -199,6 +236,22 @@ export async function getAiRecommendation(userPrompt) {
 }
 
 export async function getAiComparison(tools) {
+  'use server';
+
+  if (!Array.isArray(tools) || tools.length < 2) {
+    return { error: 'Lütfen karşılaştırmak için en az 2 araç seçin.' };
+  }
+
+  try {
+    const data = await compareSelectedToolsWithKasif(tools.map((tool) => tool?.slug));
+    return { success: true, data };
+  } catch (error) {
+    logger.error('Kâşif karşılaştırma entegrasyonu hatası:', error);
+    return { error: 'Kâşif karşılaştırma verilerini doğrulayamadı.' };
+  }
+}
+
+export async function getLegacyAiComparison(tools) {
   'use server';
 
   if (!tools || tools.length < 2) {
@@ -949,6 +1002,20 @@ export async function getVoiceAgentResponse(userQuery) {
 
 export async function getAdvancedVoiceAgentResponse(userQuery, history) {
   'use server';
+  const question = String(userQuery || '').trim();
+  if (!question) return { error: 'Sorgu boş olamaz.' };
+
+  try {
+    const data = await getKasifAssistantAnswer(question, history);
+    return { success: true, data };
+  } catch (error) {
+    logger.error('Kâşif sesli asistan entegrasyonu hatası:', error);
+    return { error: 'Kâşif yanıt üretirken beklenmedik bir hata oluştu.' };
+  }
+}
+
+export async function getLegacyAdvancedVoiceAgentResponse(userQuery, history) {
+  'use server';
 
   if (!userQuery) {
     return { error: 'Sorgu boş olamaz.' };
@@ -1041,6 +1108,20 @@ export async function getAdvancedVoiceAgentResponse(userQuery, history) {
 }
 
 export async function getAiConciergeResponse(userQuery, history) {
+  'use server';
+  const question = String(userQuery || '').trim();
+  if (!question) return { error: 'Sorgu boş olamaz.' };
+
+  try {
+    const data = await getKasifAssistantAnswer(question, history);
+    return { success: true, data };
+  } catch (error) {
+    logger.error('Kâşif konsiyerj entegrasyonu hatası:', error);
+    return { error: 'Kâşif yanıt üretirken beklenmedik bir hata oluştu.' };
+  }
+}
+
+export async function getLegacyAiConciergeResponse(userQuery, history) {
   'use server';
   if (!userQuery) return { error: 'Sorgu boş olamaz.' };
 

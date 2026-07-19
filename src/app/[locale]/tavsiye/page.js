@@ -72,7 +72,7 @@ export default function RecommendationPage() {
         <div className="relative z-10">
           <div className="brand-chip mx-auto mb-4 flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
             <Sparkles aria-hidden="true" className="h-4 w-4" />
-            Ücretsiz AI araç eşleştirmesi
+            Kâşif araç eşleştirmesi
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">
             İhtiyacını anlat, doğru AI aracını bul
@@ -165,7 +165,7 @@ export default function RecommendationPage() {
           <ol className="mt-4 space-y-4 text-sm text-muted-foreground">
             {[
               'İhtiyacını ve önemli koşulları yaz.',
-              'AI Keşif uygun araçları karşılaştırsın.',
+              'Kâşif yalnızca platform kayıtlarından uygun araçları sıralasın.',
               'Önerilerin detaylarını inceleyip karar ver.',
             ].map((step, index) => (
               <li key={step} className="flex gap-3">
