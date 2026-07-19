@@ -5,18 +5,12 @@ import { getIntegerParam, isCronAuthorized } from '@/utils/cron';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-/** Vercel Pro: up to 300s. Multi-batch weekly link audit needs the headroom. */
 export const maxDuration = 300;
 
-function getPriorityParam(searchParams) {
-  const raw = String(searchParams.get('priority') || searchParams.get('mode') || '')
-    .trim()
-    .toLowerCase();
-  if (raw === 'pending' || raw === 'new') return 'pending';
-  if (raw === 'all' || raw === 'full' || raw === 'weekly') return 'all';
-  return undefined;
-}
-
+/**
+ * Daily job: only never-checked + problem-status tools.
+ * Keeps new submissions from sitting as "Kontrol bekliyor" for days.
+ */
 async function handle(request) {
   if (!isCronAuthorized(request, { allowQuerySecret: true })) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -26,41 +20,38 @@ async function handle(request) {
 
   try {
     const report = await runScheduledLinkAudit({
-      // `limit` kept for backward compatibility → batch size
-      batchSize: getIntegerParam(searchParams, 'batchSize', { min: 1 }) ??
+      priority: 'pending',
+      batchSize:
+        getIntegerParam(searchParams, 'batchSize', { min: 1 }) ??
         getIntegerParam(searchParams, 'limit', { min: 1 }),
       maxTools: getIntegerParam(searchParams, 'maxTools', { min: 1 }),
       timeoutMs: getIntegerParam(searchParams, 'timeoutMs', { min: 1 }),
       concurrency: getIntegerParam(searchParams, 'concurrency', { min: 1 }),
-      staleDays: getIntegerParam(searchParams, 'staleDays', { min: 1 }),
       maxRuntimeMs: getIntegerParam(searchParams, 'maxRuntimeMs', { min: 1000 }),
-      priority: getPriorityParam(searchParams),
+      // pending mode ignores stale window; still accept param for symmetry
+      staleDays: getIntegerParam(searchParams, 'staleDays', { min: 1 }),
     });
 
     return NextResponse.json({
       success: true,
       message:
         report.summary.scannedCount === 0
-          ? 'Kontrol bekleyen araç yok.'
-          : `${report.summary.scannedCount} araç linki kontrol edildi.`,
+          ? 'Bekleyen yeni/problemli link yok.'
+          : `${report.summary.scannedCount} bekleyen araç linki kontrol edildi.`,
       report,
     });
   } catch (error) {
-    logger.error('Scheduled link audit failed:', error);
+    logger.error('Pending link audit failed:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Link audit failed',
+        error: error instanceof Error ? error.message : 'Pending link audit failed',
       },
       { status: 500 }
     );
   }
 }
 
-/**
- * Vercel Cron uses GET with Authorization: Bearer <CRON_SECRET>.
- * POST is allowed for manual / external schedulers.
- */
 export async function GET(request) {
   return handle(request);
 }

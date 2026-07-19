@@ -504,7 +504,7 @@
     "linkInvalidDesc": "Automated checks found a problem with the link.",
     "linkInvalidBadge": "Broken",
     "linkPendingTitle": "Link not checked yet",
-    "linkPendingDesc": "If something looks wrong, you can report the link.",
+    "linkPendingDesc": "New tools enter a daily check queue; the full catalog is re-checked weekly automatically. If something looks wrong, you can report the link.",
     "linkPendingBadge": "Pending",
     "lastChecked": "Last checked: {date}",
     "aiCategoryFallback": "AI Tool",
