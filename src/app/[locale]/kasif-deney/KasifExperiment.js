@@ -2,7 +2,37 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Bot, LoaderCircle, RotateCcw, Send, ThumbsDown, ThumbsUp, User } from 'lucide-react';
+import {
+  Bot,
+  Code2,
+  ImageIcon,
+  LoaderCircle,
+  Presentation,
+  RefreshCcw,
+  RotateCcw,
+  Send,
+  ThumbsDown,
+  ThumbsUp,
+  User,
+} from 'lucide-react';
+
+const STARTER_QUESTIONS = [
+  {
+    label: 'Sunum hazırla',
+    question: 'Ücretsiz bir sunum hazırlamak için hangi araçları kullanabilirim?',
+    icon: Presentation,
+  },
+  {
+    label: 'Görsel üret',
+    question: 'Sosyal medya için gerçekçi görseller üreten araçları karşılaştır.',
+    icon: ImageIcon,
+  },
+  {
+    label: 'Kod yaz',
+    question: 'Kodlama öğrenirken bana yardımcı olacak ücretsiz AI araçları öner.',
+    icon: Code2,
+  },
+];
 
 export default function KasifExperiment() {
   const [question, setQuestion] = useState('');
@@ -10,10 +40,15 @@ export default function KasifExperiment() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const conversationEndRef = useRef(null);
+  const questionRef = useRef(null);
+  const activeRequestRef = useRef(null);
+  const feedbackRequestsRef = useRef(new Set());
 
   useEffect(() => {
     conversationEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [turns, loading]);
+
+  useEffect(() => () => activeRequestRef.current?.abort(), []);
 
   async function submit(event) {
     event.preventDefault();
@@ -21,6 +56,8 @@ export default function KasifExperiment() {
     if (submittedQuestion.length < 3 || loading) return;
 
     const turnId = crypto.randomUUID();
+    const controller = new AbortController();
+    activeRequestRef.current = controller;
     setLoading(true);
     setQuestion('');
     setTurns((current) => [...current, { id: turnId, question: submittedQuestion }]);
@@ -29,6 +66,7 @@ export default function KasifExperiment() {
       const response = await fetch('/api/kasif/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({ question: submittedQuestion, history }),
       });
       const data = await response.json();
@@ -45,7 +83,8 @@ export default function KasifExperiment() {
           ].slice(-6)
         );
       }
-    } catch {
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
       setTurns((current) =>
         current.map((turn) =>
           turn.id === turnId
@@ -54,32 +93,74 @@ export default function KasifExperiment() {
         )
       );
     } finally {
-      setLoading(false);
+      if (activeRequestRef.current === controller) {
+        activeRequestRef.current = null;
+        setLoading(false);
+      }
     }
   }
 
   async function sendFeedback(turnId, result, value) {
-    if (!result?.interactionId) return;
-    const response = await fetch('/api/kasif/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        interactionId: result.interactionId,
-        feedbackToken: result.feedbackToken,
-        feedback: value,
-      }),
-    });
-    if (response.ok) {
+    if (!result?.interactionId || feedbackRequestsRef.current.has(turnId)) return;
+    feedbackRequestsRef.current.add(turnId);
+    setTurns((current) =>
+      current.map((turn) =>
+        turn.id === turnId ? { ...turn, feedbackStatus: 'sending', feedbackError: null } : turn
+      )
+    );
+
+    try {
+      const response = await fetch('/api/kasif/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interactionId: result.interactionId,
+          feedbackToken: result.feedbackToken,
+          feedback: value,
+        }),
+      });
+      if (!response.ok) throw new Error('KASIF_FEEDBACK_FAILED');
       setTurns((current) =>
-        current.map((turn) => (turn.id === turnId ? { ...turn, feedback: value } : turn))
+        current.map((turn) =>
+          turn.id === turnId
+            ? { ...turn, feedback: value, feedbackStatus: 'saved', feedbackError: null }
+            : turn
+        )
       );
+    } catch {
+      setTurns((current) =>
+        current.map((turn) =>
+          turn.id === turnId
+            ? {
+                ...turn,
+                feedbackStatus: 'error',
+                feedbackError: 'Geri bildirim kaydedilemedi. Lütfen tekrar deneyin.',
+              }
+            : turn
+        )
+      );
+    } finally {
+      feedbackRequestsRef.current.delete(turnId);
     }
   }
 
   function resetConversation() {
+    activeRequestRef.current?.abort();
+    activeRequestRef.current = null;
+    setLoading(false);
     setTurns([]);
     setHistory([]);
     setQuestion('');
+  }
+
+  function chooseStarterQuestion(starterQuestion) {
+    setQuestion(starterQuestion);
+    requestAnimationFrame(() => questionRef.current?.focus());
+  }
+
+  function retryQuestion(failedQuestion) {
+    setQuestion(failedQuestion);
+    requestAnimationFrame(() => questionRef.current?.focus());
   }
 
   return (
@@ -105,8 +186,35 @@ export default function KasifExperiment() {
         )}
       </header>
 
+      {turns.length === 0 && (
+        <section
+          aria-labelledby="kasif-starters-heading"
+          className="rounded-2xl border bg-card p-4"
+        >
+          <h2 id="kasif-starters-heading" className="text-sm font-semibold">
+            Nereden başlamak istersin?
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Bir örnek seçebilir veya ihtiyacını aşağıya kendi cümlelerinle yazabilirsin.
+          </p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {STARTER_QUESTIONS.map(({ label, question: starterQuestion, icon: Icon }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => chooseStarterQuestion(starterQuestion)}
+                className="flex min-h-12 items-center gap-2 rounded-xl border bg-background px-3 py-2 text-left text-sm font-medium transition-colors hover:border-primary/50 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {turns.length > 0 && (
-        <section aria-label="Kâşif konuşması" className="space-y-5">
+        <section aria-label="Kâşif konuşması" aria-live="polite" className="space-y-5">
           {turns.map((turn) => (
             <div key={turn.id} className="space-y-3">
               <div className="ml-auto flex max-w-[85%] items-start justify-end gap-2">
@@ -125,7 +233,19 @@ export default function KasifExperiment() {
                   </span>
                   <div className="min-w-0 flex-1 rounded-md border bg-card p-4">
                     {turn.result.error ? (
-                      <p className="text-sm text-destructive">{turn.result.error}</p>
+                      <div>
+                        <p role="alert" className="text-sm text-destructive">
+                          {turn.result.error}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => retryQuestion(turn.question)}
+                          className="mt-3 inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
+                        >
+                          <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+                          Yeniden dene
+                        </button>
+                      </div>
                     ) : (
                       <>
                         <p className="whitespace-pre-wrap text-sm leading-6">
@@ -158,7 +278,7 @@ export default function KasifExperiment() {
                             <button
                               type="button"
                               onClick={() => sendFeedback(turn.id, turn.result, 1)}
-                              disabled={turn.feedback != null}
+                              disabled={turn.feedback != null || turn.feedbackStatus === 'sending'}
                               aria-label="Faydalı"
                               title="Faydalı"
                               className="rounded-md border p-1.5 disabled:opacity-50"
@@ -168,7 +288,7 @@ export default function KasifExperiment() {
                             <button
                               type="button"
                               onClick={() => sendFeedback(turn.id, turn.result, -1)}
-                              disabled={turn.feedback != null}
+                              disabled={turn.feedback != null || turn.feedbackStatus === 'sending'}
                               aria-label="Faydalı değil"
                               title="Faydalı değil"
                               className="rounded-md border p-1.5 disabled:opacity-50"
@@ -178,6 +298,16 @@ export default function KasifExperiment() {
                             {turn.feedback != null && (
                               <span className="text-xs text-muted-foreground">Kaydedildi</span>
                             )}
+                            {turn.feedbackStatus === 'sending' && (
+                              <span role="status" className="text-xs text-muted-foreground">
+                                Kaydediliyor…
+                              </span>
+                            )}
+                            {turn.feedbackError && (
+                              <span role="alert" className="basis-full text-xs text-destructive">
+                                {turn.feedbackError}
+                              </span>
+                            )}
                           </div>
                         )}
                       </>
@@ -185,7 +315,10 @@ export default function KasifExperiment() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div
+                  role="status"
+                  className="flex items-center gap-2 text-sm text-muted-foreground"
+                >
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                   Kâşif düşünüyor
                 </div>
@@ -205,6 +338,7 @@ export default function KasifExperiment() {
         </label>
         <textarea
           id="kasif-question"
+          ref={questionRef}
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
           onKeyDown={(event) => {
