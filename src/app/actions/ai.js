@@ -14,6 +14,10 @@ import {
   getKasifRecommendations,
 } from '@/lib/kasif/integrations';
 
+function isKasifDisabled(error) {
+  return error instanceof Error && error.message === 'KASIF_DISABLED';
+}
+
 export async function getEmbedding(text) {
   try {
     return await embedGeminiText(text);
@@ -67,6 +71,9 @@ export async function getAiRecommendation(userPrompt) {
     return { success: true, data: recommendations };
   } catch (error) {
     logger.error('Kâşif tavsiye entegrasyonu hatası:', error);
+    if (isKasifDisabled(error)) {
+      return { success: false, error: 'Kâşif şu anda etkin değil.' };
+    }
     return { success: false, error: 'Kâşif tavsiye üretirken beklenmedik bir hata oluştu.' };
   }
 }
@@ -242,11 +249,22 @@ export async function getAiComparison(tools) {
     return { error: 'Lütfen karşılaştırmak için en az 2 araç seçin.' };
   }
 
+  const rateLimit = await enforceRateLimit('kasif-comparison', {
+    limit: 12,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return {
+      error: `Çok sık karşılaştırma istediniz. ${rateLimit.retryAfterSeconds} saniye sonra tekrar deneyin.`,
+    };
+  }
+
   try {
     const data = await compareSelectedToolsWithKasif(tools.map((tool) => tool?.slug));
     return { success: true, data };
   } catch (error) {
     logger.error('Kâşif karşılaştırma entegrasyonu hatası:', error);
+    if (isKasifDisabled(error)) return { error: 'Kâşif şu anda etkin değil.' };
     return { error: 'Kâşif karşılaştırma verilerini doğrulayamadı.' };
   }
 }
@@ -1004,12 +1022,24 @@ export async function getAdvancedVoiceAgentResponse(userQuery, history) {
   'use server';
   const question = String(userQuery || '').trim();
   if (!question) return { error: 'Sorgu boş olamaz.' };
+  if (question.length > 800) return { error: 'Sorgu en fazla 800 karakter olabilir.' };
+
+  const rateLimit = await enforceRateLimit('kasif-voice', {
+    limit: 12,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return {
+      error: `Çok sık Kâşif isteği gönderdiniz. ${rateLimit.retryAfterSeconds} saniye sonra tekrar deneyin.`,
+    };
+  }
 
   try {
     const data = await getKasifAssistantAnswer(question, history);
     return { success: true, data };
   } catch (error) {
     logger.error('Kâşif sesli asistan entegrasyonu hatası:', error);
+    if (isKasifDisabled(error)) return { error: 'Kâşif şu anda etkin değil.' };
     return { error: 'Kâşif yanıt üretirken beklenmedik bir hata oluştu.' };
   }
 }
@@ -1111,12 +1141,24 @@ export async function getAiConciergeResponse(userQuery, history) {
   'use server';
   const question = String(userQuery || '').trim();
   if (!question) return { error: 'Sorgu boş olamaz.' };
+  if (question.length > 800) return { error: 'Sorgu en fazla 800 karakter olabilir.' };
+
+  const rateLimit = await enforceRateLimit('kasif-concierge', {
+    limit: 12,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return {
+      error: `Çok sık Kâşif isteği gönderdiniz. ${rateLimit.retryAfterSeconds} saniye sonra tekrar deneyin.`,
+    };
+  }
 
   try {
     const data = await getKasifAssistantAnswer(question, history);
     return { success: true, data };
   } catch (error) {
     logger.error('Kâşif konsiyerj entegrasyonu hatası:', error);
+    if (isKasifDisabled(error)) return { error: 'Kâşif şu anda etkin değil.' };
     return { error: 'Kâşif yanıt üretirken beklenmedik bir hata oluştu.' };
   }
 }
