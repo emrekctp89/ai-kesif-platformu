@@ -13,7 +13,6 @@
     "myTools": "Araçlarım",
     "learn": "Öğren",
     "aiRecommend": "AI Tavsiye",
-    "kasif": "Kâşif",
     "workmind": "Workmind (Beta)",
     "leaderboard": "Liderlik",
     "randomTools": "Rastgele",
@@ -42,145 +41,7 @@
     "mobileNavTitle": "Ana menü",
     "mobileNavDescription": "Site bölümleri arasında gezinin.",
     "openMenu": "Menüyü aç",
-    "upgradePro": "Pro'ya yükselt",
-    "profileSettings": "Profilim & Ayarlar",
-    "signOut": "Çıkış Yap",
-    "communityPanelToggle": "Topluluk menüsü",
-    "communityPanelToggleHint": "Akış, liderlik, eserler ve yarışmaları profil menüsünde göster.",
-    "contentStudio": "İçerik stüdyosu"
-  },
-  "ContentStudio": {
-    "metaTitle": "İçerik stüdyosu",
-    "metaDescription": "Onaylı üreticiler için blog ve rehber taslak alanı.",
-    "heroChip": "İçerik üretimi",
-    "title": "İçerik stüdyosu",
-    "subtitle": "Blog yazısı veya rehber taslağı oluştur, kaydet ve admin incelemesine gönder. Yayın yalnızca onay sonrası yapılır.",
-    "lockedTitle": "İçerik üreticisi ol",
-    "lockedBody": "İçerik stüdyosu, platforma katkı sunan ve itibar eşiğini geçen üyelere açıktır. Aşağıdaki şartları tamamla, ardından başvurunu gönder.",
-    "greetingUser": "Merhaba {name}",
-    "reqBadge": "Başvuru şartı",
-    "reqMet": "Tamam",
-    "reqNotMet": "Eksik",
-    "reqReputationHeadline": "En az {min} itibar puanı gerekir",
-    "yourReputation": "Senin itibar puanın",
-    "progressComplete": "Eşik aşıldı",
-    "progressRemaining": "{count} puan kaldı",
-    "progressCallout": "Başvuru açmak için {remaining} itibar puanı daha kazanman gerekiyor (hedef {min}). Aşağıdaki yol haritasıyla hemen başla.",
-    "progressReady": "İtibar eşiğini geçtin. Aşağıdan başvuru formunu doldurabilirsin.",
-    "requirementsHeading": "Başvuru şartları",
-    "reqAccountTitle": "Kayıtlı üyelik",
-    "reqAccountBody": "Giriş yapmış bir hesapla başvuruyorsun.",
-    "reqReputationTitle": "{min} itibar puanı",
-    "reqReputationBody": "Şu an {current} / {min} puan. Kalan: {remaining}.",
-    "reqPitchTitle": "Kısa başvuru metni",
-    "reqPitchBody": "Ne tür içerik üretmek istediğini 20+ karakterle anlat.",
-    "roadmapHeading": "İtibar yol haritası",
-    "roadmapSubheading": "Net puanlar ve doğrudan linkler. Hızlı kazanmak için günlük görevlerden başla.",
-    "pointsUnit": "puan",
-    "dailyQuestsHeading": "Bugünün görevleri",
-    "dailyQuestsSubheading": "Tamamladıkça itibar anında artar. Açık görevler en hızlı yoldur.",
-    "dailyQuestsAvailable": "Bugün alınabilir: +{count}",
-    "questProjection": "Açık görevlerden +{available} puan alırsan toplamın ≈ {projected} olur. {unlock}",
-    "questProjectionUnlock": "Bu, başvuru eşiğini açmaya yeter!",
-    "questProjectionPartial": "Eşiğe biraz daha yaklaşırsın.",
-    "questDone": "Tamamlandı",
-    "questPrimaryCta": "Sıradaki görevi tamamla",
-    "questCtaRate": "Araç puanla",
-    "questCtaComment": "Yorum yaz",
-    "questCtaFavorite": "Öne çıkanı favorile",
-    "questCtaVisit": "Araçları gez",
-    "questCtaFollow": "Birini takip et",
-    "questCtaDefault": "Tamamla",
-    "awardRate": "Araç puanı",
-    "awardComment": "Yorum",
-    "awardPrompt": "Prompt paylaşımı",
-    "awardSubmit": "Onaylı araç önerisi",
-    "roadQuestsTitle": "Günlük görevleri bitir",
-    "roadQuestsBody": "Profildeki görevler tek seferde +5 ile +20 puan arasında ödül verir.",
-    "roadQuestsCta": "Görevlere git",
-    "roadRateTitle": "Araçlara puan ver",
-    "roadRateBody": "Her araç değerlendirmesi +1 itibar puanı kazandırır.",
-    "roadRateCta": "Araçlara git",
-    "roadCommentTitle": "Yorum yaz",
-    "roadCommentBody": "Araç sayfalarında yorum başına +2 puan.",
-    "roadCommentCta": "Keşfetmeye başla",
-    "roadSubmitTitle": "Yeni araç öner",
-    "roadSubmitBody": "Önerin onaylanırsa +25 puan — eşiği tek seferde aşabilirsin.",
-    "roadSubmitCta": "Araç öner",
-    "roadPromptTitle": "Prompt paylaş",
-    "roadPromptBody": "Yeni prompt gönderimi +10 puan.",
-    "roadPromptCta": "Araçlarda dene",
-    "roadLearnTitle": "Öğren ve hazırlan",
-    "roadLearnBody": "Puan getirmez ama üretici olduğunda daha iyi içerik yazmana yardım eder.",
-    "roadLearnCta": "Öğrenme merkezi",
-    "roadmapPrimaryCta": "Puan kazanmaya başla",
-    "roadmapProfileCta": "Profil & görevler",
-    "applySectionHeading": "Başvurunu gönder",
-    "applySectionReady": "Şartlar tamam. Kısa tanıtımını yaz ve başvur.",
-    "applySectionLocked": "İtibar eşiği dolunca form burada açılır.",
-    "applyFormLocked": "Form kilitli: {remaining} puan daha lazım (hedef {min}). Yol haritasından ilerle, sonra buraya dön.",
-    "ctaBlog": "Blog",
-    "ctaLearn": "Öğrenme merkezi",
-    "newDraftTitle": "Yeni taslak",
-    "titleLabel": "Başlık",
-    "titlePlaceholder": "Örn. 2026’da en iyi görsel AI araçları",
-    "typeLabel": "Tip",
-    "typePost": "Yazı",
-    "typeGuide": "Rehber",
-    "createDraft": "Taslak oluştur",
-    "myPostsHeading": "Yazılarım",
-    "emptyPosts": "Henüz taslağın yok. Yukarıdan ilk yazını oluştur.",
-    "updatedAt": "Güncellendi: {date}",
-    "reviewNote": "Admin notu",
-    "edit": "Düzenle",
-    "backToStudio": "Stüdyoya dön",
-    "editTitle": "Taslağı düzenle",
-    "applyPitchLabel": "Neden içerik üretmek istiyorsun?",
-    "applyPitchPlaceholder": "Örn. AI araçları üzerine rehber yazıyorum, blog için haftalık özet hazırlayabilirim…",
-    "applySubmit": "Üretici olmak için başvur",
-    "applySubmitting": "Gönderiliyor…",
-    "applyPending": "Başvurun incelemede. Onaylandığında bildirim alacaksın.",
-    "applyReputationHint": "Başvuru için yaklaşık {min} itibar puanı gerekir. Yorum, favori ve katkılarla puan kazanabilirsin.",
-    "statTotal": "Toplam",
-    "statDraft": "Taslak",
-    "statReview": "İncelemede",
-    "statPublished": "Yayında",
-    "statRejected": "Reddedildi",
-    "filterAll": "Tümü",
-    "filterAria": "Yazı durumu filtresi",
-    "emptyFiltered": "Bu filtrede yazı yok.",
-    "viewLive": "Canlıda gör",
-    "editOrWithdraw": "Düzenle / geri çek",
-    "preview": "Önizle",
-    "previewMetaTitle": "Yazı önizleme",
-    "previewMetaDescription": "Taslak yazı önizlemesi (yalnızca üretici).",
-    "previewBadge": "Önizleme",
-    "previewHint": "Bu görünüm yalnızca sana özel; yayınlanmadan blogda görünmez.",
-    "previewPrivateNote": "Özel önizleme — ziyaretçiler bu URL’yi göremez / arama motorlarına kapalı.",
-    "previewEmptyContent": "_Henüz içerik yazılmamış._",
-    "delete": "Sil",
-    "deleteConfirmTitle": "Taslağı sil?",
-    "deleteConfirmBody": "Bu işlem geri alınamaz. Taslak ve ilişkili etiketler silinir. Yayınlanmış yazılar silinemez.",
-    "deleteCancel": "Vazgeç",
-    "deleteConfirmAction": "Evet, sil"
-  },
-  "SoftLanding": {
-    "heroChip": "Geçici olarak pasif",
-    "title": "{feature} şu an öne çıkarılmıyor",
-    "subtitle": "{feature} bölümünü sade bir akış için geçici olarak menüden ve ana keşiften aldık.",
-    "body": "İçerik kaybolmadı; yeniden açıldığında burada olacak. Şimdilik Öğren, Workmind, Blog ve Araştırma üzerinden devam edebilirsin.",
-    "metaTitle": "{feature} (geçici pasif)",
-    "metaDescription": "{feature} bölümü geçici olarak pasif. Öğrenme merkezi, Workmind, blog ve araştırma ile keşfe devam et.",
-    "hubsHeading": "Şimdi buradan devam et",
-    "hubsSubheading": "Ana akışta öne çıkardığımız alanlar.",
-    "hubLearnBody": "Rotalar, rehberler ve pratik başlangıç adımları.",
-    "hubWorkmindBody": "AI iş akışı oluşturucu (beta).",
-    "hubBlogBody": "Güncel yazılar ve rehberler.",
-    "hubResearchBody": "Bilimsel makaleler ve akademik kaynaklar.",
-    "hubRecommendBody": "İhtiyacına göre doğru aracı bul.",
-    "hubCategoriesBody": "Katalogu kategoriye göre tara.",
-    "hubCta": "Git",
-    "footnote": "Doğrudan bağlantı: {path}"
+    "upgradePro": "Pro'ya yükselt"
   },
   "BlogPost": {
     "publishedOn": "Yayınlanma tarihi: {date}",
@@ -189,13 +50,7 @@
     "postBadge": "Yazı",
     "relatedCta": "Daha fazla yazı",
     "shareHint": "Bu yazıyı paylaşmak için sayfa adresini kopyalayabilirsin.",
-    "readTime": "Yaklaşık {minutes} dk okuma",
-    "ctaLearn": "Öğrenme merkezi",
-    "ctaResearch": "Araştırma",
-    "ctaCreate": "İçerik üret",
-    "defaultAuthor": "AI Keşif",
-    "relatedHeading": "İlgini çekebilir",
-    "readMore": "Oku"
+    "readTime": "Yaklaşık {minutes} dk okuma"
   },
   "LeaderboardPage": {
     "metaTitle": "Liderlik Tablosu",
@@ -289,46 +144,18 @@
   },
   "Blog": {
     "metaTitle": "Blog",
-    "metaDescription": "Yapay zeka dünyasındaki en son haberler, makaleler, rehberler ve araç incelemeleri. Öğrenme merkezi ve araştırma portalıyla bağlantılı içerikler.",
-    "heroChip": "Blog & rehberler",
+    "metaDescription": "Yapay zeka dünyasındaki en son haberler, makaleler ve araç incelemeleri.",
+    "heroChip": "Blog & haberler",
     "title": "Blog & Haberler",
-    "subtitle": "Güncel AI gelişmeleri, pratik rehberler ve araç incelemeleri. Okuduklarını Öğrenme merkezi ve araştırma portalıyla birleştir.",
+    "subtitle": "Yapay zeka dünyasından en son gelişmeler, derinlemesine analizler ve araç incelemeleri.",
     "statsPosts": "{count} yazı",
-    "statsGuides": "{count} rehber",
-    "statsArticles": "{count} makale",
     "emptyTitle": "Henüz yazı yok",
     "emptyBody": "Yayınlanmış bir yazı bulunmuyor. Öğrenme merkezi ve araç kataloguna göz atabilirsin.",
     "readMore": "Devamını oku",
     "guideBadge": "Rehber",
     "postBadge": "Yazı",
-    "featuredBadge": "Öne çıkan",
-    "filterAll": "Tümü",
-    "filterGuides": "Rehberler",
-    "filterPosts": "Yazılar",
-    "filterAria": "Yazı filtreleri",
-    "searchPlaceholder": "Yazı veya rehber ara…",
-    "resultsCount": "{count} sonuç",
-    "noResultsTitle": "Sonuç bulunamadı",
-    "noResultsBody": "Arama veya filtreyi daralttın. Filtreleri temizleyip tekrar dene.",
-    "clearFilters": "Filtreleri temizle",
     "ctaLearn": "Öğrenme merkezi",
-    "ctaResearch": "Araştırma",
-    "ctaTools": "Araçları keşfet",
-    "hubsHeading": "Okumaya devam et",
-    "hubsSubheading": "Blog tek başına değil — öğrenme ve araştırma ile aynı akışta.",
-    "hubLearnTitle": "Öğrenme merkezi",
-    "hubLearnBody": "Kategori rotaları, rehberler ve pratik başlangıç adımları.",
-    "hubResearchTitle": "Araştırma portalı",
-    "hubResearchBody": "Bilimsel makaleler ve akademik arka plan.",
-    "hubRecommendTitle": "AI Tavsiye",
-    "hubRecommendBody": "İhtiyacına göre doğru aracı saniyeler içinde bul.",
-    "hubCta": "Git",
-    "byAuthor": "Yazar:",
-    "defaultAuthor": "AI Keşif",
-    "filterCategory": "Kategori",
-    "filterCategoryAll": "Tüm kategoriler",
-    "filterTag": "Etiket",
-    "filterTagAll": "Tüm etiketler"
+    "ctaTools": "Araçları keşfet"
   },
   "Community": {
     "metaTitle": "Topluluk",
@@ -370,7 +197,7 @@
     "metaDescriptionNamed": "{names} yapay zeka araçlarını özelliklerine, fiyatlarına ve puanlarına göre yan yana karşılaştırın.",
     "heroChip": "Karşılaştırma arenası",
     "title": "AI Karşılaştırma Arenası",
-    "subtitle": "Karşılaştırmak istediğiniz araçları seçin; özellikleri, puanları ve Kâşif'in kayıt temelli analizini görün.",
+    "subtitle": "Karşılaştırmak istediğiniz araçları seçin ve özelliklerini, puanlarını ve yapay zekanın analizini görün.",
     "selectPlaceholder": "Karşılaştırmak için araç seçin...",
     "searchPlaceholder": "Araç ara...",
     "notFound": "Araç bulunamadı.",
@@ -393,10 +220,10 @@
     "votes": "{count} oy",
     "viewDetails": "Detay",
     "visitSite": "Site",
-    "aiButton": "Kâşif ile karşılaştır",
-    "aiAnalyzing": "Kâşif karşılaştırıyor…",
+    "aiButton": "Bu araçları yapay zekaya karşılaştır",
+    "aiAnalyzing": "Analiz ediliyor…",
     "aiNeedTwo": "Lütfen karşılaştırmak için en az 2 araç seçin.",
-    "aiTitle": "Kâşif analizi",
+    "aiTitle": "Yapay zeka analizi",
     "aiBestFor": "En iyisi",
     "aiPros": "Artıları",
     "aiCons": "Eksileri",
@@ -471,7 +298,6 @@
     "openTool": "Aracı aç",
     "sidebarBetaNote": "Öneriler otomatik ve deneme amaçlıdır; her zaman en iyi eşleşme olmayabilir."
   },
-
   "Learn": {
     "metaTitle": "Öğren — AI Öğrenme Merkezi",
     "metaDescription": "Kategori bazlı öğrenme rotaları, platform kullanımı ve uygulamalı rehberlerle yapay zeka araçlarında ustalaş.",
@@ -536,9 +362,11 @@
     "ctaBandBody": "Bir kategoriye gir, 2 araç dene, birini favorile. Öğrenme böyle başlar.",
     "emptyTitle": "İçerik hazırlanıyor",
     "emptyBody": "Öğrenme merkezi yakında rehberler ve yollarla dolacak. Bu arada araçları keşfetmeye devam edebilirsin.",
-    "browseTools": "Araçları keşfet"
+    "browseTools": "Araçları keşfet",
+    "betaBadge": "Beta",
+    "betaTitle": "Geliştirme Aşamasında",
+    "betaBody": "Öğrenme merkezi henüz deneme (beta) aşamasındadır. Rotalar ve önerilen araçlar sürekli güncellenmektedir."
   },
-
   "Hero": {
     "title": "AI Araçlarını Keşfet",
     "subtitle": "Yapay zeka ekosistemindeki en iyi araçları bulun, inceleyin ve karşılaştırın."
@@ -751,7 +579,6 @@
     "altColActions": "İşlem",
     "altCurrent": "Bu araç"
   },
-
   "Pricing": {
     "free": "Ücretsiz",
     "freemium": "Freemium",
@@ -762,7 +589,6 @@
     "credits": "Kredi",
     "oneTime": "Tek seferlik"
   },
-
   "AboutPage": {
     "metaTitle": "Hakkımızda",
     "metaDescription": "AI Keşif Platformu'nun misyonu, vizyonu ve hikayesi.",
@@ -783,7 +609,6 @@
     "ctaDiscover": "Araçları keşfet",
     "ctaContact": "Bize ulaşın"
   },
-
   "ContactPage": {
     "metaTitle": "İletişim",
     "metaDescription": "Soru, öneri veya geri bildirimleriniz için AI Keşif Platformu ekibiyle iletişime geçin.",
@@ -804,7 +629,6 @@
     "send": "Mesajı gönder",
     "ctaFeedback": "Hızlı geri bildirim"
   },
-
   "PrivacyPage": {
     "metaTitle": "Gizlilik Politikası",
     "metaDescription": "AI Keşif Platformu olarak gizliliğinize nasıl saygı duyduğumuzu ve verilerinizi nasıl koruduğumuzu öğrenin.",
@@ -821,7 +645,6 @@
     "sectionCookiesBody": "Sitemiz, kullanıcı oturumlarını yönetmek ve tema tercihlerinizi hatırlamak gibi temel işlevler için gerekli olan çerezleri kullanır. Bu çerezler kişisel veri toplamaz.",
     "ctaContact": "Sorunuz mu var?"
   },
-
   "TermsPage": {
     "metaTitle": "Kullanım Koşulları",
     "metaDescription": "AI Keşif Platformu'nu kullanarak kabul ettiğiniz şartlar ve koşullar.",
@@ -838,7 +661,6 @@
     "section4Body": "AI Keşif Platformu, listelenen araçların kullanımı veya performansından kaynaklanabilecek herhangi bir zarardan sorumlu tutulamaz. Platform “olduğu gibi” sunulmaktadır ve doğruluğu veya kesintisiz çalışacağı garanti edilmez.",
     "ctaPrivacy": "Gizlilik politikası"
   },
-
   "MembershipPage": {
     "metaTitle": "Pro üyelik",
     "metaDescription": "Pro ile AI İçerik Stüdyosu, Pro araçlar, özel rozet ve platformun tam gücünü kullanın.",
@@ -927,7 +749,6 @@
     "errorBanner": "Ödeme sırasında bir sorun oluştu. Lütfen tekrar deneyin.",
     "loginRequired": "Pro’ya yükseltmek için giriş yapmalısınız."
   },
-
   "LaunchpadPage": {
     "metaTitle": "AI Launchpad",
     "metaDescription": "Yapay zeka dünyasındaki en yeni ve en heyecan verici araç lansmanlarını keşfedin, oylayın ve ilk deneyenlerden olun.",
@@ -942,7 +763,6 @@
     "statsToday": "{count} bugün",
     "statsWeek": "{count} bu hafta"
   },
-
   "LaunchpadSubmitPage": {
     "metaTitle": "Yeni Lansman",
     "metaDescription": "Yapay zeka aracınızı topluluğa duyurun ve ilk geri bildirimleri alın.",
@@ -952,7 +772,6 @@
     "loginRequired": "Lansman yapmak için giriş yapmalısınız.",
     "back": "Launchpad’e dön"
   },
-
   "ChallengePage": {
     "metaTitle": "Haftalık Yarışma",
     "metaDescription": "Topluluğun katıldığı haftalık yaratıcılık yarışmalarını keşfedin ve en iyi eserlere oy verin.",
@@ -992,7 +811,6 @@
     "noImage": "Görsel yok",
     "voteAria": "{title} eserine oy ver"
   },
-
   "BountiesPage": {
     "metaTitle": "Ödül Avcılığı",
     "metaDescription": "Topluluğun yardımıyla ihtiyacınız olan yapay zeka aracını bulun ve katkıda bulunanları ödüllendirin.",
@@ -1024,7 +842,6 @@
     "ctaSubmitTool": "Araç öner",
     "ctaBrowseCategories": "Kategorileri keşfet"
   },
-
   "BountyDetailPage": {
     "metaTitle": "Ödül detayı",
     "metaDescription": "Ödül ilanı detayları ve topluluk önerileri.",
@@ -1038,56 +855,26 @@
     "submissionsHeading": "Öneriler",
     "submissionsSubheading": "Topluluğun bu ilan için gönderdiği araçlar"
   },
-
   "ResearchPage": {
     "metaTitle": "Araştırma Portalı",
-    "metaDescription": "Yapay zeka alanındaki bilimsel makaleler, yazarlar ve kurumlar. Blog ve öğrenme merkeziyle bağlantılı akademik keşif.",
+    "metaDescription": "Yapay zeka alanındaki en son bilimsel makaleleri, araştırmaları ve öncü akademisyenleri keşfedin.",
     "heroChip": "Akademi",
     "title": "Araştırma portalı",
-    "subtitle": "Yapay zekanın bilimsel temellerini keşfedin. Makaleleri tarayın, yazarları görün ve pratik içeriklere geçin.",
+    "subtitle": "Yapay zekanın bilimsel temellerini keşfedin. En son makaleler, araştırmalar ve daha fazlası.",
     "emptyTitle": "Henüz makale yok",
-    "emptyBody": "Yayınlanmış akademik makale bulunmuyor. Blog ve öğrenme merkeziyle keşfe devam edebilirsin.",
+    "emptyBody": "Yayınlanmış akademik makale bulunmuyor. Yeni içerikler eklendikçe burada listelenecek.",
     "statsPapers": "{count} makale",
-    "statsAuthors": "{count} yazar",
     "authors": "Yazarlar",
     "institutions": "Kurumlar",
-    "authorCount": "{count} yazar",
-    "paperBadge": "Makale",
-    "untitledPaper": "Başlıksız makale",
-    "resultsCount": "{count} sonuç",
-    "noResultsTitle": "Sonuç bulunamadı",
-    "noResultsBody": "Arama terimini sadeleştirip tekrar dene.",
-    "clearSearch": "Aramayı temizle",
-    "listHeading": "Yayınlar",
-    "listSubheading": "Başlık, özet, yazar veya kurum adına göre ara.",
-    "pillarsHeading": "Bu portal ne sunar?",
-    "pillar1Title": "Bilimsel kaynak",
-    "pillar1Body": "Araçların arkasındaki akademik çalışmalar ve özetler tek yerde.",
-    "pillar2Title": "Yazar & kurum",
-    "pillar2Body": "Kim çalışmış, hangi kurumdan gelmiş — bağlamı kaçırma.",
-    "pillar3Title": "Pratiğe köprü",
-    "pillar3Body": "Makaleden blog rehberine ve öğrenme rotalarına hızlı geçiş.",
-    "ctaBlog": "Blog",
-    "ctaLearn": "Öğrenme merkezi",
-    "hubsHeading": "İlgili alanlar",
-    "hubsSubheading": "Araştırma, blog ve öğrenme aynı keşif akışının parçası.",
-    "hubBlogTitle": "Blog & rehberler",
-    "hubBlogBody": "Güncel yazılar ve uygulanabilir rehberler.",
-    "hubLearnTitle": "Öğrenme merkezi",
-    "hubLearnBody": "Kategori rotaları ve pratik başlangıç yolları.",
-    "hubRecommendTitle": "AI Tavsiye",
-    "hubRecommendBody": "Araştırma okuduktan sonra doğru araca geç.",
-    "hubCta": "Git",
     "emptyToolTitle": "Akademik arka plan bulunamadı",
     "emptyToolBody": "Bu araçla ilişkili bir bilimsel makale henüz eklenmemiş.",
-    "readFullPaper": "Makalenin tamamını oku",
+    "readFullPaper": "Makalenin tamamını oku →",
     "selectPapers": "Yayınlarınızı seçin…",
-    "searchPapers": "Makale, yazar veya kurum ara…",
+    "searchPapers": "Makale ara…",
     "paperNotFound": "Makale bulunamadı.",
     "savePapers": "Yayınları kaydet",
     "savingPapers": "Kaydediliyor…"
   },
-
   "FeedbackPage": {
     "metaTitle": "Geri Bildirim",
     "metaDescription": "Platformla ilgili görüşlerinizi AI Keşif ekibiyle paylaşın.",
@@ -1096,7 +883,6 @@
     "subtitle": "Platformla ilgili görüşlerinizi bizimle paylaşın. Her öneri ürünü daha iyi hale getirir.",
     "ctaContact": "İletişim formu"
   },
-
   "ActivityFeedPage": {
     "metaTitle": "Akış",
     "metaDescription": "Takip ettiğiniz kişilerin ve topluluğun en son aktivitelerini, favorilerini, yorumlarını ve eserlerini keşfedin.",
@@ -1147,7 +933,6 @@
     "avatarAlt": "Kullanıcı",
     "showcasePreviewAlt": "Eser önizlemesi"
   },
-
   "StudioPage": {
     "metaTitle": "AI İçerik Stüdyosu",
     "metaDescription": "Yapay zeka modellerini kullanarak kendi metinlerinizi ve görsellerinizi yaratın.",
@@ -1157,7 +942,6 @@
     "loginRequired": "AI Stüdyosunu kullanmak için giriş yapmalısınız.",
     "proRequired": "AI Stüdyosunu kullanmak için Pro üyeliğe yükseltmelisiniz."
   },
-
   "CategoryDetail": {
     "toolsSuffix": "Araçları",
     "breadcrumbHome": "Ana Sayfa",
@@ -1169,7 +953,6 @@
     "ctaAllCategories": "Tüm kategoriler",
     "ctaCompare": "Karşılaştır"
   },
-
   "ProfilePage": {
     "metaTitle": "{name} profili",
     "metaDescription": "{name} kullanıcısının AI Keşif Platformu’ndaki katkıları.",
@@ -1187,7 +970,6 @@
     "emptyActivity": "Bu kullanıcının henüz herkese açık bir aktivitesi yok.",
     "ctaCommunity": "Topluluğu keşfet"
   },
-
   "FollowListPage": {
     "followersTitle": "{name} kullanıcısının takipçileri",
     "followingTitle": "{name} kullanıcısının takip ettikleri",
@@ -1196,7 +978,6 @@
     "emptyFollowing": "Henüz kimse takip edilmiyor.",
     "statsCount": "{count} kişi"
   },
-
   "DeveloperPage": {
     "metaTitle": "Geliştirici Portalı",
     "metaDescription": "API anahtarlarınızı oluşturun ve yönetin. AI Keşif verilerine programatik erişim.",
@@ -1206,7 +987,6 @@
     "loginRequired": "Geliştirici portalını kullanmak için giriş yapmalısınız.",
     "docsHint": "Anahtarları güvenli saklayın; rate limit ve kullanım politikalarına uyun."
   },
-
   "NotFoundPage": {
     "metaTitle": "Sayfa bulunamadı",
     "metaDescription": "Aradığınız sayfa bulunamadı. Ana sayfaya dönün veya keşfet sayfasını ziyaret edin.",
@@ -1224,7 +1004,6 @@
     "helpLink": "İletişim sayfasını",
     "helpSuffix": "ziyaret edin."
   },
-
   "MessagesPage": {
     "title": "Sohbetlerinizi görüntüleyin",
     "body": "Başlamak için soldaki menüden bir sohbet seçin veya bir kullanıcının profilinden yeni bir sohbet başlatın.",
@@ -1234,7 +1013,6 @@
     "emptySidebar": "Henüz sohbet yok. Bir profil üzerinden mesaj başlatabilirsin.",
     "loginRequired": "Mesajları görmek için giriş yapmalısınız."
   },
-
   "Auth": {
     "emailLabel": "E-posta",
     "emailPlaceholder": "ornek@mail.com",
@@ -1303,7 +1081,6 @@
     "ssoUnexpected": "Giriş yapılırken beklenmeyen bir hata oluştu.",
     "formLoading": "Form yükleniyor…"
   },
-
   "ProfilePanel": {
     "metaTitle": "Profilim",
     "metaDescription": "Profil ayarları, koleksiyonlar, eserler ve favori araçlarınızı yönetin.",
@@ -1327,7 +1104,6 @@
     "dangerTitle": "Tehlikeli bölge",
     "dangerBody": "Hesabınızı ve tüm verilerinizi kalıcı olarak silin."
   },
-
   "AdminOps": {
     "metaTitle": "Operasyon Merkezi",
     "heroChip": "Yönetim",
@@ -1373,7 +1149,6 @@
     "errorTitle": "Admin paneli hatası",
     "errorMessage": "Yönetim paneli yüklenirken veya veriler alınırken bir sorun oluştu."
   },
-
   "AdminDashboard": {
     "metaTitle": "Admin Dashboard",
     "heroChip": "Yönetim",
@@ -1401,7 +1176,6 @@
     "categoryChartTitle": "Kategoriye göre araç dağılımı",
     "topRatedTitle": "En yüksek puanlı araçlar"
   },
-
   "AdminClient": {
     "tabApproval": "Onay kuyruğu",
     "tabTools": "Araç yönetimi",
@@ -1444,7 +1218,6 @@
     "newsletterTitle": "Haftalık bülten",
     "newsletterDesc": "Bülten içeriğini hazırlayın ve abonelere gönderin."
   },
-
   "BulkImport": {
     "title": "JSON içe aktarım",
     "description": "Aşağıdaki metin kutusuna JSON formatında bir liste yapıştırın. Toplu olarak tüm araçlar veritabanına eklenecektir.",
@@ -1455,7 +1228,6 @@
     "resultTitle": "Sonuç: {message}",
     "errorsTitle": "Hatalı kayıtlar ({count}):"
   },
-
   "CoPilot": {
     "welcome": "Merhaba! Ben Admin Co-Pilot. Sitenizi geliştirmek için benden kod veya strateji isteyebilirsiniz.",
     "analysisFallback": "Yapay zeka analizi",
@@ -1470,7 +1242,6 @@
     "send": "Gönder",
     "sending": "Düşünüyor…"
   },
-
   "ProfileComponents": {
     "profileTitle": "Genel profil",
     "profileDescription": "Herkese açık profil bilgilerinizi buradan güncelleyebilirsiniz.",

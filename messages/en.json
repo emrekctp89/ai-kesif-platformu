@@ -13,7 +13,6 @@
     "myTools": "My Tools",
     "learn": "Learn",
     "aiRecommend": "AI Recommend",
-    "kasif": "Kâşif",
     "workmind": "Workmind (Beta)",
     "leaderboard": "Leaderboard",
     "randomTools": "Random",
@@ -42,145 +41,7 @@
     "mobileNavTitle": "Main menu",
     "mobileNavDescription": "Browse site sections.",
     "openMenu": "Open menu",
-    "upgradePro": "Upgrade to Pro",
-    "profileSettings": "Profile & settings",
-    "signOut": "Sign out",
-    "communityPanelToggle": "Community menu",
-    "communityPanelToggleHint": "Show feed, leaderboard, showcase and challenges in your profile menu.",
-    "contentStudio": "Content studio"
-  },
-  "ContentStudio": {
-    "metaTitle": "Content studio",
-    "metaDescription": "Draft blog posts and guides as an approved creator.",
-    "heroChip": "Content production",
-    "title": "Content studio",
-    "subtitle": "Create a blog post or guide draft, save it, and submit for admin review. Publishing happens only after approval.",
-    "lockedTitle": "Become a content creator",
-    "lockedBody": "Content studio is open to members who contribute and meet the reputation threshold. Complete the requirements below, then submit your application.",
-    "greetingUser": "Hi {name}",
-    "reqBadge": "Requirement",
-    "reqMet": "Done",
-    "reqNotMet": "Missing",
-    "reqReputationHeadline": "You need at least {min} reputation points",
-    "yourReputation": "Your reputation",
-    "progressComplete": "Threshold met",
-    "progressRemaining": "{count} points left",
-    "progressCallout": "Earn {remaining} more reputation points to unlock the form (target {min}). Follow the roadmap below.",
-    "progressReady": "You met the reputation threshold. Fill the application form below.",
-    "requirementsHeading": "Application requirements",
-    "reqAccountTitle": "Registered account",
-    "reqAccountBody": "You’re applying with a signed-in account.",
-    "reqReputationTitle": "{min} reputation points",
-    "reqReputationBody": "You have {current} / {min} points. Remaining: {remaining}.",
-    "reqPitchTitle": "Short pitch",
-    "reqPitchBody": "Describe what you want to create in 20+ characters.",
-    "roadmapHeading": "Reputation roadmap",
-    "roadmapSubheading": "Exact point values and direct links. Start with daily quests for the fastest path.",
-    "pointsUnit": "pts",
-    "dailyQuestsHeading": "Today’s quests",
-    "dailyQuestsSubheading": "Complete them to gain reputation immediately. Open quests are the fastest path.",
-    "dailyQuestsAvailable": "Available today: +{count}",
-    "questProjection": "If you claim +{available} from open quests, you’ll be at ≈ {projected}. {unlock}",
-    "questProjectionUnlock": "That’s enough to unlock the application!",
-    "questProjectionPartial": "You’ll get closer to the threshold.",
-    "questDone": "Completed",
-    "questPrimaryCta": "Complete next quest",
-    "questCtaRate": "Rate a tool",
-    "questCtaComment": "Write a comment",
-    "questCtaFavorite": "Favorite a featured tool",
-    "questCtaVisit": "Browse tools",
-    "questCtaFollow": "Follow someone",
-    "questCtaDefault": "Complete",
-    "awardRate": "Tool rating",
-    "awardComment": "Comment",
-    "awardPrompt": "Prompt share",
-    "awardSubmit": "Approved tool tip",
-    "roadQuestsTitle": "Finish daily quests",
-    "roadQuestsBody": "Profile quests award about +5 to +20 points each.",
-    "roadQuestsCta": "Open quests",
-    "roadRateTitle": "Rate tools",
-    "roadRateBody": "Each tool rating awards +1 reputation point.",
-    "roadRateCta": "Browse tools",
-    "roadCommentTitle": "Write comments",
-    "roadCommentBody": "+2 points per comment on tool pages.",
-    "roadCommentCta": "Start exploring",
-    "roadSubmitTitle": "Suggest a tool",
-    "roadSubmitBody": "If approved, you earn +25 — enough to clear the threshold alone.",
-    "roadSubmitCta": "Suggest a tool",
-    "roadPromptTitle": "Share a prompt",
-    "roadPromptBody": "New prompt submissions award +10 points.",
-    "roadPromptCta": "Try on tools",
-    "roadLearnTitle": "Learn and prepare",
-    "roadLearnBody": "No points, but it helps you write better once you’re a creator.",
-    "roadLearnCta": "Learning hub",
-    "roadmapPrimaryCta": "Start earning points",
-    "roadmapProfileCta": "Profile & quests",
-    "applySectionHeading": "Submit application",
-    "applySectionReady": "Requirements met. Write a short pitch and apply.",
-    "applySectionLocked": "The form unlocks once the reputation threshold is met.",
-    "applyFormLocked": "Form locked: {remaining} more points needed (target {min}). Follow the roadmap, then return here.",
-    "ctaBlog": "Blog",
-    "ctaLearn": "Learning hub",
-    "newDraftTitle": "New draft",
-    "titleLabel": "Title",
-    "titlePlaceholder": "e.g. Best image AI tools in 2026",
-    "typeLabel": "Type",
-    "typePost": "Post",
-    "typeGuide": "Guide",
-    "createDraft": "Create draft",
-    "myPostsHeading": "My posts",
-    "emptyPosts": "No drafts yet. Create your first post above.",
-    "updatedAt": "Updated: {date}",
-    "reviewNote": "Admin note",
-    "edit": "Edit",
-    "backToStudio": "Back to studio",
-    "editTitle": "Edit draft",
-    "applyPitchLabel": "Why do you want to create content?",
-    "applyPitchPlaceholder": "e.g. I write AI tool guides and can contribute weekly roundups…",
-    "applySubmit": "Apply to become a creator",
-    "applySubmitting": "Submitting…",
-    "applyPending": "Your application is under review. You’ll be notified when approved.",
-    "applyReputationHint": "Applications typically need about {min} reputation points. Earn points via comments, favorites, and contributions.",
-    "statTotal": "Total",
-    "statDraft": "Drafts",
-    "statReview": "In review",
-    "statPublished": "Published",
-    "statRejected": "Rejected",
-    "filterAll": "All",
-    "filterAria": "Post status filter",
-    "emptyFiltered": "No posts in this filter.",
-    "viewLive": "View live",
-    "editOrWithdraw": "Edit / withdraw",
-    "preview": "Preview",
-    "previewMetaTitle": "Post preview",
-    "previewMetaDescription": "Draft post preview (creators only).",
-    "previewBadge": "Preview",
-    "previewHint": "This view is private to you; it won’t appear on the blog until published.",
-    "previewPrivateNote": "Private preview — not public and not indexed.",
-    "previewEmptyContent": "_No content yet._",
-    "delete": "Delete",
-    "deleteConfirmTitle": "Delete draft?",
-    "deleteConfirmBody": "This cannot be undone. The draft and its tags will be removed. Published posts cannot be deleted here.",
-    "deleteCancel": "Cancel",
-    "deleteConfirmAction": "Yes, delete"
-  },
-  "SoftLanding": {
-    "heroChip": "Temporarily paused",
-    "title": "{feature} is not featured right now",
-    "subtitle": "We moved {feature} out of the main navigation for a simpler discovery flow.",
-    "body": "Nothing is deleted—this area will return when we re-enable it. For now continue with Learn, Workmind, Blog, and Research.",
-    "metaTitle": "{feature} (temporarily paused)",
-    "metaDescription": "{feature} is temporarily paused. Continue with the learning hub, Workmind, blog, and research.",
-    "hubsHeading": "Continue from here",
-    "hubsSubheading": "Areas we are featuring in the main flow.",
-    "hubLearnBody": "Tracks, guides, and practical first steps.",
-    "hubWorkmindBody": "AI workflow builder (beta).",
-    "hubBlogBody": "Latest posts and guides.",
-    "hubResearchBody": "Scientific papers and academic sources.",
-    "hubRecommendBody": "Find the right tool for your need.",
-    "hubCategoriesBody": "Browse the catalog by category.",
-    "hubCta": "Go",
-    "footnote": "Direct link: {path}"
+    "upgradePro": "Upgrade to Pro"
   },
   "BlogPost": {
     "publishedOn": "Published: {date}",
@@ -189,13 +50,7 @@
     "postBadge": "Post",
     "relatedCta": "More posts",
     "shareHint": "Copy the page URL to share this post.",
-    "readTime": "About {minutes} min read",
-    "ctaLearn": "Learning hub",
-    "ctaResearch": "Research",
-    "ctaCreate": "Create content",
-    "defaultAuthor": "AI Keşif",
-    "relatedHeading": "You may also like",
-    "readMore": "Read"
+    "readTime": "About {minutes} min read"
   },
   "LeaderboardPage": {
     "metaTitle": "Leaderboard",
@@ -289,46 +144,18 @@
   },
   "Blog": {
     "metaTitle": "Blog",
-    "metaDescription": "Latest AI news, guides, articles, and tool reviews—connected to the learning hub and research portal.",
-    "heroChip": "Blog & guides",
+    "metaDescription": "Latest AI news, articles, and tool reviews.",
+    "heroChip": "Blog & news",
     "title": "Blog & News",
-    "subtitle": "Current AI developments, practical guides, and tool reviews. Pair what you read with the learning hub and research portal.",
+    "subtitle": "The latest developments, deep dives, and tool reviews from the AI world.",
     "statsPosts": "{count} posts",
-    "statsGuides": "{count} guides",
-    "statsArticles": "{count} articles",
     "emptyTitle": "No posts yet",
     "emptyBody": "There are no published posts. Browse the learning hub or tool catalog instead.",
     "readMore": "Read more",
     "guideBadge": "Guide",
     "postBadge": "Post",
-    "featuredBadge": "Featured",
-    "filterAll": "All",
-    "filterGuides": "Guides",
-    "filterPosts": "Posts",
-    "filterAria": "Post filters",
-    "searchPlaceholder": "Search posts or guides…",
-    "resultsCount": "{count} results",
-    "noResultsTitle": "No matches",
-    "noResultsBody": "Your search or filter is too narrow. Clear filters and try again.",
-    "clearFilters": "Clear filters",
     "ctaLearn": "Learning hub",
-    "ctaResearch": "Research",
-    "ctaTools": "Explore tools",
-    "hubsHeading": "Keep exploring",
-    "hubsSubheading": "The blog sits with learning and research in one flow.",
-    "hubLearnTitle": "Learning hub",
-    "hubLearnBody": "Category tracks, guides, and practical first steps.",
-    "hubResearchTitle": "Research portal",
-    "hubResearchBody": "Scientific papers and academic background.",
-    "hubRecommendTitle": "AI Recommend",
-    "hubRecommendBody": "Find the right tool for your need in seconds.",
-    "hubCta": "Go",
-    "byAuthor": "By",
-    "defaultAuthor": "AI Keşif",
-    "filterCategory": "Category",
-    "filterCategoryAll": "All categories",
-    "filterTag": "Tag",
-    "filterTagAll": "All tags"
+    "ctaTools": "Explore tools"
   },
   "Community": {
     "metaTitle": "Community",
@@ -370,7 +197,7 @@
     "metaDescriptionNamed": "Compare {names} side by side on features, pricing, and ratings.",
     "heroChip": "Comparison arena",
     "title": "AI Comparison Arena",
-    "subtitle": "Select tools and review their features, ratings, and Kâşif's catalog-grounded analysis.",
+    "subtitle": "Select the tools you want to compare and review features, ratings, and AI analysis.",
     "selectPlaceholder": "Select tools to compare...",
     "searchPlaceholder": "Search tools...",
     "notFound": "No tools found.",
@@ -393,10 +220,10 @@
     "votes": "{count} votes",
     "viewDetails": "Details",
     "visitSite": "Site",
-    "aiButton": "Compare with Kâşif",
-    "aiAnalyzing": "Kâşif is comparing…",
+    "aiButton": "Compare these tools with AI",
+    "aiAnalyzing": "Analyzing…",
     "aiNeedTwo": "Please select at least 2 tools to compare.",
-    "aiTitle": "Kâşif analysis",
+    "aiTitle": "AI analysis",
     "aiBestFor": "Best for",
     "aiPros": "Pros",
     "aiCons": "Cons",
@@ -471,7 +298,6 @@
     "openTool": "Open tool",
     "sidebarBetaNote": "Suggestions are automatic and experimental; they may not always be the best match."
   },
-
   "Learn": {
     "metaTitle": "Learn — AI Learning Hub",
     "metaDescription": "Master AI tools with category-based learning tracks, platform how-tos, and practical guides.",
@@ -536,9 +362,11 @@
     "ctaBandBody": "Open a category, try two tools, favorite one. That’s how learning starts.",
     "emptyTitle": "Content coming soon",
     "emptyBody": "The learning hub will fill up with guides and paths soon. Meanwhile, keep exploring tools.",
-    "browseTools": "Explore tools"
+    "browseTools": "Explore tools",
+    "betaBadge": "Beta",
+    "betaTitle": "Under Development",
+    "betaBody": "The learning center is currently in beta. Tracks and suggested tools are continuously updated."
   },
-
   "Hero": {
     "title": "Discover AI Tools",
     "subtitle": "Find, review and compare the best tools in the AI ecosystem."
@@ -751,7 +579,6 @@
     "altColActions": "Actions",
     "altCurrent": "Current"
   },
-
   "Pricing": {
     "free": "Free",
     "freemium": "Freemium",
@@ -762,7 +589,6 @@
     "credits": "Credits",
     "oneTime": "One-time"
   },
-
   "AboutPage": {
     "metaTitle": "About",
     "metaDescription": "Mission, vision, and story of AI Keşif Platformu.",
@@ -783,7 +609,6 @@
     "ctaDiscover": "Browse tools",
     "ctaContact": "Contact us"
   },
-
   "ContactPage": {
     "metaTitle": "Contact",
     "metaDescription": "Reach the AI Keşif Platformu team with questions, ideas, or feedback.",
@@ -804,7 +629,6 @@
     "send": "Send message",
     "ctaFeedback": "Quick feedback"
   },
-
   "PrivacyPage": {
     "metaTitle": "Privacy Policy",
     "metaDescription": "How AI Keşif Platformu respects your privacy and protects your data.",
@@ -821,7 +645,6 @@
     "sectionCookiesBody": "We use cookies required for core features such as session management and remembering theme preferences. These cookies do not collect personal data.",
     "ctaContact": "Have a question?"
   },
-
   "TermsPage": {
     "metaTitle": "Terms of Use",
     "metaDescription": "Terms and conditions you accept when using AI Keşif Platformu.",
@@ -838,7 +661,6 @@
     "section4Body": "AI Keşif Platformu is not liable for damages arising from use or performance of listed tools. The platform is provided “as is,” without warranties of accuracy or uninterrupted availability.",
     "ctaPrivacy": "Privacy policy"
   },
-
   "MembershipPage": {
     "metaTitle": "Pro membership",
     "metaDescription": "Go Pro for AI Content Studio, Pro tools, a special badge, and priority platform power.",
@@ -927,7 +749,6 @@
     "errorBanner": "Something went wrong with checkout. Please try again.",
     "loginRequired": "Sign in to upgrade to Pro."
   },
-
   "LaunchpadPage": {
     "metaTitle": "AI Launchpad",
     "metaDescription": "Discover, upvote, and try the newest AI product launches first.",
@@ -942,7 +763,6 @@
     "statsToday": "{count} today",
     "statsWeek": "{count} this week"
   },
-
   "LaunchpadSubmitPage": {
     "metaTitle": "New Launch",
     "metaDescription": "Announce your AI tool to the community and collect early feedback.",
@@ -952,7 +772,6 @@
     "loginRequired": "Sign in to submit a launch.",
     "back": "Back to Launchpad"
   },
-
   "ChallengePage": {
     "metaTitle": "Weekly Challenge",
     "metaDescription": "Join weekly creativity challenges and vote on the best community work.",
@@ -992,7 +811,6 @@
     "noImage": "No image",
     "voteAria": "Vote for {title}"
   },
-
   "BountiesPage": {
     "metaTitle": "Bounty Hunt",
     "metaDescription": "Post a bounty to find the AI tool you need—and reward helpers in the community.",
@@ -1024,7 +842,6 @@
     "ctaSubmitTool": "Suggest a tool",
     "ctaBrowseCategories": "Browse categories"
   },
-
   "BountyDetailPage": {
     "metaTitle": "Bounty details",
     "metaDescription": "Bounty details and community tool suggestions.",
@@ -1038,56 +855,26 @@
     "submissionsHeading": "Suggestions",
     "submissionsSubheading": "Tools the community recommended for this bounty"
   },
-
   "ResearchPage": {
     "metaTitle": "Research Portal",
-    "metaDescription": "AI research papers, authors, and institutions—connected to the blog and learning hub.",
+    "metaDescription": "Explore the latest AI research papers, studies, and leading academics.",
     "heroChip": "Academia",
     "title": "Research portal",
-    "subtitle": "Explore the scientific foundations of AI. Browse papers, see authors, then jump into practical content.",
+    "subtitle": "Explore the scientific foundations of AI—papers, research, and more.",
     "emptyTitle": "No papers yet",
-    "emptyBody": "Published academic papers will appear here as they are added. Meanwhile explore the blog and learning hub.",
+    "emptyBody": "Published academic papers will appear here as they are added.",
     "statsPapers": "{count} papers",
-    "statsAuthors": "{count} authors",
     "authors": "Authors",
     "institutions": "Institutions",
-    "authorCount": "{count} authors",
-    "paperBadge": "Paper",
-    "untitledPaper": "Untitled paper",
-    "resultsCount": "{count} results",
-    "noResultsTitle": "No matches",
-    "noResultsBody": "Simplify your search and try again.",
-    "clearSearch": "Clear search",
-    "listHeading": "Publications",
-    "listSubheading": "Search by title, summary, author, or institution.",
-    "pillarsHeading": "What this portal offers",
-    "pillar1Title": "Scientific sources",
-    "pillar1Body": "Academic work behind AI tools and concise summaries in one place.",
-    "pillar2Title": "Authors & institutions",
-    "pillar2Body": "Who published it and where it came from—keep the context.",
-    "pillar3Title": "Bridge to practice",
-    "pillar3Body": "Move quickly from papers to blog guides and learning tracks.",
-    "ctaBlog": "Blog",
-    "ctaLearn": "Learning hub",
-    "hubsHeading": "Related areas",
-    "hubsSubheading": "Research, blog, and learning are part of the same discovery flow.",
-    "hubBlogTitle": "Blog & guides",
-    "hubBlogBody": "Current writing and practical guides.",
-    "hubLearnTitle": "Learning hub",
-    "hubLearnBody": "Category tracks and practical first steps.",
-    "hubRecommendTitle": "AI Recommend",
-    "hubRecommendBody": "After reading research, jump to the right tool.",
-    "hubCta": "Go",
     "emptyToolTitle": "No academic background found",
     "emptyToolBody": "No scientific papers have been linked to this tool yet.",
-    "readFullPaper": "Read the full paper",
+    "readFullPaper": "Read the full paper →",
     "selectPapers": "Select your papers…",
-    "searchPapers": "Search papers, authors, or institutions…",
+    "searchPapers": "Search papers…",
     "paperNotFound": "No papers found.",
     "savePapers": "Save papers",
     "savingPapers": "Saving…"
   },
-
   "FeedbackPage": {
     "metaTitle": "Feedback",
     "metaDescription": "Share your thoughts about the platform with the AI Keşif team.",
@@ -1096,7 +883,6 @@
     "subtitle": "Share your thoughts with us. Every idea helps improve the product.",
     "ctaContact": "Contact form"
   },
-
   "ActivityFeedPage": {
     "metaTitle": "Feed",
     "metaDescription": "See the latest activity from people you follow and the wider community.",
@@ -1147,7 +933,6 @@
     "avatarAlt": "User",
     "showcasePreviewAlt": "Showcase preview"
   },
-
   "StudioPage": {
     "metaTitle": "AI Content Studio",
     "metaDescription": "Create text and images with AI models in one studio.",
@@ -1157,7 +942,6 @@
     "loginRequired": "Sign in to use the AI Studio.",
     "proRequired": "Upgrade to Pro to use the AI Studio."
   },
-
   "CategoryDetail": {
     "toolsSuffix": "Tools",
     "breadcrumbHome": "Home",
@@ -1169,7 +953,6 @@
     "ctaAllCategories": "All categories",
     "ctaCompare": "Compare"
   },
-
   "ProfilePage": {
     "metaTitle": "{name}’s profile",
     "metaDescription": "{name}’s contributions on AI Keşif Platformu.",
@@ -1187,7 +970,6 @@
     "emptyActivity": "This user has no public activity yet.",
     "ctaCommunity": "Explore community"
   },
-
   "FollowListPage": {
     "followersTitle": "{name}’s followers",
     "followingTitle": "People {name} follows",
@@ -1196,7 +978,6 @@
     "emptyFollowing": "Not following anyone yet.",
     "statsCount": "{count} people"
   },
-
   "DeveloperPage": {
     "metaTitle": "Developer Portal",
     "metaDescription": "Create and manage API keys for programmatic access to AI Keşif data.",
@@ -1206,7 +987,6 @@
     "loginRequired": "Sign in to use the developer portal.",
     "docsHint": "Keep keys secure and follow rate limits and usage policies."
   },
-
   "NotFoundPage": {
     "metaTitle": "Page not found",
     "metaDescription": "The page you requested was not found. Return home or browse Discover.",
@@ -1224,7 +1004,6 @@
     "helpLink": "Contact page",
     "helpSuffix": "."
   },
-
   "MessagesPage": {
     "title": "Your conversations",
     "body": "Pick a chat from the sidebar, or start a new conversation from someone’s profile.",
@@ -1234,7 +1013,6 @@
     "emptySidebar": "No chats yet. Start one from a profile.",
     "loginRequired": "Sign in to view messages."
   },
-
   "Auth": {
     "emailLabel": "Email",
     "emailPlaceholder": "you@example.com",
@@ -1303,7 +1081,6 @@
     "ssoUnexpected": "An unexpected error occurred while signing in.",
     "formLoading": "Loading form…"
   },
-
   "ProfilePanel": {
     "metaTitle": "My profile",
     "metaDescription": "Manage profile settings, collections, showcase items, and favorites.",
@@ -1327,7 +1104,6 @@
     "dangerTitle": "Danger zone",
     "dangerBody": "Permanently delete your account and all of your data."
   },
-
   "AdminOps": {
     "metaTitle": "Operations Center",
     "heroChip": "Admin",
@@ -1373,7 +1149,6 @@
     "errorTitle": "Admin panel error",
     "errorMessage": "Something went wrong while loading the admin panel or fetching data."
   },
-
   "AdminDashboard": {
     "metaTitle": "Admin Dashboard",
     "heroChip": "Admin",
@@ -1401,7 +1176,6 @@
     "categoryChartTitle": "Tools by category",
     "topRatedTitle": "Top-rated tools"
   },
-
   "AdminClient": {
     "tabApproval": "Approval queue",
     "tabTools": "Tool management",
@@ -1444,7 +1218,6 @@
     "newsletterTitle": "Weekly newsletter",
     "newsletterDesc": "Prepare newsletter content and send it to subscribers."
   },
-
   "BulkImport": {
     "title": "JSON import",
     "description": "Paste a JSON list below. Tools will be added to the database in bulk.",
@@ -1455,7 +1228,6 @@
     "resultTitle": "Result: {message}",
     "errorsTitle": "Failed rows ({count}):"
   },
-
   "CoPilot": {
     "welcome": "Hi! I’m Admin Co-Pilot. Ask me for code or strategy to improve the site.",
     "analysisFallback": "AI analysis",
@@ -1470,7 +1242,6 @@
     "send": "Send",
     "sending": "Thinking…"
   },
-
   "ProfileComponents": {
     "profileTitle": "Public profile",
     "profileDescription": "Update the information shown on your public profile.",
