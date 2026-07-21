@@ -20,6 +20,7 @@ import {
   Video,
   WandSparkles,
   Zap,
+  FlaskConical,
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
@@ -318,9 +319,15 @@ export default async function LearningHubPage({ params }) {
           <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-purple-500/10 blur-3xl" />
 
           <div className="relative z-10 mx-auto max-w-3xl text-center">
-            <div className="brand-chip mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
-              <GraduationCap className="h-4 w-4" aria-hidden="true" />
-              {t('heroChip')}
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+              <div className="brand-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
+                <GraduationCap className="h-4 w-4" aria-hidden="true" />
+                {t('heroChip')}
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                <FlaskConical className="h-3 w-3" aria-hidden="true" />
+                {t('betaBadge')}
+              </span>
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-6xl">
               {t('title')}
@@ -365,6 +372,19 @@ export default async function LearningHubPage({ params }) {
                 </Link>
               </Button>
             </div>
+
+            <div
+              role="status"
+              className="mt-8 mx-auto max-w-xl flex gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-left text-amber-900 dark:bg-amber-500/15 dark:text-amber-100"
+            >
+              <FlaskConical className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+              <div className="min-w-0 space-y-0.5">
+                <p className="font-semibold leading-snug">{t('betaTitle')}</p>
+                <p className="text-xs leading-relaxed text-amber-900/90 dark:text-amber-100/85 sm:text-sm">
+                  {t('betaBody')}
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -383,18 +403,24 @@ export default async function LearningHubPage({ params }) {
             {steps.map(({ title, body, icon: Icon }, index) => (
               <Card
                 key={title}
-                className="glass-panel border-border/50 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                className="group glass-panel border-border/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
                 <CardHeader className="space-y-3 pb-2">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="rounded-xl border bg-background p-2.5 shadow-sm">
-                      <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                    <div className="rounded-xl border bg-background p-2.5 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-primary/5 group-hover:border-primary/20">
+                      <Icon
+                        className="h-5 w-5 text-primary transition-colors duration-300 group-hover:text-primary/80"
+                        aria-hidden="true"
+                      />
                     </div>
-                    <span className="text-xs font-bold text-muted-foreground">
+                    <span className="text-xs font-bold text-muted-foreground transition-colors duration-300 group-hover:text-primary">
                       {String(index + 1).padStart(2, '0')}
                     </span>
                   </div>
-                  <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
+                  <CardTitle className="text-base sm:text-lg transition-colors group-hover:text-primary">
+                    {title}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
@@ -448,29 +474,38 @@ export default async function LearningHubPage({ params }) {
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 sm:gap-5">
-              {curatedTracks.map((track) => {
+              {curatedTracks.map((track, index) => {
                 const Icon = track.icon;
                 return (
                   <Card
                     key={track.slug}
-                    className="glass-panel overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
+                    className="group glass-panel overflow-hidden border-border/50 transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-xl"
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <CardHeader className="space-y-3">
+                    <CardHeader className="space-y-3 relative z-10">
+                      <div className="absolute -right-6 -top-6 opacity-5 transition-transform duration-500 group-hover:scale-150 group-hover:rotate-12 pointer-events-none">
+                        <Icon className="w-32 h-32" aria-hidden="true" />
+                      </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <div className="rounded-xl border bg-background p-2 shadow-sm">
+                        <div className="rounded-xl border bg-background p-2 shadow-sm transition-transform duration-300 group-hover:scale-110">
                           <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
                         </div>
-                        <Badge variant="secondary" className="font-semibold">
+                        <Badge
+                          variant="secondary"
+                          className="font-semibold transition-colors group-hover:bg-primary/10 group-hover:text-primary"
+                        >
                           {t(track.levelKey)}
                         </Badge>
                         {track.categoryName ? (
                           <Badge variant="outline">{track.categoryName}</Badge>
                         ) : null}
                       </div>
-                      <CardTitle className="text-lg leading-snug sm:text-xl">
+                      <CardTitle className="text-lg leading-snug sm:text-xl transition-colors group-hover:text-primary">
                         {t(track.titleKey)}
                       </CardTitle>
-                      <CardDescription className="line-clamp-3">{t(track.bodyKey)}</CardDescription>
+                      <CardDescription className="line-clamp-3 relative z-10">
+                        {t(track.bodyKey)}
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 pt-0">
                       {track.tools.length > 0 ? (
