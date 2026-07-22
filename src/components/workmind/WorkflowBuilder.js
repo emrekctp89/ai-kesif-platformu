@@ -213,7 +213,11 @@ export function WorkflowBuilder() {
         </ReactFlow>
       </div>
 
-      <NodeSidebar node={selectedNode} onClose={() => setSelectedNode(null)} />
+      <NodeSidebar
+        node={selectedNode}
+        workflowGoal={prompt}
+        onClose={() => setSelectedNode(null)}
+      />
     </div>
   );
 }

@@ -2,32 +2,54 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ExternalLink, FlaskConical, Loader2, X } from 'lucide-react';
+import { BrainCircuit, ExternalLink, FlaskConical, Loader2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { getToolsByCategorySlug } from '@/app/actions/workmind';
+import { getWorkmindToolRecommendations } from '@/app/actions/workmind';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-export function NodeSidebar({ node, onClose }) {
+export function NodeSidebar({ node, workflowGoal, onClose }) {
   const t = useTranslations('Workmind');
   const [tools, setTools] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [recommendationSource, setRecommendationSource] = useState(null);
 
   useEffect(() => {
+    let active = true;
     if (node?.data?.raw?.categorySlug) {
       setLoading(true);
-      getToolsByCategorySlug(node.data.raw.categorySlug)
+      setTools([]);
+      setRecommendationSource(null);
+      getWorkmindToolRecommendations(node.data.raw.categorySlug, {
+        goal: workflowGoal,
+        label: node.data.raw.label,
+        description: node.data.raw.description,
+      })
         .then((res) => {
-          setTools(res || []);
+          if (active) {
+            setTools(res?.tools || []);
+            setRecommendationSource(res?.source || null);
+          }
+        })
+        .catch(() => {
+          if (active) {
+            setTools([]);
+            setRecommendationSource(null);
+          }
         })
         .finally(() => {
-          setLoading(false);
+          if (active) setLoading(false);
         });
     } else {
       setTools([]);
+      setLoading(false);
+      setRecommendationSource(null);
     }
-  }, [node]);
+    return () => {
+      active = false;
+    };
+  }, [node, workflowGoal]);
 
   if (!node) return null;
 
@@ -67,6 +89,13 @@ export function NodeSidebar({ node, onClose }) {
             {t('suggestedTools')}
           </h4>
 
+          {!loading && recommendationSource ? (
+            <p className="mb-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <BrainCircuit className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+              {recommendationSource === 'kasif' ? t('sourceKasif') : t('sourceCategoryFallback')}
+            </p>
+          ) : null}
+
           {loading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -89,6 +118,15 @@ export function NodeSidebar({ node, onClose }) {
                           className="mt-1 h-4 px-1 py-0 text-[10px]"
                         >
                           {tool.tier}
+                        </Badge>
+                      ) : null}
+                      {tool.kasifReason ? (
+                        <Badge
+                          variant="outline"
+                          className="ml-1 mt-1 h-4 gap-1 px-1 py-0 text-[10px]"
+                        >
+                          <BrainCircuit className="h-2.5 w-2.5" aria-hidden="true" />
+                          {t('kasifPick')}
                         </Badge>
                       ) : null}
                     </div>
@@ -115,6 +153,12 @@ export function NodeSidebar({ node, onClose }) {
                       {Array.isArray(tool.platforms) && tool.platforms.length
                         ? ` · ${tool.platforms.slice(0, 3).join(', ')}`
                         : ''}
+                    </p>
+                  ) : null}
+                  {tool.kasifReason ? (
+                    <p className="mt-2 rounded-md bg-primary/5 px-2 py-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                      <span className="font-semibold text-primary">{t('kasifReason')}:</span>{' '}
+                      {tool.kasifReason}
                     </p>
                   ) : null}
                 </div>

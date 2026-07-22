@@ -101,7 +101,7 @@ export async function retrievePlatformContext(question, history = []) {
     const { data, error } = await supabase
       .from('tools')
       .select(
-        'id, name, slug, link, description, pricing_model, is_featured, tier, category:categories(name)'
+        'id, name, slug, link, description, pricing_model, platforms, is_featured, tier, category:categories(name)'
       )
       .eq('is_approved', true)
       .or(buildSearchFilter(terms))

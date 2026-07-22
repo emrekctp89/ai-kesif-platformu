@@ -36,6 +36,31 @@ export async function getKasifRecommendations(question, history = [], limit = 3)
   };
 }
 
+export async function getKasifWorkmindRecommendations(step, limit = 4) {
+  assertKasifEnabled();
+  const question = [step?.goal, step?.label, step?.description, step?.categorySlug]
+    .map((value) => cleanText(value).replace(/[.?!,:;]+$/, ''))
+    .filter(Boolean)
+    .join('. ')
+    .slice(0, 800);
+  if (question.length < 3) return [];
+
+  const records = await retrievePlatformContext(question);
+  const intent = understandConversation(question);
+  return rankTools(records, intent, Math.min(Math.max(Number(limit) || 4, 1), 4)).map(
+    ({ record, reasons }) => ({
+      id: record.id,
+      name: record.name,
+      slug: record.slug,
+      description: cleanText(record.description).slice(0, 220),
+      tier: record.tier || null,
+      pricing_model: record.pricing_model || null,
+      platforms: Array.isArray(record.platforms) ? record.platforms.slice(0, 4) : [],
+      kasifReason: recommendationReason(record, reasons),
+    })
+  );
+}
+
 export async function getKasifAssistantAnswer(question, history = []) {
   assertKasifEnabled();
   const records = await retrievePlatformContext(question, history);

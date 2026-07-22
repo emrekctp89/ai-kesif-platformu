@@ -5,7 +5,9 @@ import logger from '@/utils/logger';
 import { cookies } from 'next/headers';
 
 import { resolvePrimarySlug } from '@/lib/categoryTaxonomy';
+import { getKasifWorkmindRecommendations } from '@/lib/kasif/integrations';
 import { createClient } from '@/utils/supabase/server';
+import { enforceRateLimit } from '@/utils/antiAbuse';
 
 function serializeFlowGraph(nodes = [], edges = []) {
   const safeNodes = (Array.isArray(nodes) ? nodes : []).map((node) => {
@@ -35,6 +37,41 @@ function serializeFlowGraph(nodes = [], edges = []) {
   }));
 
   return { nodes: safeNodes, edges: safeEdges };
+}
+
+export async function getWorkmindToolRecommendations(categorySlug, step = {}) {
+  const normalizedStep = {
+    goal: String(step?.goal || '')
+      .trim()
+      .slice(0, 800),
+    label: String(step?.label || '')
+      .trim()
+      .slice(0, 80),
+    description: String(step?.description || '')
+      .trim()
+      .slice(0, 220),
+    categorySlug: String(categorySlug || '')
+      .trim()
+      .slice(0, 80),
+  };
+
+  if (normalizedStep.label || normalizedStep.description) {
+    const rateLimit = await enforceRateLimit('workmind-kasif', {
+      limit: 30,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (rateLimit.allowed) {
+      try {
+        const recommendations = await getKasifWorkmindRecommendations(normalizedStep, 4);
+        if (recommendations.length) return { tools: recommendations, source: 'kasif' };
+      } catch (error) {
+        logger.warn('Workmind Kâşif recommendation fallback:', error?.message);
+      }
+    }
+  }
+
+  const tools = await getToolsByCategorySlug(categorySlug);
+  return { tools, source: 'category' };
 }
 
 export async function getToolsByCategorySlug(categorySlug) {

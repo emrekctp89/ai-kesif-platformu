@@ -8,6 +8,8 @@ araç puanlama, fiyat tercihi, kaynak seçimi ve cevap oluşturma platform kodun
 Kâşif varsayılan olarak açıktır. Gerektiğinde `.env.local` dosyasında
 `KASIF_ENABLED=false` ile kapatılabilir. Üretim ekranı `/kasif` adresindedir.
 Bu bayrak tavsiye, karşılaştırma, sesli asistan ve konsiyerj entegrasyonlarının tamamına uygulanır.
+Workmind, her iş akışı adımında ana hedefi ve adım bağlamını Kâşif'e ileterek yalnızca onaylı
+platform araçlarını sıralar; Kâşif sonuç üretemezse kategori tabanlı listeyi yedek olarak kullanır.
 
 ## Çalışma biçimi
 

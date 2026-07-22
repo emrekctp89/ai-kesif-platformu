@@ -17,6 +17,7 @@ import {
   compareToolsWithKasif,
   getKasifAssistantAnswer,
   getKasifRecommendations,
+  getKasifWorkmindRecommendations,
 } from '@/lib/kasif/integrations';
 
 const toolRecords = [
@@ -53,6 +54,27 @@ describe('Kâşif site integrations', () => {
       { type: 'Araç', title: 'Slayt Free', url: '/tool/slayt-free' },
     ]);
     expect(assertKasifEnabled).toHaveBeenCalledTimes(1);
+  });
+
+  it('Workmind adımını doğrulanmış Kâşif araç sözleşmesine dönüştürür', async () => {
+    const result = await getKasifWorkmindRecommendations({
+      goal: 'Yeni ürünümü müşterilere anlatmak istiyorum.',
+      label: 'Sunumu hazırla',
+      description: 'Ücretsiz bir araçla slayt oluştur.',
+      categorySlug: 'sunum',
+    });
+
+    expect(retrievePlatformContext).toHaveBeenCalledWith(
+      'Yeni ürünümü müşterilere anlatmak istiyorum. Sunumu hazırla. Ücretsiz bir araçla slayt oluştur. sunum'
+    );
+    expect(result).toEqual([
+      expect.objectContaining({
+        id: 1,
+        name: 'Slayt Free',
+        slug: 'slayt-free',
+        kasifReason: expect.stringContaining('uygun'),
+      }),
+    ]);
   });
 
   it('karşılaştırmayı yalnızca verilen platform kayıtlarından üretir', () => {

@@ -299,6 +299,10 @@
     "details": "Detaylar",
     "close": "Kapat",
     "suggestedTools": "Önerilen araçlar",
+    "kasifPick": "Kâşif seçimi",
+    "kasifReason": "Neden",
+    "sourceKasif": "Hedefine göre Kâşif tarafından sıralandı.",
+    "sourceCategoryFallback": "Kategori eşleşmesine göre listelendi.",
     "noTools": "Bu adıma uygun araç bulunamadı veya kategori eşleşmedi (beta).",
     "openTool": "Aracı aç",
     "sidebarBetaNote": "Öneriler otomatik ve deneme amaçlıdır; her zaman en iyi eşleşme olmayabilir."
