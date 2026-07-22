@@ -49,7 +49,9 @@ async function getProfileFlags(userId) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from('profiles')
-    .select('is_content_creator, username, email, reputation_points')
+    .select(
+      'is_content_creator, username, email, reputation_points, content_creator_applied_at, content_creator_pitch'
+    )
     .eq('id', userId)
     .maybeSingle();
   if (error) {
@@ -57,6 +59,54 @@ async function getProfileFlags(userId) {
     return null;
   }
   return data;
+}
+
+/**
+ * Best-effort mirror of creator applications into admin_alerts (dashboard legacy queue).
+ * Profile columns are the source of truth; alert insert must not block apply.
+ */
+async function mirrorCreatorApplicationAlert({ userId, email, username, pitch }) {
+  try {
+    const admin = createAdminClient();
+    const { error } = await admin.from('admin_alerts').insert({
+      alert_type: 'content_creator_application',
+      description: `İçerik üretici başvurusu: ${username || email || userId} — ${pitch}`,
+      link: '/dashboard',
+      status: 'Açık',
+      metadata: {
+        user_id: userId,
+        email,
+        username,
+        pitch,
+      },
+    });
+    if (error) logger.error('mirrorCreatorApplicationAlert', error);
+  } catch (err) {
+    logger.error('mirrorCreatorApplicationAlert exception', err);
+  }
+}
+
+async function closeCreatorApplicationAlerts(userId) {
+  try {
+    const admin = createAdminClient();
+    const { data: openAlerts } = await admin
+      .from('admin_alerts')
+      .select('id, metadata')
+      .eq('alert_type', 'content_creator_application')
+      .eq('status', 'Açık')
+      .limit(50);
+    const ids = (openAlerts || [])
+      .filter((row) => row?.metadata?.user_id === userId)
+      .map((row) => row.id);
+    if (ids.length) {
+      await admin
+        .from('admin_alerts')
+        .update({ status: 'Çözüldü', resolved_at: new Date().toISOString() })
+        .in('id', ids);
+    }
+  } catch (alertError) {
+    logger.error('close creator application alerts', alertError);
+  }
 }
 
 export async function isCurrentUserContentCreator() {
@@ -79,6 +129,8 @@ export async function setContentCreatorStatus({ userId, enabled, note } = {}) {
   const updates = {
     is_content_creator: Boolean(enabled),
     content_creator_note: note ? String(note).slice(0, 500) : null,
+    // Clear pending application flag whether approved or rejected.
+    content_creator_applied_at: null,
     updated_at: new Date().toISOString(),
   };
   if (enabled) {
@@ -91,26 +143,7 @@ export async function setContentCreatorStatus({ userId, enabled, note } = {}) {
     return { error: await tStudio('errCreatorStatusUpdate') };
   }
 
-  // Always close open application alerts for this user when admin acts.
-  try {
-    const { data: openAlerts } = await admin
-      .from('admin_alerts')
-      .select('id, metadata')
-      .eq('alert_type', 'content_creator_application')
-      .eq('status', 'Açık')
-      .limit(50);
-    const ids = (openAlerts || [])
-      .filter((row) => row?.metadata?.user_id === targetId)
-      .map((row) => row.id);
-    if (ids.length) {
-      await admin
-        .from('admin_alerts')
-        .update({ status: 'Çözüldü', resolved_at: new Date().toISOString() })
-        .in('id', ids);
-    }
-  } catch (alertError) {
-    logger.error('close creator application alerts', alertError);
-  }
+  await closeCreatorApplicationAlerts(targetId);
 
   const statusMessage = enabled
     ? await tStudio('notifyCreatorApproved')
@@ -163,7 +196,8 @@ export async function setContentCreatorStatus({ userId, enabled, note } = {}) {
 
 /**
  * Logged-in member requests content creator access.
- * Creates an admin_alert (no extra schema required).
+ * Source of truth: profiles.content_creator_applied_at + content_creator_pitch.
+ * admin_alerts is best-effort for the dashboard queue.
  */
 export async function requestContentCreatorAccess(formData) {
   const { user, error } = await requireUser();
@@ -197,42 +231,40 @@ export async function requestContentCreatorAccess(formData) {
     };
   }
 
-  const admin = createAdminClient();
-
-  // Prevent spam: one open application at a time.
-  const { data: openAlerts } = await admin
-    .from('admin_alerts')
-    .select('id, metadata, status')
-    .eq('alert_type', 'content_creator_application')
-    .eq('status', 'Açık')
-    .limit(100);
-  const alreadyOpen = (openAlerts || []).some((row) => row?.metadata?.user_id === user.id);
-  if (alreadyOpen) {
+  // Already pending on profile (source of truth).
+  if (profile?.content_creator_applied_at) {
     return {
       success: true,
       message: await tStudio('successApplicationAlreadyPending'),
     };
   }
 
+  const admin = createAdminClient();
   const username = profile?.username || null;
   const email = profile?.email || user.email || null;
-  const { error: alertError } = await admin.from('admin_alerts').insert({
-    alert_type: 'content_creator_application',
-    description: `İçerik üretici başvurusu: ${username || email || user.id} — ${pitch}`,
-    link: '/dashboard',
-    status: 'Açık',
-    metadata: {
-      user_id: user.id,
-      email,
-      username,
-      pitch,
-    },
-  });
+  const appliedAt = new Date().toISOString();
 
-  if (alertError) {
-    logger.error('requestContentCreatorAccess', alertError);
+  const { error: profileError } = await admin
+    .from('profiles')
+    .update({
+      content_creator_applied_at: appliedAt,
+      content_creator_pitch: pitch,
+      updated_at: appliedAt,
+    })
+    .eq('id', user.id);
+
+  if (profileError) {
+    logger.error('requestContentCreatorAccess profile', profileError);
     return { error: await tStudio('errApplicationSaveFailed') };
   }
+
+  // Non-blocking dashboard mirror (may fail if alerts table/policy differs).
+  await mirrorCreatorApplicationAlert({
+    userId: user.id,
+    email,
+    username,
+    pitch,
+  });
 
   revalidatePath('/admin');
   revalidatePath('/dashboard');
@@ -245,31 +277,87 @@ export async function requestContentCreatorAccess(formData) {
 
 export async function hasOpenCreatorApplication(userId) {
   if (!userId) return false;
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from('admin_alerts')
-    .select('id, metadata, status')
-    .eq('alert_type', 'content_creator_application')
-    .eq('status', 'Açık')
-    .limit(100);
-  return (data || []).some((row) => row?.metadata?.user_id === userId);
+  const profile = await getProfileFlags(userId);
+  if (profile?.is_content_creator) return false;
+  if (profile?.content_creator_applied_at) return true;
+
+  // Legacy fallback: older applications only stored in admin_alerts.
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from('admin_alerts')
+      .select('id, metadata, status')
+      .eq('alert_type', 'content_creator_application')
+      .eq('status', 'Açık')
+      .limit(100);
+    return (data || []).some((row) => row?.metadata?.user_id === userId);
+  } catch {
+    return false;
+  }
 }
 
 export async function getCreatorApplications() {
   const { user, error } = await requireUser();
   if (error || !isAdminUser(user)) return [];
   const admin = createAdminClient();
-  const { data, error: qError } = await admin
-    .from('admin_alerts')
-    .select('id, description, metadata, status, created_at')
-    .eq('alert_type', 'content_creator_application')
-    .eq('status', 'Açık')
-    .order('created_at', { ascending: true });
-  if (qError) {
-    logger.error('getCreatorApplications', qError);
-    return [];
+
+  // Primary: pending applications on profiles.
+  const { data: profiles, error: profileError } = await admin
+    .from('profiles')
+    .select(
+      'id, username, email, content_creator_pitch, content_creator_applied_at, is_content_creator'
+    )
+    .eq('is_content_creator', false)
+    .not('content_creator_applied_at', 'is', null)
+    .order('content_creator_applied_at', { ascending: true });
+
+  if (profileError) {
+    logger.error('getCreatorApplications profiles', profileError);
   }
-  return data || [];
+
+  const fromProfiles = (profiles || []).map((row) => ({
+    id: `profile:${row.id}`,
+    description: row.content_creator_pitch || '',
+    status: 'Açık',
+    created_at: row.content_creator_applied_at,
+    metadata: {
+      user_id: row.id,
+      email: row.email || null,
+      username: row.username || null,
+      pitch: row.content_creator_pitch || '',
+    },
+  }));
+
+  // Merge any legacy alert-only applications not yet mirrored to profiles.
+  let fromAlerts = [];
+  try {
+    const { data: alerts, error: qError } = await admin
+      .from('admin_alerts')
+      .select('id, description, metadata, status, created_at')
+      .eq('alert_type', 'content_creator_application')
+      .eq('status', 'Açık')
+      .order('created_at', { ascending: true });
+    if (qError) {
+      logger.error('getCreatorApplications alerts', qError);
+    } else {
+      const profileIds = new Set(fromProfiles.map((a) => a.metadata.user_id));
+      fromAlerts = (alerts || [])
+        .filter((row) => row?.metadata?.user_id && !profileIds.has(row.metadata.user_id))
+        .map((row) => ({
+          id: `alert:${row.id}`,
+          description: row.description,
+          metadata: row.metadata,
+          status: row.status,
+          created_at: row.created_at,
+        }));
+    }
+  } catch (err) {
+    logger.error('getCreatorApplications alerts exception', err);
+  }
+
+  return [...fromProfiles, ...fromAlerts].sort(
+    (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+  );
 }
 
 export async function createCreatorPost(formData) {

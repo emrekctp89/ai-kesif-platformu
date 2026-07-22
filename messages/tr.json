@@ -1486,6 +1486,44 @@
     "strategicSuggestions": "Stratejik öneriler",
     "potentialTools": "Potansiyel araç önerileri"
   },
+  "Kasif": {
+    "metaTitle": "Kâşif",
+    "metaDescription": "AI Keşif Platformu araç öneri ve karşılaştırma asistanı.",
+    "eyebrow": "AI Keşif özel öneri motoru",
+    "title": "Kâşif",
+    "subtitle": "İhtiyacını yaz, Kâşif platformdaki araçları senin için sıralasın.",
+    "newConversation": "Yeni konuşma",
+    "startersTitle": "Nereden başlamak istersin?",
+    "startersDescription": "Bir örnek seçebilir veya ihtiyacını aşağıya kendi cümlelerinle yazabilirsin.",
+    "starters": {
+      "presentation": {
+        "label": "Sunum hazırla",
+        "question": "Ücretsiz bir sunum hazırlamak için hangi araçları kullanabilirim?"
+      },
+      "image": {
+        "label": "Görsel üret",
+        "question": "Sosyal medya için gerçekçi görseller üreten araçları karşılaştır."
+      },
+      "code": {
+        "label": "Kod yaz",
+        "question": "Kodlama öğrenirken bana yardımcı olacak ücretsiz AI araçları öner."
+      }
+    },
+    "conversationLabel": "Kâşif konuşması",
+    "genericError": "Bir hata oluştu.",
+    "connectionError": "Kâşif sunucusuna ulaşılamadı.",
+    "retry": "Yeniden dene",
+    "sources": "Platform kaynakları",
+    "feedbackQuestion": "Bu sonuç faydalı mıydı?",
+    "useful": "Faydalı",
+    "notUseful": "Faydalı değil",
+    "saved": "Kaydedildi",
+    "saving": "Kaydediliyor…",
+    "feedbackError": "Geri bildirim kaydedilemedi. Lütfen tekrar deneyin.",
+    "thinking": "Kâşif düşünüyor",
+    "askLabel": "Kâşif'e sor",
+    "placeholder": "Örneğin: Ücretsiz sunum hazırlamak için hangi araçları kullanabilirim?"
+  },
   "ContentStudio": {
     "statTotal": "Toplam",
     "statDraft": "Taslak",
@@ -1719,6 +1757,8 @@
     "contentLengthHint": "{current} / min {min} karakter",
     "reviewRequirementsHint": "İncelemeye göndermek için başlık en az {titleMin}, gövde en az {contentMin} karakter olmalı.",
     "errReviewTitleShort": "Başlık en az {min} karakter olmalı (şu an: {current}).",
-    "errReviewContentShort": "İçerik en az {min} karakter olmalı (şu an: {current}). Markdown işaretleri sayılmaz."
+    "errReviewContentShort": "İçerik en az {min} karakter olmalı (şu an: {current}). Markdown işaretleri sayılmaz.",
+    "adminPublishedEditHint": "Admin olarak yayındaki yazıyı düzenliyorsun. Kaydetmek canlı içeriği günceller.",
+    "savePublished": "Yayındaki yazıyı kaydet"
   }
 }

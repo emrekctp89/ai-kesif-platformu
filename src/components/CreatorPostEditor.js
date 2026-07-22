@@ -53,6 +53,7 @@ function statusLabel(status, t) {
  *   categories?: Array<{ id: number, name: string }>,
  *   tags?: Array<{ id: number, name: string }>,
  *   selectedTagIds?: number[],
+ *   isAdmin?: boolean,
  * }} props
  */
 export function CreatorPostEditor({
@@ -60,6 +61,7 @@ export function CreatorPostEditor({
   categories = [],
   tags = [],
   selectedTagIds: initialTagIds = [],
+  isAdmin = false,
 }) {
   const t = useTranslations('ContentStudio');
   const router = useRouter();
@@ -103,11 +105,21 @@ export function CreatorPostEditor({
     [t]
   );
 
-  const lockedPublished = post.status === 'Yayınlandı';
+  // Creators cannot edit live posts; admins can keep editing while published.
+  const isPublished = post.status === 'Yayınlandı';
+  const lockedPublished = isPublished && !isAdmin;
   const inReview = post.status === 'İncelemede';
   const contentLen = plainTextFromMarkdown(content).length;
   const titleLen = plainTextFromMarkdown(title).length;
   const reviewReady = validatePostForReview({ title, content }).ok;
+
+  function resolveSaveStatus() {
+    if (isPublished && isAdmin) return 'Yayınlandı';
+    if (inReview) return 'İncelemede';
+    // Rejected stays rejected until re-submitted for review (or admin publishes).
+    if (post.status === 'Reddedildi') return 'Reddedildi';
+    return 'Taslak';
+  }
 
   const buildSnapshot = useCallback(
     () =>
@@ -188,7 +200,7 @@ export function CreatorPostEditor({
       }
 
       const formData = withMeta(new FormData(), { autosave });
-      formData.set('status', status || (inReview ? 'İncelemede' : 'Taslak'));
+      formData.set('status', status || resolveSaveStatus());
 
       if (autosave) {
         setAutosaveState('saving');
@@ -228,7 +240,10 @@ export function CreatorPostEditor({
       coverUrl,
       selectedTags,
       inReview,
+      isPublished,
+      isAdmin,
       post.id,
+      post.status,
       t,
       router,
       buildSnapshot,
@@ -360,6 +375,11 @@ export function CreatorPostEditor({
       {inReview ? (
         <div className="rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
           {t('inReviewEditorHint')}
+        </div>
+      ) : null}
+      {isPublished && isAdmin ? (
+        <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-100">
+          {t('adminPublishedEditHint')}
         </div>
       ) : null}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -576,7 +596,7 @@ export function CreatorPostEditor({
                   {t('adminNotePrefix')}: {post.review_note}
                 </p>
               ) : null}
-              {!inReview && !reviewReady ? (
+              {!inReview && !isPublished && !reviewReady ? (
                 <p className="rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
                   {t('reviewRequirementsHint', {
                     titleMin: MIN_POST_TITLE_LENGTH,
@@ -586,7 +606,11 @@ export function CreatorPostEditor({
               ) : null}
               <div className="flex flex-col gap-2">
                 <Button type="submit" disabled={isPending || isUploadingCover}>
-                  {isPending ? t('saving') : t('saveDraft')}
+                  {isPending
+                    ? t('saving')
+                    : isPublished && isAdmin
+                      ? t('savePublished')
+                      : t('saveDraft')}
                 </Button>
                 <Button asChild type="button" variant="outline">
                   <Link href={`/icerik/${post.id}/preview`}>
@@ -594,6 +618,14 @@ export function CreatorPostEditor({
                     {t('preview')}
                   </Link>
                 </Button>
+                {isPublished && isAdmin && post.slug ? (
+                  <Button asChild type="button" variant="outline">
+                    <Link href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                      {t('viewPublishedPost')}
+                    </Link>
+                  </Button>
+                ) : null}
                 {inReview ? (
                   <Button
                     type="button"
@@ -603,7 +635,7 @@ export function CreatorPostEditor({
                   >
                     {isPending ? t('saving') : t('withdrawReview')}
                   </Button>
-                ) : (
+                ) : !isPublished ? (
                   <Button
                     type="button"
                     variant="secondary"
@@ -612,7 +644,7 @@ export function CreatorPostEditor({
                   >
                     {isPending ? t('saving') : t('submitForReview')}
                   </Button>
-                )}
+                ) : null}
               </div>
             </CardContent>
           </Card>

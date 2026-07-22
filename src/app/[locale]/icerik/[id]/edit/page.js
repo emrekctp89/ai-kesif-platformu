@@ -65,6 +65,7 @@ export default async function CreatorEditPostPage({ params }) {
         categories={categories || []}
         tags={tags || []}
         selectedTagIds={selectedTagIds}
+        isAdmin={isAdmin}
       />
     </div>
   );

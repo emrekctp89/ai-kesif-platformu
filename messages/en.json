@@ -1486,6 +1486,44 @@
     "strategicSuggestions": "Strategic suggestions",
     "potentialTools": "Potential tool recommendations"
   },
+  "Kasif": {
+    "metaTitle": "Kâşif",
+    "metaDescription": "AI Discovery's tool recommendation and comparison assistant.",
+    "eyebrow": "AI Discovery's recommendation engine",
+    "title": "Kâşif",
+    "subtitle": "Describe what you need and Kâşif will rank the tools on the platform for you.",
+    "newConversation": "New conversation",
+    "startersTitle": "Where would you like to start?",
+    "startersDescription": "Choose an example or describe what you need in your own words below.",
+    "starters": {
+      "presentation": {
+        "label": "Create slides",
+        "question": "Which tools can I use to create a presentation for free?"
+      },
+      "image": {
+        "label": "Generate images",
+        "question": "Compare tools that create realistic images for social media."
+      },
+      "code": {
+        "label": "Write code",
+        "question": "Recommend free AI tools that can help me learn coding."
+      }
+    },
+    "conversationLabel": "Kâşif conversation",
+    "genericError": "Something went wrong.",
+    "connectionError": "Kâşif could not reach the server.",
+    "retry": "Try again",
+    "sources": "Platform sources",
+    "feedbackQuestion": "Was this result helpful?",
+    "useful": "Helpful",
+    "notUseful": "Not helpful",
+    "saved": "Saved",
+    "saving": "Saving…",
+    "feedbackError": "Could not save your feedback. Please try again.",
+    "thinking": "Kâşif is thinking",
+    "askLabel": "Ask Kâşif",
+    "placeholder": "For example: Which tools can I use to create a presentation for free?"
+  },
   "ContentStudio": {
     "statTotal": "Total",
     "statDraft": "Drafts",
@@ -1719,6 +1757,8 @@
     "contentLengthHint": "{current} / min {min} characters",
     "reviewRequirementsHint": "To submit for review: title ≥ {titleMin} chars, body ≥ {contentMin} chars.",
     "errReviewTitleShort": "Title must be at least {min} characters (now: {current}).",
-    "errReviewContentShort": "Body must be at least {min} characters (now: {current}). Markdown markup does not count."
+    "errReviewContentShort": "Body must be at least {min} characters (now: {current}). Markdown markup does not count.",
+    "adminPublishedEditHint": "You are editing a live post as admin. Saving updates the published content.",
+    "savePublished": "Save published post"
   }
 }
