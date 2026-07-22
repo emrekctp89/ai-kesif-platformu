@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import dynamic from 'next/dynamic';
 import toast from 'react-hot-toast';
 import { useTranslations } from 'next-intl';
-import { ExternalLink, Eye, ImagePlus, Trash2, Upload } from 'lucide-react';
+import { Check, ExternalLink, Eye, ImagePlus, Loader2, Trash2, Upload } from 'lucide-react';
 import { Link, useRouter } from '@/i18n/routing';
 import {
   assignCreatorPostTags,
@@ -13,6 +13,13 @@ import {
   uploadCreatorCoverImage,
   withdrawCreatorPostFromReview,
 } from '@/app/actions/contentCreators';
+import {
+  CREATOR_AUTOSAVE_MS,
+  MIN_POST_CONTENT_LENGTH,
+  MIN_POST_TITLE_LENGTH,
+  plainTextFromMarkdown,
+  validatePostForReview,
+} from '@/lib/contentCreatorRules';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -56,9 +63,16 @@ export function CreatorPostEditor({
 }) {
   const t = useTranslations('ContentStudio');
   const router = useRouter();
+  const formRef = useRef(null);
   const fileInputRef = useRef(null);
+  const snapshotRef = useRef('');
+  const skipNextAutosaveRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [autosaveState, setAutosaveState] = useState('idle'); // idle | dirty | saving | saved | error
+  const [title, setTitle] = useState(post.title || '');
+  const [description, setDescription] = useState(post.description || '');
+  const [slug, setSlug] = useState(post.slug || '');
   const [content, setContent] = useState(post.content || '');
   const [type, setType] = useState(post.type || 'Yazı');
   const [categoryId, setCategoryId] = useState(
@@ -91,12 +105,41 @@ export function CreatorPostEditor({
 
   const lockedPublished = post.status === 'Yayınlandı';
   const inReview = post.status === 'İncelemede';
+  const contentLen = plainTextFromMarkdown(content).length;
+  const titleLen = plainTextFromMarkdown(title).length;
+  const reviewReady = validatePostForReview({ title, content }).ok;
 
-  function withMeta(formData) {
+  const buildSnapshot = useCallback(
+    () =>
+      JSON.stringify({
+        title,
+        description,
+        slug,
+        content,
+        type,
+        categoryId,
+        coverUrl,
+        tags: [...selectedTags].sort((a, b) => a - b),
+      }),
+    [title, description, slug, content, type, categoryId, coverUrl, selectedTags]
+  );
+
+  useEffect(() => {
+    snapshotRef.current = buildSnapshot();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- baseline only on post id change
+  }, [post.id]);
+
+  function withMeta(formData, { autosave = false } = {}) {
+    formData.set('id', String(post.id));
+    formData.set('title', title.trim());
+    formData.set('description', description);
+    formData.set('slug', slug.trim());
     formData.set('content', content);
     formData.set('type', type);
     formData.set('category_id', categoryId === 'none' ? '' : categoryId);
     formData.set('featured_image_url', coverUrl.trim());
+    if (autosave) formData.set('autosave', '1');
+    else formData.delete('autosave');
     return formData;
   }
 
@@ -137,42 +180,135 @@ export function CreatorPostEditor({
     }
   }
 
-  function save(formData) {
-    withMeta(formData);
-    formData.set('status', inReview ? 'İncelemede' : 'Taslak');
-    startTransition(async () => {
+  const persist = useCallback(
+    async ({ autosave = false, status } = {}) => {
+      if (!title.trim()) {
+        if (!autosave) toast.error(t('errTitleRequired'));
+        return { error: true };
+      }
+
+      const formData = withMeta(new FormData(), { autosave });
+      formData.set('status', status || (inReview ? 'İncelemede' : 'Taslak'));
+
+      if (autosave) {
+        setAutosaveState('saving');
+        const postResult = await updateCreatorPost(formData);
+        if (postResult.error) {
+          setAutosaveState('error');
+          return { error: true };
+        }
+        snapshotRef.current = buildSnapshot();
+        setAutosaveState('saved');
+        return { ok: true };
+      }
+
       const [postResult, tagsResult] = await Promise.all([
         updateCreatorPost(formData),
         assignCreatorPostTags(tagsFormData(post.id)),
       ]);
       if (postResult.error || tagsResult.error) {
         toast.error(postResult.error || tagsResult.error);
-      } else {
-        toast.success(postResult.success || t('toastSaved'));
-        router.refresh();
+        return { error: true };
       }
+      skipNextAutosaveRef.current = true;
+      snapshotRef.current = buildSnapshot();
+      setAutosaveState('saved');
+      toast.success(postResult.success || t('toastSaved'));
+      router.refresh();
+      return { ok: true };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- form helpers close over latest state
+    [
+      title,
+      description,
+      slug,
+      content,
+      type,
+      categoryId,
+      coverUrl,
+      selectedTags,
+      inReview,
+      post.id,
+      t,
+      router,
+      buildSnapshot,
+    ]
+  );
+
+  // Debounced autosave while drafting / rejected / in-review edits.
+  useEffect(() => {
+    if (lockedPublished) return undefined;
+    if (isPending || isUploadingCover) return undefined;
+    if (skipNextAutosaveRef.current) {
+      skipNextAutosaveRef.current = false;
+      return undefined;
+    }
+
+    const nextSnap = buildSnapshot();
+    if (nextSnap === snapshotRef.current) return undefined;
+    if (!title.trim()) return undefined;
+
+    setAutosaveState('dirty');
+    const timer = setTimeout(() => {
+      void persist({ autosave: true });
+    }, CREATOR_AUTOSAVE_MS);
+
+    return () => clearTimeout(timer);
+  }, [
+    buildSnapshot,
+    title,
+    description,
+    slug,
+    content,
+    type,
+    categoryId,
+    coverUrl,
+    selectedTags,
+    lockedPublished,
+    isPending,
+    isUploadingCover,
+    persist,
+  ]);
+
+  function save() {
+    startTransition(async () => {
+      await persist({ autosave: false });
     });
   }
 
-  function submitReview(formData) {
-    withMeta(formData);
+  function submitReview() {
+    const check = validatePostForReview({ title, content });
+    if (!check.ok) {
+      if (check.reason === 'title') {
+        toast.error(t('errReviewTitleShort', { min: check.min, current: check.current }));
+      } else {
+        toast.error(t('errReviewContentShort', { min: check.min, current: check.current }));
+      }
+      return;
+    }
+
     startTransition(async () => {
       await assignCreatorPostTags(tagsFormData(post.id));
+      const formData = withMeta(new FormData());
       const result = await submitCreatorPostForReview(formData);
       if (result.error) toast.error(result.error);
       else {
+        skipNextAutosaveRef.current = true;
+        snapshotRef.current = buildSnapshot();
         toast.success(result.success || t('toastSubmitted'));
         router.refresh();
       }
     });
   }
 
-  function withdraw(formData) {
-    withMeta(formData);
+  function withdraw() {
     startTransition(async () => {
+      const formData = withMeta(new FormData());
       const result = await withdrawCreatorPostFromReview(formData);
       if (result.error) toast.error(result.error);
       else {
+        skipNextAutosaveRef.current = true;
+        snapshotRef.current = buildSnapshot();
         toast.success(result.success || t('toastWithdrawn'));
         router.refresh();
       }
@@ -201,9 +337,15 @@ export function CreatorPostEditor({
   }
 
   return (
-    <form className="space-y-6">
+    <form
+      ref={formRef}
+      className="space-y-6"
+      onSubmit={(e) => {
+        e.preventDefault();
+        save();
+      }}
+    >
       <input type="hidden" name="id" value={post.id} />
-      <input type="hidden" name="featured_image_url" value={coverUrl} />
       {post.status === 'Reddedildi' ? (
         <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
           <p className="font-medium text-destructive">{t('rejectedEditorTitle')}</p>
@@ -223,20 +365,46 @@ export function CreatorPostEditor({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <div className="space-y-2">
-            <Label htmlFor="title">{t('titleLabel')}</Label>
-            <Input id="title" name="title" defaultValue={post.title} required />
+            <div className="flex items-end justify-between gap-2">
+              <Label htmlFor="title">{t('titleLabel')}</Label>
+              <span className="text-[11px] text-muted-foreground">
+                {titleLen}/{MIN_POST_TITLE_LENGTH}+
+              </span>
+            </div>
+            <Input
+              id="title"
+              name="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">{t('descriptionLabel')}</Label>
             <Textarea
               id="description"
               name="description"
-              defaultValue={post.description || ''}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="min-h-[100px]"
             />
           </div>
           <div className="space-y-2">
-            <Label>{t('contentMarkdownLabel')}</Label>
+            <div className="flex items-end justify-between gap-2">
+              <Label>{t('contentMarkdownLabel')}</Label>
+              <span
+                className={`text-[11px] ${
+                  contentLen >= MIN_POST_CONTENT_LENGTH
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                {t('contentLengthHint', {
+                  current: contentLen,
+                  min: MIN_POST_CONTENT_LENGTH,
+                })}
+              </span>
+            </div>
             <SimpleMDE options={editorOptions} value={content} onChange={setContent} />
           </div>
         </div>
@@ -249,7 +417,13 @@ export function CreatorPostEditor({
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="slug">{t('slugLabel')}</Label>
-                <Input id="slug" name="slug" defaultValue={post.slug} required />
+                <Input
+                  id="slug"
+                  name="slug"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-2">
                 <Label>{t('typeLabel')}</Label>
@@ -371,24 +545,47 @@ export function CreatorPostEditor({
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                {t('statusLabel')}:{' '}
-                <span className="font-semibold text-foreground">{statusLabel(post.status, t)}</span>
-              </p>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p>
+                  {t('statusLabel')}:{' '}
+                  <span className="font-semibold text-foreground">
+                    {statusLabel(post.status, t)}
+                  </span>
+                </p>
+                <p className="flex items-center gap-1.5" aria-live="polite">
+                  {autosaveState === 'saving' ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      {t('autosaveSaving')}
+                    </>
+                  ) : null}
+                  {autosaveState === 'saved' ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+                      {t('autosaveSaved')}
+                    </>
+                  ) : null}
+                  {autosaveState === 'dirty' ? t('autosavePending') : null}
+                  {autosaveState === 'error' ? (
+                    <span className="text-destructive">{t('autosaveError')}</span>
+                  ) : null}
+                </p>
+              </div>
               {post.review_note ? (
                 <p className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
                   {t('adminNotePrefix')}: {post.review_note}
                 </p>
               ) : null}
+              {!inReview && !reviewReady ? (
+                <p className="rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
+                  {t('reviewRequirementsHint', {
+                    titleMin: MIN_POST_TITLE_LENGTH,
+                    contentMin: MIN_POST_CONTENT_LENGTH,
+                  })}
+                </p>
+              ) : null}
               <div className="flex flex-col gap-2">
-                <Button
-                  type="button"
-                  disabled={isPending || isUploadingCover}
-                  onClick={(e) => {
-                    const form = e.currentTarget.closest('form');
-                    if (form) save(new FormData(form));
-                  }}
-                >
+                <Button type="submit" disabled={isPending || isUploadingCover}>
                   {isPending ? t('saving') : t('saveDraft')}
                 </Button>
                 <Button asChild type="button" variant="outline">
@@ -402,10 +599,7 @@ export function CreatorPostEditor({
                     type="button"
                     variant="outline"
                     disabled={isPending || isUploadingCover}
-                    onClick={(e) => {
-                      const form = e.currentTarget.closest('form');
-                      if (form) withdraw(new FormData(form));
-                    }}
+                    onClick={withdraw}
                   >
                     {isPending ? t('saving') : t('withdrawReview')}
                   </Button>
@@ -413,11 +607,8 @@ export function CreatorPostEditor({
                   <Button
                     type="button"
                     variant="secondary"
-                    disabled={isPending || isUploadingCover}
-                    onClick={(e) => {
-                      const form = e.currentTarget.closest('form');
-                      if (form) submitReview(new FormData(form));
-                    }}
+                    disabled={isPending || isUploadingCover || !reviewReady}
+                    onClick={submitReview}
                   >
                     {isPending ? t('saving') : t('submitForReview')}
                   </Button>

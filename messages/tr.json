@@ -1710,6 +1710,15 @@
     "errCoverTooLarge": "Görsel en fazla 5 MB olabilir.",
     "errCoverType": "Yalnızca JPG, PNG, WebP veya GIF yükleyebilirsin.",
     "errCoverUpload": "Görsel yüklenemedi. Biraz sonra tekrar dene.",
-    "errCoverInvalid": "Geçerli bir http(s) kapak URL’si gir."
+    "errCoverInvalid": "Geçerli bir http(s) kapak URL’si gir.",
+    "autosavePending": "Kaydedilmemiş değişiklikler…",
+    "autosaveSaving": "Otomatik kaydediliyor…",
+    "autosaveSaved": "Otomatik kaydedildi",
+    "autosaveError": "Otomatik kayıt başarısız",
+    "successAutosaved": "Otomatik kaydedildi",
+    "contentLengthHint": "{current} / min {min} karakter",
+    "reviewRequirementsHint": "İncelemeye göndermek için başlık en az {titleMin}, gövde en az {contentMin} karakter olmalı.",
+    "errReviewTitleShort": "Başlık en az {min} karakter olmalı (şu an: {current}).",
+    "errReviewContentShort": "İçerik en az {min} karakter olmalı (şu an: {current}). Markdown işaretleri sayılmaz."
   }
 }

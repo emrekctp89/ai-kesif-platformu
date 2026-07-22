@@ -1710,6 +1710,15 @@
     "errCoverTooLarge": "Image must be 5 MB or smaller.",
     "errCoverType": "Only JPG, PNG, WebP, or GIF are allowed.",
     "errCoverUpload": "Could not upload image. Try again shortly.",
-    "errCoverInvalid": "Enter a valid http(s) cover image URL."
+    "errCoverInvalid": "Enter a valid http(s) cover image URL.",
+    "autosavePending": "Unsaved changes…",
+    "autosaveSaving": "Autosaving…",
+    "autosaveSaved": "Autosaved",
+    "autosaveError": "Autosave failed",
+    "successAutosaved": "Autosaved",
+    "contentLengthHint": "{current} / min {min} characters",
+    "reviewRequirementsHint": "To submit for review: title ≥ {titleMin} chars, body ≥ {contentMin} chars.",
+    "errReviewTitleShort": "Title must be at least {min} characters (now: {current}).",
+    "errReviewContentShort": "Body must be at least {min} characters (now: {current}). Markdown markup does not count."
   }
 }

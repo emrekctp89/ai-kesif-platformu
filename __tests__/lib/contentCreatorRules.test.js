@@ -1,10 +1,14 @@
 import {
   MIN_CREATOR_REPUTATION,
+  MIN_POST_CONTENT_LENGTH,
+  MIN_POST_TITLE_LENGTH,
   REPUTATION_AWARDS,
   isReputationEligible,
+  plainTextFromMarkdown,
   questActionDeepLink,
   reputationProgress,
   summarizeDailyQuests,
+  validatePostForReview,
 } from '@/lib/contentCreatorRules';
 
 describe('contentCreatorRules', () => {
@@ -75,5 +79,26 @@ describe('contentCreatorRules', () => {
     expect(questActionDeepLink('follow_user', { sampleUsername: 'inventor' }).href).toBe(
       '/u/inventor'
     );
+  });
+
+  it('strips markdown noise for plain-text length', () => {
+    expect(plainTextFromMarkdown('## Hello **world**')).toBe('Hello world');
+    expect(plainTextFromMarkdown('[link](https://x.com)')).toBe('link');
+  });
+
+  it('validates posts before review', () => {
+    expect(validatePostForReview({ title: 'Hi', content: 'x'.repeat(200) }).ok).toBe(false);
+    expect(
+      validatePostForReview({
+        title: 'A'.repeat(MIN_POST_TITLE_LENGTH),
+        content: 'x'.repeat(MIN_POST_CONTENT_LENGTH - 1),
+      }).reason
+    ).toBe('content');
+    expect(
+      validatePostForReview({
+        title: 'A'.repeat(MIN_POST_TITLE_LENGTH),
+        content: 'x'.repeat(MIN_POST_CONTENT_LENGTH),
+      }).ok
+    ).toBe(true);
   });
 });

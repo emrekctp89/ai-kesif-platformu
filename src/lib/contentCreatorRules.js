@@ -5,6 +5,58 @@
 
 export const MIN_CREATOR_REPUTATION = Number(process.env.CONTENT_CREATOR_MIN_REPUTATION || 10);
 
+/** Minimum plain-text length for title when submitting for review. */
+export const MIN_POST_TITLE_LENGTH = 8;
+
+/** Minimum plain-text length for body when submitting for review. */
+export const MIN_POST_CONTENT_LENGTH = 120;
+
+/** Debounce window for draft autosave (ms). */
+export const CREATOR_AUTOSAVE_MS = 2500;
+
+/**
+ * Strip common Markdown noise so length checks reflect readable text.
+ * @param {string} markdown
+ * @returns {string}
+ */
+export function plainTextFromMarkdown(markdown) {
+  return String(markdown || '')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/!\[[^\]]*]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)]\([^)]*\)/g, '$1')
+    .replace(/[#>*_~\[\]()|]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Validate a post before review submission.
+ * @param {{ title?: string, content?: string }} fields
+ * @returns {{ ok: true } | { ok: false, reason: 'title' | 'content', current: number, min: number }}
+ */
+export function validatePostForReview({ title, content } = {}) {
+  const titleLen = plainTextFromMarkdown(title).length;
+  if (titleLen < MIN_POST_TITLE_LENGTH) {
+    return {
+      ok: false,
+      reason: 'title',
+      current: titleLen,
+      min: MIN_POST_TITLE_LENGTH,
+    };
+  }
+  const contentLen = plainTextFromMarkdown(content).length;
+  if (contentLen < MIN_POST_CONTENT_LENGTH) {
+    return {
+      ok: false,
+      reason: 'content',
+      current: contentLen,
+      min: MIN_POST_CONTENT_LENGTH,
+    };
+  }
+  return { ok: true };
+}
+
 /**
  * Known reputation awards used for transparent UI copy.
  * Keep in sync with DB triggers / quest seed data.

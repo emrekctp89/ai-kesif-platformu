@@ -9,7 +9,7 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { slugify } from '@/utils/slugify';
 import { uploadToGCS } from '@/utils/gcs';
 import { contentEmailHtml, sendContentEventEmail } from '@/lib/contentNotify';
-import { MIN_CREATOR_REPUTATION } from '@/lib/contentCreatorRules';
+import { MIN_CREATOR_REPUTATION, validatePostForReview } from '@/lib/contentCreatorRules';
 
 const CREATOR_EDITABLE_STATUSES = new Set(['Taslak', 'İncelemede', 'Reddedildi']);
 const MAX_COVER_BYTES = 5 * 1024 * 1024;
@@ -371,9 +371,35 @@ export async function updateCreatorPost(formData) {
 
   if (!updates.title) return { error: await tStudio('errTitleRequired') };
 
+  // Enforce minimum quality only when moving into (or saving as) review.
+  if (nextStatus === 'İncelemede') {
+    const check = validatePostForReview({
+      title: updates.title,
+      content: updates.content,
+    });
+    if (!check.ok) {
+      if (check.reason === 'title') {
+        return {
+          error: await tStudio('errReviewTitleShort', {
+            min: check.min,
+            current: check.current,
+          }),
+        };
+      }
+      return {
+        error: await tStudio('errReviewContentShort', {
+          min: check.min,
+          current: check.current,
+        }),
+      };
+    }
+  }
+
   if (nextStatus === 'İncelemede' && existing.status !== 'İncelemede') {
     updates.submitted_at = new Date().toISOString();
   }
+
+  const isAutosave = String(formData.get('autosave') || '') === '1';
 
   const { error: updateError } = await admin.from('posts').update(updates).eq('id', id);
   if (updateError) {
@@ -381,11 +407,20 @@ export async function updateCreatorPost(formData) {
     return { error: updateError.message || (await tStudio('errSaveFailed')) };
   }
 
-  revalidatePath('/icerik');
-  revalidatePath(`/icerik/${id}/edit`);
-  revalidatePath('/admin');
-  revalidatePath('/blog');
-  return { success: await tStudio('successDraftSaved') };
+  if (!isAutosave) {
+    revalidatePath('/icerik');
+    revalidatePath(`/icerik/${id}/edit`);
+    revalidatePath('/admin');
+    revalidatePath('/blog');
+  } else {
+    // Lightweight path refresh so list timestamps stay reasonable without thrashing.
+    revalidatePath(`/icerik/${id}/edit`);
+  }
+
+  return {
+    success: isAutosave ? await tStudio('successAutosaved') : await tStudio('successDraftSaved'),
+    autosaved: isAutosave,
+  };
 }
 
 export async function submitCreatorPostForReview(formData) {
@@ -395,6 +430,7 @@ export async function submitCreatorPostForReview(formData) {
   const payload = new FormData();
   for (const [k, v] of formData.entries()) payload.set(k, v);
   payload.set('status', 'İncelemede');
+  payload.delete('autosave');
   const result = await updateCreatorPost(payload);
   if (result.error) return result;
   return { success: await tStudio('successSubmitted') };
