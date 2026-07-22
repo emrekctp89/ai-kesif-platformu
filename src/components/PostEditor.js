@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { useState, useMemo, useTransition } from 'react';
@@ -27,8 +27,9 @@ const SimpleMDE = dynamic(() => import('react-simplemde-editor'), {
   ssr: false,
 });
 import 'easymde/dist/easymde.min.css';
+import 'font-awesome/css/font-awesome.min.css';
 
-// Çoklu Seçim Bileşenleri (Bunlar için src/components altında ayrı dosyalar oluşturulabilir)
+// Ã‡oklu SeÃ§im BileÅŸenleri (Bunlar iÃ§in src/components altÄ±nda ayrÄ± dosyalar oluÅŸturulabilir)
 function MultiSelect({ items, selectedIds, onSelectionChange, placeholder }) {
   const [open, setOpen] = useState(false);
   const selectedObjects = items.filter((item) => selectedIds.has(item.id));
@@ -62,7 +63,7 @@ function MultiSelect({ items, selectedIds, onSelectionChange, placeholder }) {
         <Command>
           <CommandInput placeholder="Ara..." />
           <CommandList>
-            <CommandEmpty>Bulunamadı.</CommandEmpty>
+            <CommandEmpty>BulunamadÄ±.</CommandEmpty>
             <CommandGroup>
               {items.map((item) => (
                 <CommandItem key={item.id} value={item.name} onSelect={() => handleSelect(item.id)}>
@@ -83,7 +84,7 @@ function MultiSelect({ items, selectedIds, onSelectionChange, placeholder }) {
   );
 }
 
-// Ana Yazı Editör Bileşeni
+// Ana YazÄ± EditÃ¶r BileÅŸeni
 export function PostEditor({ post, allTools, allTags, allCategories }) {
   const [isPending, startTransition] = useTransition();
   const [content, setContent] = useState(post.content || '');
@@ -95,7 +96,7 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
   const editorOptions = useMemo(
     () => ({
       spellChecker: false,
-      placeholder: 'Yazınızı buraya yazmaya başlayın...',
+      placeholder: 'YazÄ±nÄ±zÄ± buraya yazmaya baÅŸlayÄ±n...',
       toolbar: [
         'bold',
         'italic',
@@ -120,13 +121,13 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
           uploadBlogImage(formData).then((result) => {
             if (result.success) {
               onSuccess(result.url);
-              return 'Görsel başarıyla yüklendi!';
+              return 'GÃ¶rsel baÅŸarÄ±yla yÃ¼klendi!';
             } else {
               throw new Error(result.error);
             }
           }),
           {
-            loading: 'Yükleniyor...',
+            loading: 'YÃ¼kleniyor...',
             success: (msg) => msg,
             error: (err) => `Hata: ${err.message}`,
           }
@@ -155,10 +156,10 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
       ]);
       if (postResult.error || toolsResult.error || tagsResult.error) {
         toast.error(
-          postResult.error || toolsResult.error || tagsResult.error || 'Bir hata oluştu.'
+          postResult.error || toolsResult.error || tagsResult.error || 'Bir hata oluÅŸtu.'
         );
       } else {
-        toast.success('Yazı ve ilişkili içerikler başarıyla güncellendi.');
+        toast.success('YazÄ± ve iliÅŸkili iÃ§erikler baÅŸarÄ±yla gÃ¼ncellendi.');
       }
     });
   };
@@ -170,11 +171,11 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title">Başlık</Label>
+            <Label htmlFor="title">BaÅŸlÄ±k</Label>
             <Input id="title" name="title" defaultValue={post.title} required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Kısa Açıklama</Label>
+            <Label htmlFor="description">KÄ±sa AÃ§Ä±klama</Label>
             <Textarea
               id="description"
               name="description"
@@ -183,7 +184,7 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
             />
           </div>
           <div className="space-y-2">
-            <Label>İçerik (Markdown)</Label>
+            <Label>Ä°Ã§erik (Markdown)</Label>
             <SimpleMDE options={editorOptions} value={content} onChange={setContent} />
           </div>
         </div>
@@ -191,11 +192,11 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
         <div className="md:col-span-1 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Yayın Ayarları</CardTitle>
+              <CardTitle>YayÄ±n AyarlarÄ±</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="slug">URL Uzantısı</Label>
+                <Label htmlFor="slug">URL UzantÄ±sÄ±</Label>
                 <Input id="slug" name="slug" defaultValue={post.slug} required />
               </div>
               <div className="space-y-2">
@@ -208,12 +209,12 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
                   className="w-full mt-1 block pl-3 pr-10 py-2.5 text-base border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option>Taslak</option>
-                  <option>Yayınlandı</option>
-                  <option>Arşivlendi</option>
+                  <option>YayÄ±nlandÄ±</option>
+                  <option>ArÅŸivlendi</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="type">Yazı Tipi</Label>
+                <Label htmlFor="type">YazÄ± Tipi</Label>
                 <select
                   name="type"
                   id="type"
@@ -228,7 +229,7 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
             </CardContent>
           </Card>
 
-          {/* Organizasyon Kartı sadece Rehber ve Makaleler için görünür */}
+          {/* Organizasyon KartÄ± sadece Rehber ve Makaleler iÃ§in gÃ¶rÃ¼nÃ¼r */}
           {(post.type === 'Rehber' || post.type === 'Makale') && (
             <Card>
               <CardHeader>
@@ -256,7 +257,7 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
                     items={allTags}
                     selectedIds={selectedTags}
                     onSelectionChange={setSelectedTags}
-                    placeholder="Etiket Seç..."
+                    placeholder="Etiket SeÃ§..."
                   />
                 </div>
               </CardContent>
@@ -265,14 +266,14 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
 
           <Card>
             <CardHeader>
-              <CardTitle>İlişkili Araçlar</CardTitle>
+              <CardTitle>Ä°liÅŸkili AraÃ§lar</CardTitle>
             </CardHeader>
             <CardContent>
               <MultiSelect
                 items={allTools}
                 selectedIds={selectedTools}
                 onSelectionChange={setSelectedTools}
-                placeholder="Araç Seç..."
+                placeholder="AraÃ§ SeÃ§..."
               />
             </CardContent>
           </Card>
@@ -281,12 +282,12 @@ export function PostEditor({ post, allTools, allTags, allCategories }) {
 
       <div className="flex justify-end gap-2 pt-6 border-t">
         <Button type="submit" disabled={isPending}>
-          {isPending ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+          {isPending ? 'Kaydediliyor...' : 'DeÄŸiÅŸiklikleri Kaydet'}
         </Button>
-        {/* DEĞİŞİKLİK: "Önizle" butonu artık yeni ve güvenli önizleme sayfasına gidiyor */}
+        {/* DEÄÄ°ÅÄ°KLÄ°K: "Ã–nizle" butonu artÄ±k yeni ve gÃ¼venli Ã¶nizleme sayfasÄ±na gidiyor */}
         <Button variant="outline" asChild>
           <a href={`/admin/posts/${post.id}/preview`} target="_blank">
-            Önizle
+            Ã–nizle
           </a>
         </Button>
       </div>
