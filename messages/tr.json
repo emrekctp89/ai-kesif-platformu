@@ -505,7 +505,7 @@
     "linkInvalidDesc": "Otomatik kontrol bağlantıda sorun buldu.",
     "linkInvalidBadge": "Sorunlu",
     "linkPendingTitle": "Link henüz otomatik kontrol edilmedi",
-    "linkPendingDesc": "Bir sorun fark ederseniz link raporu gönderebilirsiniz.",
+    "linkPendingDesc": "Yeni eklenen araçlar günlük kuyruğa alınır; tüm katalog haftalık otomatik link kontrolünden geçer. Bir sorun fark ederseniz link raporu gönderebilirsiniz.",
     "linkPendingBadge": "Kontrol bekliyor",
     "lastChecked": "Son kontrol: {date}",
     "aiCategoryFallback": "Yapay Zeka Aracı",
