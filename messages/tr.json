@@ -1318,7 +1318,8 @@
     "creatorAppsBadge": "Başvuru",
     "creatorAppsApprove": "Onayla",
     "creatorAppsReject": "Reddet",
-    "creatorAppsRejectedToast": "Başvuru reddedildi (üretici yetkisi yok)."
+    "creatorAppsRejectedToast": "Başvuru reddedildi (üretici yetkisi yok).",
+    "contentReviewPreview": "Önizle"
   },
   "BulkImport": {
     "title": "JSON içe aktarım",
@@ -1676,6 +1677,24 @@
     "emailCtaBackStudio": "Stüdyoya dön",
     "successPostPublished": "Yazı yayınlandı.",
     "successPostRejected": "Yazı reddedildi.",
-    "draftBodySeed": "# {title}\n\nBuraya yazınızı yazmaya başlayın..."
+    "draftBodySeed": "# {title}\n\nBuraya yazınızı yazmaya başlayın...",
+    "workflowHeading": "Nasıl çalışır?",
+    "workflowSubheading": "Taslak oluştur, yaz, incelemeye gönder. Yayın yalnızca admin onayından sonra yapılır.",
+    "workflowStep1": "Taslak oluştur",
+    "workflowStep2": "İçeriği yaz ve kaydet",
+    "workflowStep3": "İncelemeye gönder",
+    "workflowStep4": "Onay sonrası yayında",
+    "creatingDraft": "Oluşturuluyor…",
+    "emptyPostsHint": "Yukarıdaki formdan başlık gir; düzenleyici sayfası otomatik açılır.",
+    "rejectedBannerTitle": "{count} reddedilen yazı var",
+    "rejectedBannerBody": "Admin notunu oku, düzenle ve tekrar incelemeye gönder.",
+    "rejectedBannerCta": "Reddedilenleri göster",
+    "rejectedNoNote": "Admin notu eklenmemiş.",
+    "resubmitHint": "Düzenleyip tekrar incelemeye gönderebilirsin.",
+    "inReviewHint": "İncelemede. Gerekirse geri çekip düzenleyebilirsin.",
+    "editAndResubmit": "Düzenle ve yeniden gönder",
+    "rejectedEditorTitle": "Bu yazı reddedildi",
+    "inReviewEditorHint": "Yazı incelemede. Kaydetmek içeriği günceller; yayına almak için incelemeyi geri çekmen veya onay beklemen gerekir.",
+    "saving": "Kaydediliyor…"
   }
 }

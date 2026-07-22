@@ -1318,7 +1318,8 @@
     "creatorAppsBadge": "Application",
     "creatorAppsApprove": "Approve",
     "creatorAppsReject": "Reject",
-    "creatorAppsRejectedToast": "Application rejected (no creator access)."
+    "creatorAppsRejectedToast": "Application rejected (no creator access).",
+    "contentReviewPreview": "Preview"
   },
   "BulkImport": {
     "title": "JSON import",
@@ -1676,6 +1677,24 @@
     "emailCtaBackStudio": "Back to studio",
     "successPostPublished": "Post published.",
     "successPostRejected": "Post rejected.",
-    "draftBodySeed": "# {title}\n\nStart writing here..."
+    "draftBodySeed": "# {title}\n\nStart writing here...",
+    "workflowHeading": "How it works",
+    "workflowSubheading": "Create a draft, write, then submit for review. Publishing happens only after admin approval.",
+    "workflowStep1": "Create a draft",
+    "workflowStep2": "Write and save",
+    "workflowStep3": "Submit for review",
+    "workflowStep4": "Live after approval",
+    "creatingDraft": "Creating…",
+    "emptyPostsHint": "Enter a title above; the editor opens automatically.",
+    "rejectedBannerTitle": "{count} rejected post(s)",
+    "rejectedBannerBody": "Read the admin note, edit, and resubmit for review.",
+    "rejectedBannerCta": "Show rejected",
+    "rejectedNoNote": "No admin note provided.",
+    "resubmitHint": "You can edit and submit for review again.",
+    "inReviewHint": "In review. You can withdraw and edit if needed.",
+    "editAndResubmit": "Edit and resubmit",
+    "rejectedEditorTitle": "This post was rejected",
+    "inReviewEditorHint": "This post is in review. Saving updates the content; withdraw from review or wait for approval to publish.",
+    "saving": "Saving…"
   }
 }

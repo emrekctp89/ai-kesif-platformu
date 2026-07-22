@@ -2,8 +2,8 @@
 
 import logger from '@/utils/logger';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { redirect } from '@/i18n/routing';
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { slugify } from '@/utils/slugify';

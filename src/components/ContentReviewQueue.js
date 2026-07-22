@@ -1,11 +1,10 @@
 'use client';
 
 import { useTransition } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useTranslations } from 'next-intl';
-import { Check, X } from 'lucide-react';
+import { Check, Eye, X } from 'lucide-react';
+import { Link, useRouter } from '@/i18n/routing';
 import { adminReviewCreatorPost } from '@/app/actions/contentCreators';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -82,6 +81,16 @@ export function ContentReviewQueue({ posts }) {
                   className="min-w-0 flex-1"
                   disabled={isPending}
                 />
+                <Button asChild variant="outline" size="sm">
+                  <Link
+                    href={`/icerik/${post.id}/preview`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Eye className="mr-1 h-4 w-4" aria-hidden="true" />
+                    {t('contentReviewPreview')}
+                  </Link>
+                </Button>
                 <Button asChild variant="outline" size="sm">
                   <Link href={`/admin/posts/${post.id}/edit`}>{t('contentReviewEdit')}</Link>
                 </Button>

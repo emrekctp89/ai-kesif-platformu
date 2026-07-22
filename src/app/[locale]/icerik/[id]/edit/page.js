@@ -1,10 +1,10 @@
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
-import Link from 'next/link';
 import { ArrowLeft, FilePenLine } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
+import { Link } from '@/i18n/routing';
 import { CreatorPostEditor } from '@/components/CreatorPostEditor';
 import { Button } from '@/components/ui/button';
 import { createAdminClient } from '@/utils/supabase/admin';

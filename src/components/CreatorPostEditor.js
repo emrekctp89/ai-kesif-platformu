@@ -2,11 +2,10 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useTranslations } from 'next-intl';
 import { ExternalLink, Eye } from 'lucide-react';
+import { Link, useRouter } from '@/i18n/routing';
 import {
   assignCreatorPostTags,
   submitCreatorPostForReview,
@@ -178,6 +177,22 @@ export function CreatorPostEditor({
   return (
     <form className="space-y-6">
       <input type="hidden" name="id" value={post.id} />
+      {post.status === 'Reddedildi' ? (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+          <p className="font-medium text-destructive">{t('rejectedEditorTitle')}</p>
+          <p className="mt-1 text-muted-foreground">
+            {post.review_note
+              ? `${t('adminNotePrefix')}: ${post.review_note}`
+              : t('rejectedNoNote')}
+          </p>
+          <p className="mt-1 text-muted-foreground">{t('resubmitHint')}</p>
+        </div>
+      ) : null}
+      {inReview ? (
+        <div className="rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+          {t('inReviewEditorHint')}
+        </div>
+      ) : null}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <div className="space-y-2">
@@ -282,7 +297,7 @@ export function CreatorPostEditor({
                     if (form) save(new FormData(form));
                   }}
                 >
-                  {t('saveDraft')}
+                  {isPending ? t('saving') : t('saveDraft')}
                 </Button>
                 <Button asChild type="button" variant="outline">
                   <Link href={`/icerik/${post.id}/preview`}>
@@ -300,7 +315,7 @@ export function CreatorPostEditor({
                       if (form) withdraw(new FormData(form));
                     }}
                   >
-                    {t('withdrawReview')}
+                    {isPending ? t('saving') : t('withdrawReview')}
                   </Button>
                 ) : (
                   <Button
@@ -312,7 +327,7 @@ export function CreatorPostEditor({
                       if (form) submitReview(new FormData(form));
                     }}
                   >
-                    {t('submitForReview')}
+                    {isPending ? t('saving') : t('submitForReview')}
                   </Button>
                 )}
               </div>
