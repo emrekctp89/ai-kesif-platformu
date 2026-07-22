@@ -63,7 +63,6 @@ export function MobileNav({ user, isProUser }) {
           { href: '/kasif', label: t('kasif'), icon: BrainCircuit },
           { href: '/karsilastir', label: t('compare'), icon: GitCompareArrows },
           { href: '/tavsiye', label: t('aiRecommend'), icon: Lightbulb },
-          { href: '/koleksiyonlar', label: t('collections'), icon: FolderOpen },
           { href: '/arastirma', label: t('research'), icon: FlaskConical },
           { href: '/kesfet', label: t('discover'), icon: Bot },
           { href: '/random-tools', label: t('randomTools'), icon: Bot },
@@ -75,6 +74,7 @@ export function MobileNav({ user, isProUser }) {
       title: t('groupCommunity'),
       links: filterNavLinks(
         [
+          { href: '/koleksiyonlar', label: t('collections'), icon: FolderOpen },
           ...(user ? [{ href: '/akis', label: t('feed'), icon: Rss }] : []),
           { href: '/topluluk', label: t('community'), icon: Users },
           { href: '/leaderboard', label: t('leaderboard'), icon: Trophy },

@@ -49,7 +49,6 @@ export function HeaderNav({
     [
       { href: '/kasif', label: t('kasif') },
       { href: '/tavsiye', label: t('aiRecommend') },
-      { href: '/koleksiyonlar', label: t('collections') },
       { href: '/arastirma', label: t('research') },
       { href: '/bulten', label: t('newsletter') },
       // Paused for now — kept listed only if flags re-enabled in navFeatures:
@@ -59,8 +58,10 @@ export function HeaderNav({
     { allowCommunity: false }
   );
 
+  // Collections stays public (not in COMMUNITY_PATHS); other community surfaces need the panel toggle.
   const moreCommunity = filterNavLinks(
     [
+      { href: '/koleksiyonlar', label: t('collections') },
       ...(user ? [{ href: '/akis', label: t('feed') }] : []),
       { href: '/topluluk', label: t('community') },
       { href: '/leaderboard', label: t('leaderboard') },

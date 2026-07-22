@@ -18,11 +18,26 @@ export default function Footer() {
           { href: '/workmind', label: t('workmind') },
           { href: '/karsilastir', label: t('compare') },
           { href: '/tavsiye', label: t('aiRecommend') },
-          { href: '/koleksiyonlar', label: t('collections') },
           { href: '/arastirma', label: t('research') },
           { href: '/kesfet', label: t('discover') },
           { href: '/random-tools', label: t('randomTools') },
         ],
+        { allowCommunity: false }
+      ),
+    },
+    {
+      title: t('groupCommunity'),
+      links: filterNavLinks(
+        [
+          { href: '/koleksiyonlar', label: t('collections') },
+          { href: '/topluluk', label: t('community') },
+          { href: '/leaderboard', label: t('leaderboard') },
+          { href: '/eserler', label: t('showcase') },
+          { href: '/launchpad', label: t('launchpad') },
+          { href: '/yarisma', label: t('challenge') },
+          { href: '/odul-avciligi', label: t('bounties') },
+        ],
+        // Footer always lists public collections; paused community routes stay hidden.
         { allowCommunity: false }
       ),
     },
@@ -46,7 +61,7 @@ export default function Footer() {
         { href: '/kullanim-kosullari', label: t('terms') },
       ],
     },
-  ];
+  ].filter((group) => group.links.length > 0);
 
   return (
     <footer className="mt-12 border-t border-border bg-card">
