@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import {
   Bot,
   Code2,
@@ -18,23 +19,21 @@ import {
 
 const STARTER_QUESTIONS = [
   {
-    label: 'Sunum hazırla',
-    question: 'Ücretsiz bir sunum hazırlamak için hangi araçları kullanabilirim?',
+    key: 'presentation',
     icon: Presentation,
   },
   {
-    label: 'Görsel üret',
-    question: 'Sosyal medya için gerçekçi görseller üreten araçları karşılaştır.',
+    key: 'image',
     icon: ImageIcon,
   },
   {
-    label: 'Kod yaz',
-    question: 'Kodlama öğrenirken bana yardımcı olacak ücretsiz AI araçları öner.',
+    key: 'code',
     icon: Code2,
   },
 ];
 
 export default function KasifExperiment() {
+  const t = useTranslations('Kasif');
   const [question, setQuestion] = useState('');
   const [turns, setTurns] = useState([]);
   const [history, setHistory] = useState([]);
@@ -70,7 +69,7 @@ export default function KasifExperiment() {
         body: JSON.stringify({ question: submittedQuestion, history }),
       });
       const data = await response.json();
-      const result = response.ok ? data : { error: data.error || 'Bir hata oluştu.' };
+      const result = response.ok ? data : { error: data.error || t('genericError') };
       setTurns((current) =>
         current.map((turn) => (turn.id === turnId ? { ...turn, result } : turn))
       );
@@ -87,9 +86,7 @@ export default function KasifExperiment() {
       if (error?.name === 'AbortError') return;
       setTurns((current) =>
         current.map((turn) =>
-          turn.id === turnId
-            ? { ...turn, result: { error: 'Kâşif sunucusuna ulaşılamadı.' } }
-            : turn
+          turn.id === turnId ? { ...turn, result: { error: t('connectionError') } } : turn
         )
       );
     } finally {
@@ -134,7 +131,7 @@ export default function KasifExperiment() {
             ? {
                 ...turn,
                 feedbackStatus: 'error',
-                feedbackError: 'Geri bildirim kaydedilemedi. Lütfen tekrar deneyin.',
+                feedbackError: t('feedbackError'),
               }
             : turn
         )
@@ -167,19 +164,17 @@ export default function KasifExperiment() {
     <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl flex-col gap-6 px-2 py-8 sm:px-4 sm:py-12">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-primary">AI Keşif özel öneri motoru</p>
-          <h1 className="text-3xl font-bold">Kâşif</h1>
-          <p className="mt-2 text-muted-foreground">
-            İhtiyacını yaz, Kâşif platformdaki araçları senin için sıralasın.
-          </p>
+          <p className="text-sm font-medium text-primary">{t('eyebrow')}</p>
+          <h1 className="text-3xl font-bold">{t('title')}</h1>
+          <p className="mt-2 text-muted-foreground">{t('subtitle')}</p>
         </div>
         {turns.length > 0 && (
           <button
             type="button"
             onClick={resetConversation}
             className="shrink-0 rounded-md border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Yeni konuşma"
-            title="Yeni konuşma"
+            aria-label={t('newConversation')}
+            title={t('newConversation')}
           >
             <RotateCcw className="h-4 w-4" />
           </button>
@@ -192,21 +187,19 @@ export default function KasifExperiment() {
           className="rounded-2xl border bg-card p-4"
         >
           <h2 id="kasif-starters-heading" className="text-sm font-semibold">
-            Nereden başlamak istersin?
+            {t('startersTitle')}
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Bir örnek seçebilir veya ihtiyacını aşağıya kendi cümlelerinle yazabilirsin.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{t('startersDescription')}</p>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            {STARTER_QUESTIONS.map(({ label, question: starterQuestion, icon: Icon }) => (
+            {STARTER_QUESTIONS.map(({ key, icon: Icon }) => (
               <button
-                key={label}
+                key={key}
                 type="button"
-                onClick={() => chooseStarterQuestion(starterQuestion)}
+                onClick={() => chooseStarterQuestion(t(`starters.${key}.question`))}
                 className="flex min-h-12 items-center gap-2 rounded-xl border bg-background px-3 py-2 text-left text-sm font-medium transition-colors hover:border-primary/50 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                {label}
+                {t(`starters.${key}.label`)}
               </button>
             ))}
           </div>
@@ -214,7 +207,7 @@ export default function KasifExperiment() {
       )}
 
       {turns.length > 0 && (
-        <section aria-label="Kâşif konuşması" aria-live="polite" className="space-y-5">
+        <section aria-label={t('conversationLabel')} aria-live="polite" className="space-y-5">
           {turns.map((turn) => (
             <div key={turn.id} className="space-y-3">
               <div className="ml-auto flex max-w-[85%] items-start justify-end gap-2">
@@ -243,7 +236,7 @@ export default function KasifExperiment() {
                           className="mt-3 inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
                         >
                           <RefreshCcw className="h-4 w-4" aria-hidden="true" />
-                          Yeniden dene
+                          {t('retry')}
                         </button>
                       </div>
                     ) : (
@@ -254,7 +247,7 @@ export default function KasifExperiment() {
                         {turn.result.sources?.length > 0 && (
                           <div className="mt-4 border-t pt-3">
                             <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
-                              Platform kaynakları
+                              {t('sources')}
                             </p>
                             <ul className="flex flex-wrap gap-2">
                               {turn.result.sources.map((source) => (
@@ -273,14 +266,14 @@ export default function KasifExperiment() {
                         {turn.result.interactionId && (
                           <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-3">
                             <span className="text-xs text-muted-foreground">
-                              Bu sonuç faydalı mıydı?
+                              {t('feedbackQuestion')}
                             </span>
                             <button
                               type="button"
                               onClick={() => sendFeedback(turn.id, turn.result, 1)}
                               disabled={turn.feedback != null || turn.feedbackStatus === 'sending'}
-                              aria-label="Faydalı"
-                              title="Faydalı"
+                              aria-label={t('useful')}
+                              title={t('useful')}
                               className="rounded-md border p-1.5 disabled:opacity-50"
                             >
                               <ThumbsUp className="h-4 w-4" />
@@ -289,18 +282,18 @@ export default function KasifExperiment() {
                               type="button"
                               onClick={() => sendFeedback(turn.id, turn.result, -1)}
                               disabled={turn.feedback != null || turn.feedbackStatus === 'sending'}
-                              aria-label="Faydalı değil"
-                              title="Faydalı değil"
+                              aria-label={t('notUseful')}
+                              title={t('notUseful')}
                               className="rounded-md border p-1.5 disabled:opacity-50"
                             >
                               <ThumbsDown className="h-4 w-4" />
                             </button>
                             {turn.feedback != null && (
-                              <span className="text-xs text-muted-foreground">Kaydedildi</span>
+                              <span className="text-xs text-muted-foreground">{t('saved')}</span>
                             )}
                             {turn.feedbackStatus === 'sending' && (
                               <span role="status" className="text-xs text-muted-foreground">
-                                Kaydediliyor…
+                                {t('saving')}
                               </span>
                             )}
                             {turn.feedbackError && (
@@ -320,7 +313,7 @@ export default function KasifExperiment() {
                   className="flex items-center gap-2 text-sm text-muted-foreground"
                 >
                   <LoaderCircle className="h-4 w-4 animate-spin" />
-                  Kâşif düşünüyor
+                  {t('thinking')}
                 </div>
               )}
             </div>
@@ -334,7 +327,7 @@ export default function KasifExperiment() {
         className="sticky bottom-3 space-y-2 rounded-md border bg-background p-3 shadow-lg"
       >
         <label htmlFor="kasif-question" className="sr-only">
-          Kâşif'e sor
+          {t('askLabel')}
         </label>
         <textarea
           id="kasif-question"
@@ -350,7 +343,7 @@ export default function KasifExperiment() {
           maxLength={800}
           rows={3}
           className="w-full resize-none bg-transparent p-2 outline-none"
-          placeholder="Örneğin: Ücretsiz sunum hazırlamak için hangi araçları kullanabilirim?"
+          placeholder={t('placeholder')}
         />
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-muted-foreground">{question.length}/800</span>
@@ -358,8 +351,8 @@ export default function KasifExperiment() {
             type="submit"
             disabled={loading || question.trim().length < 3}
             className="rounded-md bg-primary p-2 text-primary-foreground disabled:opacity-50"
-            aria-label="Kâşif'e sor"
-            title="Kâşif'e sor"
+            aria-label={t('askLabel')}
+            title={t('askLabel')}
           >
             {loading ? (
               <LoaderCircle className="h-5 w-5 animate-spin" />

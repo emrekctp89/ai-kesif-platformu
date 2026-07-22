@@ -1,9 +1,11 @@
 import KasifExperiment from '../kasif-deney/KasifExperiment';
+import { getTranslations } from 'next-intl/server';
 
-export const metadata = {
-  title: 'Kâşif',
-  description: 'AI Keşif Platformu araç öneri ve karşılaştırma asistanı.',
-};
+export async function generateMetadata({ params }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Kasif' });
+  return { title: t('metaTitle'), description: t('metaDescription') };
+}
 
 export default function KasifPage() {
   return <KasifExperiment />;

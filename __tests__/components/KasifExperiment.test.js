@@ -1,4 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+
+jest.mock('next-intl', () => ({
+  useTranslations: (namespace) => {
+    const messages = require('../../messages/tr.json')[namespace];
+    return (key) => key.split('.').reduce((value, part) => value?.[part], messages);
+  },
+}));
+
 import KasifExperiment from '@/app/[locale]/kasif-deney/KasifExperiment';
 
 describe('Kâşif ekranı', () => {
