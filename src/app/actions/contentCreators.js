@@ -764,7 +764,10 @@ export async function uploadCreatorCoverImage(formData) {
   const originalName = String(file.name || 'cover.jpg');
   const ext = (originalName.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
   const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
-  const gcsPath = `blog-images/creators/${user.id}/${Date.now()}.${safeExt}`;
+  // Cover and inline body images share the same upload path for creators.
+  const kind =
+    String(formData?.get?.('kind') || 'cover').toLowerCase() === 'body' ? 'body' : 'cover';
+  const gcsPath = `blog-images/creators/${user.id}/${kind}-${Date.now()}.${safeExt}`;
 
   try {
     const publicUrl = await uploadToGCS(gcsPath, file, mime || 'image/jpeg');
@@ -800,7 +803,7 @@ export async function getPostsPendingReview() {
   const { data, error: qError } = await admin
     .from('posts')
     .select(
-      'id, title, slug, status, type, submitted_at, updated_at, author_id, profiles:author_id(username, email)'
+      'id, title, slug, status, type, description, content, featured_image_url, submitted_at, updated_at, author_id, profiles:author_id(username, email)'
     )
     .eq('status', 'İncelemede')
     .order('submitted_at', { ascending: true, nullsFirst: false });
@@ -809,7 +812,9 @@ export async function getPostsPendingReview() {
     logger.error('getPostsPendingReview', qError);
     const { data: plain } = await admin
       .from('posts')
-      .select('id, title, slug, status, type, submitted_at, updated_at, author_id')
+      .select(
+        'id, title, slug, status, type, description, content, featured_image_url, submitted_at, updated_at, author_id'
+      )
       .eq('status', 'İncelemede')
       .order('updated_at', { ascending: true });
     return plain || [];

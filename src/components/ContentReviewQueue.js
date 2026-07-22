@@ -6,10 +6,18 @@ import { useTranslations } from 'next-intl';
 import { Check, Eye, X } from 'lucide-react';
 import { Link, useRouter } from '@/i18n/routing';
 import { adminReviewCreatorPost } from '@/app/actions/contentCreators';
+import { plainTextFromMarkdown } from '@/lib/contentCreatorRules';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+
+function snippetFromPost(post, max = 220) {
+  const fromDesc = plainTextFromMarkdown(post?.description || '');
+  if (fromDesc.length >= 40) return fromDesc.slice(0, max);
+  const fromBody = plainTextFromMarkdown(post?.content || '');
+  return fromBody.slice(0, max);
+}
 
 export function ContentReviewQueue({ posts }) {
   const t = useTranslations('AdminClient');
@@ -57,18 +65,44 @@ export function ContentReviewQueue({ posts }) {
             : post.type === 'Yazı'
               ? tc('typePost')
               : post.type;
+        const snippet = snippetFromPost(post);
+        const bodyLen = plainTextFromMarkdown(post?.content || '').length;
         return (
           <Card key={post.id} className="glass-panel">
             <CardHeader className="pb-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <CardTitle className="text-base">{post.title}</CardTitle>
-                <Badge variant="secondary">{typeLabel}</Badge>
-                <Badge variant="outline">{t('contentReviewStatus')}</Badge>
+              <div className="flex flex-wrap items-start gap-3">
+                {post.featured_image_url ? (
+                  <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg border border-border/50">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={post.featured_image_url}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/20 text-[10px] text-muted-foreground">
+                    {t('contentReviewNoCover')}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle className="text-base">{post.title}</CardTitle>
+                    <Badge variant="secondary">{typeLabel}</Badge>
+                    <Badge variant="outline">{t('contentReviewStatus')}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('contentReviewAuthor', { name: authorLabel })}
+                    {post.submitted_at ? ` · ${new Date(post.submitted_at).toLocaleString()}` : ''}
+                    {bodyLen > 0 ? ` · ${t('contentReviewChars', { count: bodyLen })}` : ''}
+                  </p>
+                  {snippet ? (
+                    <p className="line-clamp-2 text-sm text-muted-foreground">{snippet}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{t('contentReviewNoSnippet')}</p>
+                  )}
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {t('contentReviewAuthor', { name: authorLabel })}
-                {post.submitted_at ? ` · ${new Date(post.submitted_at).toLocaleString()}` : ''}
-              </p>
             </CardHeader>
             <CardContent>
               <form

@@ -97,9 +97,11 @@ export function CreatorAccessGate({
             <PenLine className="h-4 w-4" aria-hidden="true" />
             {t('heroChip')}
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{t('lockedTitle')}</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+            {alreadyPending ? t('pendingHeroTitle') : t('lockedTitle')}
+          </h1>
           <p className="mx-auto mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
-            {t('lockedBody')}
+            {alreadyPending ? t('pendingHeroBody') : t('lockedBody')}
           </p>
           {username ? (
             <p className="mt-2 text-xs text-muted-foreground">
@@ -108,6 +110,39 @@ export function CreatorAccessGate({
           ) : null}
         </div>
       </section>
+
+      {alreadyPending ? (
+        <Card className="border-emerald-500/30 bg-emerald-500/5 shadow-md ring-1 ring-emerald-500/15">
+          <CardHeader className="space-y-2 pb-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="font-semibold" variant="secondary">
+                {t('pendingBadge')}
+              </Badge>
+            </div>
+            <CardTitle className="text-xl sm:text-2xl">{t('pendingCardTitle')}</CardTitle>
+            <CardDescription className="text-sm leading-relaxed sm:text-base">
+              {t('pendingCardBody')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <Link href="/blog" prefetch={false}>
+                {t('ctaBlog')}
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/ogren" prefetch={false}>
+                {t('ctaLearn')}
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/profile" prefetch={false}>
+                {t('roadmapProfileCta')}
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {/* Reputation requirement */}
       <Card className="glass-panel border-primary/30 shadow-md ring-1 ring-primary/15">
@@ -218,8 +253,8 @@ export function CreatorAccessGate({
         </div>
       </section>
 
-      {/* Daily quests (live) */}
-      {!eligible && quests.items.length > 0 ? (
+      {/* Daily quests (live) — skip when application already pending */}
+      {!alreadyPending && !eligible && quests.items.length > 0 ? (
         <section aria-labelledby="creator-quests-heading" className="space-y-3">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
@@ -301,8 +336,8 @@ export function CreatorAccessGate({
         </section>
       ) : null}
 
-      {/* Static roadmap with exact points */}
-      {!eligible ? (
+      {/* Static roadmap with exact points — skip when application already pending */}
+      {!alreadyPending && !eligible ? (
         <section aria-labelledby="creator-roadmap-heading" className="space-y-4">
           <div>
             <h2
@@ -400,58 +435,60 @@ export function CreatorAccessGate({
         </section>
       ) : null}
 
-      {/* Apply form */}
-      <section aria-labelledby="creator-apply-heading" className="space-y-3">
-        <div>
-          <h2 id="creator-apply-heading" className="text-lg font-bold tracking-tight sm:text-xl">
-            {t('applySectionHeading')}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {eligible ? t('applySectionReady') : t('applySectionLocked')}
-          </p>
-        </div>
+      {/* Apply form — hide while already pending (status card above is enough). */}
+      {!alreadyPending ? (
+        <section aria-labelledby="creator-apply-heading" className="space-y-3">
+          <div>
+            <h2 id="creator-apply-heading" className="text-lg font-bold tracking-tight sm:text-xl">
+              {t('applySectionHeading')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {eligible ? t('applySectionReady') : t('applySectionLocked')}
+            </p>
+          </div>
 
-        {eligible || alreadyPending ? (
-          <Card className="glass-panel border-border/50">
-            <CardContent className="pt-6">
-              <CreatorApplyForm
-                alreadyPending={alreadyPending}
-                labels={{
-                  pitchLabel: t('applyPitchLabel'),
-                  pitchPlaceholder: t('applyPitchPlaceholder'),
-                  submit: t('applySubmit'),
-                  submitting: t('applySubmitting'),
-                  pendingMessage: t('applyPending'),
-                }}
-              />
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="border-dashed">
-            <CardContent className="space-y-3 py-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                {t('applyFormLocked', {
-                  remaining: progress.remaining,
-                  min: progress.target,
-                })}
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                <Button asChild>
-                  <Link href="/profile" prefetch={false}>
-                    {t('roadQuestsCta')}
-                    <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/" prefetch={false}>
-                    {t('roadmapPrimaryCta')}
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </section>
+          {eligible ? (
+            <Card className="glass-panel border-border/50">
+              <CardContent className="pt-6">
+                <CreatorApplyForm
+                  alreadyPending={false}
+                  labels={{
+                    pitchLabel: t('applyPitchLabel'),
+                    pitchPlaceholder: t('applyPitchPlaceholder'),
+                    submit: t('applySubmit'),
+                    submitting: t('applySubmitting'),
+                    pendingMessage: t('applyPending'),
+                  }}
+                />
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-dashed">
+              <CardContent className="space-y-3 py-8 text-center">
+                <p className="text-sm text-muted-foreground">
+                  {t('applyFormLocked', {
+                    remaining: progress.remaining,
+                    min: progress.target,
+                  })}
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Button asChild>
+                    <Link href="/profile" prefetch={false}>
+                      {t('roadQuestsCta')}
+                      <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/" prefetch={false}>
+                      {t('roadmapPrimaryCta')}
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </section>
+      ) : null}
     </div>
   );
 }

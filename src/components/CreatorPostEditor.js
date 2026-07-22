@@ -36,6 +36,7 @@ import {
 
 const SimpleMDE = dynamic(() => import('react-simplemde-editor'), { ssr: false });
 import 'easymde/dist/easymde.min.css';
+import 'font-awesome/css/font-awesome.min.css';
 
 function statusLabel(status, t) {
   const map = {
@@ -97,10 +98,36 @@ export function CreatorPostEditor({
         'ordered-list',
         '|',
         'link',
+        'image',
         '|',
         'preview',
         'side-by-side',
       ],
+      uploadImage: true,
+      imageUploadFunction: (file, onSuccess, onError) => {
+        const formData = new FormData();
+        formData.set('image', file);
+        formData.set('kind', 'body');
+        const loadingId = toast.loading(t('coverImageUploading'));
+        uploadCreatorCoverImage(formData)
+          .then((result) => {
+            toast.dismiss(loadingId);
+            if (result?.success && result.url) {
+              onSuccess(result.url);
+              toast.success(t('toastBodyImageUploaded'));
+              return;
+            }
+            const msg = result?.error || t('errCoverUpload');
+            onError(msg);
+            toast.error(msg);
+          })
+          .catch((err) => {
+            toast.dismiss(loadingId);
+            const msg = err?.message || t('errCoverUpload');
+            onError(msg);
+            toast.error(msg);
+          });
+      },
     }),
     [t]
   );

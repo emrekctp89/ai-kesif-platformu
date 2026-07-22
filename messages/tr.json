@@ -1319,7 +1319,10 @@
     "creatorAppsApprove": "Onayla",
     "creatorAppsReject": "Reddet",
     "creatorAppsRejectedToast": "Başvuru reddedildi (üretici yetkisi yok).",
-    "contentReviewPreview": "Önizle"
+    "contentReviewPreview": "Önizle",
+    "contentReviewNoCover": "Kapak yok",
+    "contentReviewNoSnippet": "Özet yok",
+    "contentReviewChars": "{count} karakter"
   },
   "BulkImport": {
     "title": "JSON içe aktarım",
@@ -1759,6 +1762,12 @@
     "errReviewTitleShort": "Başlık en az {min} karakter olmalı (şu an: {current}).",
     "errReviewContentShort": "İçerik en az {min} karakter olmalı (şu an: {current}). Markdown işaretleri sayılmaz.",
     "adminPublishedEditHint": "Admin olarak yayındaki yazıyı düzenliyorsun. Kaydetmek canlı içeriği günceller.",
-    "savePublished": "Yayındaki yazıyı kaydet"
+    "savePublished": "Yayındaki yazıyı kaydet",
+    "toastBodyImageUploaded": "Görsel eklendi",
+    "pendingHeroTitle": "Başvurun incelemede",
+    "pendingHeroBody": "Admin ekibi başvurunu inceliyor. Onaylandığında bildirim alacaksın; stüdyo o zaman açılır.",
+    "pendingBadge": "Beklemede",
+    "pendingCardTitle": "Teşekkürler — kaydın alındı",
+    "pendingCardBody": "Aynı anda tek açık başvuru olur. Onay veya red gelene kadar yeni form gönderemezsin. Bu arada blog ve öğrenme merkezine göz atabilirsin."
   }
 }

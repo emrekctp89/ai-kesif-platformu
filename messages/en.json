@@ -1319,7 +1319,10 @@
     "creatorAppsApprove": "Approve",
     "creatorAppsReject": "Reject",
     "creatorAppsRejectedToast": "Application rejected (no creator access).",
-    "contentReviewPreview": "Preview"
+    "contentReviewPreview": "Preview",
+    "contentReviewNoCover": "No cover",
+    "contentReviewNoSnippet": "No summary",
+    "contentReviewChars": "{count} chars"
   },
   "BulkImport": {
     "title": "JSON import",
@@ -1759,6 +1762,12 @@
     "errReviewTitleShort": "Title must be at least {min} characters (now: {current}).",
     "errReviewContentShort": "Body must be at least {min} characters (now: {current}). Markdown markup does not count.",
     "adminPublishedEditHint": "You are editing a live post as admin. Saving updates the published content.",
-    "savePublished": "Save published post"
+    "savePublished": "Save published post",
+    "toastBodyImageUploaded": "Image inserted",
+    "pendingHeroTitle": "Your application is under review",
+    "pendingHeroBody": "The admin team is reviewing your request. You’ll be notified when approved; the studio opens then.",
+    "pendingBadge": "Pending",
+    "pendingCardTitle": "Thanks — we received your application",
+    "pendingCardBody": "Only one open application at a time. You can’t submit another until you’re approved or rejected. Meanwhile, browse the blog and learning hub."
   }
 }
