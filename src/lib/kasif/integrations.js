@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { answerQuestion, rankTools, understandConversation } from './engine';
+import { assertKasifEnabled } from './config';
 import { groundModelResponse, NO_INFORMATION_ANSWER } from './grounding';
 import { retrievePlatformContext } from './retrieval';
 import { createClient } from '@/utils/supabase/actions';
@@ -20,6 +21,7 @@ function recommendationReason(record, reasons) {
 }
 
 export async function getKasifRecommendations(question, history = [], limit = 3) {
+  assertKasifEnabled();
   const records = await retrievePlatformContext(question, history);
   const intent = understandConversation(question, history);
   const ranked = rankTools(records, intent, limit);
@@ -35,6 +37,7 @@ export async function getKasifRecommendations(question, history = [], limit = 3)
 }
 
 export async function getKasifAssistantAnswer(question, history = []) {
+  assertKasifEnabled();
   const records = await retrievePlatformContext(question, history);
   if (!records.length) {
     return { spoken_response: NO_INFORMATION_ANSWER, suggested_content: [] };
@@ -104,6 +107,7 @@ export function compareToolsWithKasif(tools) {
 }
 
 export async function compareSelectedToolsWithKasif(toolSlugs) {
+  assertKasifEnabled();
   const slugs = [
     ...new Set((toolSlugs || []).map((slug) => cleanText(slug)).filter(Boolean)),
   ].slice(0, 4);

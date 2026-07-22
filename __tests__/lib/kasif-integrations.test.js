@@ -5,9 +5,13 @@ jest.mock('@/lib/kasif/retrieval', () => ({
   ...jest.requireActual('@/lib/kasif/retrieval'),
   retrievePlatformContext: jest.fn(),
 }));
+jest.mock('@/lib/kasif/config', () => ({
+  assertKasifEnabled: jest.fn(),
+}));
 
 import { retrievePlatformContext } from '@/lib/kasif/retrieval';
 import { createClient } from '@/utils/supabase/actions';
+import { assertKasifEnabled } from '@/lib/kasif/config';
 import {
   compareSelectedToolsWithKasif,
   compareToolsWithKasif,
@@ -27,6 +31,7 @@ const toolRecords = [
 
 describe('Kâşif site integrations', () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     retrievePlatformContext.mockResolvedValue(toolRecords);
   });
 
@@ -37,6 +42,7 @@ describe('Kâşif site integrations', () => {
       expect.objectContaining({ name: 'Slayt Free', slug: 'slayt-free' }),
     ]);
     expect(result.recommendations[0].reason).toContain('uygun');
+    expect(assertKasifEnabled).toHaveBeenCalledTimes(1);
   });
 
   it('konsiyerj için grounded cevap ve tıklanabilir araç kaynağı döndürür', async () => {
@@ -46,6 +52,7 @@ describe('Kâşif site integrations', () => {
     expect(result.suggested_content).toEqual([
       { type: 'Araç', title: 'Slayt Free', url: '/tool/slayt-free' },
     ]);
+    expect(assertKasifEnabled).toHaveBeenCalledTimes(1);
   });
 
   it('karşılaştırmayı yalnızca verilen platform kayıtlarından üretir', () => {
@@ -90,5 +97,17 @@ describe('Kâşif site integrations', () => {
 
     expect(inFilter).toHaveBeenCalledWith('slug', ['arac-b', 'arac-a']);
     expect(result.detailed_analysis.map((tool) => tool.tool_name)).toEqual(['Araç B', 'Araç A']);
+    expect(assertKasifEnabled).toHaveBeenCalledTimes(1);
+  });
+
+  it('özellik bayrağı kapalıyken platform verisine erişmez', async () => {
+    assertKasifEnabled.mockImplementationOnce(() => {
+      throw new Error('KASIF_DISABLED');
+    });
+
+    await expect(getKasifRecommendations('Ücretsiz sunum aracı öner')).rejects.toThrow(
+      'KASIF_DISABLED'
+    );
+    expect(retrievePlatformContext).not.toHaveBeenCalled();
   });
 });
