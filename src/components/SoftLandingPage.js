@@ -27,6 +27,7 @@ const FEATURE_ICONS = {
   launchpad: Compass,
   challenge: Compass,
   bounties: Compass,
+  collections: Compass,
 };
 
 /**

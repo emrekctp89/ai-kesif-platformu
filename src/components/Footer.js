@@ -26,22 +26,6 @@ export default function Footer() {
       ),
     },
     {
-      title: t('groupCommunity'),
-      links: filterNavLinks(
-        [
-          { href: '/koleksiyonlar', label: t('collections') },
-          { href: '/topluluk', label: t('community') },
-          { href: '/leaderboard', label: t('leaderboard') },
-          { href: '/eserler', label: t('showcase') },
-          { href: '/launchpad', label: t('launchpad') },
-          { href: '/yarisma', label: t('challenge') },
-          { href: '/odul-avciligi', label: t('bounties') },
-        ],
-        // Footer always lists public collections; paused community routes stay hidden.
-        { allowCommunity: false }
-      ),
-    },
-    {
       title: t('groupContent'),
       links: [
         { href: '/blog', label: t('blog') },
@@ -61,7 +45,7 @@ export default function Footer() {
         { href: '/kullanim-kosullari', label: t('terms') },
       ],
     },
-  ].filter((group) => group.links.length > 0);
+  ];
 
   return (
     <footer className="mt-12 border-t border-border bg-card">

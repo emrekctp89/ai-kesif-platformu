@@ -32,7 +32,6 @@ export async function GET() {
     { url: withBase('/karsilastir'), lastModified: generatedAt },
     { url: withBase('/tavsiye'), lastModified: generatedAt },
     { url: withBase('/bulten'), lastModified: generatedAt },
-    { url: withBase('/koleksiyonlar'), lastModified: generatedAt },
     { url: withBase('/hakkimizda'), lastModified: generatedAt },
     { url: withBase('/iletisim'), lastModified: generatedAt },
     { url: withBase('/gizlilik'), lastModified: generatedAt },

@@ -15,10 +15,12 @@ export const PUBLICLY_PAUSED_PATHS = new Set([
   '/launchpad',
   '/yarisma',
   '/odul-avciligi',
+  '/koleksiyonlar',
 ]);
 
 /** Community surfaces — optional for logged-in users via profile menu toggle. */
 export const COMMUNITY_PATHS = [
+  '/koleksiyonlar',
   '/topluluk',
   '/akis',
   '/leaderboard',

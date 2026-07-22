@@ -32,6 +32,7 @@ import {
   BrainCircuit,
   Images,
   PenLine,
+  FolderOpen,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCommunityPanelPref } from '@/hooks/useCommunityPanelPref';
@@ -151,6 +152,12 @@ export function UserNav({ user, profile, isProUser, isAdmin }) {
             <DropdownMenuLabel className="text-xs text-muted-foreground">
               {t('groupCommunity')}
             </DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+              <Link href="/koleksiyonlar">
+                <FolderOpen className="mr-2 h-4 w-4" />
+                <span>{t('collections')}</span>
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/akis">
                 <Rss className="mr-2 h-4 w-4" />

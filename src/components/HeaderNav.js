@@ -58,7 +58,7 @@ export function HeaderNav({
     { allowCommunity: false }
   );
 
-  // Collections stays public (not in COMMUNITY_PATHS); other community surfaces need the panel toggle.
+  // Community surfaces (incl. collections) only when user enables the profile community panel.
   const moreCommunity = filterNavLinks(
     [
       { href: '/koleksiyonlar', label: t('collections') },
