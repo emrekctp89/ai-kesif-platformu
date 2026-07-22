@@ -41,7 +41,12 @@
     "mobileNavTitle": "Ana menü",
     "mobileNavDescription": "Site bölümleri arasında gezinin.",
     "openMenu": "Menüyü aç",
-    "upgradePro": "Pro'ya yükselt"
+    "upgradePro": "Pro'ya yükselt",
+    "profileSettings": "Profil Ayarları",
+    "contentStudio": "İçerik Stüdyosu",
+    "communityPanelToggle": "Topluluk Paneli",
+    "communityPanelToggleHint": "Topluluk ve keşif araçlarını göster",
+    "signOut": "Çıkış Yap"
   },
   "BlogPost": {
     "publishedOn": "Yayınlanma tarihi: {date}",
@@ -1382,5 +1387,25 @@
     "projectSummary": "Proje özeti",
     "strategicSuggestions": "Stratejik öneriler",
     "potentialTools": "Potansiyel araç önerileri"
+  },
+  "ContentStudio": {
+    "statTotal": "Toplam",
+    "statDraft": "Taslak",
+    "statReview": "İncelemede",
+    "statPublished": "Yayınlandı",
+    "statRejected": "Reddedildi",
+    "newDraftTitle": "Yeni İçerik Oluştur",
+    "titleLabel": "Başlık",
+    "titlePlaceholder": "Harika bir başlık düşünün...",
+    "typeLabel": "İçerik Türü",
+    "typePlaceholder": "Tür Seçin",
+    "typePost": "Yazı",
+    "typeGuide": "Rehber",
+    "createDraft": "Taslak Oluştur",
+    "myPostsHeading": "İçeriklerim",
+    "filterAll": "Tümü",
+    "viewLive": "Canlı Gör",
+    "edit": "Düzenle",
+    "updatedAt": "Son Güncelleme"
   }
 }

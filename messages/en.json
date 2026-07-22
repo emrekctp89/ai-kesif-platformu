@@ -41,7 +41,12 @@
     "mobileNavTitle": "Main menu",
     "mobileNavDescription": "Browse site sections.",
     "openMenu": "Open menu",
-    "upgradePro": "Upgrade to Pro"
+    "upgradePro": "Upgrade to Pro",
+    "profileSettings": "Profile Settings",
+    "contentStudio": "Content Studio",
+    "communityPanelToggle": "Community Panel",
+    "communityPanelToggleHint": "Show community and discovery tools",
+    "signOut": "Sign Out"
   },
   "BlogPost": {
     "publishedOn": "Published: {date}",
@@ -1382,5 +1387,25 @@
     "projectSummary": "Project summary",
     "strategicSuggestions": "Strategic suggestions",
     "potentialTools": "Potential tool recommendations"
+  },
+  "ContentStudio": {
+    "statTotal": "Total",
+    "statDraft": "Draft",
+    "statReview": "In Review",
+    "statPublished": "Published",
+    "statRejected": "Rejected",
+    "newDraftTitle": "Create New Content",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Think of a great title...",
+    "typeLabel": "Content Type",
+    "typePlaceholder": "Select Type",
+    "typePost": "Post",
+    "typeGuide": "Guide",
+    "createDraft": "Create Draft",
+    "myPostsHeading": "My Posts",
+    "filterAll": "All",
+    "viewLive": "View Live",
+    "edit": "Edit",
+    "updatedAt": "Last Updated"
   }
 }
