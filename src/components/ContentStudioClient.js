@@ -340,36 +340,48 @@ export function ContentStudioClient({ posts }) {
                   } ${inReview ? 'border-primary/30' : ''}`}
                 >
                   <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0 space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate font-semibold">{post.title}</p>
-                        <Badge variant={statusVariant(post.status)}>
-                          {statusLabel(post.status, t)}
-                        </Badge>
-                        <Badge variant="outline">{typeLabel(post.type, t)}</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t('updatedAt', {
-                          date: new Date(post.updated_at).toLocaleString(),
-                        })}
-                      </p>
-                      {rejected ? (
-                        <p className="rounded-lg border border-destructive/20 bg-destructive/5 px-2.5 py-1.5 text-xs text-destructive">
-                          {post.review_note
-                            ? `${t('reviewNote')}: ${post.review_note}`
-                            : t('rejectedNoNote')}
-                          {' · '}
-                          {t('resubmitHint')}
-                        </p>
+                    <div className="flex min-w-0 flex-1 gap-3">
+                      {post.featured_image_url ? (
+                        <div className="hidden h-14 w-20 shrink-0 overflow-hidden rounded-lg border border-border/50 sm:block">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={post.featured_image_url}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
                       ) : null}
-                      {inReview ? (
-                        <p className="text-xs text-muted-foreground">{t('inReviewHint')}</p>
-                      ) : null}
-                      {!rejected && post.review_note ? (
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate font-semibold">{post.title}</p>
+                          <Badge variant={statusVariant(post.status)}>
+                            {statusLabel(post.status, t)}
+                          </Badge>
+                          <Badge variant="outline">{typeLabel(post.type, t)}</Badge>
+                        </div>
                         <p className="text-xs text-muted-foreground">
-                          {t('reviewNote')}: {post.review_note}
+                          {t('updatedAt', {
+                            date: new Date(post.updated_at).toLocaleString(),
+                          })}
                         </p>
-                      ) : null}
+                        {rejected ? (
+                          <p className="rounded-lg border border-destructive/20 bg-destructive/5 px-2.5 py-1.5 text-xs text-destructive">
+                            {post.review_note
+                              ? `${t('reviewNote')}: ${post.review_note}`
+                              : t('rejectedNoNote')}
+                            {' · '}
+                            {t('resubmitHint')}
+                          </p>
+                        ) : null}
+                        {inReview ? (
+                          <p className="text-xs text-muted-foreground">{t('inReviewHint')}</p>
+                        ) : null}
+                        {!rejected && post.review_note ? (
+                          <p className="text-xs text-muted-foreground">
+                            {t('reviewNote')}: {post.review_note}
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {post.status === 'Yayınlandı' && post.slug ? (

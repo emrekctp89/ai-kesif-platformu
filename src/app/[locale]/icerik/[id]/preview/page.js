@@ -106,6 +106,17 @@ export default async function CreatorPreviewPostPage({ params }) {
         {t('previewPrivateNote')}
       </div>
 
+      {post.featured_image_url ? (
+        <div className="overflow-hidden rounded-3xl border border-border/50 shadow-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={post.featured_image_url}
+            alt={post.title}
+            className="max-h-[420px] w-full object-cover"
+          />
+        </div>
+      ) : null}
+
       {post.description ? (
         <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">
           {post.description}

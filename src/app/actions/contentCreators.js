@@ -7,10 +7,25 @@ import { redirect } from '@/i18n/routing';
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { slugify } from '@/utils/slugify';
+import { uploadToGCS } from '@/utils/gcs';
 import { contentEmailHtml, sendContentEventEmail } from '@/lib/contentNotify';
 import { MIN_CREATOR_REPUTATION } from '@/lib/contentCreatorRules';
 
 const CREATOR_EDITABLE_STATUSES = new Set(['Taslak', 'İncelemede', 'Reddedildi']);
+const MAX_COVER_BYTES = 5 * 1024 * 1024;
+const ALLOWED_COVER_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+
+function normalizeFeaturedImageUrl(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+    return url.toString().slice(0, 2000);
+  } catch {
+    return null;
+  }
+}
 
 async function tStudio(key, values) {
   const t = await getTranslations('ContentStudio');
@@ -333,6 +348,13 @@ export async function updateCreatorPost(formData) {
   const categoryId =
     categoryRaw === '' || categoryRaw == null ? null : parseInt(String(categoryRaw), 10);
 
+  const featuredRaw = formData.get('featured_image_url');
+  const featuredProvided = featuredRaw != null;
+  const featuredImageUrl = featuredProvided ? normalizeFeaturedImageUrl(featuredRaw) : undefined;
+  if (featuredProvided && String(featuredRaw || '').trim() && featuredImageUrl == null) {
+    return { error: await tStudio('errCoverInvalid') };
+  }
+
   const updates = {
     title: String(formData.get('title') || '').trim(),
     slug: String(formData.get('slug') || existing.slug).trim(),
@@ -343,6 +365,9 @@ export async function updateCreatorPost(formData) {
     category_id: Number.isFinite(categoryId) ? categoryId : null,
     updated_at: new Date().toISOString(),
   };
+  if (featuredProvided) {
+    updates.featured_image_url = featuredImageUrl;
+  }
 
   if (!updates.title) return { error: await tStudio('errTitleRequired') };
 
@@ -586,13 +611,55 @@ export async function adminReviewCreatorPost(formData) {
   };
 }
 
+/**
+ * Upload a cover/featured image for a creator post (or admin).
+ * Returns a public GCS URL for use as featured_image_url.
+ */
+export async function uploadCreatorCoverImage(formData) {
+  const { user, error } = await requireUser();
+  if (error) return { error };
+  if (!isAdminUser(user)) {
+    const profile = await getProfileFlags(user.id);
+    if (!profile?.is_content_creator) {
+      return { error: await tStudio('errNoCreatorPermission') };
+    }
+  }
+
+  const file = formData?.get?.('image');
+  if (!file || typeof file !== 'object' || !file.size) {
+    return { error: await tStudio('errCoverMissing') };
+  }
+  if (file.size > MAX_COVER_BYTES) {
+    return { error: await tStudio('errCoverTooLarge') };
+  }
+  const mime = String(file.type || '').toLowerCase();
+  if (mime && !ALLOWED_COVER_TYPES.has(mime)) {
+    return { error: await tStudio('errCoverType') };
+  }
+
+  const originalName = String(file.name || 'cover.jpg');
+  const ext = (originalName.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
+  const gcsPath = `blog-images/creators/${user.id}/${Date.now()}.${safeExt}`;
+
+  try {
+    const publicUrl = await uploadToGCS(gcsPath, file, mime || 'image/jpeg');
+    return { success: true, url: publicUrl };
+  } catch (uploadError) {
+    logger.error('uploadCreatorCoverImage', uploadError);
+    return { error: await tStudio('errCoverUpload') };
+  }
+}
+
 export async function getCreatorPostsForCurrentUser() {
   const { user, error } = await requireUser();
   if (error || !user) return [];
   const admin = createAdminClient();
   const { data, error: qError } = await admin
     .from('posts')
-    .select('id, title, slug, status, type, updated_at, submitted_at, published_at, review_note')
+    .select(
+      'id, title, slug, status, type, updated_at, submitted_at, published_at, review_note, featured_image_url'
+    )
     .eq('author_id', user.id)
     .order('updated_at', { ascending: false });
   if (qError) {

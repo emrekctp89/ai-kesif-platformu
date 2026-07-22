@@ -1,15 +1,16 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useRef, useState, useTransition } from 'react';
 import dynamic from 'next/dynamic';
 import toast from 'react-hot-toast';
 import { useTranslations } from 'next-intl';
-import { ExternalLink, Eye } from 'lucide-react';
+import { ExternalLink, Eye, ImagePlus, Trash2, Upload } from 'lucide-react';
 import { Link, useRouter } from '@/i18n/routing';
 import {
   assignCreatorPostTags,
   submitCreatorPostForReview,
   updateCreatorPost,
+  uploadCreatorCoverImage,
   withdrawCreatorPostFromReview,
 } from '@/app/actions/contentCreators';
 import { Button } from '@/components/ui/button';
@@ -55,12 +56,15 @@ export function CreatorPostEditor({
 }) {
   const t = useTranslations('ContentStudio');
   const router = useRouter();
+  const fileInputRef = useRef(null);
   const [isPending, startTransition] = useTransition();
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [content, setContent] = useState(post.content || '');
   const [type, setType] = useState(post.type || 'Yazı');
   const [categoryId, setCategoryId] = useState(
     post.category_id != null ? String(post.category_id) : 'none'
   );
+  const [coverUrl, setCoverUrl] = useState(post.featured_image_url || '');
   const [selectedTags, setSelectedTags] = useState(() => new Set(initialTagIds.map(Number)));
 
   const editorOptions = useMemo(
@@ -92,6 +96,7 @@ export function CreatorPostEditor({
     formData.set('content', content);
     formData.set('type', type);
     formData.set('category_id', categoryId === 'none' ? '' : categoryId);
+    formData.set('featured_image_url', coverUrl.trim());
     return formData;
   }
 
@@ -109,6 +114,27 @@ export function CreatorPostEditor({
       else next.add(tagId);
       return next;
     });
+  }
+
+  async function handleCoverUpload(file) {
+    if (!file) return;
+    setIsUploadingCover(true);
+    try {
+      const fd = new FormData();
+      fd.set('image', file);
+      const result = await uploadCreatorCoverImage(fd);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setCoverUrl(result.url || '');
+      toast.success(t('toastCoverUploaded'));
+    } catch (err) {
+      toast.error(err?.message || t('errCoverUpload'));
+    } finally {
+      setIsUploadingCover(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   }
 
   function save(formData) {
@@ -177,6 +203,7 @@ export function CreatorPostEditor({
   return (
     <form className="space-y-6">
       <input type="hidden" name="id" value={post.id} />
+      <input type="hidden" name="featured_image_url" value={coverUrl} />
       {post.status === 'Reddedildi' ? (
         <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
           <p className="font-medium text-destructive">{t('rejectedEditorTitle')}</p>
@@ -279,6 +306,71 @@ export function CreatorPostEditor({
                 </div>
               ) : null}
 
+              <div className="space-y-2 border-t border-border/50 pt-4">
+                <Label className="flex items-center gap-1.5">
+                  <ImagePlus className="h-4 w-4" aria-hidden="true" />
+                  {t('coverImageLabel')}
+                </Label>
+                <p className="text-xs text-muted-foreground">{t('coverImageHint')}</p>
+                {coverUrl ? (
+                  <div className="relative overflow-hidden rounded-xl border border-border/60">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={coverUrl}
+                      alt={t('coverImageAlt')}
+                      className="h-36 w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-28 items-center justify-center rounded-xl border border-dashed border-border/70 bg-muted/20 text-xs text-muted-foreground">
+                    {t('coverImageEmpty')}
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="sr-only"
+                    onChange={(e) => handleCoverUpload(e.target.files?.[0])}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={isPending || isUploadingCover}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                    {isUploadingCover ? t('coverImageUploading') : t('coverImageUpload')}
+                  </Button>
+                  {coverUrl ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={isPending || isUploadingCover}
+                      onClick={() => setCoverUrl('')}
+                    >
+                      <Trash2 className="mr-1.5 h-4 w-4" aria-hidden="true" />
+                      {t('coverImageRemove')}
+                    </Button>
+                  ) : null}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="cover-url" className="text-xs">
+                    {t('coverImageUrlLabel')}
+                  </Label>
+                  <Input
+                    id="cover-url"
+                    value={coverUrl}
+                    onChange={(e) => setCoverUrl(e.target.value)}
+                    placeholder={t('coverImageUrlPlaceholder')}
+                    disabled={isPending || isUploadingCover}
+                  />
+                </div>
+              </div>
+
               <p className="text-xs text-muted-foreground">
                 {t('statusLabel')}:{' '}
                 <span className="font-semibold text-foreground">{statusLabel(post.status, t)}</span>
@@ -291,7 +383,7 @@ export function CreatorPostEditor({
               <div className="flex flex-col gap-2">
                 <Button
                   type="button"
-                  disabled={isPending}
+                  disabled={isPending || isUploadingCover}
                   onClick={(e) => {
                     const form = e.currentTarget.closest('form');
                     if (form) save(new FormData(form));
@@ -309,7 +401,7 @@ export function CreatorPostEditor({
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={isPending}
+                    disabled={isPending || isUploadingCover}
                     onClick={(e) => {
                       const form = e.currentTarget.closest('form');
                       if (form) withdraw(new FormData(form));
@@ -321,7 +413,7 @@ export function CreatorPostEditor({
                   <Button
                     type="button"
                     variant="secondary"
-                    disabled={isPending}
+                    disabled={isPending || isUploadingCover}
                     onClick={(e) => {
                       const form = e.currentTarget.closest('form');
                       if (form) submitReview(new FormData(form));

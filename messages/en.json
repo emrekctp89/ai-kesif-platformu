@@ -1695,6 +1695,21 @@
     "editAndResubmit": "Edit and resubmit",
     "rejectedEditorTitle": "This post was rejected",
     "inReviewEditorHint": "This post is in review. Saving updates the content; withdraw from review or wait for approval to publish.",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "coverImageLabel": "Cover image",
+    "coverImageHint": "Shown on the blog list and post page. JPG, PNG, WebP, or GIF · max 5 MB.",
+    "coverImageUpload": "Upload image",
+    "coverImageUploading": "Uploading…",
+    "coverImageRemove": "Remove",
+    "coverImageUrlLabel": "or image URL",
+    "coverImageUrlPlaceholder": "https://…",
+    "coverImageEmpty": "No cover yet",
+    "coverImageAlt": "Cover image preview",
+    "toastCoverUploaded": "Cover uploaded. Remember to save.",
+    "errCoverMissing": "Please choose an image.",
+    "errCoverTooLarge": "Image must be 5 MB or smaller.",
+    "errCoverType": "Only JPG, PNG, WebP, or GIF are allowed.",
+    "errCoverUpload": "Could not upload image. Try again shortly.",
+    "errCoverInvalid": "Enter a valid http(s) cover image URL."
   }
 }

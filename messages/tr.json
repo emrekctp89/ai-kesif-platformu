@@ -1695,6 +1695,21 @@
     "editAndResubmit": "Düzenle ve yeniden gönder",
     "rejectedEditorTitle": "Bu yazı reddedildi",
     "inReviewEditorHint": "Yazı incelemede. Kaydetmek içeriği günceller; yayına almak için incelemeyi geri çekmen veya onay beklemen gerekir.",
-    "saving": "Kaydediliyor…"
+    "saving": "Kaydediliyor…",
+    "coverImageLabel": "Kapak görseli",
+    "coverImageHint": "Blog listesinde ve yazı sayfasında görünür. JPG, PNG, WebP veya GIF · en fazla 5 MB.",
+    "coverImageUpload": "Görsel yükle",
+    "coverImageUploading": "Yükleniyor…",
+    "coverImageRemove": "Kaldır",
+    "coverImageUrlLabel": "veya görsel URL",
+    "coverImageUrlPlaceholder": "https://…",
+    "coverImageEmpty": "Henüz kapak yok",
+    "coverImageAlt": "Kapak görseli önizleme",
+    "toastCoverUploaded": "Kapak görseli yüklendi. Kaydetmeyi unutma.",
+    "errCoverMissing": "Lütfen bir görsel seç.",
+    "errCoverTooLarge": "Görsel en fazla 5 MB olabilir.",
+    "errCoverType": "Yalnızca JPG, PNG, WebP veya GIF yükleyebilirsin.",
+    "errCoverUpload": "Görsel yüklenemedi. Biraz sonra tekrar dene.",
+    "errCoverInvalid": "Geçerli bir http(s) kapak URL’si gir."
   }
 }
