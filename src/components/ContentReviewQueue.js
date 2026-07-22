@@ -4,6 +4,7 @@ import { useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import { adminReviewCreatorPost } from '@/app/actions/contentCreators';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 export function ContentReviewQueue({ posts }) {
+  const t = useTranslations('AdminClient');
+  const tc = useTranslations('ContentStudio');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -33,7 +36,7 @@ export function ContentReviewQueue({ posts }) {
     return (
       <Card className="border-dashed">
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
-          İnceleme bekleyen içerik yok.
+          {t('contentReviewEmpty')}
         </CardContent>
       </Card>
     );
@@ -49,16 +52,22 @@ export function ContentReviewQueue({ posts }) {
           post.profiles?.email ||
           post.author_id?.slice?.(0, 8) ||
           '—';
+        const typeLabel =
+          post.type === 'Rehber'
+            ? tc('typeGuide')
+            : post.type === 'Yazı'
+              ? tc('typePost')
+              : post.type;
         return (
           <Card key={post.id} className="glass-panel">
             <CardHeader className="pb-2">
               <div className="flex flex-wrap items-center gap-2">
                 <CardTitle className="text-base">{post.title}</CardTitle>
-                <Badge variant="secondary">{post.type}</Badge>
-                <Badge variant="outline">İncelemede</Badge>
+                <Badge variant="secondary">{typeLabel}</Badge>
+                <Badge variant="outline">{t('contentReviewStatus')}</Badge>
               </div>
               <p className="text-xs text-muted-foreground">
-                Yazar: {authorLabel}
+                {t('contentReviewAuthor', { name: authorLabel })}
                 {post.submitted_at ? ` · ${new Date(post.submitted_at).toLocaleString()}` : ''}
               </p>
             </CardHeader>
@@ -69,12 +78,12 @@ export function ContentReviewQueue({ posts }) {
               >
                 <Input
                   name="review_note"
-                  placeholder="Opsiyonel admin notu"
+                  placeholder={t('contentReviewNotePlaceholder')}
                   className="min-w-0 flex-1"
                   disabled={isPending}
                 />
                 <Button asChild variant="outline" size="sm">
-                  <Link href={`/admin/posts/${post.id}/edit`}>Düzenle</Link>
+                  <Link href={`/admin/posts/${post.id}/edit`}>{t('contentReviewEdit')}</Link>
                 </Button>
                 <Button
                   type="button"
@@ -83,7 +92,7 @@ export function ContentReviewQueue({ posts }) {
                   onClick={(e) => review(post.id, 'publish', e.currentTarget.form)}
                 >
                   <Check className="mr-1 h-4 w-4" />
-                  Yayınla
+                  {t('contentReviewPublish')}
                 </Button>
                 <Button
                   type="button"
@@ -93,7 +102,7 @@ export function ContentReviewQueue({ posts }) {
                   onClick={(e) => review(post.id, 'reject', e.currentTarget.form)}
                 >
                   <X className="mr-1 h-4 w-4" />
-                  Reddet
+                  {t('contentReviewReject')}
                 </Button>
               </form>
             </CardContent>

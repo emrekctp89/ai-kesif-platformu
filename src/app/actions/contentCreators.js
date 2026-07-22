@@ -3,6 +3,7 @@
 import logger from '@/utils/logger';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/utils/supabase/actions';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { slugify } from '@/utils/slugify';
@@ -11,12 +12,17 @@ import { MIN_CREATOR_REPUTATION } from '@/lib/contentCreatorRules';
 
 const CREATOR_EDITABLE_STATUSES = new Set(['Taslak', 'İncelemede', 'Reddedildi']);
 
+async function tStudio(key, values) {
+  const t = await getTranslations('ContentStudio');
+  return t(key, values);
+}
+
 async function requireUser() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: 'Giriş yapmalısınız.', user: null, supabase };
+  if (!user) return { error: await tStudio('errLoginRequired'), user: null, supabase };
   return { user, supabase, error: null };
 }
 
@@ -49,10 +55,10 @@ export async function isCurrentUserContentCreator() {
 export async function setContentCreatorStatus({ userId, enabled, note } = {}) {
   const { user, error } = await requireUser();
   if (error) return { error };
-  if (!isAdminUser(user)) return { error: 'Yetkiniz yok.' };
+  if (!isAdminUser(user)) return { error: await tStudio('errForbidden') };
 
   const targetId = String(userId || '').trim();
-  if (!targetId) return { error: 'Kullanıcı seçilmedi.' };
+  if (!targetId) return { error: await tStudio('errUserNotSelected') };
 
   const admin = createAdminClient();
   const updates = {
@@ -67,7 +73,7 @@ export async function setContentCreatorStatus({ userId, enabled, note } = {}) {
   const { error: updateError } = await admin.from('profiles').update(updates).eq('id', targetId);
   if (updateError) {
     logger.error('setContentCreatorStatus', updateError);
-    return { error: 'İçerik üretici durumu güncellenemedi.' };
+    return { error: await tStudio('errCreatorStatusUpdate') };
   }
 
   // Always close open application alerts for this user when admin acts.
@@ -92,10 +98,10 @@ export async function setContentCreatorStatus({ userId, enabled, note } = {}) {
   }
 
   const statusMessage = enabled
-    ? 'İçerik üretici başvurun onaylandı. İçerik stüdyosundan yazı gönderebilirsin.'
+    ? await tStudio('notifyCreatorApproved')
     : note === 'application_rejected'
-      ? 'İçerik üretici başvurun şu an onaylanmadı. Daha sonra tekrar deneyebilirsin.'
-      : 'İçerik üretici yetkin kaldırıldı.';
+      ? await tStudio('notifyCreatorRejected')
+      : await tStudio('notifyCreatorRevoked');
 
   try {
     await admin.from('notifications').insert({
@@ -113,11 +119,15 @@ export async function setContentCreatorStatus({ userId, enabled, note } = {}) {
   if (targetProfile?.email) {
     await sendContentEventEmail({
       to: targetProfile.email,
-      subject: enabled ? 'İçerik üretici onayın' : 'İçerik üretici başvurun',
+      subject: enabled
+        ? await tStudio('emailSubjectApproved')
+        : await tStudio('emailSubjectApplication'),
       html: contentEmailHtml({
-        title: enabled ? 'Onaylandın 🎉' : 'Başvuru güncellemesi',
+        title: enabled
+          ? await tStudio('emailTitleApproved')
+          : await tStudio('emailTitleApplicationUpdate'),
         body: statusMessage,
-        ctaLabel: enabled ? 'İçerik stüdyosuna git' : 'Blogu incele',
+        ctaLabel: enabled ? await tStudio('emailCtaStudio') : await tStudio('emailCtaBlog'),
         ctaUrl: enabled ? '/icerik' : '/blog',
       }),
     });
@@ -129,10 +139,10 @@ export async function setContentCreatorStatus({ userId, enabled, note } = {}) {
   return {
     success: true,
     message: enabled
-      ? 'Kullanıcı içerik üretici olarak onaylandı.'
+      ? await tStudio('adminMsgCreatorApproved')
       : note === 'application_rejected'
-        ? 'Başvuru reddedildi.'
-        : 'İçerik üretici yetkisi kaldırıldı.',
+        ? await tStudio('adminMsgApplicationRejected')
+        : await tStudio('adminMsgCreatorRevoked'),
   };
 }
 
@@ -145,26 +155,30 @@ export async function requestContentCreatorAccess(formData) {
   if (error) return { error };
 
   if (isAdminUser(user)) {
-    return { error: 'Admin zaten tüm içerik yetkilerine sahip.' };
+    return { error: await tStudio('errAdminAlreadyHasAccess') };
   }
 
   const profile = await getProfileFlags(user.id);
   if (profile?.is_content_creator) {
-    return { error: 'Zaten içerik üreticisisin.', success: true };
+    return { error: await tStudio('errAlreadyCreator'), success: true };
   }
 
   const pitch = String(formData?.get?.('pitch') || formData?.pitch || '')
     .trim()
     .slice(0, 800);
   if (pitch.length < 20) {
-    return { error: 'Kısa bir tanıtım yaz (en az 20 karakter).' };
+    return { error: await tStudio('errPitchTooShort') };
   }
 
   const reputation = Number(profile?.reputation_points || 0);
   if (reputation < MIN_CREATOR_REPUTATION) {
     const remaining = MIN_CREATOR_REPUTATION - reputation;
     return {
-      error: `Üretici başvurusu için en az ${MIN_CREATOR_REPUTATION} itibar puanı gerekir (şu an: ${reputation}, kalan: ${remaining}). Ana sayfadan araçlara puan ver, yorum yaz veya /submit ile araç önererek puan kazan.`,
+      error: await tStudio('errReputationGate', {
+        min: MIN_CREATOR_REPUTATION,
+        current: reputation,
+        remaining,
+      }),
     };
   }
 
@@ -181,7 +195,7 @@ export async function requestContentCreatorAccess(formData) {
   if (alreadyOpen) {
     return {
       success: true,
-      message: 'Başvurun zaten incelemede. Onaylandığında bildirim alacaksın.',
+      message: await tStudio('successApplicationAlreadyPending'),
     };
   }
 
@@ -202,7 +216,7 @@ export async function requestContentCreatorAccess(formData) {
 
   if (alertError) {
     logger.error('requestContentCreatorAccess', alertError);
-    return { error: 'Başvuru kaydedilemedi. Biraz sonra tekrar dene.' };
+    return { error: await tStudio('errApplicationSaveFailed') };
   }
 
   revalidatePath('/admin');
@@ -210,7 +224,7 @@ export async function requestContentCreatorAccess(formData) {
   revalidatePath('/icerik');
   return {
     success: true,
-    message: 'Başvurun alındı. Admin onayından sonra içerik stüdyosu açılacak.',
+    message: await tStudio('successApplicationReceived'),
   };
 }
 
@@ -249,24 +263,25 @@ export async function createCreatorPost(formData) {
   if (!isAdminUser(user)) {
     const profile = await getProfileFlags(user.id);
     if (!profile?.is_content_creator) {
-      return { error: 'İçerik üretmek için onaylı üretici olmalısınız.' };
+      return { error: await tStudio('errNeedApprovedCreator') };
     }
   }
 
   const title = String(formData.get('title') || '').trim();
   const type = String(formData.get('type') || 'Yazı').trim() || 'Yazı';
-  if (!title) return { error: 'Başlık zorunludur.' };
-  if (!['Yazı', 'Rehber'].includes(type)) return { error: 'Geçersiz yazı tipi.' };
+  if (!title) return { error: await tStudio('errTitleRequired') };
+  if (!['Yazı', 'Rehber'].includes(type)) return { error: await tStudio('errInvalidType') };
 
   const admin = createAdminClient();
   const slug = `${slugify(title)}-${Date.now().toString(36)}`;
+  const seedBody = await tStudio('draftBodySeed', { title });
   const { data: newPost, error: insertError } = await admin
     .from('posts')
     .insert({
       title,
       slug,
       author_id: user.id,
-      content: `# ${title}\n\nBuraya yazınızı yazmaya başlayın...`,
+      content: seedBody,
       type,
       status: 'Taslak',
       description: '',
@@ -276,7 +291,7 @@ export async function createCreatorPost(formData) {
 
   if (insertError) {
     logger.error('createCreatorPost', insertError);
-    return { error: 'Taslak oluşturulamadı.' };
+    return { error: await tStudio('errDraftCreateFailed') };
   }
 
   revalidatePath('/icerik');
@@ -288,7 +303,7 @@ export async function updateCreatorPost(formData) {
   if (error) return { error };
 
   const id = String(formData.get('id') || '').trim();
-  if (!id) return { error: 'Yazı bulunamadı.' };
+  if (!id) return { error: await tStudio('errPostNotFound') };
 
   const admin = createAdminClient();
   const { data: existing, error: loadError } = await admin
@@ -297,21 +312,21 @@ export async function updateCreatorPost(formData) {
     .eq('id', id)
     .maybeSingle();
 
-  if (loadError || !existing) return { error: 'Yazı bulunamadı.' };
+  if (loadError || !existing) return { error: await tStudio('errPostNotFound') };
 
   const adminUser = isAdminUser(user);
-  if (!adminUser && existing.author_id !== user.id) return { error: 'Yetkiniz yok.' };
+  if (!adminUser && existing.author_id !== user.id) return { error: await tStudio('errForbidden') };
   if (!adminUser && !CREATOR_EDITABLE_STATUSES.has(existing.status)) {
-    return { error: 'Yayınlanmış yazıyı üretici düzenleyemez.' };
+    return { error: await tStudio('errPublishedCreatorLocked') };
   }
   if (!adminUser) {
     const profile = await getProfileFlags(user.id);
-    if (!profile?.is_content_creator) return { error: 'İçerik üretici yetkisi yok.' };
+    if (!profile?.is_content_creator) return { error: await tStudio('errNoCreatorPermission') };
   }
 
   const nextStatus = String(formData.get('status') || existing.status).trim();
   if (!adminUser && !CREATOR_EDITABLE_STATUSES.has(nextStatus)) {
-    return { error: 'Geçersiz durum. Yayınlama yalnızca admin onayından sonra yapılır.' };
+    return { error: await tStudio('errInvalidStatus') };
   }
 
   const categoryRaw = formData.get('category_id');
@@ -329,51 +344,48 @@ export async function updateCreatorPost(formData) {
     updated_at: new Date().toISOString(),
   };
 
-  if (!updates.title) return { error: 'Başlık zorunludur.' };
+  if (!updates.title) return { error: await tStudio('errTitleRequired') };
 
   if (nextStatus === 'İncelemede' && existing.status !== 'İncelemede') {
     updates.submitted_at = new Date().toISOString();
-  }
-  if (nextStatus === 'Taslak' || nextStatus === 'Reddedildi') {
-    // keep submitted_at history
   }
 
   const { error: updateError } = await admin.from('posts').update(updates).eq('id', id);
   if (updateError) {
     logger.error('updateCreatorPost', updateError);
-    return { error: updateError.message || 'Kayıt başarısız.' };
+    return { error: updateError.message || (await tStudio('errSaveFailed')) };
   }
 
   revalidatePath('/icerik');
   revalidatePath(`/icerik/${id}/edit`);
   revalidatePath('/admin');
   revalidatePath('/blog');
-  return { success: 'Taslak kaydedildi.' };
+  return { success: await tStudio('successDraftSaved') };
 }
 
 export async function submitCreatorPostForReview(formData) {
   const id = String(formData.get('id') || '').trim();
-  if (!id) return { error: 'Yazı bulunamadı.' };
+  if (!id) return { error: await tStudio('errPostNotFound') };
 
   const payload = new FormData();
   for (const [k, v] of formData.entries()) payload.set(k, v);
   payload.set('status', 'İncelemede');
   const result = await updateCreatorPost(payload);
   if (result.error) return result;
-  return { success: 'İncelemeye gönderildi. Admin onayından sonra yayınlanır.' };
+  return { success: await tStudio('successSubmitted') };
 }
 
 /** Pull a post back from review into draft. */
 export async function withdrawCreatorPostFromReview(formData) {
   const id = String(formData.get('id') || '').trim();
-  if (!id) return { error: 'Yazı bulunamadı.' };
+  if (!id) return { error: await tStudio('errPostNotFound') };
 
   const payload = new FormData();
   for (const [k, v] of formData.entries()) payload.set(k, v);
   payload.set('status', 'Taslak');
   const result = await updateCreatorPost(payload);
   if (result.error) return result;
-  return { success: 'İnceleme geri çekildi. Yazı tekrar taslak.' };
+  return { success: await tStudio('successWithdrawn') };
 }
 
 /**
@@ -385,7 +397,7 @@ export async function deleteCreatorPost(formData) {
   if (error) return { error };
 
   const id = String(formData.get('id') || '').trim();
-  if (!id) return { error: 'Yazı bulunamadı.' };
+  if (!id) return { error: await tStudio('errPostNotFound') };
 
   const admin = createAdminClient();
   const { data: existing, error: loadError } = await admin
@@ -393,15 +405,15 @@ export async function deleteCreatorPost(formData) {
     .select('id, author_id, status, slug')
     .eq('id', id)
     .maybeSingle();
-  if (loadError || !existing) return { error: 'Yazı bulunamadı.' };
+  if (loadError || !existing) return { error: await tStudio('errPostNotFound') };
 
   const adminUser = isAdminUser(user);
-  if (!adminUser && existing.author_id !== user.id) return { error: 'Yetkiniz yok.' };
+  if (!adminUser && existing.author_id !== user.id) return { error: await tStudio('errForbidden') };
   if (!adminUser) {
     const profile = await getProfileFlags(user.id);
-    if (!profile?.is_content_creator) return { error: 'İçerik üretici yetkisi yok.' };
+    if (!profile?.is_content_creator) return { error: await tStudio('errNoCreatorPermission') };
     if (existing.status === 'Yayınlandı') {
-      return { error: 'Yayınlanmış yazı silinemez. Admin ile iletişime geç.' };
+      return { error: await tStudio('errCannotDeletePublished') };
     }
   }
 
@@ -416,14 +428,14 @@ export async function deleteCreatorPost(formData) {
   const { error: deleteError } = await admin.from('posts').delete().eq('id', id);
   if (deleteError) {
     logger.error('deleteCreatorPost', deleteError);
-    return { error: 'Yazı silinemedi.' };
+    return { error: await tStudio('errDeleteFailed') };
   }
 
   revalidatePath('/icerik');
   revalidatePath('/admin');
   revalidatePath('/blog');
   if (existing.slug) revalidatePath(`/blog/${existing.slug}`);
-  return { success: 'Yazı silindi.' };
+  return { success: await tStudio('successDeleted') };
 }
 
 /** Assign tags to a creator-owned post (admin client after auth checks). */
@@ -432,7 +444,7 @@ export async function assignCreatorPostTags(formData) {
   if (error) return { error };
 
   const postId = String(formData.get('postId') || formData.get('id') || '').trim();
-  if (!postId) return { error: "Yazı ID'si bulunamadı." };
+  if (!postId) return { error: await tStudio('errPostIdMissing') };
 
   const tagIds = formData
     .getAll('tagId')
@@ -445,16 +457,16 @@ export async function assignCreatorPostTags(formData) {
     .select('id, author_id, status')
     .eq('id', postId)
     .maybeSingle();
-  if (loadError || !existing) return { error: 'Yazı bulunamadı.' };
+  if (loadError || !existing) return { error: await tStudio('errPostNotFound') };
 
   const adminUser = isAdminUser(user);
-  if (!adminUser && existing.author_id !== user.id) return { error: 'Yetkiniz yok.' };
+  if (!adminUser && existing.author_id !== user.id) return { error: await tStudio('errForbidden') };
   if (!adminUser && !CREATOR_EDITABLE_STATUSES.has(existing.status)) {
-    return { error: 'Yayınlanmış yazının etiketleri üretici tarafından değiştirilemez.' };
+    return { error: await tStudio('errPublishedTagsLocked') };
   }
   if (!adminUser) {
     const profile = await getProfileFlags(user.id);
-    if (!profile?.is_content_creator) return { error: 'İçerik üretici yetkisi yok.' };
+    if (!profile?.is_content_creator) return { error: await tStudio('errNoCreatorPermission') };
   }
 
   await admin.from('post_tags').delete().eq('post_id', postId);
@@ -464,7 +476,7 @@ export async function assignCreatorPostTags(formData) {
       .insert(tagIds.map((tagId) => ({ post_id: postId, tag_id: tagId })));
     if (insertError) {
       logger.error('assignCreatorPostTags', insertError);
-      return { error: 'Etiketler kaydedilemedi.' };
+      return { error: await tStudio('errTagsSaveFailed') };
     }
   }
 
@@ -477,15 +489,16 @@ export async function assignCreatorPostTags(formData) {
 export async function adminReviewCreatorPost(formData) {
   const { user, error } = await requireUser();
   if (error) return { error };
-  if (!isAdminUser(user)) return { error: 'Yetkiniz yok.' };
+  if (!isAdminUser(user)) return { error: await tStudio('errForbidden') };
 
   const id = String(formData.get('id') || '').trim();
   const decision = String(formData.get('decision') || '').trim(); // publish | reject
   const note = String(formData.get('review_note') || '')
     .trim()
     .slice(0, 1000);
-  if (!id) return { error: 'Yazı bulunamadı.' };
-  if (!['publish', 'reject'].includes(decision)) return { error: 'Geçersiz karar.' };
+  if (!id) return { error: await tStudio('errPostNotFound') };
+  if (!['publish', 'reject'].includes(decision))
+    return { error: await tStudio('errInvalidDecision') };
 
   const admin = createAdminClient();
   const { data: existing, error: loadError } = await admin
@@ -493,7 +506,7 @@ export async function adminReviewCreatorPost(formData) {
     .select('id, status, slug, published_at, author_id, title')
     .eq('id', id)
     .maybeSingle();
-  if (loadError || !existing) return { error: 'Yazı bulunamadı.' };
+  if (loadError || !existing) return { error: await tStudio('errPostNotFound') };
 
   const updates = {
     review_note: note || null,
@@ -510,7 +523,7 @@ export async function adminReviewCreatorPost(formData) {
   const { error: updateError } = await admin.from('posts').update(updates).eq('id', id);
   if (updateError) {
     logger.error('adminReviewCreatorPost', updateError);
-    return { error: 'İnceleme kaydedilemedi.' };
+    return { error: await tStudio('errReviewSaveFailed') };
   }
 
   // Notify creator (in-app + email) when preference allows.
@@ -524,8 +537,10 @@ export async function adminReviewCreatorPost(formData) {
       if (authorProfile?.notify_on_content_approval !== false) {
         const published = decision === 'publish';
         const message = published
-          ? `"${existing.title}" yayınlandı.`
-          : `"${existing.title}" reddedildi.${note ? ` Not: ${note}` : ''}`;
+          ? await tStudio('notifyPostPublished', { title: existing.title })
+          : note
+            ? await tStudio('notifyPostRejectedWithNote', { title: existing.title, note })
+            : await tStudio('notifyPostRejected', { title: existing.title });
         const link = published && existing.slug ? `/blog/${existing.slug}` : '/icerik';
         await admin.from('notifications').insert({
           user_id: existing.author_id,
@@ -537,11 +552,17 @@ export async function adminReviewCreatorPost(formData) {
         if (authorProfile.email) {
           await sendContentEventEmail({
             to: authorProfile.email,
-            subject: published ? 'Yazın yayınlandı' : 'Yazın hakkında güncelleme',
+            subject: published
+              ? await tStudio('emailSubjectPostPublished')
+              : await tStudio('emailSubjectPostUpdate'),
             html: contentEmailHtml({
-              title: published ? 'Yayında ✨' : 'İnceleme sonucu',
+              title: published
+                ? await tStudio('emailTitlePostPublished')
+                : await tStudio('emailTitleReviewResult'),
               body: message,
-              ctaLabel: published ? 'Yazıyı oku' : 'Stüdyoya dön',
+              ctaLabel: published
+                ? await tStudio('emailCtaReadPost')
+                : await tStudio('emailCtaBackStudio'),
               ctaUrl: link,
             }),
           });
@@ -558,7 +579,10 @@ export async function adminReviewCreatorPost(formData) {
   if (existing.slug) revalidatePath(`/blog/${existing.slug}`);
 
   return {
-    success: decision === 'publish' ? 'Yazı yayınlandı.' : 'Yazı reddedildi.',
+    success:
+      decision === 'publish'
+        ? await tStudio('successPostPublished')
+        : await tStudio('successPostRejected'),
   };
 }
 

@@ -38,7 +38,31 @@ function statusVariant(status) {
   return 'outline';
 }
 
-function DeleteDraftButton({ postId, label, confirmTitle, confirmBody, cancelLabel, deleteLabel }) {
+function statusLabel(status, t) {
+  const map = {
+    Taslak: t('statDraft'),
+    İncelemede: t('statReview'),
+    Yayınlandı: t('statPublished'),
+    Reddedildi: t('statRejected'),
+  };
+  return map[status] || status;
+}
+
+function typeLabel(type, t) {
+  if (type === 'Yazı') return t('typePost');
+  if (type === 'Rehber') return t('typeGuide');
+  return type;
+}
+
+function DeleteDraftButton({
+  postId,
+  label,
+  confirmTitle,
+  confirmBody,
+  cancelLabel,
+  deleteLabel,
+  deletedToast,
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -65,7 +89,7 @@ function DeleteDraftButton({ postId, label, confirmTitle, confirmBody, cancelLab
                 const result = await deleteCreatorPost(fd);
                 if (result.error) toast.error(result.error);
                 else {
-                  toast.success(result.success || 'Silindi');
+                  toast.success(result.success || deletedToast);
                   router.refresh();
                 }
               });
@@ -152,7 +176,7 @@ export function ContentStudioClient({ posts }) {
                   if (result?.error) toast.error(result.error);
                 } catch (err) {
                   if (err && typeof err === 'object' && 'digest' in err) return;
-                  toast.error(err?.message || 'Taslak oluşturulamadı');
+                  toast.error(err?.message || t('toastCreateFailed'));
                 }
               });
             }}
@@ -230,8 +254,10 @@ export function ContentStudioClient({ posts }) {
                   <div className="min-w-0 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate font-semibold">{post.title}</p>
-                      <Badge variant={statusVariant(post.status)}>{post.status}</Badge>
-                      <Badge variant="outline">{post.type}</Badge>
+                      <Badge variant={statusVariant(post.status)}>
+                        {statusLabel(post.status, t)}
+                      </Badge>
+                      <Badge variant="outline">{typeLabel(post.type, t)}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {t('updatedAt', {
@@ -274,6 +300,7 @@ export function ContentStudioClient({ posts }) {
                         confirmBody={t('deleteConfirmBody')}
                         cancelLabel={t('deleteCancel')}
                         deleteLabel={t('deleteConfirmAction')}
+                        deletedToast={t('toastDeleted')}
                       />
                     ) : null}
                   </div>

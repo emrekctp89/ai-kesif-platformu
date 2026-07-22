@@ -3,6 +3,7 @@
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import { setContentCreatorStatus } from '@/app/actions/contentCreators';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function CreatorApplicationsPanel({ applications }) {
+  const t = useTranslations('AdminClient');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -17,7 +19,7 @@ export function CreatorApplicationsPanel({ applications }) {
     return (
       <Card className="border-dashed">
         <CardContent className="py-8 text-center text-sm text-muted-foreground">
-          Bekleyen içerik üretici başvurusu yok.
+          {t('creatorAppsEmpty')}
         </CardContent>
       </Card>
     );
@@ -36,12 +38,12 @@ export function CreatorApplicationsPanel({ applications }) {
             <CardHeader className="pb-2">
               <div className="flex flex-wrap items-center gap-2">
                 <CardTitle className="text-base">{label}</CardTitle>
-                <Badge variant="secondary">Başvuru</Badge>
+                <Badge variant="secondary">{t('creatorAppsBadge')}</Badge>
               </div>
               {meta.email ? <p className="text-xs text-muted-foreground">{meta.email}</p> : null}
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{pitch}</p>
+              <p className="whitespace-pre-wrap text-sm text-muted-foreground">{pitch}</p>
               <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
@@ -63,7 +65,7 @@ export function CreatorApplicationsPanel({ applications }) {
                   }}
                 >
                   <Check className="mr-1 h-4 w-4" />
-                  Onayla
+                  {t('creatorAppsApprove')}
                 </Button>
                 <Button
                   type="button"
@@ -72,25 +74,21 @@ export function CreatorApplicationsPanel({ applications }) {
                   disabled={isPending || !userId}
                   onClick={() => {
                     startTransition(async () => {
-                      // Reject = keep not creator; close alert by approving false after resolving via set with note only won't close.
-                      // Use setContentCreatorStatus(false) then manually we need close alert - setContentCreatorStatus only closes on enable.
-                      // Call setContentCreatorStatus enabled false and resolve alerts in a dedicated path.
                       const result = await setContentCreatorStatus({
                         userId,
                         enabled: false,
                         note: 'application_rejected',
                       });
-                      // Close application alerts even on reject
                       if (result.error) toast.error(result.error);
                       else {
-                        toast.success('Başvuru reddedildi (üretici yetkisi yok).');
+                        toast.success(result.message || t('creatorAppsRejectedToast'));
                         router.refresh();
                       }
                     });
                   }}
                 >
                   <X className="mr-1 h-4 w-4" />
-                  Reddet
+                  {t('creatorAppsReject')}
                 </Button>
               </div>
             </CardContent>

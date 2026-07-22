@@ -49,6 +49,13 @@ export default async function CreatorPreviewPostPage({ params }) {
   if (!isAdmin && post.author_id !== user.id) redirect('/icerik');
 
   const isGuide = post.type === 'Rehber';
+  const statusLabels = {
+    Taslak: t('statDraft'),
+    İncelemede: t('statReview'),
+    Yayınlandı: t('statPublished'),
+    Reddedildi: t('statRejected'),
+  };
+  const typeDisplay = isGuide ? t('typeGuide') : post.type === 'Yazı' ? t('typePost') : post.type;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 pb-12">
@@ -65,15 +72,15 @@ export default async function CreatorPreviewPostPage({ params }) {
               <Eye className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
               {t('previewBadge')}
             </Badge>
-            <Badge variant="outline">{post.status}</Badge>
+            <Badge variant="outline">{statusLabels[post.status] || post.status}</Badge>
             <Badge variant={isGuide ? 'default' : 'outline'}>
               {isGuide ? (
                 <>
                   <BookOpen className="mr-1 h-3 w-3" aria-hidden="true" />
-                  {post.type}
+                  {typeDisplay}
                 </>
               ) : (
-                post.type
+                typeDisplay
               )}
             </Badge>
           </div>

@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 import { ExternalLink, Eye } from 'lucide-react';
 import {
   assignCreatorPostTags,
@@ -29,6 +30,16 @@ import {
 const SimpleMDE = dynamic(() => import('react-simplemde-editor'), { ssr: false });
 import 'easymde/dist/easymde.min.css';
 
+function statusLabel(status, t) {
+  const map = {
+    Taslak: t('statDraft'),
+    İncelemede: t('statReview'),
+    Yayınlandı: t('statPublished'),
+    Reddedildi: t('statRejected'),
+  };
+  return map[status] || status;
+}
+
 /**
  * @param {{
  *   post: object,
@@ -43,6 +54,7 @@ export function CreatorPostEditor({
   tags = [],
   selectedTagIds: initialTagIds = [],
 }) {
+  const t = useTranslations('ContentStudio');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [content, setContent] = useState(post.content || '');
@@ -55,7 +67,7 @@ export function CreatorPostEditor({
   const editorOptions = useMemo(
     () => ({
       spellChecker: false,
-      placeholder: 'Yazınızı buraya yazmaya başlayın...',
+      placeholder: t('editorPlaceholder'),
       toolbar: [
         'bold',
         'italic',
@@ -71,7 +83,7 @@ export function CreatorPostEditor({
         'side-by-side',
       ],
     }),
-    []
+    [t]
   );
 
   const lockedPublished = post.status === 'Yayınlandı';
@@ -111,7 +123,7 @@ export function CreatorPostEditor({
       if (postResult.error || tagsResult.error) {
         toast.error(postResult.error || tagsResult.error);
       } else {
-        toast.success(postResult.success || 'Kaydedildi');
+        toast.success(postResult.success || t('toastSaved'));
         router.refresh();
       }
     });
@@ -124,7 +136,7 @@ export function CreatorPostEditor({
       const result = await submitCreatorPostForReview(formData);
       if (result.error) toast.error(result.error);
       else {
-        toast.success(result.success || 'İncelemeye gönderildi');
+        toast.success(result.success || t('toastSubmitted'));
         router.refresh();
       }
     });
@@ -136,7 +148,7 @@ export function CreatorPostEditor({
       const result = await withdrawCreatorPostFromReview(formData);
       if (result.error) toast.error(result.error);
       else {
-        toast.success(result.success || 'İnceleme geri çekildi');
+        toast.success(result.success || t('toastWithdrawn'));
         router.refresh();
       }
     });
@@ -146,15 +158,15 @@ export function CreatorPostEditor({
     return (
       <Card className="glass-panel">
         <CardHeader>
-          <CardTitle>Yayınlandı</CardTitle>
+          <CardTitle>{t('publishedLockedTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>Bu yazı yayınlanmış. Düzenleme için admin ile iletişime geçin.</p>
+          <p>{t('publishedLockedBody')}</p>
           {post.slug ? (
             <Button asChild variant="outline" size="sm">
               <Link href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="mr-1.5 h-4 w-4" aria-hidden="true" />
-                Yayındaki yazıyı gör
+                {t('viewPublishedPost')}
               </Link>
             </Button>
           ) : null}
@@ -169,11 +181,11 @@ export function CreatorPostEditor({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <div className="space-y-2">
-            <Label htmlFor="title">Başlık</Label>
+            <Label htmlFor="title">{t('titleLabel')}</Label>
             <Input id="title" name="title" defaultValue={post.title} required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Kısa açıklama</Label>
+            <Label htmlFor="description">{t('descriptionLabel')}</Label>
             <Textarea
               id="description"
               name="description"
@@ -182,7 +194,7 @@ export function CreatorPostEditor({
             />
           </div>
           <div className="space-y-2">
-            <Label>İçerik (Markdown)</Label>
+            <Label>{t('contentMarkdownLabel')}</Label>
             <SimpleMDE options={editorOptions} value={content} onChange={setContent} />
           </div>
         </div>
@@ -190,34 +202,34 @@ export function CreatorPostEditor({
         <div className="space-y-4">
           <Card className="glass-panel">
             <CardHeader>
-              <CardTitle className="text-base">Yayın bilgisi</CardTitle>
+              <CardTitle className="text-base">{t('publishMetaTitle')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="slug">URL uzantısı</Label>
+                <Label htmlFor="slug">{t('slugLabel')}</Label>
                 <Input id="slug" name="slug" defaultValue={post.slug} required />
               </div>
               <div className="space-y-2">
-                <Label>Tip</Label>
+                <Label>{t('typeLabel')}</Label>
                 <Select value={type} onValueChange={setType}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Yazı">Yazı</SelectItem>
-                    <SelectItem value="Rehber">Rehber</SelectItem>
+                    <SelectItem value="Yazı">{t('typePost')}</SelectItem>
+                    <SelectItem value="Rehber">{t('typeGuide')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {categories.length > 0 ? (
                 <div className="space-y-2">
-                  <Label>Kategori (opsiyonel)</Label>
+                  <Label>{t('categoryOptionalLabel')}</Label>
                   <Select value={categoryId} onValueChange={setCategoryId}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Kategori seç" />
+                      <SelectValue placeholder={t('categorySelectPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Kategori yok</SelectItem>
+                      <SelectItem value="none">{t('categoryNone')}</SelectItem>
                       {categories.map((cat) => (
                         <SelectItem key={cat.id} value={String(cat.id)}>
                           {cat.name}
@@ -230,7 +242,7 @@ export function CreatorPostEditor({
 
               {tags.length > 0 ? (
                 <div className="space-y-2">
-                  <Label>Etiketler</Label>
+                  <Label>{t('tagsLabel')}</Label>
                   <div className="max-h-40 space-y-2 overflow-y-auto rounded-lg border p-2">
                     {tags.map((tag) => {
                       const checked = selectedTags.has(tag.id);
@@ -253,11 +265,12 @@ export function CreatorPostEditor({
               ) : null}
 
               <p className="text-xs text-muted-foreground">
-                Durum: <span className="font-semibold text-foreground">{post.status}</span>
+                {t('statusLabel')}:{' '}
+                <span className="font-semibold text-foreground">{statusLabel(post.status, t)}</span>
               </p>
               {post.review_note ? (
                 <p className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
-                  Admin notu: {post.review_note}
+                  {t('adminNotePrefix')}: {post.review_note}
                 </p>
               ) : null}
               <div className="flex flex-col gap-2">
@@ -269,12 +282,12 @@ export function CreatorPostEditor({
                     if (form) save(new FormData(form));
                   }}
                 >
-                  Taslağı kaydet
+                  {t('saveDraft')}
                 </Button>
                 <Button asChild type="button" variant="outline">
                   <Link href={`/icerik/${post.id}/preview`}>
                     <Eye className="mr-1.5 h-4 w-4" aria-hidden="true" />
-                    Önizleme
+                    {t('preview')}
                   </Link>
                 </Button>
                 {inReview ? (
@@ -287,7 +300,7 @@ export function CreatorPostEditor({
                       if (form) withdraw(new FormData(form));
                     }}
                   >
-                    İncelemeyi geri çek
+                    {t('withdrawReview')}
                   </Button>
                 ) : (
                   <Button
@@ -299,7 +312,7 @@ export function CreatorPostEditor({
                       if (form) submitReview(new FormData(form));
                     }}
                   >
-                    İncelemeye gönder
+                    {t('submitForReview')}
                   </Button>
                 )}
               </div>
