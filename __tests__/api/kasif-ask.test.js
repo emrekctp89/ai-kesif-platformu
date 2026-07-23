@@ -2,6 +2,7 @@ const enforceRateLimit = jest.fn();
 const assertKasifEnabled = jest.fn();
 const retrievePlatformContext = jest.fn();
 const answerQuestion = jest.fn();
+const answerMetaQuestion = jest.fn();
 const groundModelResponse = jest.fn();
 const createAdminClient = jest.fn();
 
@@ -24,6 +25,7 @@ jest.mock('@/lib/kasif/retrieval', () => ({
 }));
 jest.mock('@/lib/kasif/engine', () => ({
   answerQuestion: (...args) => answerQuestion(...args),
+  answerMetaQuestion: (...args) => answerMetaQuestion(...args),
 }));
 jest.mock('@/lib/kasif/grounding', () => ({
   noInformationAnswer: (locale) =>
@@ -53,6 +55,7 @@ describe('Kâşif ask API', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     enforceRateLimit.mockResolvedValue({ allowed: true });
+    answerMetaQuestion.mockReturnValue(null);
     retrievePlatformContext.mockResolvedValue([{ id: 7, name: 'Slide Tool', slug: 'slide-tool' }]);
     answerQuestion.mockReturnValue({
       answer: 'Answer',
@@ -114,5 +117,33 @@ describe('Kâşif ask API', () => {
       error: 'The question must be between 3 and 800 characters.',
     });
     expect(retrievePlatformContext).not.toHaveBeenCalled();
+  });
+
+  it('meta sorularda katalog aramasını atlar', async () => {
+    answerMetaQuestion.mockReturnValue({
+      answer: 'Ben Kâşif’im',
+      sourceIds: [],
+      confidence: 0.99,
+      meta: true,
+      metaKind: 'identity',
+      intent: { meta: 'identity', goals: [] },
+    });
+    groundModelResponse.mockReturnValue({
+      answer: 'Ben Kâşif’im',
+      sources: [],
+      grounded: true,
+      meta: true,
+    });
+
+    const response = await POST(requestWith({ question: 'Sen kimsin?', locale: 'tr' }));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      answer: 'Ben Kâşif’im',
+      grounded: true,
+      confidence: 0.99,
+    });
+    expect(retrievePlatformContext).not.toHaveBeenCalled();
+    expect(answerQuestion).not.toHaveBeenCalled();
   });
 });

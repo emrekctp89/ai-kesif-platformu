@@ -2,7 +2,9 @@ jest.mock('server-only', () => ({}));
 jest.mock('@/utils/supabase/server', () => ({ createClient: jest.fn() }));
 
 import {
+  answerMetaQuestion,
   answerQuestion,
+  detectMetaIntent,
   rankTools,
   understandConversation,
   understandQuestion,
@@ -597,5 +599,26 @@ describe('Kâşif engine', () => {
   it('ücretsiz tercihli yanıtta fiyat ipucu ekler', () => {
     const result = answerQuestion('Ücretsiz sunum aracı', records);
     expect(result.answer).toContain('ücretsiz/freemium tercihine göre');
+  });
+
+  it('meta kimlik sorusunu katalog aramadan yanıtlar', () => {
+    expect(detectMetaIntent('Sen kimsin ve görevin ne?')).toBe('identity');
+    const result = answerMetaQuestion('Sen kimsin?', 'tr');
+    expect(result.meta).toBe(true);
+    expect(result.answer).toMatch(/Kâşif/i);
+    expect(result.sourceIds).toEqual([]);
+    expect(result.confidence).toBeGreaterThanOrEqual(0.99);
+  });
+
+  it('yetenek ve çalışma biçimi meta sorularını ayırır', () => {
+    expect(detectMetaIntent('Ne yapabilirsin?')).toBe('capabilities');
+    expect(detectMetaIntent('How do you work?')).toBe('how');
+    expect(answerMetaQuestion('What can you do?', 'en').answer).toMatch(/recommend tools/i);
+  });
+
+  it('net goal eşleşmesinde güven tabanı uygular', () => {
+    const result = answerQuestion('Ücretsiz sunum aracı', records);
+    expect(result.intent.goals).toContain('presentation-creation');
+    expect(result.confidence).toBeGreaterThanOrEqual(0.78);
   });
 });

@@ -10,6 +10,19 @@ export function noInformationAnswer(locale = 'tr') {
 }
 
 export function groundModelResponse(modelResponse, records, locale = 'tr') {
+  const answer = String(modelResponse?.answer || '').trim();
+
+  // Meta yanıtlar (kimlik / yetenek) katalog kaynağı gerektirmez.
+  if (modelResponse?.meta && answer) {
+    return {
+      answer: answer.slice(0, 2000),
+      sources: [],
+      grounded: true,
+      meta: true,
+      metaKind: modelResponse.metaKind || modelResponse.intent?.meta || null,
+    };
+  }
+
   const allowed = new Map(records.map((item) => [`tool:${item.id}`, item]));
   const requestedIds = Array.isArray(modelResponse?.sourceIds) ? modelResponse.sourceIds : [];
   const validSources = [...new Set(requestedIds)]
@@ -22,7 +35,6 @@ export function groundModelResponse(modelResponse, records, locale = 'tr') {
       url: `/${locale}/tool/${item.slug}`,
     }));
 
-  const answer = String(modelResponse?.answer || '').trim();
   if (modelResponse?.insufficientContext || !answer || validSources.length === 0) {
     return {
       answer: noInformationAnswer(locale),

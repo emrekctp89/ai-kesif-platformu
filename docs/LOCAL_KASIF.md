@@ -39,6 +39,20 @@ npm run kasif:feedback-report -- --days=14 --limit=30
 Rapor negatif geri bildirimleri token ve goal kovalarına ayırır; lexicon kural adayları önerir.
 Aynı özet admin panelindeki **Kâşif kalite** sekmesinde de görünür (`buildKasifQualityStats`).
 
+Eski etkileşimleri mevcut motorla dry-run yeniden yorumlamak için:
+
+```bash
+npm run kasif:reprocess-intents
+npm run kasif:reprocess-intents -- --days=30 --limit=50
+```
+
+Bu komut veritabanına yazmaz; goal kazanan veya meta sayılan örnekleri listeler.
+
+## Meta sorular
+
+`sen kimsin`, `ne yapabilirsin`, `how do you work` gibi sorular katalog aramasına gitmeden
+sabit platform açıklaması döndürür (`answerMetaQuestion`).
+
 Bu sürüm platforma özel bir öneri motorudur; genel amaçlı serbest metin üreten temel dil
 modeli değildir. Gerçek kullanım geri bildirimleri biriktikçe ağırlıklar çevrimdışı olarak
 öğrenilebilir ve motor sürümlenmiş bir değerlendirme veri setiyle geliştirilebilir.

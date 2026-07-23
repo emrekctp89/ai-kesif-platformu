@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { enforceRateLimit } from '@/utils/antiAbuse';
 import { assertKasifEnabled } from '@/lib/kasif/config';
-import { answerQuestion } from '@/lib/kasif/engine';
+import { answerMetaQuestion, answerQuestion } from '@/lib/kasif/engine';
 import { retrievePlatformContext } from '@/lib/kasif/retrieval';
 import { groundModelResponse, noInformationAnswer } from '@/lib/kasif/grounding';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -111,18 +111,36 @@ export async function POST(request) {
   }
 
   try {
+    const isLocalEvaluation = body?.evaluation === true && isLocalEvaluationRequest;
+
+    // Meta sorular (kimsin / ne yapabilirsin) katalog aramadan yanıtlanır.
+    const metaResponse = answerMetaQuestion(question, locale);
+    if (metaResponse) {
+      const groundedMeta = groundModelResponse(metaResponse, [], locale);
+      const interaction = isLocalEvaluation
+        ? {}
+        : await withTimeout(recordInteraction(question, metaResponse, groundedMeta), 3000, {});
+      return NextResponse.json({
+        ...groundedMeta,
+        confidence: metaResponse.confidence || 0.99,
+        intent: metaResponse.intent || {},
+        ...interaction,
+      });
+    }
+
     const records = await retrievePlatformContext(question, history);
     if (!records.length) {
       return NextResponse.json({
         answer: noInformationAnswer(locale),
         sources: [],
         grounded: false,
+        confidence: 0,
+        intent: {},
       });
     }
 
     const modelResponse = answerQuestion(question, records, history, locale);
     const groundedResponse = groundModelResponse(modelResponse, records, locale);
-    const isLocalEvaluation = body?.evaluation === true && isLocalEvaluationRequest;
     const interaction = isLocalEvaluation
       ? {}
       : await withTimeout(recordInteraction(question, modelResponse, groundedResponse), 3000, {});

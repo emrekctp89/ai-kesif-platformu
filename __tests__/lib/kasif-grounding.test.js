@@ -41,4 +41,24 @@ describe('Kâşif grounding', () => {
       )
     ).toEqual({ answer: NO_INFORMATION_ANSWER, sources: [], grounded: false });
   });
+
+  it('meta yanıtları kaynaksız grounded kabul eder', () => {
+    expect(
+      groundModelResponse(
+        {
+          answer: 'Ben Kâşif’im',
+          sourceIds: [],
+          meta: true,
+          metaKind: 'identity',
+        },
+        records
+      )
+    ).toEqual({
+      answer: 'Ben Kâşif’im',
+      sources: [],
+      grounded: true,
+      meta: true,
+      metaKind: 'identity',
+    });
+  });
 });

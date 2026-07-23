@@ -1567,45 +1567,85 @@ function formatKasifDate(value) {
   }
 }
 
+function formatGoalLabel(goals, t) {
+  if (!goals || goals === '(hedef yok)') return t('kasifGoalNone');
+  return goals;
+}
+
 function KasifQualityTab({ interactions = [] }) {
   const t = useTranslations('AdminClient');
+  const router = useRouter();
+  const locale = useLocale();
+  const kasifHref = locale === 'en' ? '/en/kasif' : '/kasif';
   const stats = React.useMemo(
     () => buildKasifQualityStats(interactions, { windowDays: 30, sampleLimit: 12 }),
     [interactions]
   );
+  const feedbackCoverage =
+    stats.total > 0 ? Math.round((stats.withFeedback / stats.total) * 100) : null;
 
   return (
     <div className="space-y-6">
       <Card className="glass-panel border-border/50">
-        <CardHeader>
-          <CardTitle>{t('kasifQualityTitle')}</CardTitle>
-          <CardDescription>{t('kasifQualityDesc', { days: stats.windowDays })}</CardDescription>
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1.5">
+            <CardTitle>{t('kasifQualityTitle')}</CardTitle>
+            <CardDescription>{t('kasifQualityDesc', { days: stats.windowDays })}</CardDescription>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm" className="min-h-9">
+              <Link href={kasifHref} prefetch={false}>
+                {t('kasifOpenLive')}
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="min-h-9"
+              onClick={() => router.refresh()}
+            >
+              {t('kasifRefresh')}
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border bg-background/60 p-4">
-            <p className="text-xs text-muted-foreground">{t('kasifStatTotal')}</p>
-            <p className="mt-1 text-2xl font-bold">{stats.total}</p>
-          </div>
-          <div className="rounded-xl border bg-background/60 p-4">
-            <p className="text-xs text-muted-foreground">{t('kasifStatHelpful')}</p>
-            <p className="mt-1 text-2xl font-bold">
-              {stats.helpfulRate == null ? '—' : `%${stats.helpfulRate}`}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              +{stats.positive} / −{stats.negative}
-            </p>
-          </div>
-          <div className="rounded-xl border bg-background/60 p-4">
-            <p className="text-xs text-muted-foreground">{t('kasifStatLowConf')}</p>
-            <p className="mt-1 text-2xl font-bold">{stats.lowConfidence}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {t('kasifStatAvgConf')}:{' '}
-              {stats.avgConfidence == null ? '—' : `%${Math.round(stats.avgConfidence * 100)}`}
-            </p>
-          </div>
-          <div className="rounded-xl border bg-background/60 p-4">
-            <p className="text-xs text-muted-foreground">{t('kasifStatUngrounded')}</p>
-            <p className="mt-1 text-2xl font-bold">{stats.ungrounded}</p>
+        <CardContent className="space-y-4">
+          {stats.total === 0 ? (
+            <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">{t('kasifEmptyTitle')}</p>
+              <p className="mt-1">{t('kasifEmptyHint')}</p>
+            </div>
+          ) : null}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border bg-background/60 p-4">
+              <p className="text-xs text-muted-foreground">{t('kasifStatTotal')}</p>
+              <p className="mt-1 text-2xl font-bold">{stats.total}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('kasifFeedbackCoverage')}:{' '}
+                {feedbackCoverage == null ? '—' : `%${feedbackCoverage}`}
+              </p>
+            </div>
+            <div className="rounded-xl border bg-background/60 p-4">
+              <p className="text-xs text-muted-foreground">{t('kasifStatHelpful')}</p>
+              <p className="mt-1 text-2xl font-bold">
+                {stats.helpfulRate == null ? '—' : `%${stats.helpfulRate}`}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                +{stats.positive} / −{stats.negative}
+              </p>
+            </div>
+            <div className="rounded-xl border bg-background/60 p-4">
+              <p className="text-xs text-muted-foreground">{t('kasifStatLowConf')}</p>
+              <p className="mt-1 text-2xl font-bold">{stats.lowConfidence}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('kasifStatAvgConf')}:{' '}
+                {stats.avgConfidence == null ? '—' : `%${Math.round(stats.avgConfidence * 100)}`}
+              </p>
+            </div>
+            <div className="rounded-xl border bg-background/60 p-4">
+              <p className="text-xs text-muted-foreground">{t('kasifStatUngrounded')}</p>
+              <p className="mt-1 text-2xl font-bold">{stats.ungrounded}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -1625,7 +1665,9 @@ function KasifQualityTab({ interactions = [] }) {
                   key={bucket.goals}
                   className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm"
                 >
-                  <span className="min-w-0 truncate font-medium">{bucket.goals}</span>
+                  <span className="min-w-0 truncate font-medium">
+                    {formatGoalLabel(bucket.goals, t)}
+                  </span>
                   <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
                     <Badge variant="secondary">{bucket.total}</Badge>
                     {bucket.negative > 0 && <Badge variant="destructive">−{bucket.negative}</Badge>}
@@ -1643,7 +1685,7 @@ function KasifQualityTab({ interactions = [] }) {
           </CardHeader>
           <CardContent className="space-y-2">
             {stats.ruleCandidates.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t('kasifEmpty')}</p>
+              <p className="text-sm text-muted-foreground">{t('kasifRulesEmpty')}</p>
             ) : (
               stats.ruleCandidates.map((candidate) => (
                 <div key={candidate.token} className="rounded-lg border px-3 py-2 text-sm">
@@ -1666,7 +1708,7 @@ function KasifQualityTab({ interactions = [] }) {
           </CardHeader>
           <CardContent className="space-y-3">
             {stats.recentNegative.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t('kasifEmpty')}</p>
+              <p className="text-sm text-muted-foreground">{t('kasifNegativeEmpty')}</p>
             ) : (
               stats.recentNegative.map((row) => (
                 <article key={row.id} className="rounded-lg border p-3 text-sm">
@@ -1692,6 +1734,7 @@ function KasifQualityTab({ interactions = [] }) {
         <Card className="glass-panel border-border/50">
           <CardHeader>
             <CardTitle className="text-base">{t('kasifLowConfTitle')}</CardTitle>
+            <CardDescription>{t('kasifLowConfDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {stats.recentLowConfidence.length === 0 ? (
@@ -1704,9 +1747,13 @@ function KasifQualityTab({ interactions = [] }) {
                     <span>
                       {t('kasifConfidence')}: %{Math.round((row.confidence || 0) * 100)}
                     </span>
-                    {row.goals?.length > 0 && (
+                    {row.goals?.length > 0 ? (
                       <Badge variant="outline" className="font-normal">
                         {row.goals.join(', ')}
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="font-normal">
+                        {t('kasifGoalNone')}
                       </Badge>
                     )}
                   </div>
@@ -1744,7 +1791,13 @@ export function AdminPageClient({ data }) {
   const pendingReviewCount = (allPosts || []).filter((post) => post.status === 'İncelemede').length;
   const creatorAppCount = (creatorApplications || []).length;
   const contentBadgeCount = pendingReviewCount + creatorAppCount;
-  const kasifNegativeCount = (kasifInteractions || []).filter((row) => row.feedback === -1).length;
+  const kasifIssueCount = (kasifInteractions || []).filter(
+    (row) =>
+      row.feedback === -1 ||
+      (Number(row.confidence) > 0 && Number(row.confidence) < 0.55) ||
+      !Array.isArray(row.source_ids) ||
+      row.source_ids.length === 0
+  ).length;
 
   return (
     <Tabs defaultValue="approval_queue" className="w-full">
@@ -1764,8 +1817,8 @@ export function AdminPageClient({ data }) {
         </TabsTrigger>
         <TabsTrigger value="kasif_quality" className="shrink-0 text-xs sm:text-sm">
           {t('tabKasif')}
-          <Badge variant={kasifNegativeCount > 0 ? 'destructive' : 'secondary'} className="ml-2">
-            {kasifNegativeCount}
+          <Badge variant={kasifIssueCount > 0 ? 'destructive' : 'secondary'} className="ml-2">
+            {kasifIssueCount}
           </Badge>
         </TabsTrigger>
         <TabsTrigger value="admin_alerts">

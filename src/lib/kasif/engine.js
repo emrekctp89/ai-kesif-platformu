@@ -210,7 +210,99 @@ export function rankTools(records, intent, limit = 5) {
   return diverse;
 }
 
+const META_PATTERNS = {
+  identity: [
+    /sen kimsin/,
+    /kimsin/,
+    /adin ne/,
+    /adın ne/,
+    /who are you/,
+    /what are you/,
+    /what is kasif/,
+    /kasif nedir/,
+    /kâşif nedir/,
+  ],
+  capabilities: [
+    /ne yapabilirsin/,
+    /neler yapabilirsin/,
+    /neler yapabilir/,
+    /nasil yardimci/,
+    /nasıl yardımcı/,
+    /what can you do/,
+    /how can you help/,
+    /hangi konularda/,
+  ],
+  how: [
+    /nasil calisir/,
+    /nasıl çalışır/,
+    /nasil calisiyorsun/,
+    /nasıl çalışıyorsun/,
+    /how do you work/,
+    /how does it work/,
+    /hangi modeli/,
+    /llm kullan/,
+  ],
+};
+
+export function detectMetaIntent(question) {
+  const normalized = normalizeText(question);
+  if (!normalized || normalized.length < 3) return null;
+  for (const [kind, patterns] of Object.entries(META_PATTERNS)) {
+    if (
+      patterns.some((pattern) => pattern.test(normalized) || pattern.test(String(question || '')))
+    ) {
+      return kind;
+    }
+  }
+  return null;
+}
+
+function metaAnswers(kind, locale = 'tr') {
+  const tr = {
+    identity:
+      'Ben Kâşif’im — AI Keşif Platformu’nun yerel öneri motoruyum. Dış bir sohbet modeline bağlı değilim; yalnızca platformdaki onaylı araç kayıtlarından öneri ve karşılaştırma üretirim.',
+    capabilities:
+      'Yapabileceklerim: ihtiyacına göre araç önermek, ücretsiz/ücretli tercihine göre sıralamak, birkaç aracı karşılaştırmak ve neden önerdiğimi platform verisiyle açıklamak. Örnek: “ücretsiz sunum aracı”, “SEO analizi”, “soğuk e-posta yaz”.',
+    how: 'Şöyle çalışırım: sorunu Türkçe/İngilizce normalize ederim, kavram ve görev niyetini çıkarırım, onaylı araçları puanlarım ve cevabı yalnızca bu kayıtlardan üretirim. Genel bilgi sohbeti veya platform dışı web araması yapmam.',
+  };
+  const en = {
+    identity:
+      'I am Kâşif — the local recommendation engine of AI Keşif Platformu. I am not a general chatbot; I rank and compare only verified tools from this platform’s catalog.',
+    capabilities:
+      'I can recommend tools for a task, filter free vs paid options, compare tools, and explain matches using platform data. Examples: “free presentation tool”, “SEO analysis”, “cold email writing”.',
+    how: 'I normalize your question, detect task intent, score approved tools, and answer only from those records. I do not browse the open web or invent tools outside the catalog.',
+  };
+  const pack = locale === 'en' ? en : tr;
+  return pack[kind] || pack.identity;
+}
+
+/**
+ * "Sen kimsin?", "Ne yapabilirsin?" gibi meta sorulara katalog aramadan sabit yanıt.
+ */
+export function answerMetaQuestion(question, locale = 'tr') {
+  const kind = detectMetaIntent(question);
+  if (!kind) return null;
+  return {
+    answer: metaAnswers(kind, locale),
+    sourceIds: [],
+    insufficientContext: false,
+    confidence: 0.99,
+    meta: true,
+    metaKind: kind,
+    intent: {
+      concepts: [],
+      goals: [],
+      pricePreference: 'any',
+      comparison: false,
+      meta: kind,
+    },
+  };
+}
+
 export function answerQuestion(question, records, history = [], locale = 'tr') {
+  const meta = answerMetaQuestion(question, locale);
+  if (meta) return meta;
+
   const intent = understandConversation(question, history);
   const ranked = rankTools(records, intent, intent.wantsComparison ? 4 : 5);
   if (!ranked.length) {
@@ -252,7 +344,17 @@ export function answerQuestion(question, records, history = [], locale = 'tr') {
     return `${index + 1}. ${record.name}${why}${detail ? `: ${detail}` : ''}`;
   });
   const topScore = ranked[0].score;
-  const confidence = Math.min(0.98, Number((topScore / 30).toFixed(2)));
+  // Skor tabanlı güven + niyet netliği için taban (eski düşük güven gürültüsünü azaltır).
+  let confidence = Math.min(0.98, Number((topScore / 30).toFixed(2)));
+  if (intent.goals.length > 0) confidence = Math.max(confidence, 0.72);
+  if (intent.goals.length > 0 && (intent.wantsFree || intent.wantsPaid)) {
+    confidence = Math.max(confidence, 0.78);
+  }
+  if (ranked[0].reasons?.includes('direct-match')) {
+    confidence = Math.max(confidence, 0.8);
+  }
+  confidence = Math.min(0.98, Number(confidence.toFixed(2)));
+
   return {
     answer: `${intro}\n\n${lines.join('\n')}\n\n${
       locale === 'en'
