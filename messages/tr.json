@@ -1551,6 +1551,8 @@
     "priceFree": "Ücretsiz tercih",
     "pricePaid": "Ücretli tercih",
     "confidence": "Güven %{value}",
+    "lowConfidenceHint": "Bu eşleşme düşük güvenli. Görevi, fiyatı veya platformu daha net yazarak soruyu daraltmayı dene.",
+    "ungroundedHint": "Platform kayıtlarında net bir eşleşme bulunamadı. Örnek görevlerden birini dene veya ihtiyacını daha somut yaz.",
     "feedbackQuestion": "Bu sonuç faydalı mıydı?",
     "useful": "Faydalı",
     "notUseful": "Faydalı değil",

@@ -5,6 +5,7 @@ import {
   buildRetrievalQuery,
   buildSearchFilter,
   expandSearchTerms,
+  includesNormalized,
   normalizeText,
 } from '@/lib/kasif/retrieval';
 
@@ -26,7 +27,10 @@ describe('Kâşif semantic retrieval', () => {
     const terms = expandSearchTerms('Yapay zeka ile müzik üretmek için AI aracı öner');
 
     expect(terms).not.toEqual(expect.arrayContaining(['yapay', 'zeka', 'ai']));
-    expect(terms).toEqual(expect.arrayContaining(['muzik', 'müzik', 'şarkı']));
+    expect(terms.some((term) => /m[uü]zik/i.test(term))).toBe(true);
+    expect(terms).toEqual(expect.arrayContaining(['şarkı']));
+    // Kısa "ik" sinyali "müzik" içinde false-positive üretmemeli.
+    expect(terms).not.toEqual(expect.arrayContaining(['işe alım', 'cv', 'özgeçmiş']));
   });
 
   it('açık konu değişikliğinde geçmiş konuyu retrieval sorgusuna taşımaz', () => {
@@ -54,5 +58,27 @@ describe('Kâşif semantic retrieval', () => {
     expect(buildSearchFilter(['sunum', 'slayt'])).toBe(
       'name.ilike.%sunum%,description.ilike.%sunum%,name.ilike.%slayt%,description.ilike.%slayt%'
     );
+  });
+
+  it('eşleşen hedef evidence kelimelerini arama terimlerine ekler', () => {
+    const terms = expandSearchTerms('Markam için logo tasarlamak istiyorum');
+    expect(terms).toEqual(
+      expect.arrayContaining(['logo', 'logo tasarım', 'marka kimliği', 'logo maker'])
+    );
+  });
+
+  it('SEO hedefi için keyword ve sıralama evidence terimleri ekler', () => {
+    const terms = expandSearchTerms('Sitem için SEO analizi ve anahtar kelime araçları öner');
+    expect(terms).toEqual(
+      expect.arrayContaining(['seo', 'anahtar kelime', 'keyword research', 'sıralama'])
+    );
+  });
+
+  it('kısa kavram sinyallerini token başında eşleştirir', () => {
+    expect(includesNormalized('müzik üretmek', 'ik')).toBe(false);
+    expect(includesNormalized('ik süreçleri', 'ik')).toBe(true);
+    expect(includesNormalized('seo analizi', 'seo')).toBe(true);
+    expect(includesNormalized('blog yazısı', 'yaz')).toBe(true);
+    expect(includesNormalized('gorsel', 'seo')).toBe(false);
   });
 });

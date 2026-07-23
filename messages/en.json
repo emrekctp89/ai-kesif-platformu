@@ -1551,6 +1551,8 @@
     "priceFree": "Free preference",
     "pricePaid": "Paid preference",
     "confidence": "Confidence {value}%",
+    "lowConfidenceHint": "This match has low confidence. Try narrowing the question with a clearer task, price, or platform.",
+    "ungroundedHint": "No clear match was found in platform records. Try a starter prompt or describe your need more specifically.",
     "feedbackQuestion": "Was this result helpful?",
     "useful": "Helpful",
     "notUseful": "Not helpful",

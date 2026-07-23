@@ -1,4 +1,9 @@
-import { buildRetrievalQuery, extractSearchTerms, normalizeText } from './retrieval';
+import {
+  buildRetrievalQuery,
+  extractSearchTerms,
+  includesNormalized,
+  normalizeText,
+} from './retrieval';
 import { FREE_WORDS, KASIF_CONCEPTS, KASIF_GOALS, PAID_WORDS } from './lexicon';
 
 function pricingOf(record) {
@@ -74,8 +79,8 @@ function isPrimaryToolPage(record) {
 
 export function understandQuestion(question) {
   const normalized = normalizeText(question);
-  const freeMentioned = FREE_WORDS.map(normalizeText).some((word) => normalized.includes(word));
-  const paidMentioned = PAID_WORDS.map(normalizeText).some((word) => normalized.includes(word));
+  const freeMentioned = FREE_WORDS.some((word) => includesNormalized(normalized, word));
+  const paidMentioned = PAID_WORDS.some((word) => includesNormalized(normalized, word));
   const rejectsFree =
     /ucretsiz (olmasin|istemiyorum)|bedava (olmasin|istemiyorum)|(?:do not|don t|dont) want (?:a )?free|not free/.test(
       normalized
@@ -87,15 +92,13 @@ export function understandQuestion(question) {
   const matchedConcepts = Object.entries(KASIF_CONCEPTS)
     .map(([concept, words]) => ({
       concept,
-      signals: words.map(normalizeText).filter((word) => normalized.includes(word)),
+      signals: words.filter((word) => includesNormalized(normalized, word)).map(normalizeText),
     }))
     .filter(({ signals }) => signals.length > 0);
   const concepts = matchedConcepts.map(({ concept }) => concept);
   const goals = Object.entries(KASIF_GOALS)
     .filter(([, goal]) =>
-      goal.queryGroups.every((group) =>
-        group.some((word) => normalized.includes(normalizeText(word)))
-      )
+      goal.queryGroups.every((group) => group.some((word) => includesNormalized(normalized, word)))
     )
     .map(([goal]) => goal);
   return {
@@ -145,18 +148,20 @@ export function scoreTool(record, intent) {
     if (description.includes(token)) score += 2;
   }
   for (const signal of intent.signals) {
-    if (searchable.includes(signal)) score += 6;
+    if (includesNormalized(searchable, signal)) score += 6;
   }
   for (const goalName of intent.goals) {
     const goal = KASIF_GOALS[goalName];
-    const evidence = goal.evidence.map(normalizeText);
-    const evidenceMatches = evidence.filter((phrase) => searchable.includes(phrase)).length;
+    const evidenceMatches = goal.evidence.filter((phrase) =>
+      includesNormalized(searchable, phrase)
+    ).length;
     if (evidenceMatches > 0) {
       score += 10 + Math.min(evidenceMatches - 1, 2) * 3;
       reasons.push('direct-match');
     }
-    const negativeEvidence = (goal.negativeEvidence || []).map(normalizeText);
-    const negativeMatches = negativeEvidence.filter((phrase) => searchable.includes(phrase)).length;
+    const negativeMatches = (goal.negativeEvidence || []).filter((phrase) =>
+      includesNormalized(searchable, phrase)
+    ).length;
     score -= Math.min(negativeMatches, 2) * 16;
   }
   if (intent.wantsFree && isFreePricing(record)) {

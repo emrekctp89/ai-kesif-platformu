@@ -1,6 +1,6 @@
 import 'server-only';
 import { createClient } from '@/utils/supabase/server';
-import { KASIF_CONCEPTS } from './lexicon';
+import { KASIF_CONCEPTS, KASIF_GOALS } from './lexicon';
 
 const STOP_WORDS = new Set([
   'acaba',
@@ -35,6 +35,8 @@ const STOP_WORDS = new Set([
   'ariyorum',
   'oner',
   'oneri',
+  'gerekli',
+  'hangileri',
   'about',
   'any',
   'are',
@@ -74,6 +76,25 @@ export function normalizeText(value) {
     .trim();
 }
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Normalize edilmiş metinde kelime/ifade arar.
+ * 1–3 harflik kısa sinyaller (ik, ui, hr, seo) rastgele alt string false-positive
+ * üretmesin diye token başında aranır: "ik" ≠ "müzik", ama "yaz" = "yazısı".
+ */
+export function includesNormalized(haystack, needle) {
+  const h = normalizeText(haystack);
+  const n = normalizeText(needle);
+  if (!h || !n) return false;
+  if (n.length <= 3) {
+    return new RegExp(`(?:^|\\s)${escapeRegExp(n)}(?:[a-z0-9-]|\\s|$)`).test(h);
+  }
+  return h.includes(n);
+}
+
 export function extractSearchTerms(question) {
   return normalizeText(question)
     .split(/\s+/)
@@ -81,11 +102,19 @@ export function extractSearchTerms(question) {
     .slice(0, 10);
 }
 
+function matchesGoal(goal, normalizedQuery) {
+  return goal.queryGroups.every((group) =>
+    group.some((word) => includesNormalized(normalizedQuery, word))
+  );
+}
+
 function hasRecognizedTopic(question) {
   const normalized = normalizeText(question);
-  return Object.values(KASIF_CONCEPTS).some((words) =>
-    words.some((word) => normalized.includes(normalizeText(word)))
+  const hasConcept = Object.values(KASIF_CONCEPTS).some((words) =>
+    words.some((word) => includesNormalized(normalized, word))
   );
+  if (hasConcept) return true;
+  return Object.values(KASIF_GOALS).some((goal) => matchesGoal(goal, normalized));
 }
 
 export function buildRetrievalQuery(question, history = [], { isolateCurrentTopic = false } = {}) {
@@ -102,13 +131,37 @@ export function buildRetrievalQuery(question, history = [], { isolateCurrentTopi
   return [...previousUserTurns, currentQuestion].join(' ').slice(0, 1600);
 }
 
+function uniqueSearchTerms(terms) {
+  const seen = new Set();
+  const result = [];
+  for (const raw of terms) {
+    const term = String(raw || '').trim();
+    if (!term) continue;
+    const key = normalizeText(term);
+    if (!key || key.length < 3 || STOP_WORDS.has(key) || seen.has(key)) continue;
+    seen.add(key);
+    result.push(term);
+  }
+  return result;
+}
+
 export function expandSearchTerms(query) {
   const normalized = normalizeText(query);
   const baseTerms = extractSearchTerms(query);
   const conceptTerms = Object.values(KASIF_CONCEPTS)
-    .filter((words) => words.some((word) => normalized.includes(normalizeText(word))))
+    .filter((words) => words.some((word) => includesNormalized(normalized, word)))
     .flat();
-  return [...new Set([...baseTerms, ...conceptTerms])].slice(0, 12);
+  // Eşleşen hedeflerin evidence/query kelimeleri retrieval hatırlamasını güçlendirir.
+  // Goal terimleri concept'ten önce gelir; slice diliminde kaybolmasınlar.
+  const goalTerms = Object.values(KASIF_GOALS)
+    .filter((goal) => matchesGoal(goal, normalized))
+    .flatMap((goal) => {
+      const evidence = Array.isArray(goal.evidence) ? goal.evidence : [];
+      const groupWords = goal.queryGroups.flat();
+      return [...evidence, ...groupWords].slice(0, 10);
+    });
+
+  return uniqueSearchTerms([...baseTerms, ...goalTerms, ...conceptTerms]).slice(0, 18);
 }
 
 export function buildSearchFilter(terms) {

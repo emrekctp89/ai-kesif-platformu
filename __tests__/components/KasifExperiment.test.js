@@ -57,6 +57,49 @@ describe('Kâşif ekranı', () => {
     expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toMatchObject({ locale: 'tr' });
   });
 
+  it('düşük güvenli yanıtta daraltma ipucu gösterir', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        answer: 'Zayıf eşleşme',
+        sources: [{ id: 'tool:1', title: 'Araç', url: '/tr/tool/arac' }],
+        grounded: true,
+        confidence: 0.4,
+        intent: { goals: ['content-writing'], pricePreference: 'any' },
+      }),
+    });
+    render(<KasifExperiment />);
+
+    fireEvent.change(screen.getByRole('textbox', { name: "Kâşif'e sor" }), {
+      target: { value: 'Bir şey öner' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: "Kâşif'e sor" }));
+
+    expect(await screen.findByText(/Bu eşleşme düşük güvenli/i)).toBeInTheDocument();
+  });
+
+  it('eşleşmesiz yanıtta platform ipucu gösterir', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        answer: 'Bilgi yok',
+        sources: [],
+        grounded: false,
+        confidence: 0,
+      }),
+    });
+    render(<KasifExperiment />);
+
+    fireEvent.change(screen.getByRole('textbox', { name: "Kâşif'e sor" }), {
+      target: { value: 'Uzay gemisi motoru öner' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: "Kâşif'e sor" }));
+
+    expect(
+      await screen.findByText(/Platform kayıtlarında net bir eşleşme bulunamadı/i)
+    ).toBeInTheDocument();
+  });
+
   it('yeni konuşma başlatıldığında bekleyen isteği iptal eder', () => {
     let requestSignal;
     global.fetch.mockImplementation((_url, options) => {
