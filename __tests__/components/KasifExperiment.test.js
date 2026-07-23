@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 jest.mock('next-intl', () => ({
+  useLocale: () => 'tr',
   useTranslations: (namespace) => {
     const messages = require('../../messages/tr.json')[namespace];
     return (key) => key.split('.').reduce((value, part) => value?.[part], messages);
@@ -35,6 +36,22 @@ describe('Kâşif ekranı', () => {
     expect(screen.getByRole('heading', { name: 'Nereden başlamak istersin?' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Görsel üret' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Kod yaz' })).toBeInTheDocument();
+  });
+
+  it('yanıtın arayüz diliyle üretilmesi için locale bilgisini gönderir', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ answer: 'Yanıt', sources: [] }),
+    });
+    render(<KasifExperiment />);
+
+    fireEvent.change(screen.getByRole('textbox', { name: "Kâşif'e sor" }), {
+      target: { value: 'Ücretsiz sunum aracı öner' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: "Kâşif'e sor" }));
+
+    await screen.findByText('Yanıt');
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toMatchObject({ locale: 'tr' });
   });
 
   it('yeni konuşma başlatıldığında bekleyen isteği iptal eder', () => {

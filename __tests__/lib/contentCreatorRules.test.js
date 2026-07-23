@@ -1,12 +1,16 @@
 import {
+  CREATOR_POST_TEMPLATES,
   MIN_CREATOR_REPUTATION,
   MIN_POST_CONTENT_LENGTH,
   MIN_POST_TITLE_LENGTH,
   REPUTATION_AWARDS,
+  buildReviewChecklist,
+  getCreatorPostTemplate,
   isReputationEligible,
   plainTextFromMarkdown,
   questActionDeepLink,
   reputationProgress,
+  summarizeCreatorStudio,
   summarizeDailyQuests,
   validatePostForReview,
 } from '@/lib/contentCreatorRules';
@@ -100,5 +104,65 @@ describe('contentCreatorRules', () => {
         content: 'x'.repeat(MIN_POST_CONTENT_LENGTH),
       }).ok
     ).toBe(true);
+  });
+
+  it('summarizes studio posts by status', () => {
+    const s = summarizeCreatorStudio([
+      { status: 'Taslak', type: 'Yazı', updated_at: '2026-01-02T00:00:00Z' },
+      {
+        status: 'Yayınlandı',
+        type: 'Rehber',
+        published_at: '2026-01-03T00:00:00Z',
+        view_count: 12,
+      },
+      {
+        status: 'Yayınlandı',
+        type: 'Yazı',
+        published_at: '2026-01-01T00:00:00Z',
+        view_count: 8,
+      },
+      { status: 'Reddedildi', type: 'Yazı' },
+      { status: 'İncelemede', type: 'Rehber' },
+    ]);
+    expect(s.total).toBe(5);
+    expect(s.draft).toBe(1);
+    expect(s.published).toBe(2);
+    expect(s.rejected).toBe(1);
+    expect(s.review).toBe(1);
+    expect(s.guides).toBe(2);
+    expect(s.articles).toBe(3);
+    expect(s.publishRate).toBe(67); // 2/3 decided
+    expect(s.lastPublishedAt).toBe('2026-01-03T00:00:00.000Z');
+    expect(s.totalViews).toBe(20);
+  });
+
+  it('exposes starter templates with stable ids', () => {
+    expect(CREATOR_POST_TEMPLATES.length).toBeGreaterThanOrEqual(4);
+    expect(getCreatorPostTemplate('comparison').type).toBe('Rehber');
+    expect(getCreatorPostTemplate('missing').id).toBe('blank');
+    expect(getCreatorPostTemplate('listicle').contentKey).toBeTruthy();
+  });
+
+  it('builds review checklist with required and optional items', () => {
+    const weak = buildReviewChecklist({
+      title: 'Hi',
+      content: 'short',
+      description: '',
+      coverUrl: '',
+      toolCount: 0,
+    });
+    expect(weak.requiredReady).toBe(false);
+    expect(weak.score).toBe(0);
+
+    const strong = buildReviewChecklist({
+      title: 'A'.repeat(MIN_POST_TITLE_LENGTH),
+      content: 'x'.repeat(MIN_POST_CONTENT_LENGTH),
+      description: 'y'.repeat(40),
+      coverUrl: 'https://example.com/c.jpg',
+      toolCount: 2,
+    });
+    expect(strong.requiredReady).toBe(true);
+    expect(strong.score).toBe(5);
+    expect(strong.optionalDone).toBe(3);
   });
 });

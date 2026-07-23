@@ -9,7 +9,14 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { slugify } from '@/utils/slugify';
 import { uploadToGCS } from '@/utils/gcs';
 import { contentEmailHtml, sendContentEventEmail } from '@/lib/contentNotify';
-import { MIN_CREATOR_REPUTATION, validatePostForReview } from '@/lib/contentCreatorRules';
+import {
+  MIN_CREATOR_REPUTATION,
+  getCreatorPostTemplate,
+  plainTextFromMarkdown,
+  validatePostForReview,
+} from '@/lib/contentCreatorRules';
+import { generateGeminiText } from '@/utils/gemini';
+import { enforceRateLimit } from '@/utils/antiAbuse';
 
 const CREATOR_EDITABLE_STATUSES = new Set(['Taslak', 'İncelemede', 'Reddedildi']);
 const MAX_COVER_BYTES = 5 * 1024 * 1024;
@@ -371,13 +378,31 @@ export async function createCreatorPost(formData) {
   }
 
   const title = String(formData.get('title') || '').trim();
-  const type = String(formData.get('type') || 'Yazı').trim() || 'Yazı';
+  const template = getCreatorPostTemplate(formData.get('template_id'));
+  const typeRaw = String(formData.get('type') || template.type || 'Yazı').trim() || 'Yazı';
+  const type = ['Yazı', 'Rehber'].includes(typeRaw) ? typeRaw : template.type || 'Yazı';
   if (!title) return { error: await tStudio('errTitleRequired') };
   if (!['Yazı', 'Rehber'].includes(type)) return { error: await tStudio('errInvalidType') };
 
+  let seedBody = await tStudio('draftBodySeed', { title });
+  let description = '';
+  if (template.contentKey) {
+    try {
+      seedBody = await tStudio(template.contentKey, { title });
+    } catch (err) {
+      logger.error('createCreatorPost template content', err);
+    }
+  }
+  if (template.descriptionKey) {
+    try {
+      description = await tStudio(template.descriptionKey, { title });
+    } catch (err) {
+      logger.error('createCreatorPost template description', err);
+    }
+  }
+
   const admin = createAdminClient();
   const slug = `${slugify(title)}-${Date.now().toString(36)}`;
-  const seedBody = await tStudio('draftBodySeed', { title });
   const { data: newPost, error: insertError } = await admin
     .from('posts')
     .insert({
@@ -387,7 +412,7 @@ export async function createCreatorPost(formData) {
       content: seedBody,
       type,
       status: 'Taslak',
-      description: '',
+      description: String(description || '').slice(0, 500),
     })
     .select('id')
     .single();
@@ -399,6 +424,97 @@ export async function createCreatorPost(formData) {
 
   revalidatePath('/icerik');
   redirect(`/icerik/${newPost.id}/edit`);
+}
+
+/**
+ * Clone an owned post into a new draft (content, description, type, category, tags, tools).
+ * Published originals stay live; the copy starts as Taslak.
+ */
+export async function duplicateCreatorPost(formData) {
+  const { user, error } = await requireUser();
+  if (error) return { error };
+  if (!isAdminUser(user)) {
+    const profile = await getProfileFlags(user.id);
+    if (!profile?.is_content_creator) {
+      return { error: await tStudio('errNoCreatorPermission') };
+    }
+  }
+
+  const id = String(formData?.get?.('id') || formData?.id || '').trim();
+  if (!id) return { error: await tStudio('errPostNotFound') };
+
+  const admin = createAdminClient();
+  const { data: source, error: loadError } = await admin
+    .from('posts')
+    .select(
+      'id, author_id, title, content, description, type, category_id, featured_image_url, status'
+    )
+    .eq('id', id)
+    .maybeSingle();
+
+  if (loadError || !source) return { error: await tStudio('errPostNotFound') };
+
+  const adminUser = isAdminUser(user);
+  if (!adminUser && source.author_id !== user.id) {
+    return { error: await tStudio('errForbidden') };
+  }
+
+  const copySuffix = await tStudio('duplicateTitleSuffix');
+  const baseTitle = String(source.title || '').trim() || 'Untitled';
+  const title = `${baseTitle}${copySuffix}`.slice(0, 200);
+  const slug = `${slugify(title)}-${Date.now().toString(36)}`;
+
+  const { data: newPost, error: insertError } = await admin
+    .from('posts')
+    .insert({
+      title,
+      slug,
+      author_id: adminUser && source.author_id ? source.author_id : user.id,
+      content: source.content || '',
+      description: source.description || '',
+      type: ['Yazı', 'Rehber'].includes(source.type) ? source.type : 'Yazı',
+      status: 'Taslak',
+      category_id: source.category_id || null,
+      featured_image_url: source.featured_image_url || null,
+      review_note: null,
+      submitted_at: null,
+      published_at: null,
+    })
+    .select('id')
+    .single();
+
+  if (insertError || !newPost) {
+    logger.error('duplicateCreatorPost', insertError);
+    return { error: await tStudio('errDuplicateFailed') };
+  }
+
+  // Best-effort copy of tags + tools.
+  try {
+    const [{ data: tags }, { data: tools }] = await Promise.all([
+      admin.from('post_tags').select('tag_id').eq('post_id', id),
+      admin.from('post_tools').select('tool_id').eq('post_id', id),
+    ]);
+    if (tags?.length) {
+      await admin
+        .from('post_tags')
+        .insert(tags.map((row) => ({ post_id: newPost.id, tag_id: row.tag_id })));
+    }
+    if (tools?.length) {
+      await admin
+        .from('post_tools')
+        .insert(tools.map((row) => ({ post_id: newPost.id, tool_id: row.tool_id })));
+    }
+  } catch (copyError) {
+    logger.error('duplicateCreatorPost relations', copyError);
+  }
+
+  revalidatePath('/icerik');
+  revalidatePath('/admin');
+  return {
+    success: true,
+    id: newPost.id,
+    message: await tStudio('successDuplicated'),
+  };
 }
 
 export async function updateCreatorPost(formData) {
@@ -635,18 +751,90 @@ export async function assignCreatorPostTags(formData) {
   return { success: true };
 }
 
+/**
+ * Link approved tools to a creator-owned post (post_tools join).
+ * Mirrors assignCreatorPostTags auth rules.
+ */
+export async function assignCreatorPostTools(formData) {
+  const { user, error } = await requireUser();
+  if (error) return { error };
+
+  const postId = String(formData.get('postId') || formData.get('id') || '').trim();
+  if (!postId) return { error: await tStudio('errPostIdMissing') };
+
+  const toolIds = [
+    ...new Set(
+      formData
+        .getAll('toolId')
+        .map((id) => parseInt(String(id), 10))
+        .filter((id) => Number.isFinite(id) && id > 0)
+    ),
+  ].slice(0, 20);
+
+  const admin = createAdminClient();
+  const { data: existing, error: loadError } = await admin
+    .from('posts')
+    .select('id, author_id, status, slug')
+    .eq('id', postId)
+    .maybeSingle();
+  if (loadError || !existing) return { error: await tStudio('errPostNotFound') };
+
+  const adminUser = isAdminUser(user);
+  if (!adminUser && existing.author_id !== user.id) return { error: await tStudio('errForbidden') };
+  if (!adminUser && !CREATOR_EDITABLE_STATUSES.has(existing.status)) {
+    return { error: await tStudio('errPublishedToolsLocked') };
+  }
+  if (!adminUser) {
+    const profile = await getProfileFlags(user.id);
+    if (!profile?.is_content_creator) return { error: await tStudio('errNoCreatorPermission') };
+  }
+
+  // Only link approved tools.
+  let validIds = toolIds;
+  if (toolIds.length > 0) {
+    const { data: approved, error: toolsError } = await admin
+      .from('tools')
+      .select('id')
+      .in('id', toolIds)
+      .eq('is_approved', true);
+    if (toolsError) {
+      logger.error('assignCreatorPostTools tools check', toolsError);
+      return { error: await tStudio('errToolsSaveFailed') };
+    }
+    const approvedSet = new Set((approved || []).map((row) => row.id));
+    validIds = toolIds.filter((id) => approvedSet.has(id));
+  }
+
+  await admin.from('post_tools').delete().eq('post_id', postId);
+  if (validIds.length > 0) {
+    const { error: insertError } = await admin
+      .from('post_tools')
+      .insert(validIds.map((toolId) => ({ post_id: postId, tool_id: toolId })));
+    if (insertError) {
+      logger.error('assignCreatorPostTools', insertError);
+      return { error: await tStudio('errToolsSaveFailed') };
+    }
+  }
+
+  revalidatePath(`/icerik/${postId}/edit`);
+  revalidatePath('/icerik');
+  revalidatePath('/blog');
+  if (existing.slug) revalidatePath(`/blog/${existing.slug}`);
+  return { success: true };
+}
+
 export async function adminReviewCreatorPost(formData) {
   const { user, error } = await requireUser();
   if (error) return { error };
   if (!isAdminUser(user)) return { error: await tStudio('errForbidden') };
 
   const id = String(formData.get('id') || '').trim();
-  const decision = String(formData.get('decision') || '').trim(); // publish | reject
+  const decision = String(formData.get('decision') || '').trim(); // publish | reject | return_draft
   const note = String(formData.get('review_note') || '')
     .trim()
     .slice(0, 1000);
   if (!id) return { error: await tStudio('errPostNotFound') };
-  if (!['publish', 'reject'].includes(decision))
+  if (!['publish', 'reject', 'return_draft'].includes(decision))
     return { error: await tStudio('errInvalidDecision') };
 
   const admin = createAdminClient();
@@ -657,6 +845,13 @@ export async function adminReviewCreatorPost(formData) {
     .maybeSingle();
   if (loadError || !existing) return { error: await tStudio('errPostNotFound') };
 
+  if (
+    decision === 'return_draft' &&
+    !['İncelemede', 'Yayınlandı', 'Reddedildi'].includes(existing.status)
+  ) {
+    return { error: await tStudio('errInvalidDecision') };
+  }
+
   const updates = {
     review_note: note || null,
     updated_at: new Date().toISOString(),
@@ -665,6 +860,11 @@ export async function adminReviewCreatorPost(formData) {
   if (decision === 'publish') {
     updates.status = 'Yayınlandı';
     if (!existing.published_at) updates.published_at = new Date().toISOString();
+  } else if (decision === 'return_draft') {
+    // Pull offline so the creator can edit again in the studio.
+    updates.status = 'Taslak';
+    updates.published_at = null;
+    updates.submitted_at = null;
   } else {
     updates.status = 'Reddedildi';
   }
@@ -684,16 +884,28 @@ export async function adminReviewCreatorPost(formData) {
         .eq('id', existing.author_id)
         .maybeSingle();
       if (authorProfile?.notify_on_content_approval !== false) {
-        const published = decision === 'publish';
-        const message = published
-          ? await tStudio('notifyPostPublished', { title: existing.title })
-          : note
+        let message;
+        let eventType;
+        let link = '/icerik';
+        if (decision === 'publish') {
+          message = await tStudio('notifyPostPublished', { title: existing.title });
+          eventType = 'content_published';
+          if (existing.slug) link = `/blog/${existing.slug}`;
+        } else if (decision === 'return_draft') {
+          message = note
+            ? await tStudio('notifyPostReturnedWithNote', { title: existing.title, note })
+            : await tStudio('notifyPostReturned', { title: existing.title });
+          eventType = 'content_returned_to_draft';
+          link = `/icerik/${existing.id}/edit`;
+        } else {
+          message = note
             ? await tStudio('notifyPostRejectedWithNote', { title: existing.title, note })
             : await tStudio('notifyPostRejected', { title: existing.title });
-        const link = published && existing.slug ? `/blog/${existing.slug}` : '/icerik';
+          eventType = 'content_rejected';
+        }
         await admin.from('notifications').insert({
           user_id: existing.author_id,
-          event_type: published ? 'content_published' : 'content_rejected',
+          event_type: eventType,
           message,
           link,
           is_read: false,
@@ -701,17 +913,20 @@ export async function adminReviewCreatorPost(formData) {
         if (authorProfile.email) {
           await sendContentEventEmail({
             to: authorProfile.email,
-            subject: published
-              ? await tStudio('emailSubjectPostPublished')
-              : await tStudio('emailSubjectPostUpdate'),
+            subject:
+              decision === 'publish'
+                ? await tStudio('emailSubjectPostPublished')
+                : await tStudio('emailSubjectPostUpdate'),
             html: contentEmailHtml({
-              title: published
-                ? await tStudio('emailTitlePostPublished')
-                : await tStudio('emailTitleReviewResult'),
+              title:
+                decision === 'publish'
+                  ? await tStudio('emailTitlePostPublished')
+                  : await tStudio('emailTitleReviewResult'),
               body: message,
-              ctaLabel: published
-                ? await tStudio('emailCtaReadPost')
-                : await tStudio('emailCtaBackStudio'),
+              ctaLabel:
+                decision === 'publish'
+                  ? await tStudio('emailCtaReadPost')
+                  : await tStudio('emailCtaBackStudio'),
               ctaUrl: link,
             }),
           });
@@ -723,6 +938,7 @@ export async function adminReviewCreatorPost(formData) {
   }
 
   revalidatePath('/admin');
+  revalidatePath('/dashboard');
   revalidatePath('/icerik');
   revalidatePath('/blog');
   if (existing.slug) revalidatePath(`/blog/${existing.slug}`);
@@ -731,7 +947,9 @@ export async function adminReviewCreatorPost(formData) {
     success:
       decision === 'publish'
         ? await tStudio('successPostPublished')
-        : await tStudio('successPostRejected'),
+        : decision === 'return_draft'
+          ? await tStudio('successPostReturned')
+          : await tStudio('successPostRejected'),
   };
 }
 
@@ -782,6 +1000,18 @@ export async function getCreatorPostsForCurrentUser() {
   const { user, error } = await requireUser();
   if (error || !user) return [];
   const admin = createAdminClient();
+  const withViews = await admin
+    .from('posts')
+    .select(
+      'id, title, slug, status, type, updated_at, submitted_at, published_at, review_note, featured_image_url, view_count'
+    )
+    .eq('author_id', user.id)
+    .order('updated_at', { ascending: false });
+
+  if (!withViews.error) return withViews.data || [];
+
+  // Fallback when view_count column is not migrated yet.
+  logger.error('getCreatorPostsForCurrentUser', withViews.error);
   const { data, error: qError } = await admin
     .from('posts')
     .select(
@@ -790,7 +1020,7 @@ export async function getCreatorPostsForCurrentUser() {
     .eq('author_id', user.id)
     .order('updated_at', { ascending: false });
   if (qError) {
-    logger.error('getCreatorPostsForCurrentUser', qError);
+    logger.error('getCreatorPostsForCurrentUser fallback', qError);
     return [];
   }
   return data || [];
@@ -803,7 +1033,7 @@ export async function getPostsPendingReview() {
   const { data, error: qError } = await admin
     .from('posts')
     .select(
-      'id, title, slug, status, type, description, content, featured_image_url, submitted_at, updated_at, author_id, profiles:author_id(username, email)'
+      'id, title, slug, status, type, description, content, featured_image_url, submitted_at, updated_at, author_id, profiles:author_id(username, email), post_tools(tool_id)'
     )
     .eq('status', 'İncelemede')
     .order('submitted_at', { ascending: true, nullsFirst: false });
@@ -820,4 +1050,110 @@ export async function getPostsPendingReview() {
     return plain || [];
   }
   return data || [];
+}
+
+const CREATOR_ASSIST_MODES = new Set(['description', 'outline', 'title', 'improve']);
+
+/**
+ * AI writing helper for approved creators (Gemini).
+ * Modes: description | outline | title | improve
+ * @param {{ mode?: string, title?: string, description?: string, content?: string, locale?: string }} input
+ */
+export async function assistCreatorPost(input = {}) {
+  const { user, error } = await requireUser();
+  if (error) return { error };
+  if (!isAdminUser(user)) {
+    const profile = await getProfileFlags(user.id);
+    if (!profile?.is_content_creator) {
+      return { error: await tStudio('errNoCreatorPermission') };
+    }
+  }
+
+  const rateLimit = await enforceRateLimit(`creator-assist:${user.id}`, {
+    limit: 12,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return {
+      error: await tStudio('errAssistRateLimit', {
+        seconds: rateLimit.retryAfterSeconds,
+      }),
+    };
+  }
+
+  const mode = String(input.mode || '').trim();
+  if (!CREATOR_ASSIST_MODES.has(mode)) {
+    return { error: await tStudio('errAssistMode') };
+  }
+
+  const title = String(input.title || '')
+    .trim()
+    .slice(0, 300);
+  const description = String(input.description || '')
+    .trim()
+    .slice(0, 800);
+  const contentPlain = plainTextFromMarkdown(input.content).slice(0, 6000);
+  const locale = String(input.locale || 'tr').startsWith('en') ? 'en' : 'tr';
+
+  if (mode === 'title' && title.length < 3 && contentPlain.length < 40) {
+    return { error: await tStudio('errAssistNeedContent') };
+  }
+  if (mode !== 'title' && contentPlain.length < 40 && title.length < 8) {
+    return { error: await tStudio('errAssistNeedContent') };
+  }
+
+  const langLine =
+    locale === 'en' ? 'Write in clear, natural English.' : 'Türkçe, akıcı ve doğal bir dilde yaz.';
+
+  let systemInstruction = `You help content creators on an AI tools discovery platform (AI Keşif). ${langLine}
+Return ONLY the requested text — no preamble, no quotes around the whole answer, no markdown fences unless asked for outline headings.`;
+
+  let prompt = '';
+  if (mode === 'description') {
+    prompt = `Write a short SEO-friendly summary (max 180 characters) for this post.
+Title: ${title || '(none)'}
+Body excerpt: ${contentPlain || '(empty)'}
+Current description: ${description || '(none)'}
+Rules: one or two sentences, no hashtags, no clickbait.`;
+  } else if (mode === 'title') {
+    prompt = `Suggest a clearer, more specific blog/guide title (max 80 characters).
+Current title: ${title || '(none)'}
+Body excerpt: ${contentPlain || '(empty)'}
+Return only the title text.`;
+  } else if (mode === 'outline') {
+    systemInstruction += ' Use Markdown headings (## and ###) and short bullet points.';
+    prompt = `Create a practical outline for this AI tools post/guide.
+Title: ${title || '(none)'}
+Existing body excerpt: ${contentPlain || '(empty)'}
+Include: intro hook, 3–5 main sections, FAQ or tips, short conclusion.
+Do not invent fake product claims.`;
+  } else {
+    // improve
+    systemInstruction += ' Keep Markdown structure if present. Improve clarity and flow only.';
+    prompt = `Improve this draft for readability without changing the core meaning.
+Title: ${title || '(none)'}
+Draft:
+${String(input.content || '').slice(0, 8000)}
+
+Rules: keep useful structure; fix awkward phrasing; do not add long marketing fluff; output the full improved Markdown body only.`;
+  }
+
+  try {
+    const raw = await generateGeminiText(prompt, { systemInstruction });
+    let text = String(raw || '').trim();
+    // Strip accidental wrapping quotes / fences.
+    text = text
+      .replace(/^```(?:markdown|md)?\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+    if (!text) return { error: await tStudio('errAssistEmpty') };
+
+    if (mode === 'description') text = text.replace(/\s+/g, ' ').slice(0, 280);
+    if (mode === 'title') text = text.replace(/^["'“”]+|["'“”]+$/g, '').slice(0, 120);
+
+    return { success: true, mode, text };
+  } catch (assistError) {
+    logger.error('assistCreatorPost', assistError);
+    return { error: await tStudio('errAssistFailed') };
+  }
 }

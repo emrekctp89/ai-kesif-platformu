@@ -30,18 +30,32 @@ export default async function CreatorEditPostPage({ params }) {
     if (!profile?.is_content_creator) redirect('/icerik');
   }
 
-  const [{ data: post, error }, { data: categories }, { data: tags }, { data: postTags }] =
-    await Promise.all([
-      admin.from('posts').select('*').eq('id', id).maybeSingle(),
-      admin.from('categories').select('id, name').order('name', { ascending: true }),
-      admin.from('tags').select('id, name').order('name', { ascending: true }),
-      admin.from('post_tags').select('tag_id').eq('post_id', id),
-    ]);
+  const [
+    { data: post, error },
+    { data: categories },
+    { data: tags },
+    { data: postTags },
+    { data: tools },
+    { data: postTools },
+  ] = await Promise.all([
+    admin.from('posts').select('*').eq('id', id).maybeSingle(),
+    admin.from('categories').select('id, name').order('name', { ascending: true }),
+    admin.from('tags').select('id, name').order('name', { ascending: true }),
+    admin.from('post_tags').select('tag_id').eq('post_id', id),
+    admin
+      .from('tools')
+      .select('id, name, slug')
+      .eq('is_approved', true)
+      .order('name', { ascending: true })
+      .limit(500),
+    admin.from('post_tools').select('tool_id').eq('post_id', id),
+  ]);
 
   if (error || !post) notFound();
   if (!isAdmin && post.author_id !== user.id) redirect('/icerik');
 
   const selectedTagIds = (postTags || []).map((row) => row.tag_id).filter(Boolean);
+  const selectedToolIds = (postTools || []).map((row) => row.tool_id).filter(Boolean);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-12">
@@ -65,6 +79,8 @@ export default async function CreatorEditPostPage({ params }) {
         categories={categories || []}
         tags={tags || []}
         selectedTagIds={selectedTagIds}
+        tools={tools || []}
+        selectedToolIds={selectedToolIds}
         isAdmin={isAdmin}
       />
     </div>

@@ -13,13 +13,14 @@ function isPaidPricing(record) {
   return /paid|ucretli|premium|enterprise/.test(pricingOf(record));
 }
 
-function pricingLabel(record) {
+function pricingLabel(record, locale = 'tr') {
   const pricing = pricingOf(record);
-  if (!pricing) return 'Fiyat belirtilmemiş';
-  if (pricing === 'free' || pricing === 'ucretsiz') return 'Ücretsiz';
+  if (!pricing) return locale === 'en' ? 'Pricing not specified' : 'Fiyat belirtilmemiş';
+  if (pricing === 'free' || pricing === 'ucretsiz') return locale === 'en' ? 'Free' : 'Ücretsiz';
   if (pricing === 'freemium') return 'Freemium';
-  if (pricing === 'paid' || pricing === 'ucretli') return 'Ücretli';
-  if (pricing === 'open source' || pricing === 'acik kaynak') return 'Açık kaynak';
+  if (pricing === 'paid' || pricing === 'ucretli') return locale === 'en' ? 'Paid' : 'Ücretli';
+  if (pricing === 'open source' || pricing === 'acik kaynak')
+    return locale === 'en' ? 'Open source' : 'Açık kaynak';
   return record.pricing_type || record.pricing_model;
 }
 
@@ -30,6 +31,24 @@ const SHARED_TOOL_HOSTS = new Set([
   'huggingface.co',
   'play.google.com',
 ]);
+
+const REASON_LABELS = {
+  tr: {
+    'direct-match': 'istenen göreve doğrudan uygun',
+    'free-plan': 'ücretsiz veya ücretsiz planlı',
+    verified: 'platformda doğrulanmış',
+  },
+  en: {
+    'direct-match': 'direct match for the requested task',
+    'free-plan': 'free or offers a free plan',
+    verified: 'verified on the platform',
+  },
+};
+
+export function formatKasifReasons(reasons = [], locale = 'tr') {
+  const labels = REASON_LABELS[locale] || REASON_LABELS.tr;
+  return reasons.map((reason) => labels[reason] || reason);
+}
 
 function toolFamily(record) {
   try {
@@ -53,10 +72,14 @@ export function understandQuestion(question) {
   const normalized = normalizeText(question);
   const freeMentioned = FREE_WORDS.map(normalizeText).some((word) => normalized.includes(word));
   const paidMentioned = PAID_WORDS.map(normalizeText).some((word) => normalized.includes(word));
-  const rejectsFree = /ucretsiz (olmasin|istemiyorum)|bedava (olmasin|istemiyorum)/.test(
-    normalized
-  );
-  const rejectsPaid = /ucretli (olmasin|istemiyorum)|para vermek istemiyorum/.test(normalized);
+  const rejectsFree =
+    /ucretsiz (olmasin|istemiyorum)|bedava (olmasin|istemiyorum)|(?:do not|don t|dont) want (?:a )?free|not free/.test(
+      normalized
+    );
+  const rejectsPaid =
+    /ucretli (olmasin|istemiyorum)|para vermek istemiyorum|(?:do not|don t|dont) want (?:a )?paid|not paid|no paid|without (?:paying|a subscription)/.test(
+      normalized
+    );
   const matchedConcepts = Object.entries(KASIF_CONCEPTS)
     .map(([concept, words]) => ({
       concept,
@@ -75,7 +98,10 @@ export function understandQuestion(question) {
     tokens: extractSearchTerms(question),
     wantsFree: (freeMentioned && !rejectsFree) || rejectsPaid,
     wantsPaid: (paidMentioned && !rejectsPaid) || rejectsFree,
-    wantsComparison: /karsilastir|farki|hangisi|alternatif/.test(normalized),
+    wantsComparison:
+      /karsilastir|farki|hangisi|alternatif|compare|comparison|difference|alternative|versus|\bvs\b/.test(
+        normalized
+      ),
     concepts,
     signals: matchedConcepts.flatMap(({ signals }) => signals),
     goals,
@@ -123,7 +149,7 @@ export function scoreTool(record, intent) {
     const evidenceMatches = evidence.filter((phrase) => searchable.includes(phrase)).length;
     if (evidenceMatches > 0) {
       score += 10 + Math.min(evidenceMatches - 1, 2) * 3;
-      reasons.push('istenen göreve doğrudan uygun');
+      reasons.push('direct-match');
     }
     const negativeEvidence = (goal.negativeEvidence || []).map(normalizeText);
     const negativeMatches = negativeEvidence.filter((phrase) => searchable.includes(phrase)).length;
@@ -131,12 +157,12 @@ export function scoreTool(record, intent) {
   }
   if (intent.wantsFree && isFreePricing(record)) {
     score += 7;
-    reasons.push('ücretsiz veya ücretsiz planlı');
+    reasons.push('free-plan');
   }
   if (intent.wantsPaid && /paid|ucretli|premium|enterprise/.test(pricing)) score += 4;
   if (record.is_verified) {
     score += 2;
-    reasons.push('platformda doğrulanmış');
+    reasons.push('verified');
   }
   if (record.is_featured) score += 2;
   if (isPrimaryToolPage(record)) score += 1;
@@ -169,30 +195,41 @@ export function rankTools(records, intent, limit = 5) {
   return diverse;
 }
 
-export function answerQuestion(question, records, history = []) {
+export function answerQuestion(question, records, history = [], locale = 'tr') {
   const intent = understandConversation(question, history);
   const ranked = rankTools(records, intent, intent.wantsComparison ? 4 : 5);
   if (!ranked.length) {
     return { answer: '', sourceIds: [], insufficientContext: true, confidence: 0, intent };
   }
-  const intro = intent.wantsComparison
-    ? 'İhtiyacına göre öne çıkan seçenekleri karşılaştırdım:'
-    : 'Platform verilerine göre ihtiyacına en yakın araçlar şunlar:';
+  const intro =
+    locale === 'en'
+      ? intent.wantsComparison
+        ? 'I compared the strongest options for your needs:'
+        : 'Based on platform data, these tools best match your needs:'
+      : intent.wantsComparison
+        ? 'İhtiyacına göre öne çıkan seçenekleri karşılaştırdım:'
+        : 'Platform verilerine göre ihtiyacına en yakın araçlar şunlar:';
   const lines = ranked.map(({ record, reasons }, index) => {
     const detail = String(record.description || '')
       .trim()
       .replace(/\s+/g, ' ')
       .slice(0, 170);
-    const why = reasons.length ? ` (${reasons.join(', ')})` : '';
+    const why = reasons.length ? ` (${formatKasifReasons(reasons, locale).join(', ')})` : '';
     if (intent.wantsComparison) {
-      const category = record.category?.name || 'Kategori belirtilmemiş';
-      const pricing = pricingLabel(record);
+      const category =
+        record.category?.name ||
+        (locale === 'en' ? 'Category not specified' : 'Kategori belirtilmemiş');
+      const pricing = pricingLabel(record, locale);
       return `${index + 1}. ${record.name} — ${category} · ${pricing}${why}${detail ? `\n${detail}` : ''}`;
     }
     return `${index + 1}. ${record.name}${why}${detail ? `: ${detail}` : ''}`;
   });
   return {
-    answer: `${intro}\n\n${lines.join('\n')}\n\nSonuçlar yalnızca AI Keşif Platformu kayıtlarından hesaplandı.`,
+    answer: `${intro}\n\n${lines.join('\n')}\n\n${
+      locale === 'en'
+        ? 'Results were calculated exclusively from AI Keşif Platformu records.'
+        : 'Sonuçlar yalnızca AI Keşif Platformu kayıtlarından hesaplandı.'
+    }`,
     sourceIds: ranked.map(({ record }) => `tool:${record.id}`),
     insufficientContext: false,
     confidence: Math.min(0.98, Number((ranked[0].score / 30).toFixed(2))),

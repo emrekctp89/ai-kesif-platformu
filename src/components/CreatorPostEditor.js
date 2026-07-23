@@ -3,11 +3,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import dynamic from 'next/dynamic';
 import toast from 'react-hot-toast';
-import { useTranslations } from 'next-intl';
-import { Check, ExternalLink, Eye, ImagePlus, Loader2, Trash2, Upload } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import {
+  Check,
+  Circle,
+  ExternalLink,
+  Eye,
+  ImagePlus,
+  Loader2,
+  Sparkles,
+  Trash2,
+  Upload,
+} from 'lucide-react';
 import { Link, useRouter } from '@/i18n/routing';
 import {
+  assistCreatorPost,
   assignCreatorPostTags,
+  assignCreatorPostTools,
   submitCreatorPostForReview,
   updateCreatorPost,
   uploadCreatorCoverImage,
@@ -17,9 +29,12 @@ import {
   CREATOR_AUTOSAVE_MS,
   MIN_POST_CONTENT_LENGTH,
   MIN_POST_TITLE_LENGTH,
+  buildReviewChecklist,
   plainTextFromMarkdown,
   validatePostForReview,
 } from '@/lib/contentCreatorRules';
+import { slugify } from '@/utils/slugify';
+import { MultiSelectTools } from '@/components/MultiSelectTools';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -54,6 +69,8 @@ function statusLabel(status, t) {
  *   categories?: Array<{ id: number, name: string }>,
  *   tags?: Array<{ id: number, name: string }>,
  *   selectedTagIds?: number[],
+ *   tools?: Array<{ id: number, name: string, slug?: string }>,
+ *   selectedToolIds?: number[],
  *   isAdmin?: boolean,
  * }} props
  */
@@ -62,16 +79,21 @@ export function CreatorPostEditor({
   categories = [],
   tags = [],
   selectedTagIds: initialTagIds = [],
+  tools = [],
+  selectedToolIds: initialToolIds = [],
   isAdmin = false,
 }) {
   const t = useTranslations('ContentStudio');
+  const locale = useLocale();
   const router = useRouter();
   const formRef = useRef(null);
   const fileInputRef = useRef(null);
   const snapshotRef = useRef('');
   const skipNextAutosaveRef = useRef(false);
+  const slugTouchedRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [assistBusy, setAssistBusy] = useState(null); // mode string | null
   const [autosaveState, setAutosaveState] = useState('idle'); // idle | dirty | saving | saved | error
   const [title, setTitle] = useState(post.title || '');
   const [description, setDescription] = useState(post.description || '');
@@ -83,6 +105,7 @@ export function CreatorPostEditor({
   );
   const [coverUrl, setCoverUrl] = useState(post.featured_image_url || '');
   const [selectedTags, setSelectedTags] = useState(() => new Set(initialTagIds.map(Number)));
+  const [selectedTools, setSelectedTools] = useState(() => new Set(initialToolIds.map(Number)));
 
   const editorOptions = useMemo(
     () => ({
@@ -139,6 +162,17 @@ export function CreatorPostEditor({
   const contentLen = plainTextFromMarkdown(content).length;
   const titleLen = plainTextFromMarkdown(title).length;
   const reviewReady = validatePostForReview({ title, content }).ok;
+  const checklist = useMemo(
+    () =>
+      buildReviewChecklist({
+        title,
+        content,
+        description,
+        coverUrl,
+        toolCount: selectedTools.size,
+      }),
+    [title, content, description, coverUrl, selectedTools]
+  );
 
   function resolveSaveStatus() {
     if (isPublished && isAdmin) return 'Yayınlandı';
@@ -148,7 +182,8 @@ export function CreatorPostEditor({
     return 'Taslak';
   }
 
-  const buildSnapshot = useCallback(
+  // Content-only snapshot drives autosave (tags/tools save on explicit Save / Submit).
+  const buildContentSnapshot = useCallback(
     () =>
       JSON.stringify({
         title,
@@ -158,15 +193,37 @@ export function CreatorPostEditor({
         type,
         categoryId,
         coverUrl,
-        tags: [...selectedTags].sort((a, b) => a - b),
       }),
-    [title, description, slug, content, type, categoryId, coverUrl, selectedTags]
+    [title, description, slug, content, type, categoryId, coverUrl]
+  );
+
+  const buildFullSnapshot = useCallback(
+    () =>
+      JSON.stringify({
+        content: buildContentSnapshot(),
+        tags: [...selectedTags].sort((a, b) => a - b),
+        tools: [...selectedTools].sort((a, b) => a - b),
+      }),
+    [buildContentSnapshot, selectedTags, selectedTools]
   );
 
   useEffect(() => {
-    snapshotRef.current = buildSnapshot();
+    snapshotRef.current = buildFullSnapshot();
+    slugTouchedRef.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- baseline only on post id change
   }, [post.id]);
+
+  // Warn before leaving with unsaved changes (tags/tools included).
+  useEffect(() => {
+    if (lockedPublished) return undefined;
+    const onBeforeUnload = (event) => {
+      if (buildFullSnapshot() === snapshotRef.current) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [buildFullSnapshot, lockedPublished]);
 
   function withMeta(formData, { autosave = false } = {}) {
     formData.set('id', String(post.id));
@@ -189,6 +246,13 @@ export function CreatorPostEditor({
     return fd;
   }
 
+  function toolsFormData(postId) {
+    const fd = new FormData();
+    fd.set('postId', String(postId));
+    selectedTools.forEach((id) => fd.append('toolId', String(id)));
+    return fd;
+  }
+
   function toggleTag(tagId) {
     setSelectedTags((prev) => {
       const next = new Set(prev);
@@ -196,6 +260,63 @@ export function CreatorPostEditor({
       else next.add(tagId);
       return next;
     });
+  }
+
+  function applySlugFromTitle() {
+    const base = slugify(title.trim());
+    if (!base) {
+      toast.error(t('errTitleRequired'));
+      return;
+    }
+    // Keep existing uniqueness suffix (e.g. -m1abc) when present on current slug.
+    const suffixMatch = String(slug || '').match(/-([a-z0-9]{4,12})$/i);
+    const next = suffixMatch ? `${base}-${suffixMatch[1]}` : `${base}-${Date.now().toString(36)}`;
+    setSlug(next);
+    slugTouchedRef.current = true;
+  }
+
+  async function runAssist(mode) {
+    if (assistBusy || isPending || isUploadingCover) return;
+    setAssistBusy(mode);
+    try {
+      const result = await assistCreatorPost({
+        mode,
+        title,
+        description,
+        content,
+        locale,
+      });
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+      const text = String(result?.text || '').trim();
+      if (!text) {
+        toast.error(t('errAssistEmpty'));
+        return;
+      }
+      if (mode === 'description') {
+        setDescription(text);
+        toast.success(t('toastAssistDescription'));
+      } else if (mode === 'title') {
+        setTitle(text);
+        toast.success(t('toastAssistTitle'));
+      } else if (mode === 'outline') {
+        setContent((prev) => {
+          const base = String(prev || '').trim();
+          if (!base) return text;
+          return `${base}\n\n${text}`;
+        });
+        toast.success(t('toastAssistOutline'));
+      } else if (mode === 'improve') {
+        setContent(text);
+        toast.success(t('toastAssistImprove'));
+      }
+    } catch (err) {
+      toast.error(err?.message || t('errAssistFailed'));
+    } finally {
+      setAssistBusy(null);
+    }
   }
 
   async function handleCoverUpload(file) {
@@ -236,21 +357,32 @@ export function CreatorPostEditor({
           setAutosaveState('error');
           return { error: true };
         }
-        snapshotRef.current = buildSnapshot();
+        // Preserve pending tags/tools dirty state after content-only autosave.
+        try {
+          const prev = JSON.parse(snapshotRef.current || '{}');
+          snapshotRef.current = JSON.stringify({
+            content: buildContentSnapshot(),
+            tags: prev.tags ?? [...selectedTags].sort((a, b) => a - b),
+            tools: prev.tools ?? [...selectedTools].sort((a, b) => a - b),
+          });
+        } catch {
+          snapshotRef.current = buildFullSnapshot();
+        }
         setAutosaveState('saved');
         return { ok: true };
       }
 
-      const [postResult, tagsResult] = await Promise.all([
+      const [postResult, tagsResult, toolsResult] = await Promise.all([
         updateCreatorPost(formData),
         assignCreatorPostTags(tagsFormData(post.id)),
+        assignCreatorPostTools(toolsFormData(post.id)),
       ]);
-      if (postResult.error || tagsResult.error) {
-        toast.error(postResult.error || tagsResult.error);
+      if (postResult.error || tagsResult.error || toolsResult.error) {
+        toast.error(postResult.error || tagsResult.error || toolsResult.error);
         return { error: true };
       }
       skipNextAutosaveRef.current = true;
-      snapshotRef.current = buildSnapshot();
+      snapshotRef.current = buildFullSnapshot();
       setAutosaveState('saved');
       toast.success(postResult.success || t('toastSaved'));
       router.refresh();
@@ -266,6 +398,7 @@ export function CreatorPostEditor({
       categoryId,
       coverUrl,
       selectedTags,
+      selectedTools,
       inReview,
       isPublished,
       isAdmin,
@@ -273,11 +406,12 @@ export function CreatorPostEditor({
       post.status,
       t,
       router,
-      buildSnapshot,
+      buildContentSnapshot,
+      buildFullSnapshot,
     ]
   );
 
-  // Debounced autosave while drafting / rejected / in-review edits.
+  // Debounced autosave while drafting / rejected / in-review edits (content fields only).
   useEffect(() => {
     if (lockedPublished) return undefined;
     if (isPending || isUploadingCover) return undefined;
@@ -286,8 +420,14 @@ export function CreatorPostEditor({
       return undefined;
     }
 
-    const nextSnap = buildSnapshot();
-    if (nextSnap === snapshotRef.current) return undefined;
+    let prevContent = '';
+    try {
+      prevContent = JSON.parse(snapshotRef.current || '{}').content || '';
+    } catch {
+      prevContent = '';
+    }
+    const nextContent = buildContentSnapshot();
+    if (nextContent === prevContent) return undefined;
     if (!title.trim()) return undefined;
 
     setAutosaveState('dirty');
@@ -297,7 +437,7 @@ export function CreatorPostEditor({
 
     return () => clearTimeout(timer);
   }, [
-    buildSnapshot,
+    buildContentSnapshot,
     title,
     description,
     slug,
@@ -305,7 +445,6 @@ export function CreatorPostEditor({
     type,
     categoryId,
     coverUrl,
-    selectedTags,
     lockedPublished,
     isPending,
     isUploadingCover,
@@ -330,13 +469,16 @@ export function CreatorPostEditor({
     }
 
     startTransition(async () => {
-      await assignCreatorPostTags(tagsFormData(post.id));
+      await Promise.all([
+        assignCreatorPostTags(tagsFormData(post.id)),
+        assignCreatorPostTools(toolsFormData(post.id)),
+      ]);
       const formData = withMeta(new FormData());
       const result = await submitCreatorPostForReview(formData);
       if (result.error) toast.error(result.error);
       else {
         skipNextAutosaveRef.current = true;
-        snapshotRef.current = buildSnapshot();
+        snapshotRef.current = buildFullSnapshot();
         toast.success(result.success || t('toastSubmitted'));
         router.refresh();
       }
@@ -350,7 +492,7 @@ export function CreatorPostEditor({
       if (result.error) toast.error(result.error);
       else {
         skipNextAutosaveRef.current = true;
-        snapshotRef.current = buildSnapshot();
+        snapshotRef.current = buildFullSnapshot();
         toast.success(result.success || t('toastWithdrawn'));
         router.refresh();
       }
@@ -414,9 +556,26 @@ export function CreatorPostEditor({
           <div className="space-y-2">
             <div className="flex items-end justify-between gap-2">
               <Label htmlFor="title">{t('titleLabel')}</Label>
-              <span className="text-[11px] text-muted-foreground">
-                {titleLen}/{MIN_POST_TITLE_LENGTH}+
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-muted-foreground">
+                  {titleLen}/{MIN_POST_TITLE_LENGTH}+
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-xs"
+                  disabled={Boolean(assistBusy) || isPending}
+                  onClick={() => runAssist('title')}
+                >
+                  {assistBusy === 'title' ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                  {t('assistTitle')}
+                </Button>
+              </div>
             </div>
             <Input
               id="title"
@@ -427,7 +586,24 @@ export function CreatorPostEditor({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">{t('descriptionLabel')}</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="description">{t('descriptionLabel')}</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 px-2 text-xs"
+                disabled={Boolean(assistBusy) || isPending}
+                onClick={() => runAssist('description')}
+              >
+                {assistBusy === 'description' ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                {t('assistDescription')}
+              </Button>
+            </div>
             <Textarea
               id="description"
               name="description"
@@ -437,20 +613,52 @@ export function CreatorPostEditor({
             />
           </div>
           <div className="space-y-2">
-            <div className="flex items-end justify-between gap-2">
+            <div className="flex flex-wrap items-end justify-between gap-2">
               <Label>{t('contentMarkdownLabel')}</Label>
-              <span
-                className={`text-[11px] ${
-                  contentLen >= MIN_POST_CONTENT_LENGTH
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-muted-foreground'
-                }`}
-              >
-                {t('contentLengthHint', {
-                  current: contentLen,
-                  min: MIN_POST_CONTENT_LENGTH,
-                })}
-              </span>
+              <div className="flex flex-wrap items-center gap-1">
+                <span
+                  className={`text-[11px] ${
+                    contentLen >= MIN_POST_CONTENT_LENGTH
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-muted-foreground'
+                  }`}
+                >
+                  {t('contentLengthHint', {
+                    current: contentLen,
+                    min: MIN_POST_CONTENT_LENGTH,
+                  })}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-xs"
+                  disabled={Boolean(assistBusy) || isPending}
+                  onClick={() => runAssist('outline')}
+                >
+                  {assistBusy === 'outline' ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                  {t('assistOutline')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-xs"
+                  disabled={Boolean(assistBusy) || isPending}
+                  onClick={() => runAssist('improve')}
+                >
+                  {assistBusy === 'improve' ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                  {t('assistImprove')}
+                </Button>
+              </div>
             </div>
             <SimpleMDE options={editorOptions} value={content} onChange={setContent} />
           </div>
@@ -463,14 +671,30 @@ export function CreatorPostEditor({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="slug">{t('slugLabel')}</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="slug">{t('slugLabel')}</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    disabled={isPending || isUploadingCover}
+                    onClick={applySlugFromTitle}
+                  >
+                    {t('slugFromTitle')}
+                  </Button>
+                </div>
                 <Input
                   id="slug"
                   name="slug"
                   value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
+                  onChange={(e) => {
+                    slugTouchedRef.current = true;
+                    setSlug(e.target.value);
+                  }}
                   required
                 />
+                <p className="text-[11px] text-muted-foreground">{t('slugHint')}</p>
               </div>
               <div className="space-y-2">
                 <Label>{t('typeLabel')}</Label>
@@ -524,6 +748,28 @@ export function CreatorPostEditor({
                       );
                     })}
                   </div>
+                </div>
+              ) : null}
+
+              {tools.length > 0 ? (
+                <div className="space-y-2">
+                  <Label>{t('relatedToolsLabel')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('relatedToolsHint')}</p>
+                  <MultiSelectTools
+                    allTools={tools}
+                    selectedTools={selectedTools}
+                    onSelectionChange={setSelectedTools}
+                    placeholder={t('relatedToolsPlaceholder')}
+                    searchPlaceholder={t('relatedToolsSearch')}
+                    emptyLabel={t('relatedToolsEmpty')}
+                    disabled={isPending || isUploadingCover}
+                    maxSelected={20}
+                  />
+                  {selectedTools.size > 0 ? (
+                    <p className="text-[11px] text-muted-foreground">
+                      {t('relatedToolsCount', { count: selectedTools.size })}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
 
@@ -631,6 +877,59 @@ export function CreatorPostEditor({
                   })}
                 </p>
               ) : null}
+
+              <div className="space-y-2 rounded-xl border border-border/60 bg-muted/20 p-3">
+                <p className="text-xs font-semibold text-foreground">
+                  {t('checklistHeading', {
+                    score: checklist.score,
+                    max: checklist.maxScore,
+                  })}
+                </p>
+                <ul className="space-y-1.5">
+                  {checklist.items.map((item) => {
+                    const labelKey = {
+                      title: 'checklistTitle',
+                      content: 'checklistContent',
+                      description: 'checklistDescription',
+                      cover: 'checklistCover',
+                      tools: 'checklistTools',
+                    }[item.id];
+                    return (
+                      <li
+                        key={item.id}
+                        className="flex items-start gap-2 text-xs text-muted-foreground"
+                      >
+                        {item.ok ? (
+                          <Check
+                            className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <Circle
+                            className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-50"
+                            aria-hidden="true"
+                          />
+                        )}
+                        <span className={item.ok ? 'text-foreground' : ''}>
+                          {t(labelKey)}
+                          {item.required ? (
+                            <span className="text-muted-foreground">
+                              {' '}
+                              · {t('checklistRequired')}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              {' '}
+                              · {t('checklistOptional')}
+                            </span>
+                          )}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
               <div className="flex flex-col gap-2">
                 <Button type="submit" disabled={isPending || isUploadingCover}>
                   {isPending

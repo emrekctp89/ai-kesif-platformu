@@ -55,6 +55,35 @@ describe('Kâşif engine', () => {
     expect(result.sourceIds[0]).toBe('tool:2');
   });
 
+  it('İngilizce soruyu anlayıp İngilizce yanıt üretir', () => {
+    const result = answerQuestion('Recommend a free presentation tool', records, [], 'en');
+
+    expect(result.intent.goals).toContain('presentation-creation');
+    expect(result.intent.pricePreference).toBe('free');
+    expect(result.answer).toContain('Based on platform data');
+    expect(result.answer).toContain('free or offers a free plan');
+    expect(result.answer).not.toContain('araçlar');
+  });
+
+  it('İngilizce ücret reddini ve karşılaştırma niyetini anlar', () => {
+    const intent = understandQuestion('Compare presentation tools without paying');
+
+    expect(intent.wantsFree).toBe(true);
+    expect(intent.wantsPaid).toBe(false);
+    expect(intent.wantsComparison).toBe(true);
+    expect(intent.goals).toContain('presentation-creation');
+  });
+
+  it('İngilizce takip sorusunda önceki konuyu korur', () => {
+    const intent = understandConversation('Which of these are free?', [
+      { role: 'user', content: 'Recommend a tool to create presentations' },
+    ]);
+
+    expect(intent.goals).toContain('presentation-creation');
+    expect(intent.wantsFree).toBe(true);
+    expect(intent.tokens).toContain('presentations');
+  });
+
   it('genel kategori eşleşmesi yerine doğrudan görev yeteneğini öne alır', () => {
     const intent = understandQuestion('Toplantı notlarını otomatik özetlemek istiyorum');
     expect(intent.goals).toContain('meeting-notes');
@@ -70,6 +99,27 @@ describe('Kâşif engine', () => {
   it('uygun seçenek varken fiyat tercihini katı filtre olarak uygular', () => {
     const ranked = rankTools(records, understandQuestion('Ücretsiz sunum aracı'));
     expect(ranked.every(({ record }) => record.pricing_model === 'freemium')).toBe(true);
+  });
+
+  it('aynı görev uygunluğunda daha yüksek platform puanını öne alır', () => {
+    const ratedRecords = [
+      {
+        id: 40,
+        name: 'Sunum Orta',
+        description: 'Sunum ve slayt oluşturur',
+        average_rating: 3.2,
+      },
+      {
+        id: 41,
+        name: 'Sunum Güçlü',
+        description: 'Sunum ve slayt oluşturur',
+        average_rating: 4.9,
+      },
+    ];
+
+    expect(rankTools(ratedRecords, understandQuestion('Sunum oluşturma aracı'))[0].record.id).toBe(
+      41
+    );
   });
 
   it('karşılaştırma yanıtında kategori ve fiyat bilgisini gösterir', () => {

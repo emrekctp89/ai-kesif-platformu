@@ -100,3 +100,98 @@ export function collectTagsFromPosts(posts) {
   }
   return [...map.values()].sort((a, b) => String(a.name).localeCompare(String(b.name), 'tr'));
 }
+
+/**
+ * Attach related tools (post_tools → tools) to a single post or list.
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {Array<{ id?: number|string }>| { id?: number|string }} posts
+ * @returns {Promise<Array>}
+ */
+export async function attachRelatedToolsToPosts(supabase, posts) {
+  const list = Array.isArray(posts) ? posts : posts ? [posts] : [];
+  if (!list.length) return list;
+
+  const ids = [...new Set(list.map((p) => p.id).filter((id) => id != null && id !== ''))];
+  if (!ids.length) {
+    return list.map((p) => ({ ...p, relatedTools: [] }));
+  }
+
+  const { data, error } = await supabase
+    .from('post_tools')
+    .select(
+      'post_id, tool_id, tools(id, name, slug, description, logo_url, link, tier, is_featured, is_promoted)'
+    )
+    .in('post_id', ids);
+
+  if (error) {
+    return list.map((p) => ({ ...p, relatedTools: [] }));
+  }
+
+  const map = new Map();
+  for (const row of data || []) {
+    const postId = row.post_id;
+    if (!map.has(postId)) map.set(postId, []);
+    const tool = row.tools;
+    if (tool?.id != null && tool?.slug) {
+      map.get(postId).push(tool);
+    }
+  }
+
+  return list.map((post) => ({
+    ...post,
+    relatedTools: map.get(post.id) || [],
+  }));
+}
+
+/**
+ * Public published posts by a profile author (for creator profile section).
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {string} authorId
+ * @param {{ limit?: number }} [opts]
+ */
+export async function getPublishedPostsByAuthor(supabase, authorId, opts = {}) {
+  if (!authorId) return [];
+  const limit = Math.min(Math.max(Number(opts.limit) || 6, 1), 24);
+  const { data, error } = await supabase
+    .from('posts')
+    .select('id, title, slug, description, type, published_at, featured_image_url')
+    .eq('author_id', authorId)
+    .eq('status', 'Yayınlandı')
+    .order('published_at', { ascending: false })
+    .limit(limit);
+  if (error) return [];
+  return data || [];
+}
+
+/**
+ * Published posts linked to a tool via post_tools (tool detail page).
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {string|number} toolId
+ * @param {{ limit?: number }} [opts]
+ */
+export async function getPublishedPostsForTool(supabase, toolId, opts = {}) {
+  if (toolId == null || toolId === '') return [];
+  const limit = Math.min(Math.max(Number(opts.limit) || 4, 1), 12);
+
+  const { data: links, error: linkError } = await supabase
+    .from('post_tools')
+    .select('post_id')
+    .eq('tool_id', toolId)
+    .limit(80);
+
+  if (linkError || !links?.length) return [];
+
+  const postIds = [...new Set(links.map((row) => row.post_id).filter((id) => id != null))];
+  if (!postIds.length) return [];
+
+  const { data: posts, error: postError } = await supabase
+    .from('posts')
+    .select('id, title, slug, description, type, published_at, featured_image_url')
+    .in('id', postIds)
+    .eq('status', 'Yayınlandı')
+    .order('published_at', { ascending: false })
+    .limit(limit);
+
+  if (postError) return [];
+  return posts || [];
+}

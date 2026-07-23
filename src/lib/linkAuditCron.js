@@ -250,6 +250,48 @@ async function validateToolLink(tool, timeoutMs) {
   }
 }
 
+/**
+ * Tek bir linki audit kurallarıyla doğrular (admin kaydı / anlık kontrol için).
+ * Cron ile aynı HEAD→GET ve sınıflandırma mantığını kullanır.
+ */
+export async function checkToolLink(link, options = {}) {
+  const timeoutMs = clampInteger(options.timeoutMs || process.env.LINK_AUDIT_TIMEOUT_MS, {
+    fallback: DEFAULT_TIMEOUT_MS,
+    min: 3000,
+    max: 10000,
+  });
+
+  const tool = {
+    id: options.toolId ?? null,
+    name: options.name ?? null,
+    slug: options.slug ?? null,
+    link,
+    link_check_status: options.previousStatus ?? null,
+  };
+
+  return validateToolLink(tool, timeoutMs);
+}
+
+/**
+ * validateToolLink sonucunu tools tablosu update payload'ına çevirir.
+ */
+export function buildLinkCheckUpdatePayload(result, checkedAt = new Date().toISOString()) {
+  const payload = {
+    link_check_status: result.status,
+    link_check_error: result.errorDetail,
+    link_check_http_status: result.httpStatus,
+    link_response_time_ms: result.responseTimeMs || null,
+    link_checked_at: checkedAt,
+  };
+
+  if (result.status === 'valid' || result.status === 'skipped') {
+    payload.link_deactivated_at = null;
+    payload.link_deactivation_reason = null;
+  }
+
+  return payload;
+}
+
 async function mapWithConcurrency(items, concurrency, mapper) {
   const results = new Array(items.length);
   let currentIndex = 0;
@@ -277,15 +319,7 @@ function groupResults(results) {
 
 async function updateAuditMetadata(supabaseAdmin, results, checkedAt) {
   for (const result of results) {
-    const payload = {
-      link_check_status: result.status,
-      link_check_error: result.errorDetail,
-      link_check_http_status: result.httpStatus,
-      link_response_time_ms: result.responseTimeMs || null,
-      link_checked_at: checkedAt,
-      link_deactivated_at: null,
-      link_deactivation_reason: null,
-    };
+    const payload = buildLinkCheckUpdatePayload(result, checkedAt);
 
     const { error } = await supabaseAdmin.from('tools').update(payload).eq('id', result.toolId);
 

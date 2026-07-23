@@ -168,7 +168,21 @@ export function EditToolDialog({ tool, categories, allTags }) {
         return;
       }
 
-      toast.success('Araç ve etiketleri başarıyla güncellendi.');
+      const linkStatus = toolUpdateResult?.linkCheck?.status;
+      if (linkStatus === 'invalid') {
+        toast.error(
+          toolUpdateResult.success ||
+            'Araç kaydedildi ancak link hâlâ kırık görünüyor. Alternatif URL deneyin.'
+        );
+      } else if (linkStatus === 'review') {
+        toast(
+          toolUpdateResult.success ||
+            'Araç kaydedildi. Link manuel inceleme gerektiriyor (bot koruması olabilir).',
+          { icon: '⚠️' }
+        );
+      } else {
+        toast.success(toolUpdateResult.success || 'Araç ve etiketleri başarıyla güncellendi.');
+      }
       setIsOpen(false);
       router.refresh();
     } finally {

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   Bot,
   Code2,
@@ -34,6 +34,7 @@ const STARTER_QUESTIONS = [
 
 export default function KasifExperiment() {
   const t = useTranslations('Kasif');
+  const locale = useLocale();
   const [question, setQuestion] = useState('');
   const [turns, setTurns] = useState([]);
   const [history, setHistory] = useState([]);
@@ -66,7 +67,7 @@ export default function KasifExperiment() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
-        body: JSON.stringify({ question: submittedQuestion, history }),
+        body: JSON.stringify({ question: submittedQuestion, history, locale }),
       });
       const data = await response.json();
       const result = response.ok ? data : { error: data.error || t('genericError') };

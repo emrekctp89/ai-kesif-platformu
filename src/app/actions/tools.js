@@ -618,6 +618,16 @@ export async function updateTool(formData) {
     return { error: 'Geçerli bir kategori seçin.' };
   }
 
+  const { data: existingTool, error: existingToolError } = await supabase
+    .from('tools')
+    .select('id, name, slug, link, link_check_status')
+    .eq('id', toolId)
+    .maybeSingle();
+
+  if (existingToolError || !existingTool) {
+    return { error: 'Güncellenecek araç bulunamadı.' };
+  }
+
   const updatedData = {
     name,
     link: normalizedLink,
@@ -639,6 +649,41 @@ export async function updateTool(formData) {
     logger.error('Embedding generation error on update:', err);
   }
 
+  // Admin kaydında link değiştiyse veya önceki audit kırık/inceleme ise canlı kontrol et.
+  // Aksi halde eski link_check_status kalır ve admin paneli hâlâ "kırık" gösterir.
+  const previousStatus = String(existingTool.link_check_status || '')
+    .trim()
+    .toLowerCase();
+  const linkChanged = String(existingTool.link || '').trim() !== normalizedLink;
+  const shouldRecheckLink =
+    linkChanged || !previousStatus || previousStatus === 'invalid' || previousStatus === 'review';
+
+  let linkCheck = null;
+  if (shouldRecheckLink) {
+    try {
+      const { checkToolLink, buildLinkCheckUpdatePayload } = await import('@/lib/linkAuditCron');
+      linkCheck = await checkToolLink(normalizedLink, {
+        toolId,
+        name,
+        slug: existingTool.slug,
+        previousStatus: existingTool.link_check_status,
+      });
+      Object.assign(updatedData, buildLinkCheckUpdatePayload(linkCheck));
+    } catch (linkCheckError) {
+      logger.error('Admin araç güncellemesinde link kontrolü başarısız:', linkCheckError);
+      // Kontrol başarısız olsa bile kaydı yap; stale durumdan çıkarmak için inceleme işaretle.
+      updatedData.link_check_status = 'review';
+      updatedData.link_check_error = 'Kayıt sırasında link kontrolü tamamlanamadı.';
+      updatedData.link_check_http_status = null;
+      updatedData.link_checked_at = new Date().toISOString();
+      linkCheck = {
+        status: 'review',
+        errorDetail: updatedData.link_check_error,
+        httpStatus: null,
+      };
+    }
+  }
+
   const { error } = await supabase.from('tools').update(updatedData).eq('id', toolId);
 
   if (error) {
@@ -646,15 +691,57 @@ export async function updateTool(formData) {
     return { error: 'Araç güncellenirken bir hata oluştu.' };
   }
 
+  // Link geçerliyse açık kullanıcı raporlarını otomatik çöz.
+  if (linkCheck?.status === 'valid') {
+    try {
+      const supabaseAdmin = createAdminClient();
+      await supabaseAdmin
+        .from('tool_link_reports')
+        .update({
+          status: 'resolved',
+          admin_note: 'Admin araç kaydı sırasında link doğrulandı.',
+          resolved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('tool_id', toolId)
+        .in('status', ['open', 'reviewing']);
+    } catch (reportError) {
+      logger.error('Link raporları otomatik çözülürken hata:', reportError);
+    }
+  }
+
   revalidatePath('/admin');
   revalidatePath('/');
 
-  const { data: tool } = await supabase.from('tools').select('slug').eq('id', toolId).single();
-  if (tool) {
-    revalidatePath(`/tool/${tool.slug}`);
+  const toolSlug = existingTool.slug;
+  if (toolSlug) {
+    revalidatePath(`/tool/${toolSlug}`);
+    revalidatePath(`/en/tool/${toolSlug}`);
   }
 
-  return { success: 'Araç başarıyla güncellendi.' };
+  const linkCheckMessages = {
+    valid: 'Link doğrulandı (geçerli).',
+    invalid: 'Link hâlâ kırık görünüyor; alternatif URL deneyin.',
+    review: 'Link manuel inceleme gerektiriyor (ör. bot koruması).',
+    skipped: 'Link otomatik kontrolden atlandı.',
+  };
+
+  const linkCheckMessage = linkCheck
+    ? linkCheckMessages[linkCheck.status] || `Link durumu: ${linkCheck.status}.`
+    : null;
+
+  return {
+    success: linkCheckMessage
+      ? `Araç başarıyla güncellendi. ${linkCheckMessage}`
+      : 'Araç başarıyla güncellendi.',
+    linkCheck: linkCheck
+      ? {
+          status: linkCheck.status,
+          error: linkCheck.errorDetail || null,
+          httpStatus: linkCheck.httpStatus ?? null,
+        }
+      : null,
+  };
 }
 
 /**

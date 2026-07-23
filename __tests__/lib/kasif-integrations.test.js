@@ -43,6 +43,8 @@ describe('Kâşif site integrations', () => {
       expect.objectContaining({ name: 'Slayt Free', slug: 'slayt-free' }),
     ]);
     expect(result.recommendations[0].reason).toContain('uygun');
+    expect(result.recommendations[0].reason).toContain('ücretsiz veya ücretsiz planlı');
+    expect(result.recommendations[0].reason).not.toContain('free-plan');
     expect(assertKasifEnabled).toHaveBeenCalledTimes(1);
   });
 
@@ -51,7 +53,7 @@ describe('Kâşif site integrations', () => {
 
     expect(result.spoken_response).toContain('Slayt Free');
     expect(result.suggested_content).toEqual([
-      { type: 'Araç', title: 'Slayt Free', url: '/tool/slayt-free' },
+      { type: 'Araç', title: 'Slayt Free', url: '/tr/tool/slayt-free' },
     ]);
     expect(assertKasifEnabled).toHaveBeenCalledTimes(1);
   });

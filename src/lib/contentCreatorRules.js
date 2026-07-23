@@ -175,6 +175,159 @@ export function questActionDeepLink(actionType, opts = {}) {
  * @param {Array} quests - user_daily_quests rows with nested quests
  * @param {{ featuredToolSlug?: string|null, popularToolSlug?: string|null, sampleUsername?: string|null }} [linkOpts]
  */
+/**
+ * Draft starter templates for the content studio.
+ * `contentKey` / `descriptionKey` resolve via next-intl ContentStudio namespace.
+ * Title field is still filled by the creator; `{title}` is interpolated into body.
+ */
+export const CREATOR_POST_TEMPLATES = [
+  {
+    id: 'blank',
+    type: 'Yazı',
+    titleKey: 'templateBlankTitle',
+    bodyKey: 'templateBlankBody',
+    contentKey: null,
+    descriptionKey: null,
+  },
+  {
+    id: 'comparison',
+    type: 'Rehber',
+    titleKey: 'templateComparisonTitle',
+    bodyKey: 'templateComparisonBody',
+    contentKey: 'templateComparisonContent',
+    descriptionKey: 'templateComparisonDescription',
+  },
+  {
+    id: 'listicle',
+    type: 'Rehber',
+    titleKey: 'templateListicleTitle',
+    bodyKey: 'templateListicleBody',
+    contentKey: 'templateListicleContent',
+    descriptionKey: 'templateListicleDescription',
+  },
+  {
+    id: 'tutorial',
+    type: 'Rehber',
+    titleKey: 'templateTutorialTitle',
+    bodyKey: 'templateTutorialBody',
+    contentKey: 'templateTutorialContent',
+    descriptionKey: 'templateTutorialDescription',
+  },
+  {
+    id: 'weekly',
+    type: 'Yazı',
+    titleKey: 'templateWeeklyTitle',
+    bodyKey: 'templateWeeklyBody',
+    contentKey: 'templateWeeklyContent',
+    descriptionKey: 'templateWeeklyDescription',
+  },
+];
+
+/**
+ * @param {string} [id]
+ * @returns {(typeof CREATOR_POST_TEMPLATES)[number]}
+ */
+export function getCreatorPostTemplate(id) {
+  const key = String(id || 'blank').trim();
+  return CREATOR_POST_TEMPLATES.find((t) => t.id === key) || CREATOR_POST_TEMPLATES[0];
+}
+
+/**
+ * Aggregate a creator's posts for the studio insights card.
+ * @param {Array<{ status?: string, updated_at?: string, published_at?: string, type?: string, view_count?: number }>} posts
+ */
+export function summarizeCreatorStudio(posts) {
+  const list = Array.isArray(posts) ? posts : [];
+  let draft = 0;
+  let review = 0;
+  let published = 0;
+  let rejected = 0;
+  let guides = 0;
+  let articles = 0;
+  let totalViews = 0;
+  let lastPublishedAt = null;
+  let lastUpdatedAt = null;
+
+  for (const post of list) {
+    const status = post?.status;
+    if (status === 'Taslak') draft += 1;
+    else if (status === 'İncelemede') review += 1;
+    else if (status === 'Yayınlandı') published += 1;
+    else if (status === 'Reddedildi') rejected += 1;
+
+    if (post?.type === 'Rehber') guides += 1;
+    else if (post?.type === 'Yazı') articles += 1;
+
+    const views = Number(post?.view_count);
+    if (Number.isFinite(views) && views > 0) totalViews += views;
+
+    if (post?.published_at) {
+      const ts = new Date(post.published_at).getTime();
+      if (Number.isFinite(ts) && (lastPublishedAt == null || ts > lastPublishedAt)) {
+        lastPublishedAt = ts;
+      }
+    }
+    if (post?.updated_at) {
+      const ts = new Date(post.updated_at).getTime();
+      if (Number.isFinite(ts) && (lastUpdatedAt == null || ts > lastUpdatedAt)) {
+        lastUpdatedAt = ts;
+      }
+    }
+  }
+
+  const decided = published + rejected;
+  const publishRate = decided > 0 ? Math.round((published / decided) * 100) : null;
+
+  return {
+    total: list.length,
+    draft,
+    review,
+    published,
+    rejected,
+    guides,
+    articles,
+    totalViews,
+    publishRate,
+    lastPublishedAt: lastPublishedAt ? new Date(lastPublishedAt).toISOString() : null,
+    lastUpdatedAt: lastUpdatedAt ? new Date(lastUpdatedAt).toISOString() : null,
+    hasPipeline: review > 0 || draft > 0,
+  };
+}
+
+/**
+ * Checklist items for review readiness (editor sidebar).
+ * @param {{ title?: string, description?: string, content?: string, coverUrl?: string, toolCount?: number }} fields
+ */
+export function buildReviewChecklist(fields = {}) {
+  const titleOk = plainTextFromMarkdown(fields.title).length >= MIN_POST_TITLE_LENGTH;
+  const contentOk = plainTextFromMarkdown(fields.content).length >= MIN_POST_CONTENT_LENGTH;
+  const descLen = String(fields.description || '').trim().length;
+  const descriptionOk = descLen >= 40;
+  const coverOk = Boolean(String(fields.coverUrl || '').trim());
+  const toolsOk = Number(fields.toolCount || 0) > 0;
+
+  const items = [
+    { id: 'title', ok: titleOk, required: true },
+    { id: 'content', ok: contentOk, required: true },
+    { id: 'description', ok: descriptionOk, required: false },
+    { id: 'cover', ok: coverOk, required: false },
+    { id: 'tools', ok: toolsOk, required: false },
+  ];
+
+  const requiredReady = items.filter((i) => i.required).every((i) => i.ok);
+  const optionalDone = items.filter((i) => !i.required && i.ok).length;
+  const optionalTotal = items.filter((i) => !i.required).length;
+
+  return {
+    items,
+    requiredReady,
+    optionalDone,
+    optionalTotal,
+    score: items.filter((i) => i.ok).length,
+    maxScore: items.length,
+  };
+}
+
 export function summarizeDailyQuests(quests, linkOpts = {}) {
   const list = Array.isArray(quests) ? quests : [];
   let availablePoints = 0;

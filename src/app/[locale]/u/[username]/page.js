@@ -3,7 +3,15 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Award, Heart, Image as ImageIcon, MessageSquare, Users } from 'lucide-react';
+import {
+  Award,
+  BookOpen,
+  Heart,
+  Image as ImageIcon,
+  MessageSquare,
+  PenLine,
+  Users,
+} from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { startConversation } from '@/app/actions';
@@ -14,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { getPublishedPostsByAuthor } from '@/lib/contentAuthors';
 import { generatePageMetadata } from '@/utils/seo';
 
 const tierColors = {
@@ -86,10 +95,13 @@ export default async function UserProfilePage(props) {
     month: 'long',
   });
 
+  const publishedPosts = await getPublishedPostsByAuthor(supabase, profile.id, { limit: 6 });
+
   const hasActivity =
     (profile.comments?.length || 0) > 0 ||
     (profile.favorites?.length || 0) > 0 ||
-    (profile.showcase_items?.length || 0) > 0;
+    (profile.showcase_items?.length || 0) > 0 ||
+    publishedPosts.length > 0;
 
   return (
     <div className="mx-auto max-w-4xl space-y-10 pb-10">
@@ -117,6 +129,12 @@ export default async function UserProfilePage(props) {
               {profile.tier ? (
                 <Badge className={cn('text-sm', tierColors[profile.tier] || 'bg-secondary')}>
                   {profile.tier}
+                </Badge>
+              ) : null}
+              {profile.is_content_creator ? (
+                <Badge variant="secondary" className="gap-1 text-sm">
+                  <PenLine className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t('contentCreatorBadge')}
                 </Badge>
               ) : null}
             </div>
@@ -184,6 +202,52 @@ export default async function UserProfilePage(props) {
       </section>
 
       <div className="space-y-6">
+        {publishedPosts.length > 0 ? (
+          <Card className="glass-panel border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <BookOpen className="h-5 w-5 text-primary" aria-hidden="true" />
+                {t('postsHeading')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {publishedPosts.map((post) => (
+                <Link
+                  key={post.id}
+                  href={`/blog/${post.slug}`}
+                  prefetch={false}
+                  className="group rounded-xl border border-border/50 bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-muted/50"
+                >
+                  <div className="flex items-start gap-3">
+                    {post.featured_image_url ? (
+                      <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg">
+                        <Image
+                          src={post.featured_image_url}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          sizes="80px"
+                        />
+                      </div>
+                    ) : null}
+                    <div className="min-w-0 space-y-1">
+                      <p className="line-clamp-2 text-sm font-semibold group-hover:text-primary">
+                        {post.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {post.type === 'Rehber' ? t('postTypeGuide') : t('postTypeArticle')}
+                        {post.published_at
+                          ? ` · ${new Date(post.published_at).toLocaleDateString(dateLocale)}`
+                          : ''}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
+        ) : null}
+
         {profile.comments?.length > 0 ? (
           <Card className="glass-panel border-border/50">
             <CardHeader>

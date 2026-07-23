@@ -35,6 +35,32 @@ const STOP_WORDS = new Set([
   'ariyorum',
   'oner',
   'oneri',
+  'about',
+  'any',
+  'are',
+  'can',
+  'could',
+  'for',
+  'from',
+  'help',
+  'how',
+  'looking',
+  'need',
+  'please',
+  'recommend',
+  'show',
+  'some',
+  'that',
+  'the',
+  'these',
+  'this',
+  'tool',
+  'tools',
+  'want',
+  'what',
+  'which',
+  'with',
+  'would',
 ]);
 
 export function normalizeText(value) {
@@ -101,7 +127,7 @@ export async function retrievePlatformContext(question, history = []) {
     const { data, error } = await supabase
       .from('tools')
       .select(
-        'id, name, slug, link, description, pricing_model, platforms, is_featured, tier, category:categories(name)'
+        'id, name, slug, link, description, pricing_model, platforms, is_featured, is_verified, tier, average_rating, total_ratings, category:categories(name)'
       )
       .eq('is_approved', true)
       .or(buildSearchFilter(terms))

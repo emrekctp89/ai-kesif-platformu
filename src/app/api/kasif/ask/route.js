@@ -5,13 +5,34 @@ import { enforceRateLimit } from '@/utils/antiAbuse';
 import { assertKasifEnabled } from '@/lib/kasif/config';
 import { answerQuestion } from '@/lib/kasif/engine';
 import { retrievePlatformContext } from '@/lib/kasif/retrieval';
-import { groundModelResponse, NO_INFORMATION_ANSWER } from '@/lib/kasif/grounding';
+import { groundModelResponse, noInformationAnswer } from '@/lib/kasif/grounding';
 import { createAdminClient } from '@/utils/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
 function fail(error, status) {
   return NextResponse.json({ error }, { status });
+}
+
+const API_MESSAGES = {
+  tr: {
+    disabled: 'Kâşif deneyi etkin değil.',
+    rateLimit: 'Çok fazla istek gönderildi.',
+    invalid: 'Geçersiz istek.',
+    questionLength: 'Soru 3–800 karakter arasında olmalıdır.',
+    unavailable: 'Kâşif yanıt üretemedi.',
+  },
+  en: {
+    disabled: 'The Kâşif experiment is not enabled.',
+    rateLimit: 'Too many requests.',
+    invalid: 'Invalid request.',
+    questionLength: 'The question must be between 3 and 800 characters.',
+    unavailable: 'Kâşif could not generate an answer.',
+  },
+};
+
+function requestLocale(value) {
+  return value === 'en' ? 'en' : 'tr';
 }
 
 function normalizeHistory(value) {
@@ -58,10 +79,19 @@ function withTimeout(promise, timeoutMs, fallback) {
 }
 
 export async function POST(request) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return fail(API_MESSAGES.tr.invalid, 400);
+  }
+  const locale = requestLocale(body?.locale);
+  const messages = API_MESSAGES[locale];
+
   try {
     assertKasifEnabled();
   } catch {
-    return fail('Kâşif deneyi etkin değil.', 404);
+    return fail(messages.disabled, 404);
   }
 
   const isLocalEvaluationRequest =
@@ -72,29 +102,26 @@ export async function POST(request) {
         limit: 10,
         windowMs: 10 * 60 * 1000,
       });
-  if (!rateLimit.allowed) return fail('Çok fazla istek gönderildi.', 429);
-
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return fail('Geçersiz istek.', 400);
-  }
+  if (!rateLimit.allowed) return fail(messages.rateLimit, 429);
 
   const question = String(body?.question || '').trim();
   const history = normalizeHistory(body?.history);
   if (question.length < 3 || question.length > 800) {
-    return fail('Soru 3–800 karakter arasında olmalıdır.', 400);
+    return fail(messages.questionLength, 400);
   }
 
   try {
     const records = await retrievePlatformContext(question, history);
     if (!records.length) {
-      return NextResponse.json({ answer: NO_INFORMATION_ANSWER, sources: [], grounded: false });
+      return NextResponse.json({
+        answer: noInformationAnswer(locale),
+        sources: [],
+        grounded: false,
+      });
     }
 
-    const modelResponse = answerQuestion(question, records, history);
-    const groundedResponse = groundModelResponse(modelResponse, records);
+    const modelResponse = answerQuestion(question, records, history, locale);
+    const groundedResponse = groundModelResponse(modelResponse, records, locale);
     const isLocalEvaluation = body?.evaluation === true && isLocalEvaluationRequest;
     const interaction = isLocalEvaluation
       ? {}
@@ -107,6 +134,6 @@ export async function POST(request) {
     });
   } catch (error) {
     logger.error('Kâşif engine error:', error);
-    return fail('Kâşif yanıt üretemedi.', 503);
+    return fail(messages.unavailable, 503);
   }
 }

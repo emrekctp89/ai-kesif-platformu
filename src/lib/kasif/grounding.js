@@ -1,7 +1,15 @@
-export const NO_INFORMATION_ANSWER =
-  'Platformumuzda bu soruyu yanıtlayacak doğrulanmış bilgi bulunmuyor.';
+const NO_INFORMATION_ANSWERS = {
+  tr: 'Platformumuzda bu soruyu yanıtlayacak doğrulanmış bilgi bulunmuyor.',
+  en: 'There is no verified information on our platform that can answer this question.',
+};
 
-export function groundModelResponse(modelResponse, records) {
+export const NO_INFORMATION_ANSWER = NO_INFORMATION_ANSWERS.tr;
+
+export function noInformationAnswer(locale = 'tr') {
+  return NO_INFORMATION_ANSWERS[locale] || NO_INFORMATION_ANSWERS.tr;
+}
+
+export function groundModelResponse(modelResponse, records, locale = 'tr') {
   const allowed = new Map(records.map((item) => [`tool:${item.id}`, item]));
   const requestedIds = Array.isArray(modelResponse?.sourceIds) ? modelResponse.sourceIds : [];
   const validSources = [...new Set(requestedIds)]
@@ -11,13 +19,13 @@ export function groundModelResponse(modelResponse, records) {
       id: `tool:${item.id}`,
       type: 'tool',
       title: item.name,
-      url: `/tool/${item.slug}`,
+      url: `/${locale}/tool/${item.slug}`,
     }));
 
   const answer = String(modelResponse?.answer || '').trim();
   if (modelResponse?.insufficientContext || !answer || validSources.length === 0) {
     return {
-      answer: NO_INFORMATION_ANSWER,
+      answer: noInformationAnswer(locale),
       sources: [],
       grounded: false,
     };

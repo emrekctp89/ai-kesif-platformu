@@ -5,6 +5,8 @@ import { Suspense } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
+  ArrowRight,
+  BookOpen,
   CalendarDays,
   CheckCircle2,
   Clock3,
@@ -36,6 +38,7 @@ import { getTranslations } from 'next-intl/server';
 import { formatPricing } from '@/utils/formatPricing';
 import { getSiteOrigin } from '@/utils/siteUrl';
 import { requireProAccess } from '@/lib/proAccess';
+import { getPublishedPostsForTool } from '@/lib/contentAuthors';
 
 export const revalidate = 3600;
 
@@ -265,6 +268,10 @@ export default async function ToolPage(props) {
     pricingLabel,
     linkHealthBadge: linkHealth.badge,
   });
+  const relatedGuides = await getPublishedPostsForTool(createPublicClient(), tool.id, {
+    limit: 4,
+  });
+
   const sectionNavItems = [
     { id: 'tool-overview', label: t('overview'), navLabel: t('sectionNav') },
     ...(tool.technical_details
@@ -273,6 +280,9 @@ export default async function ToolPage(props) {
     { id: 'tool-faq', label: t('faqHeading'), navLabel: t('sectionNav') },
     { id: 'tool-alternatives', label: t('alternativesHeading'), navLabel: t('sectionNav') },
     { id: 'tool-prompts', label: t('promptsHeading'), navLabel: t('sectionNav') },
+    ...(relatedGuides.length
+      ? [{ id: 'tool-guides', label: t('relatedGuidesHeading'), navLabel: t('sectionNav') }]
+      : []),
     { id: 'similar-tools-heading', label: t('similarHeading'), navLabel: t('sectionNav') },
     { id: 'tool-comments-heading', label: t('commentsHeading'), navLabel: t('sectionNav') },
   ];
@@ -603,6 +613,55 @@ export default async function ToolPage(props) {
             <section className="border-t pt-8">
               <ToolPromptsPanel toolId={tool.id} toolSlug={tool.slug} />
             </section>
+
+            {relatedGuides.length > 0 ? (
+              <section
+                id="tool-guides"
+                className="scroll-mt-36 border-t pt-8 sm:scroll-mt-40"
+                aria-labelledby="tool-guides-heading"
+              >
+                <h2
+                  id="tool-guides-heading"
+                  className="mb-2 flex items-center gap-2 text-2xl font-bold tracking-tight"
+                >
+                  <BookOpen className="h-6 w-6 text-primary" aria-hidden="true" />
+                  {t('relatedGuidesHeading')}
+                </h2>
+                <p className="mb-4 text-sm text-muted-foreground">{t('relatedGuidesSubheading')}</p>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {relatedGuides.map((guide) => (
+                    <Link
+                      key={guide.id}
+                      href={`/blog/${guide.slug}`}
+                      prefetch={false}
+                      className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <Card className="glass-panel h-full border-border/50 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+                        <CardContent className="space-y-2 p-4 sm:p-5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant={guide.type === 'Rehber' ? 'default' : 'secondary'}>
+                              {guide.type === 'Rehber' ? t('guideBadge') : t('postBadge')}
+                            </Badge>
+                          </div>
+                          <p className="font-semibold leading-snug group-hover:text-primary">
+                            {guide.title}
+                          </p>
+                          {guide.description ? (
+                            <p className="line-clamp-2 text-xs text-muted-foreground">
+                              {guide.description}
+                            </p>
+                          ) : null}
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                            {t('relatedGuidesCta')}
+                            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                          </span>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
             <section
               className="scroll-mt-36 border-t pt-8 sm:scroll-mt-40"

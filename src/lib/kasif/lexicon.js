@@ -15,12 +15,23 @@ export const KASIF_CONCEPTS = {
     'translation',
     'diller arası',
   ],
-  'kod-yazilim': ['kod', 'yazılım', 'programlama', 'developer', 'test'],
-  pazarlama: ['pazarlama', 'seo', 'reklam', 'sosyal medya'],
-  'veri-analiz': ['veri', 'analiz', 'rapor', 'sql', 'istatistik'],
+  'kod-yazilim': ['kod', 'yazılım', 'programlama', 'developer', 'coding', 'software', 'test'],
+  pazarlama: ['pazarlama', 'marketing', 'seo', 'reklam', 'advertising', 'sosyal medya'],
+  'veri-analiz': ['veri', 'data', 'analiz', 'analysis', 'rapor', 'report', 'sql', 'istatistik'],
   'otomasyon-ajan': ['otomasyon', 'ajan', 'agent', 'workflow', 'iş akışı'],
   chatbotlar: ['sohbet', 'chatbot', 'asistan', 'chat'],
-  uretkenlik: ['sunum', 'slayt', 'not', 'toplantı', 'takvim', 'görev'],
+  uretkenlik: [
+    'sunum',
+    'presentation',
+    'slayt',
+    'slide',
+    'not',
+    'notes',
+    'toplantı',
+    'meeting',
+    'takvim',
+    'görev',
+  ],
 };
 
 export const FREE_WORDS = ['ücretsiz', 'free', 'bedava', 'açık kaynak', 'open-source'];
@@ -28,21 +39,24 @@ export const PAID_WORDS = ['ücretli', 'premium', 'paid', 'enterprise'];
 
 export const KASIF_GOALS = {
   'meeting-notes': {
-    queryGroups: [['toplantı'], ['not', 'özet', 'transkript', 'kaydet']],
+    queryGroups: [
+      ['toplantı', 'meeting'],
+      ['not', 'notes', 'özet', 'summary', 'transkript', 'transcript', 'kaydet'],
+    ],
     evidence: ['transkript', 'özet', 'toplantı notu', 'kayıt', 'deşifre'],
   },
   'coding-assistant': {
     queryGroups: [
-      ['kod', 'yazılım', 'programlama'],
-      ['yaz', 'geliştir', 'asistan', 'tamamla'],
+      ['kod', 'yazılım', 'programlama', 'code', 'coding', 'software'],
+      ['yaz', 'geliştir', 'asistan', 'tamamla', 'write', 'build', 'assistant', 'complete'],
     ],
     evidence: ['kod yaz', 'kod üret', 'kod tamamlama', 'programlama', 'geliştirici asistan'],
     negativeEvidence: ['arasında kod dönüşümü', 'programlama dillerini öğreten', 'eğitim deneyimi'],
   },
   'image-generation': {
     queryGroups: [
-      ['görsel', 'resim', 'fotoğraf', 'illüstrasyon'],
-      ['üret', 'oluştur', 'çiz', 'yap'],
+      ['görsel', 'resim', 'fotoğraf', 'illüstrasyon', 'image', 'picture', 'photo', 'illustration'],
+      ['üret', 'oluştur', 'çiz', 'yap', 'generate', 'create', 'draw', 'make'],
     ],
     evidence: [
       'metinden görsel',
@@ -55,8 +69,8 @@ export const KASIF_GOALS = {
   },
   'video-generation': {
     queryGroups: [
-      ['video', 'animasyon', 'film'],
-      ['üret', 'oluştur', 'yap', 'dönüştür'],
+      ['video', 'animasyon', 'animation', 'film'],
+      ['üret', 'oluştur', 'yap', 'dönüştür', 'generate', 'create', 'make', 'convert'],
     ],
     evidence: [
       'metinden video',
@@ -75,8 +89,8 @@ export const KASIF_GOALS = {
   },
   'voice-generation': {
     queryGroups: [
-      ['ses', 'seslendirme', 'dublaj', 'voice'],
-      ['üret', 'oluştur', 'yap', 'dönüştür', 'klonla'],
+      ['ses', 'seslendirme', 'dublaj', 'voice', 'audio', 'speech'],
+      ['üret', 'oluştur', 'yap', 'dönüştür', 'klonla', 'generate', 'create', 'convert', 'clone'],
     ],
     evidence: [
       'metinden sese',
@@ -91,8 +105,8 @@ export const KASIF_GOALS = {
   },
   'music-generation': {
     queryGroups: [
-      ['müzik', 'şarkı', 'beste', 'melodi'],
-      ['üret', 'oluştur', 'yap', 'bestele'],
+      ['müzik', 'şarkı', 'beste', 'melodi', 'music', 'song', 'melody'],
+      ['üret', 'oluştur', 'yap', 'bestele', 'generate', 'create', 'compose', 'make'],
     ],
     evidence: [
       'müzik üret',
@@ -107,8 +121,18 @@ export const KASIF_GOALS = {
   },
   'workflow-automation': {
     queryGroups: [
-      ['otomasyon', 'workflow', 'iş akışı', 'ajan', 'agent'],
-      ['otomatikleştir', 'bağla', 'tekrarlayan', 'entegrasyon', 'görev'],
+      ['otomasyon', 'automation', 'workflow', 'iş akışı', 'ajan', 'agent'],
+      [
+        'otomatikleştir',
+        'automate',
+        'bağla',
+        'connect',
+        'tekrarlayan',
+        'repetitive',
+        'entegrasyon',
+        'integration',
+        'görev',
+      ],
     ],
     evidence: [
       'iş akışı otomasyonu',
@@ -124,8 +148,19 @@ export const KASIF_GOALS = {
   },
   'data-analysis': {
     queryGroups: [
-      ['veri', 'csv', 'excel', 'sql', 'dataset'],
-      ['analiz', 'rapor', 'grafik', 'görselleştir', 'dashboard'],
+      ['veri', 'data', 'csv', 'excel', 'sql', 'dataset'],
+      [
+        'analiz',
+        'analysis',
+        'analyze',
+        'rapor',
+        'report',
+        'grafik',
+        'chart',
+        'visualize',
+        'görselleştir',
+        'dashboard',
+      ],
     ],
     evidence: [
       'veri analizi',
@@ -152,8 +187,8 @@ export const KASIF_GOALS = {
   },
   'content-writing': {
     queryGroups: [
-      ['blog', 'makale', 'içerik', 'metin'],
-      ['yaz', 'hazırla', 'kaleme'],
+      ['blog', 'makale', 'article', 'içerik', 'content', 'metin', 'copy'],
+      ['yaz', 'write', 'hazırla', 'create', 'kaleme'],
     ],
     evidence: [
       'blog yazısı',
@@ -168,8 +203,8 @@ export const KASIF_GOALS = {
   },
   translation: {
     queryGroups: [
-      ['çeviri', 'çevir', 'tercüme', 'translation'],
-      ['metin', 'dil', 'türkçe', 'ingilizce'],
+      ['çeviri', 'çevir', 'tercüme', 'translation', 'translate'],
+      ['metin', 'text', 'dil', 'language', 'türkçe', 'turkish', 'ingilizce', 'english'],
     ],
     evidence: [
       'metin çeviri',
@@ -193,8 +228,21 @@ export const KASIF_GOALS = {
   },
   'presentation-creation': {
     queryGroups: [
-      ['sunum', 'slayt'],
-      ['hazırla', 'oluştur', 'üret', 'yap', 'öner', 'araç', 'gerekli'],
+      ['sunum', 'presentation', 'slayt', 'slide', 'deck'],
+      [
+        'hazırla',
+        'oluştur',
+        'üret',
+        'yap',
+        'öner',
+        'araç',
+        'gerekli',
+        'create',
+        'generate',
+        'make',
+        'recommend',
+        'tool',
+      ],
     ],
     evidence: ['sunum oluştur', 'sunum hazırla', 'slayt oluştur', 'presentation', 'sunum', 'slayt'],
   },

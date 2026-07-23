@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { answerQuestion, rankTools, understandConversation } from './engine';
+import { answerQuestion, formatKasifReasons, rankTools, understandConversation } from './engine';
 import { assertKasifEnabled } from './config';
 import { groundModelResponse, NO_INFORMATION_ANSWER } from './grounding';
 import { retrievePlatformContext } from './retrieval';
@@ -13,7 +13,9 @@ function cleanText(value, fallback = '') {
 }
 
 function recommendationReason(record, reasons) {
-  if (reasons.length) return `${reasons.join(', ')} olduğu için ihtiyacınıza uygun.`;
+  if (reasons.length) {
+    return `${formatKasifReasons(reasons).join(', ')} olduğu için ihtiyacınıza uygun.`;
+  }
   return cleanText(record.description, 'Platformdaki özellikleri ihtiyacınızla eşleşiyor.').slice(
     0,
     220

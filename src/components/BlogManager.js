@@ -27,8 +27,10 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { createPost, deletePost } from '@/app/actions';
+import { adminReviewCreatorPost } from '@/app/actions/contentCreators';
 import toast from 'react-hot-toast';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Undo2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 // ✅ Yazı Silme Butonu
 function DeletePostButton({ post }) {
@@ -50,6 +52,39 @@ function DeletePostButton({ post }) {
   return (
     <Button onClick={handleClick} variant="destructive" size="sm">
       Sil
+    </Button>
+  );
+}
+
+/** Pull published / in-review posts back to draft so creators can edit again. */
+function ReturnToDraftButton({ post }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  if (!['Yayınlandı', 'İncelemede'].includes(post.status)) return null;
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={isPending}
+      onClick={() => {
+        startTransition(async () => {
+          const formData = new FormData();
+          formData.set('id', String(post.id));
+          formData.set('decision', 'return_draft');
+          formData.set('review_note', 'Admin tarafından taslağa geri alındı.');
+          const result = await adminReviewCreatorPost(formData);
+          if (result?.error) toast.error(result.error);
+          else {
+            toast.success(result?.success || 'Taslağa gönderildi.');
+            router.refresh();
+          }
+        });
+      }}
+    >
+      <Undo2 className="mr-1 h-4 w-4" aria-hidden="true" />
+      {isPending ? '…' : 'Taslağa'}
     </Button>
   );
 }
@@ -165,6 +200,7 @@ export function BlogManager({ posts }) {
                   <Button asChild variant="outline" size="sm">
                     <Link href={editUrl}>Düzenle</Link>
                   </Button>
+                  <ReturnToDraftButton post={post} />
                   <DeletePostButton post={post} />
                 </div>
               </div>

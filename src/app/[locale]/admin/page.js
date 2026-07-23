@@ -10,6 +10,7 @@ import { getTranslations } from 'next-intl/server';
 import { AdminPageClient } from '@/components/AdminPageClient';
 import { Button } from '@/components/ui/button';
 import { sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
+import { getCreatorApplications } from '@/app/actions/contentCreators';
 import { generatePageMetadata } from '@/utils/seo';
 
 export const dynamic = 'force-dynamic';
@@ -98,7 +99,9 @@ async function getAdminData() {
     supabaseAdmin.from('tags').select('*').order('name'),
     supabaseAdmin
       .from('posts')
-      .select('id, title, slug, status, type, submitted_at, updated_at, author_id')
+      .select(
+        'id, title, slug, status, type, description, content, featured_image_url, submitted_at, updated_at, published_at, author_id, review_note, post_tools(tool_id)'
+      )
       .order('created_at', { ascending: false }),
     supabaseAdmin.from('challenges').select('*').order('created_at', { ascending: false }),
     supabaseAdmin
@@ -177,6 +180,15 @@ async function getAdminData() {
   };
 }
 
+async function loadCreatorApplicationsSafe() {
+  try {
+    return await getCreatorApplications();
+  } catch (error) {
+    logger.error('[admin] creator applications:', error);
+    return [];
+  }
+}
+
 export async function generateMetadata({ params }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'AdminOps' });
@@ -215,6 +227,9 @@ export default async function AdminPage({ params }) {
       adminAlerts: [],
     };
   }
+
+  const creatorApplications = await loadCreatorApplicationsSafe();
+  adminData = { ...adminData, creatorApplications };
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-3 py-5 sm:px-4 sm:py-8">

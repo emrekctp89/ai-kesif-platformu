@@ -46,6 +46,7 @@ import { AiToolFactory } from './AiToolFactory';
 import { BlogManager } from './BlogManager';
 import { ChallengeManager } from './ChallengeManager';
 import { ContentReviewQueue } from './ContentReviewQueue';
+import { CreatorApplicationsPanel } from './CreatorApplicationsPanel';
 import { NewsletterManager } from './NewsletterManager';
 import { TagManager } from './TagManager';
 import { CategoryManager } from './CategoryManager';
@@ -1565,12 +1566,16 @@ export function AdminPageClient({ data }) {
     challenges,
     reportedLinks = [],
     adminAlerts = [],
+    creatorApplications = [],
   } = data;
 
   const approvalCount = unapprovedTools.length + unapprovedShowcaseItems.length;
   const activeReportCount = reportedLinks.filter(
     (report) => report.status === 'open' || report.status === 'reviewing'
   ).length;
+  const pendingReviewCount = (allPosts || []).filter((post) => post.status === 'İncelemede').length;
+  const creatorAppCount = (creatorApplications || []).length;
+  const contentBadgeCount = pendingReviewCount + creatorAppCount;
 
   return (
     <Tabs defaultValue="approval_queue" className="w-full">
@@ -1601,7 +1606,12 @@ export function AdminPageClient({ data }) {
             {adminAlerts.filter((a) => a.status === 'Açık').length}
           </Badge>
         </TabsTrigger>
-        <TabsTrigger value="content_management">{t('tabContent')}</TabsTrigger>
+        <TabsTrigger value="content_management">
+          {t('tabContent')}
+          <Badge variant={contentBadgeCount > 0 ? 'default' : 'secondary'} className="ml-2">
+            {contentBadgeCount}
+          </Badge>
+        </TabsTrigger>
         <TabsTrigger value="platform_settings">{t('tabSettings')}</TabsTrigger>
       </TabsList>
 
@@ -1637,14 +1647,26 @@ export function AdminPageClient({ data }) {
         <Card className="glass-panel border-border/50">
           <CardHeader>
             <CardTitle className="flex flex-wrap items-center gap-2">
-              İçerik inceleme kuyruğu
-              <Badge variant="secondary">
-                {(allPosts || []).filter((post) => post.status === 'İncelemede').length}
+              {t('creatorAppsTitle')}
+              <Badge variant={creatorAppCount > 0 ? 'default' : 'secondary'}>
+                {creatorAppCount}
               </Badge>
             </CardTitle>
-            <CardDescription>
-              Onaylı üreticilerden gelen yazı/rehber taslaklarını yayınla veya reddet.
-            </CardDescription>
+            <CardDescription>{t('creatorAppsDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CreatorApplicationsPanel applications={creatorApplications} />
+          </CardContent>
+        </Card>
+        <Card className="glass-panel border-border/50">
+          <CardHeader>
+            <CardTitle className="flex flex-wrap items-center gap-2">
+              {t('contentReviewTitle')}
+              <Badge variant={pendingReviewCount > 0 ? 'default' : 'secondary'}>
+                {pendingReviewCount}
+              </Badge>
+            </CardTitle>
+            <CardDescription>{t('contentReviewDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <ContentReviewQueue

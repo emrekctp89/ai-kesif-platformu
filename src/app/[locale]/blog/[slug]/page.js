@@ -10,8 +10,10 @@ import {
   ArrowRight,
   BookOpen,
   Calendar,
+  Eye,
   FlaskConical,
   GraduationCap,
+  Wrench,
   User,
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
@@ -19,8 +21,14 @@ import { getTranslations } from 'next-intl/server';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ToolIcon from '@/components/ToolIcon';
+import { PostViewTracker } from '@/components/PostViewTracker';
 import { generateBlogMetadata, generateStructuredData } from '@/utils/seo';
-import { attachAuthorsToPosts, authorDisplayName } from '@/lib/contentAuthors';
+import {
+  attachAuthorsToPosts,
+  attachRelatedToolsToPosts,
+  authorDisplayName,
+} from '@/lib/contentAuthors';
 
 export const revalidate = 3600;
 
@@ -35,7 +43,8 @@ async function getPost(slug) {
 
   if (error || !data) return null;
   const [withAuthor] = await attachAuthorsToPosts(supabase, [data]);
-  return withAuthor || data;
+  const [withTools] = await attachRelatedToolsToPosts(supabase, [withAuthor || data]);
+  return withTools || withAuthor || data;
 }
 
 async function getRelatedPosts(post) {
@@ -116,6 +125,8 @@ export default async function PostPage(props0) {
   const authorName = authorDisplayName(post, t('defaultAuthor'));
   const authorHref = post.author?.username ? `/u/${post.author.username}` : null;
   const related = await getRelatedPosts(post);
+  const viewCount = Number(post.view_count);
+  const showViews = Number.isFinite(viewCount) && viewCount > 0;
 
   const structuredData = generateStructuredData('Article', {
     title: post.title,
@@ -128,6 +139,7 @@ export default async function PostPage(props0) {
 
   return (
     <>
+      <PostViewTracker slug={post.slug} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -157,6 +169,12 @@ export default async function PostPage(props0) {
                 )}
               </Badge>
               <span className="text-xs text-muted-foreground">{t('readTime', { minutes })}</span>
+              {showViews ? (
+                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                  <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t('viewCount', { count: viewCount })}
+                </span>
+              ) : null}
             </div>
 
             <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
@@ -225,6 +243,54 @@ export default async function PostPage(props0) {
             {post.content || ''}
           </ReactMarkdown>
         </div>
+
+        {Array.isArray(post.relatedTools) && post.relatedTools.length > 0 ? (
+          <section
+            aria-labelledby="related-tools-heading"
+            className="space-y-4 border-t border-border/60 pt-8"
+          >
+            <h2
+              id="related-tools-heading"
+              className="flex items-center gap-2 text-xl font-bold tracking-tight"
+            >
+              <Wrench className="h-5 w-5 text-primary" aria-hidden="true" />
+              {t('relatedToolsHeading')}
+            </h2>
+            <p className="text-sm text-muted-foreground">{t('relatedToolsSubheading')}</p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {post.relatedTools.map((tool) => (
+                <Link
+                  key={tool.id}
+                  href={`/tool/${tool.slug}`}
+                  prefetch={false}
+                  className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Card className="glass-panel h-full border-border/50 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+                    <CardContent className="flex items-start gap-3 py-4">
+                      <div className="mt-0.5 shrink-0">
+                        <ToolIcon name={tool.name} link={tool.link} className="h-10 w-10" />
+                      </div>
+                      <div className="min-w-0 space-y-1">
+                        <p className="font-semibold leading-snug group-hover:text-primary">
+                          {tool.name}
+                        </p>
+                        {tool.description ? (
+                          <p className="line-clamp-2 text-xs text-muted-foreground">
+                            {tool.description}
+                          </p>
+                        ) : null}
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                          {t('relatedToolsCta')}
+                          <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {related.length > 0 ? (
           <section

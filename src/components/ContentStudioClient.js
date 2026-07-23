@@ -6,15 +6,25 @@ import { useTranslations } from 'next-intl';
 import {
   ArrowRight,
   CheckCircle2,
+  Copy,
   ExternalLink,
   Eye,
   FilePenLine,
+  LayoutTemplate,
+  ListOrdered,
   Plus,
+  Scale,
   Send,
+  Sparkles,
   Trash2,
 } from 'lucide-react';
 import { Link, useRouter } from '@/i18n/routing';
-import { createCreatorPost, deleteCreatorPost } from '@/app/actions/contentCreators';
+import {
+  createCreatorPost,
+  deleteCreatorPost,
+  duplicateCreatorPost,
+} from '@/app/actions/contentCreators';
+import { CREATOR_POST_TEMPLATES, summarizeCreatorStudio } from '@/lib/contentCreatorRules';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -111,24 +121,81 @@ function DeleteDraftButton({
   );
 }
 
+function DuplicatePostButton({ postId, label, successToast }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={isPending}
+      onClick={() => {
+        startTransition(async () => {
+          const fd = new FormData();
+          fd.set('id', String(postId));
+          const result = await duplicateCreatorPost(fd);
+          if (result?.error) {
+            toast.error(result.error);
+            return;
+          }
+          toast.success(result?.message || successToast);
+          if (result?.id) {
+            router.push(`/icerik/${result.id}/edit`);
+            router.refresh();
+          } else {
+            router.refresh();
+          }
+        });
+      }}
+    >
+      <Copy className="mr-1.5 h-4 w-4" aria-hidden="true" />
+      {isPending ? '…' : label}
+    </Button>
+  );
+}
+
+const TEMPLATE_ICONS = {
+  blank: FilePenLine,
+  comparison: Scale,
+  listicle: ListOrdered,
+  tutorial: Sparkles,
+  weekly: LayoutTemplate,
+};
+
 export function ContentStudioClient({ posts }) {
   const t = useTranslations('ContentStudio');
   const [isPending, startTransition] = useTransition();
   const [type, setType] = useState('Yazı');
+  const [templateId, setTemplateId] = useState('blank');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [query, setQuery] = useState('');
 
+  const insights = useMemo(() => summarizeCreatorStudio(posts), [posts]);
   const stats = {
-    total: posts.length,
-    draft: posts.filter((p) => p.status === 'Taslak').length,
-    review: posts.filter((p) => p.status === 'İncelemede').length,
-    published: posts.filter((p) => p.status === 'Yayınlandı').length,
-    rejected: posts.filter((p) => p.status === 'Reddedildi').length,
+    total: insights.total,
+    draft: insights.draft,
+    review: insights.review,
+    published: insights.published,
+    rejected: insights.rejected,
   };
 
+  function selectTemplate(id) {
+    setTemplateId(id);
+    const tpl = CREATOR_POST_TEMPLATES.find((item) => item.id === id);
+    if (tpl?.type) setType(tpl.type);
+  }
+
   const filtered = useMemo(() => {
-    if (statusFilter === 'all') return posts;
-    return posts.filter((p) => p.status === statusFilter);
-  }, [posts, statusFilter]);
+    const q = query.trim().toLocaleLowerCase('tr');
+    return posts.filter((p) => {
+      if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+      if (!q) return true;
+      const hay = `${p.title || ''} ${p.slug || ''} ${p.type || ''}`.toLocaleLowerCase('tr');
+      return hay.includes(q);
+    });
+  }, [posts, statusFilter, query]);
 
   const filters = [
     { id: 'all', label: t('filterAll') },
@@ -202,6 +269,50 @@ export function ContentStudioClient({ posts }) {
         ))}
       </div>
 
+      {posts.length > 0 ? (
+        <Card className="glass-panel border-border/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">{t('insightsHeading')}</CardTitle>
+            <p className="text-sm text-muted-foreground">{t('insightsSubheading')}</p>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-border/60 bg-background/50 p-3">
+              <p className="text-xs text-muted-foreground">{t('insightsPublishRate')}</p>
+              <p className="mt-1 text-xl font-extrabold tracking-tight">
+                {insights.publishRate != null
+                  ? t('insightsPublishRateValue', { percent: insights.publishRate })
+                  : t('insightsPublishRateEmpty')}
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-background/50 p-3">
+              <p className="text-xs text-muted-foreground">{t('insightsMix')}</p>
+              <p className="mt-1 text-sm font-semibold">
+                {t('insightsMixValue', {
+                  articles: insights.articles,
+                  guides: insights.guides,
+                })}
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-background/50 p-3">
+              <p className="text-xs text-muted-foreground">{t('insightsLastPublished')}</p>
+              <p className="mt-1 text-sm font-semibold">
+                {insights.lastPublishedAt
+                  ? new Date(insights.lastPublishedAt).toLocaleDateString()
+                  : t('insightsNeverPublished')}
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-background/50 p-3">
+              <p className="text-xs text-muted-foreground">{t('insightsViews')}</p>
+              <p className="mt-1 text-xl font-extrabold tracking-tight">
+                {insights.totalViews > 0
+                  ? t('insightsViewsValue', { count: insights.totalViews })
+                  : t('insightsViewsEmpty')}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {stats.rejected > 0 ? (
         <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
           <p className="font-medium text-destructive">
@@ -227,11 +338,50 @@ export function ContentStudioClient({ posts }) {
             <Plus className="h-5 w-5" aria-hidden="true" />
             {t('newDraftTitle')}
           </CardTitle>
+          <p className="text-sm text-muted-foreground">{t('templatesHeading')}</p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div
+            className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
+            role="listbox"
+            aria-label={t('templatesAria')}
+          >
+            {CREATOR_POST_TEMPLATES.map((tpl) => {
+              const Icon = TEMPLATE_ICONS[tpl.id] || FilePenLine;
+              const active = templateId === tpl.id;
+              return (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  disabled={isPending}
+                  onClick={() => selectTemplate(tpl.id)}
+                  className={`rounded-xl border p-3 text-left transition-colors ${
+                    active
+                      ? 'border-primary/50 bg-primary/5 ring-2 ring-primary/30'
+                      : 'border-border/60 bg-background/40 hover:border-primary/30'
+                  }`}
+                >
+                  <div className="flex items-start gap-2">
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    <div className="min-w-0 space-y-0.5">
+                      <p className="text-sm font-semibold leading-snug">{t(tpl.titleKey)}</p>
+                      <p className="text-xs text-muted-foreground">{t(tpl.bodyKey)}</p>
+                      <Badge variant="outline" className="mt-1 text-[10px]">
+                        {typeLabel(tpl.type, t)}
+                      </Badge>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
           <form
             action={async (formData) => {
               formData.set('type', type);
+              formData.set('template_id', templateId);
               startTransition(async () => {
                 try {
                   const result = await createCreatorPost(formData);
@@ -267,6 +417,7 @@ export function ContentStudioClient({ posts }) {
               </Select>
             </div>
             <input type="hidden" name="type" value={type} />
+            <input type="hidden" name="template_id" value={templateId} />
             <Button type="submit" className="brand-gradient" disabled={isPending}>
               {isPending ? t('creatingDraft') : t('createDraft')}
             </Button>
@@ -277,31 +428,40 @@ export function ContentStudioClient({ posts }) {
       <section className="space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-xl font-bold tracking-tight">{t('myPostsHeading')}</h2>
-          <div
-            className="inline-flex flex-wrap gap-1 rounded-full border border-border/60 bg-background/70 p-1"
-            role="tablist"
-            aria-label={t('filterAria')}
-          >
-            {filters.map((item) => {
-              const active = statusFilter === item.id;
-              return (
-                <Button
-                  key={item.id}
-                  type="button"
-                  size="sm"
-                  variant={active ? 'default' : 'ghost'}
-                  className="min-h-8 rounded-full px-3 text-xs"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => setStatusFilter(item.id)}
-                >
-                  {item.label}
-                  {item.id !== 'all' && item.id === 'Reddedildi' && stats.rejected > 0
-                    ? ` (${stats.rejected})`
-                    : null}
-                </Button>
-              );
-            })}
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[280px]">
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('searchPostsPlaceholder')}
+              aria-label={t('searchPostsAria')}
+              className="h-9"
+            />
+            <div
+              className="inline-flex flex-wrap gap-1 rounded-full border border-border/60 bg-background/70 p-1"
+              role="tablist"
+              aria-label={t('filterAria')}
+            >
+              {filters.map((item) => {
+                const active = statusFilter === item.id;
+                return (
+                  <Button
+                    key={item.id}
+                    type="button"
+                    size="sm"
+                    variant={active ? 'default' : 'ghost'}
+                    className="min-h-8 rounded-full px-3 text-xs"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setStatusFilter(item.id)}
+                  >
+                    {item.label}
+                    {item.id !== 'all' && item.id === 'Reddedildi' && stats.rejected > 0
+                      ? ` (${stats.rejected})`
+                      : null}
+                  </Button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -413,6 +573,11 @@ export function ContentStudioClient({ posts }) {
                               : t('edit')}
                         </Link>
                       </Button>
+                      <DuplicatePostButton
+                        postId={post.id}
+                        label={t('duplicate')}
+                        successToast={t('toastDuplicated')}
+                      />
                       {post.status !== 'Yayınlandı' ? (
                         <DeleteDraftButton
                           postId={post.id}

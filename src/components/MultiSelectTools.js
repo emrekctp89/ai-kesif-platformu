@@ -15,7 +15,28 @@ import { Badge } from '@/components/ui/badge';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function MultiSelectTools({ allTools, selectedTools, onSelectionChange }) {
+/**
+ * @param {{
+ *   allTools: Array<{ id: number|string, name: string }>,
+ *   selectedTools: Set<number|string>,
+ *   onSelectionChange: (next: Set<number|string>) => void,
+ *   placeholder?: string,
+ *   searchPlaceholder?: string,
+ *   emptyLabel?: string,
+ *   disabled?: boolean,
+ *   maxSelected?: number,
+ * }} props
+ */
+export function MultiSelectTools({
+  allTools,
+  selectedTools,
+  onSelectionChange,
+  placeholder = 'İlişkili Araç Seç...',
+  searchPlaceholder = 'Araç ara...',
+  emptyLabel = 'Araç bulunamadı.',
+  disabled = false,
+  maxSelected = 20,
+}) {
   const [open, setOpen] = React.useState(false);
 
   const handleSelect = (toolId) => {
@@ -23,6 +44,7 @@ export function MultiSelectTools({ allTools, selectedTools, onSelectionChange })
     if (newSelection.has(toolId)) {
       newSelection.delete(toolId);
     } else {
+      if (newSelection.size >= maxSelected) return;
       newSelection.add(toolId);
     }
     onSelectionChange(newSelection);
@@ -31,12 +53,13 @@ export function MultiSelectTools({ allTools, selectedTools, onSelectionChange })
   const selectedToolObjects = allTools.filter((tool) => selectedTools.has(tool.id));
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(next) => !disabled && setOpen(next)}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          disabled={disabled}
           className="w-full justify-between h-auto min-h-[40px]"
         >
           <div className="flex flex-wrap gap-1">
@@ -46,16 +69,19 @@ export function MultiSelectTools({ allTools, selectedTools, onSelectionChange })
                     {tool.name}
                   </Badge>
                 ))
-              : 'İlişkili Araç Seç...'}
+              : placeholder}
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] min-w-[280px] p-0"
+        align="start"
+      >
         <Command>
-          <CommandInput placeholder="Araç ara..." />
+          <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
-            <CommandEmpty>Araç bulunamadı.</CommandEmpty>
+            <CommandEmpty>{emptyLabel}</CommandEmpty>
             <CommandGroup>
               {allTools.map((tool) => (
                 <CommandItem key={tool.id} value={tool.name} onSelect={() => handleSelect(tool.id)}>

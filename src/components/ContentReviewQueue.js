@@ -3,7 +3,7 @@
 import { useTransition } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslations } from 'next-intl';
-import { Check, Eye, X } from 'lucide-react';
+import { Check, Eye, Undo2, X } from 'lucide-react';
 import { Link, useRouter } from '@/i18n/routing';
 import { adminReviewCreatorPost } from '@/app/actions/contentCreators';
 import { plainTextFromMarkdown } from '@/lib/contentCreatorRules';
@@ -67,6 +67,11 @@ export function ContentReviewQueue({ posts }) {
               : post.type;
         const snippet = snippetFromPost(post);
         const bodyLen = plainTextFromMarkdown(post?.content || '').length;
+        const toolCount = Array.isArray(post.post_tools)
+          ? post.post_tools.length
+          : Array.isArray(post.relatedTools)
+            ? post.relatedTools.length
+            : 0;
         return (
           <Card key={post.id} className="glass-panel">
             <CardHeader className="pb-2">
@@ -90,6 +95,11 @@ export function ContentReviewQueue({ posts }) {
                     <CardTitle className="text-base">{post.title}</CardTitle>
                     <Badge variant="secondary">{typeLabel}</Badge>
                     <Badge variant="outline">{t('contentReviewStatus')}</Badge>
+                    {toolCount > 0 ? (
+                      <Badge variant="outline">
+                        {t('contentReviewTools', { count: toolCount })}
+                      </Badge>
+                    ) : null}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {t('contentReviewAuthor', { name: authorLabel })}
@@ -136,6 +146,16 @@ export function ContentReviewQueue({ posts }) {
                 >
                   <Check className="mr-1 h-4 w-4" />
                   {t('contentReviewPublish')}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={isPending}
+                  onClick={(e) => review(post.id, 'return_draft', e.currentTarget.form)}
+                >
+                  <Undo2 className="mr-1 h-4 w-4" />
+                  {t('contentReviewReturnDraft')}
                 </Button>
                 <Button
                   type="button"
