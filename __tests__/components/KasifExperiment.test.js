@@ -36,6 +36,9 @@ describe('Kâşif ekranı', () => {
     expect(screen.getByRole('heading', { name: 'Nereden başlamak istersin?' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Görsel üret' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Kod yaz' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'SEO analiz' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'E-posta yaz' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sohbet asistanı' })).toBeInTheDocument();
   });
 
   it('yanıtın arayüz diliyle üretilmesi için locale bilgisini gönderir', async () => {

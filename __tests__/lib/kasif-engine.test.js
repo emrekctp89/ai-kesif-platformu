@@ -421,4 +421,181 @@ describe('Kâşif engine', () => {
     expect(ids).toEqual(expect.arrayContaining([30, 32]));
     expect(ids).not.toContain(31);
   });
+
+  it('logo tasarım isteğini genel görsel üretimden ayırır', () => {
+    const designRecords = [
+      {
+        id: 50,
+        name: 'Logo Maker',
+        description: 'Logo tasarım ve marka kimliği oluşturur',
+      },
+      {
+        id: 51,
+        name: 'Image Studio',
+        description: 'Metinden görsel üretir ve resim oluşturur',
+      },
+    ];
+
+    const intent = understandQuestion('Markam için logo tasarlamak istiyorum');
+    const ranked = rankTools(designRecords, intent);
+
+    expect(intent.goals).toContain('logo-design');
+    expect(intent.concepts).toContain('tasarim');
+    expect(ranked[0].record.id).toBe(50);
+  });
+
+  it('chatbot asistanı isteğini kod asistanından ayırır', () => {
+    const assistantRecords = [
+      {
+        id: 52,
+        name: 'Chat Helper',
+        description: 'Sohbet botu ve yapay zeka asistan arayüzü sunar',
+      },
+      {
+        id: 53,
+        name: 'Code Buddy',
+        description: 'IDE içinde kod yazar ve kod tamamlar',
+      },
+    ];
+
+    const intent = understandQuestion('Gündelik sorular için sohbet asistanı öner');
+    const ranked = rankTools(assistantRecords, intent);
+
+    expect(intent.goals).toContain('chatbot-assistant');
+    expect(ranked[0].record.id).toBe(52);
+  });
+
+  it('e-posta yazımı isteğini tanır', () => {
+    const emailRecords = [
+      {
+        id: 54,
+        name: 'Mail Writer',
+        description: 'Soğuk e-posta ve e-posta kampanya metni yazar',
+      },
+      {
+        id: 55,
+        name: 'Blog Bot',
+        description: 'SEO uyumlu blog yazısı ve makale üretir',
+      },
+    ];
+
+    const intent = understandQuestion('Soğuk e-posta kampanyası yazmak için araç öner');
+    const ranked = rankTools(emailRecords, intent);
+
+    expect(intent.goals).toContain('email-writing');
+    expect(ranked[0].record.id).toBe(54);
+  });
+
+  it('SEO optimizasyon isteğini veri analizinden ayırır', () => {
+    const seoRecords = [
+      {
+        id: 56,
+        name: 'SEO Pro',
+        description: 'SEO analizi, anahtar kelime ve sıralama raporu sunar',
+      },
+      {
+        id: 57,
+        name: 'Data Plot',
+        description: 'CSV verilerini analiz eder ve dashboard grafik oluşturur',
+      },
+    ];
+
+    const intent = understandQuestion('Sitem için SEO analizi ve anahtar kelime araçları öner');
+    const ranked = rankTools(seoRecords, intent);
+
+    expect(intent.goals).toContain('seo-optimization');
+    expect(ranked[0].record.id).toBe(56);
+  });
+
+  it('müşteri destek otomasyonu isteğini tanır', () => {
+    const supportRecords = [
+      {
+        id: 58,
+        name: 'Helpdesk AI',
+        description: 'Müşteri destek botu ve ticket otomasyonu sağlar',
+      },
+      {
+        id: 59,
+        name: 'Sales CRM',
+        description: 'Satış pipeline ve lead yönetimi sunar',
+      },
+    ];
+
+    const intent = understandQuestion(
+      'Müşteri destek ticket yanıtlarını otomatikleştiren bot öner'
+    );
+    const ranked = rankTools(supportRecords, intent);
+
+    expect(intent.goals).toContain('customer-support');
+    expect(ranked[0].record.id).toBe(58);
+  });
+
+  it('e-ticaret ürün açıklaması isteğini tanır', () => {
+    const commerceRecords = [
+      {
+        id: 60,
+        name: 'Product Copy',
+        description: 'E-ticaret ürün açıklaması ve product listing yazar',
+      },
+      {
+        id: 61,
+        name: 'Blog Writer',
+        description: 'Blog yazısı ve makale üretir',
+      },
+    ];
+
+    const intent = understandQuestion('Mağaza için ürün açıklaması yazacak araç öner');
+    const ranked = rankTools(commerceRecords, intent);
+
+    expect(intent.goals).toContain('ecommerce-copy');
+    expect(ranked[0].record.id).toBe(60);
+  });
+
+  it('hukuki sözleşme inceleme isteğini tanır', () => {
+    const legalRecords = [
+      {
+        id: 62,
+        name: 'Contract AI',
+        description: 'Sözleşme inceleme ve yasal uyumluluk analizi yapar',
+      },
+      {
+        id: 63,
+        name: 'Copywriter',
+        description: 'Pazarlama metni ve blog yazısı üretir',
+      },
+    ];
+
+    const intent = understandQuestion('Hukuki sözleşme incelemek için AI aracı öner');
+    const ranked = rankTools(legalRecords, intent);
+
+    expect(intent.goals).toContain('legal-review');
+    expect(ranked[0].record.id).toBe(62);
+  });
+
+  it('3D model üretim isteğini tanır', () => {
+    const modelRecords = [
+      {
+        id: 64,
+        name: 'MeshGen',
+        description: 'Metinden 3D model ve avatar oluşturur',
+      },
+      {
+        id: 65,
+        name: 'PhotoGen',
+        description: 'Metinden görsel üretir ve resim oluşturur',
+      },
+    ];
+
+    const intent = understandQuestion('Metinden 3D model ve avatar oluşturmak istiyorum');
+    const ranked = rankTools(modelRecords, intent);
+
+    expect(intent.goals).toContain('three-d-generation');
+    expect(intent.concepts).toContain('3d-modelleme');
+    expect(ranked[0].record.id).toBe(64);
+  });
+
+  it('ücretsiz tercihli yanıtta fiyat ipucu ekler', () => {
+    const result = answerQuestion('Ücretsiz sunum aracı', records);
+    expect(result.answer).toContain('ücretsiz/freemium tercihine göre');
+  });
 });

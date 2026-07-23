@@ -37,11 +37,15 @@ const REASON_LABELS = {
     'direct-match': 'istenen göreve doğrudan uygun',
     'free-plan': 'ücretsiz veya ücretsiz planlı',
     verified: 'platformda doğrulanmış',
+    featured: 'öne çıkarılmış',
+    'high-rated': 'yüksek puanlı',
   },
   en: {
     'direct-match': 'direct match for the requested task',
     'free-plan': 'free or offers a free plan',
     verified: 'verified on the platform',
+    featured: 'featured on the platform',
+    'high-rated': 'highly rated',
   },
 };
 
@@ -164,11 +168,17 @@ export function scoreTool(record, intent) {
     score += 2;
     reasons.push('verified');
   }
-  if (record.is_featured) score += 2;
+  if (record.is_featured) {
+    score += 2;
+    reasons.push('featured');
+  }
   if (isPrimaryToolPage(record)) score += 1;
   const rating = Number(record.average_rating);
-  if (Number.isFinite(rating) && rating > 0) score += Math.min(rating, 5) / 2;
-  return { record, score, reasons };
+  if (Number.isFinite(rating) && rating > 0) {
+    score += Math.min(rating, 5) / 2;
+    if (rating >= 4.5) reasons.push('high-rated');
+  }
+  return { record, score, reasons: [...new Set(reasons)] };
 }
 
 export function rankTools(records, intent, limit = 5) {
@@ -201,14 +211,26 @@ export function answerQuestion(question, records, history = [], locale = 'tr') {
   if (!ranked.length) {
     return { answer: '', sourceIds: [], insufficientContext: true, confidence: 0, intent };
   }
+  const priceHint =
+    locale === 'en'
+      ? intent.wantsFree
+        ? ' (preferring free or freemium options)'
+        : intent.wantsPaid
+          ? ' (preferring paid options)'
+          : ''
+      : intent.wantsFree
+        ? ' (ücretsiz/freemium tercihine göre)'
+        : intent.wantsPaid
+          ? ' (ücretli tercihine göre)'
+          : '';
   const intro =
     locale === 'en'
       ? intent.wantsComparison
-        ? 'I compared the strongest options for your needs:'
-        : 'Based on platform data, these tools best match your needs:'
+        ? `I compared the strongest options for your needs${priceHint}:`
+        : `Based on platform data, these tools best match your needs${priceHint}:`
       : intent.wantsComparison
-        ? 'İhtiyacına göre öne çıkan seçenekleri karşılaştırdım:'
-        : 'Platform verilerine göre ihtiyacına en yakın araçlar şunlar:';
+        ? `İhtiyacına göre öne çıkan seçenekleri karşılaştırdım${priceHint}:`
+        : `Platform verilerine göre ihtiyacına en yakın araçlar şunlar${priceHint}:`;
   const lines = ranked.map(({ record, reasons }, index) => {
     const detail = String(record.description || '')
       .trim()
@@ -224,6 +246,8 @@ export function answerQuestion(question, records, history = [], locale = 'tr') {
     }
     return `${index + 1}. ${record.name}${why}${detail ? `: ${detail}` : ''}`;
   });
+  const topScore = ranked[0].score;
+  const confidence = Math.min(0.98, Number((topScore / 30).toFixed(2)));
   return {
     answer: `${intro}\n\n${lines.join('\n')}\n\n${
       locale === 'en'
@@ -232,7 +256,7 @@ export function answerQuestion(question, records, history = [], locale = 'tr') {
     }`,
     sourceIds: ranked.map(({ record }) => `tool:${record.id}`),
     insufficientContext: false,
-    confidence: Math.min(0.98, Number((ranked[0].score / 30).toFixed(2))),
+    confidence,
     intent: {
       concepts: intent.concepts,
       goals: intent.goals,

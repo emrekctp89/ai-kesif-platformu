@@ -1529,6 +1529,18 @@
       "code": {
         "label": "Write code",
         "question": "Recommend free AI tools that can help me learn coding."
+      },
+      "seo": {
+        "label": "SEO analysis",
+        "question": "Recommend SEO analysis and keyword research tools for my site."
+      },
+      "email": {
+        "label": "Write email",
+        "question": "Recommend a tool for writing cold email campaigns."
+      },
+      "chatbot": {
+        "label": "Chat assistant",
+        "question": "Recommend a chat assistant for everyday questions."
       }
     },
     "conversationLabel": "Kâşif conversation",
@@ -1536,6 +1548,9 @@
     "connectionError": "Kâşif could not reach the server.",
     "retry": "Try again",
     "sources": "Platform sources",
+    "priceFree": "Free preference",
+    "pricePaid": "Paid preference",
+    "confidence": "Confidence {value}%",
     "feedbackQuestion": "Was this result helpful?",
     "useful": "Helpful",
     "notUseful": "Not helpful",

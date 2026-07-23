@@ -25,9 +25,29 @@ fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır.
 ## Değerlendirme
 
 Yerel geliştirme sunucusu çalışırken `npm run kasif:evaluate` komutu sunum, görsel üretim, kodlama,
-toplantı notları, doğal dil varyantları ve takip sorularını doğrular. Yerel değerlendirme çağrıları
-`kasif_interactions` tablosuna analitik kaydı eklemez.
+toplantı notları, SEO, e-posta, chatbot, logo, hukuk, 3D, doğal dil varyantları ve takip
+sorularını doğrular. Yerel değerlendirme çağrıları `kasif_interactions` tablosuna analitik kaydı
+eklemez.
+
+Geri bildirim özeti için (service role gerekir):
+
+```bash
+npm run kasif:feedback-report
+npm run kasif:feedback-report -- --days=14 --limit=30
+```
+
+Rapor negatif geri bildirimleri token ve goal kovalarına ayırır; lexicon kural adayları önerir.
 
 Bu sürüm platforma özel bir öneri motorudur; genel amaçlı serbest metin üreten temel dil
 modeli değildir. Gerçek kullanım geri bildirimleri biriktikçe ağırlıklar çevrimdışı olarak
 öğrenilebilir ve motor sürümlenmiş bir değerlendirme veri setiyle geliştirilebilir.
+
+## Kavram ve hedef sözlüğü
+
+`src/lib/kasif/lexicon.js` platform kategorileriyle hizalı kavramlar (`KASIF_CONCEPTS`) ve görev
+hedefleri (`KASIF_GOALS`) tutar. Yeni bir iş alanı eklerken:
+
+1. Kavram kelimelerini ekle (topic isolation için).
+2. `queryGroups` + `evidence` + gerekirse `negativeEvidence` ile hedef tanımla.
+3. `__tests__/lib/kasif-engine.test.js` içine ayırt edici bir case yaz.
+4. `scripts/kasif-evaluate.mjs` içine canlı katalog beklenen araçlarıyla eval case ekle.

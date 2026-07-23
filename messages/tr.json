@@ -1529,6 +1529,18 @@
       "code": {
         "label": "Kod yaz",
         "question": "Kodlama öğrenirken bana yardımcı olacak ücretsiz AI araçları öner."
+      },
+      "seo": {
+        "label": "SEO analiz",
+        "question": "Sitem için SEO analizi ve anahtar kelime araçları öner."
+      },
+      "email": {
+        "label": "E-posta yaz",
+        "question": "Soğuk e-posta kampanyası yazmak için araç öner."
+      },
+      "chatbot": {
+        "label": "Sohbet asistanı",
+        "question": "Gündelik sorular için sohbet asistanı öner."
       }
     },
     "conversationLabel": "Kâşif konuşması",
@@ -1536,6 +1548,9 @@
     "connectionError": "Kâşif sunucusuna ulaşılamadı.",
     "retry": "Yeniden dene",
     "sources": "Platform kaynakları",
+    "priceFree": "Ücretsiz tercih",
+    "pricePaid": "Ücretli tercih",
+    "confidence": "Güven %{value}",
     "feedbackQuestion": "Bu sonuç faydalı mıydı?",
     "useful": "Faydalı",
     "notUseful": "Faydalı değil",

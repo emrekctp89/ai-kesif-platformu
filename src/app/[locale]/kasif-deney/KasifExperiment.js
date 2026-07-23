@@ -8,9 +8,12 @@ import {
   Code2,
   ImageIcon,
   LoaderCircle,
+  Mail,
+  MessageSquare,
   Presentation,
   RefreshCcw,
   RotateCcw,
+  Search,
   Send,
   ThumbsDown,
   ThumbsUp,
@@ -29,6 +32,18 @@ const STARTER_QUESTIONS = [
   {
     key: 'code',
     icon: Code2,
+  },
+  {
+    key: 'seo',
+    icon: Search,
+  },
+  {
+    key: 'email',
+    icon: Mail,
+  },
+  {
+    key: 'chatbot',
+    icon: MessageSquare,
   },
 ];
 
@@ -191,7 +206,7 @@ export default function KasifExperiment() {
             {t('startersTitle')}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('startersDescription')}</p>
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {STARTER_QUESTIONS.map(({ key, icon: Icon }) => (
               <button
                 key={key}
@@ -245,6 +260,34 @@ export default function KasifExperiment() {
                         <p className="whitespace-pre-wrap text-sm leading-6">
                           {turn.result.answer}
                         </p>
+                        {(turn.result.intent?.goals?.length > 0 ||
+                          turn.result.intent?.pricePreference) && (
+                          <div className="mt-3 flex flex-wrap gap-1.5">
+                            {turn.result.intent.goals?.map((goal) => (
+                              <span
+                                key={goal}
+                                className="rounded-full border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+                              >
+                                {goal}
+                              </span>
+                            ))}
+                            {turn.result.intent.pricePreference &&
+                              turn.result.intent.pricePreference !== 'any' && (
+                                <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                                  {turn.result.intent.pricePreference === 'free'
+                                    ? t('priceFree')
+                                    : t('pricePaid')}
+                                </span>
+                              )}
+                            {typeof turn.result.confidence === 'number' && (
+                              <span className="rounded-full border px-2 py-0.5 text-[11px] text-muted-foreground">
+                                {t('confidence', {
+                                  value: Math.round(turn.result.confidence * 100),
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        )}
                         {turn.result.sources?.length > 0 && (
                           <div className="mt-4 border-t pt-3">
                             <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
@@ -254,7 +297,7 @@ export default function KasifExperiment() {
                               {turn.result.sources.map((source) => (
                                 <li key={source.id}>
                                   <Link
-                                    className="text-sm font-medium text-primary underline underline-offset-4"
+                                    className="inline-flex items-center rounded-full border bg-background px-3 py-1 text-sm font-medium text-primary transition-colors hover:bg-muted"
                                     href={source.url}
                                   >
                                     {source.title}
