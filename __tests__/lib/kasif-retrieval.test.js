@@ -60,6 +60,15 @@ describe('Kâşif semantic retrieval', () => {
     );
   });
 
+  it('çok kelimeli evidence ifadelerini filtre için parçalar', () => {
+    const filter = buildSearchFilter(['logo tasarım', 'keyword research']);
+    expect(filter).toContain('name.ilike.%logo%');
+    expect(filter).toContain('name.ilike.%tasarım%');
+    expect(filter).toContain('name.ilike.%keyword%');
+    expect(filter).toContain('name.ilike.%research%');
+    expect(filter).not.toContain('%logo tasarım%');
+  });
+
   it('eşleşen hedef evidence kelimelerini arama terimlerine ekler', () => {
     const terms = expandSearchTerms('Markam için logo tasarlamak istiyorum');
     expect(terms).toEqual(

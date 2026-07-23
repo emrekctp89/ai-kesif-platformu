@@ -202,15 +202,18 @@ export const KASIF_CONCEPTS = {
 
 export const FREE_WORDS = [
   'ücretsiz',
+  'ucretsiz',
   'free',
   'bedava',
   'açık kaynak',
+  'acik kaynak',
   'open-source',
   'open source',
   'gratis',
 ];
 export const PAID_WORDS = [
   'ücretli',
+  'ucretli',
   'premium',
   'paid',
   'enterprise',

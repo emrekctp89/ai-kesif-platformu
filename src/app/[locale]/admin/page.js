@@ -87,6 +87,7 @@ async function getAdminData() {
     challengesResult,
     reportedLinksResult,
     adminAlertsResult,
+    kasifInteractionsResult,
   ] = await Promise.all([
     loadTools(false),
     loadTools(true),
@@ -114,6 +115,12 @@ async function getAdminData() {
       .select('*')
       .order('created_at', { ascending: false })
       .limit(100),
+    supabaseAdmin
+      .from('kasif_interactions')
+      .select('id, question, answer, intent, confidence, feedback, source_ids, created_at')
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false })
+      .limit(300),
   ]);
 
   if (unapprovedShowcaseResult.error) {
@@ -136,6 +143,9 @@ async function getAdminData() {
   }
   if (adminAlertsResult.error) {
     logger.error('[admin] alerts:', adminAlertsResult.error.message);
+  }
+  if (kasifInteractionsResult.error) {
+    logger.error('[admin] kasif interactions:', kasifInteractionsResult.error.message);
   }
 
   const normalizedApprovedTools = (approvedTools || []).map((tool) => ({
@@ -177,6 +187,7 @@ async function getAdminData() {
     challenges: challengesResult.data || [],
     reportedLinks: reportedLinksResult.data || [],
     adminAlerts: adminAlertsResult.data || [],
+    kasifInteractions: kasifInteractionsResult.data || [],
   };
 }
 
@@ -225,6 +236,7 @@ export default async function AdminPage({ params }) {
       challenges: [],
       reportedLinks: [],
       adminAlerts: [],
+      kasifInteractions: [],
     };
   }
 

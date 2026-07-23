@@ -164,8 +164,28 @@ export function expandSearchTerms(query) {
   return uniqueSearchTerms([...baseTerms, ...goalTerms, ...conceptTerms]).slice(0, 18);
 }
 
+/**
+ * PostgREST `.or()` için güvenli tek-token filtreleri üretir.
+ * Çok kelimeli evidence ifadeleri parçalanır; boşluk/`,` filtreyi bozmaz.
+ */
 export function buildSearchFilter(terms) {
-  return terms.flatMap((term) => [`name.ilike.%${term}%`, `description.ilike.%${term}%`]).join(',');
+  const tokens = [];
+  const seen = new Set();
+  for (const raw of terms || []) {
+    for (const part of String(raw || '').split(/\s+/)) {
+      const cleaned = part.replace(/[%*,()]/g, '').trim();
+      if (cleaned.length < 3) continue;
+      const key = normalizeText(cleaned);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      tokens.push(cleaned);
+      if (tokens.length >= 14) break;
+    }
+    if (tokens.length >= 14) break;
+  }
+  return tokens
+    .flatMap((term) => [`name.ilike.%${term}%`, `description.ilike.%${term}%`])
+    .join(',');
 }
 
 export async function retrievePlatformContext(question, history = []) {
@@ -173,24 +193,36 @@ export async function retrievePlatformContext(question, history = []) {
     buildRetrievalQuery(question, history, { isolateCurrentTopic: true })
   );
   if (!terms.length) return [];
+  const filter = buildSearchFilter(terms);
+  if (!filter) return [];
+
   const supabase = await createClient();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
+    // tools_with_ratings: average_rating/total_ratings; is_verified tools tablosunda yok.
     const { data, error } = await supabase
-      .from('tools')
+      .from('tools_with_ratings')
       .select(
-        'id, name, slug, link, description, pricing_model, platforms, is_featured, is_verified, tier, average_rating, total_ratings, category:categories(name)'
+        'id, name, slug, link, description, pricing_model, platforms, is_featured, tier, average_rating, total_ratings, category_name'
       )
       .eq('is_approved', true)
-      .or(buildSearchFilter(terms))
+      .or(filter)
       .order('is_featured', { ascending: false })
       .order('id', { ascending: true })
       .limit(250)
       .abortSignal(controller.signal);
-    if (error) throw new Error('KASIF_RETRIEVAL_FAILED');
+    if (error) {
+      const detail = error.message || error.code || 'unknown';
+      throw new Error(`KASIF_RETRIEVAL_FAILED: ${detail}`);
+    }
 
-    return data || [];
+    return (data || []).map((row) => ({
+      ...row,
+      // engine scoreTool category.name bekler
+      category: row.category || (row.category_name ? { name: row.category_name } : null),
+      is_verified: Boolean(row.is_verified),
+    }));
   } finally {
     clearTimeout(timeout);
   }

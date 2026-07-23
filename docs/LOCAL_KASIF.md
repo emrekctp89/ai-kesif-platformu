@@ -37,6 +37,7 @@ npm run kasif:feedback-report -- --days=14 --limit=30
 ```
 
 Rapor negatif geri bildirimleri token ve goal kovalarına ayırır; lexicon kural adayları önerir.
+Aynı özet admin panelindeki **Kâşif kalite** sekmesinde de görünür (`buildKasifQualityStats`).
 
 Bu sürüm platforma özel bir öneri motorudur; genel amaçlı serbest metin üreten temel dil
 modeli değildir. Gerçek kullanım geri bildirimleri biriktikçe ağırlıklar çevrimdışı olarak

@@ -58,6 +58,7 @@ import {
   isLikelyEnglishDescription,
   normalizeToolLink,
 } from '@/lib/toolQuality';
+import { buildKasifQualityStats } from '@/lib/kasif/qualityStats';
 
 function getQualityPriority(issues, duplicateNameCount, duplicateLinkCount) {
   if (issues.some((issue) => issue.key === 'link-invalid')) return 'high';
@@ -1553,6 +1554,172 @@ function AdminAlertsTab({ alerts }) {
   );
 }
 
+function formatKasifDate(value) {
+  if (!value) return '—';
+  try {
+    return new Intl.DateTimeFormat('tr-TR', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+      timeZone: 'Europe/Istanbul',
+    }).format(new Date(value));
+  } catch {
+    return '—';
+  }
+}
+
+function KasifQualityTab({ interactions = [] }) {
+  const t = useTranslations('AdminClient');
+  const stats = React.useMemo(
+    () => buildKasifQualityStats(interactions, { windowDays: 30, sampleLimit: 12 }),
+    [interactions]
+  );
+
+  return (
+    <div className="space-y-6">
+      <Card className="glass-panel border-border/50">
+        <CardHeader>
+          <CardTitle>{t('kasifQualityTitle')}</CardTitle>
+          <CardDescription>{t('kasifQualityDesc', { days: stats.windowDays })}</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border bg-background/60 p-4">
+            <p className="text-xs text-muted-foreground">{t('kasifStatTotal')}</p>
+            <p className="mt-1 text-2xl font-bold">{stats.total}</p>
+          </div>
+          <div className="rounded-xl border bg-background/60 p-4">
+            <p className="text-xs text-muted-foreground">{t('kasifStatHelpful')}</p>
+            <p className="mt-1 text-2xl font-bold">
+              {stats.helpfulRate == null ? '—' : `%${stats.helpfulRate}`}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              +{stats.positive} / −{stats.negative}
+            </p>
+          </div>
+          <div className="rounded-xl border bg-background/60 p-4">
+            <p className="text-xs text-muted-foreground">{t('kasifStatLowConf')}</p>
+            <p className="mt-1 text-2xl font-bold">{stats.lowConfidence}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('kasifStatAvgConf')}:{' '}
+              {stats.avgConfidence == null ? '—' : `%${Math.round(stats.avgConfidence * 100)}`}
+            </p>
+          </div>
+          <div className="rounded-xl border bg-background/60 p-4">
+            <p className="text-xs text-muted-foreground">{t('kasifStatUngrounded')}</p>
+            <p className="mt-1 text-2xl font-bold">{stats.ungrounded}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="glass-panel border-border/50">
+          <CardHeader>
+            <CardTitle className="text-base">{t('kasifGoalsTitle')}</CardTitle>
+            <CardDescription>{t('kasifGoalsDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {stats.topGoals.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('kasifEmpty')}</p>
+            ) : (
+              stats.topGoals.map((bucket) => (
+                <div
+                  key={bucket.goals}
+                  className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm"
+                >
+                  <span className="min-w-0 truncate font-medium">{bucket.goals}</span>
+                  <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                    <Badge variant="secondary">{bucket.total}</Badge>
+                    {bucket.negative > 0 && <Badge variant="destructive">−{bucket.negative}</Badge>}
+                  </div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="glass-panel border-border/50">
+          <CardHeader>
+            <CardTitle className="text-base">{t('kasifRulesTitle')}</CardTitle>
+            <CardDescription>{t('kasifRulesDesc')}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {stats.ruleCandidates.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('kasifEmpty')}</p>
+            ) : (
+              stats.ruleCandidates.map((candidate) => (
+                <div key={candidate.token} className="rounded-lg border px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <code className="font-semibold">{candidate.token}</code>
+                    <Badge variant="secondary">{candidate.count}</Badge>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{candidate.suggestion}</p>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="glass-panel border-border/50">
+          <CardHeader>
+            <CardTitle className="text-base">{t('kasifNegativeTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {stats.recentNegative.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('kasifEmpty')}</p>
+            ) : (
+              stats.recentNegative.map((row) => (
+                <article key={row.id} className="rounded-lg border p-3 text-sm">
+                  <p className="font-medium leading-5">{row.question}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                    <span>{formatKasifDate(row.created_at)}</span>
+                    <span>·</span>
+                    <span>
+                      {t('kasifConfidence')}: %{Math.round((row.confidence || 0) * 100)}
+                    </span>
+                    {row.goals?.length > 0 && (
+                      <Badge variant="outline" className="font-normal">
+                        {row.goals.join(', ')}
+                      </Badge>
+                    )}
+                  </div>
+                </article>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="glass-panel border-border/50">
+          <CardHeader>
+            <CardTitle className="text-base">{t('kasifLowConfTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {stats.recentLowConfidence.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('kasifEmpty')}</p>
+            ) : (
+              stats.recentLowConfidence.map((row) => (
+                <article key={row.id} className="rounded-lg border p-3 text-sm">
+                  <p className="font-medium leading-5">{row.question}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                    <span>
+                      {t('kasifConfidence')}: %{Math.round((row.confidence || 0) * 100)}
+                    </span>
+                    {row.goals?.length > 0 && (
+                      <Badge variant="outline" className="font-normal">
+                        {row.goals.join(', ')}
+                      </Badge>
+                    )}
+                  </div>
+                </article>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 // Ana Admin Paneli Bileşeni
 export function AdminPageClient({ data }) {
   const t = useTranslations('AdminClient');
@@ -1567,6 +1734,7 @@ export function AdminPageClient({ data }) {
     reportedLinks = [],
     adminAlerts = [],
     creatorApplications = [],
+    kasifInteractions = [],
   } = data;
 
   const approvalCount = unapprovedTools.length + unapprovedShowcaseItems.length;
@@ -1576,6 +1744,7 @@ export function AdminPageClient({ data }) {
   const pendingReviewCount = (allPosts || []).filter((post) => post.status === 'İncelemede').length;
   const creatorAppCount = (creatorApplications || []).length;
   const contentBadgeCount = pendingReviewCount + creatorAppCount;
+  const kasifNegativeCount = (kasifInteractions || []).filter((row) => row.feedback === -1).length;
 
   return (
     <Tabs defaultValue="approval_queue" className="w-full">
@@ -1591,6 +1760,12 @@ export function AdminPageClient({ data }) {
           {t('tabReports')}
           <Badge variant={activeReportCount > 0 ? 'default' : 'secondary'} className="ml-2">
             {activeReportCount}
+          </Badge>
+        </TabsTrigger>
+        <TabsTrigger value="kasif_quality" className="shrink-0 text-xs sm:text-sm">
+          {t('tabKasif')}
+          <Badge variant={kasifNegativeCount > 0 ? 'destructive' : 'secondary'} className="ml-2">
+            {kasifNegativeCount}
           </Badge>
         </TabsTrigger>
         <TabsTrigger value="admin_alerts">
@@ -1635,6 +1810,10 @@ export function AdminPageClient({ data }) {
 
       <TabsContent value="reported_links" className="mt-6">
         <ReportedLinksTab reports={reportedLinks} />
+      </TabsContent>
+
+      <TabsContent value="kasif_quality" className="mt-6">
+        <KasifQualityTab interactions={kasifInteractions} />
       </TabsContent>
 
       <TabsContent value="admin_alerts" className="mt-6">
