@@ -58,7 +58,7 @@ import {
   isLikelyEnglishDescription,
   normalizeToolLink,
 } from '@/lib/toolQuality';
-import { buildKasifQualityStats } from '@/lib/kasif/qualityStats';
+import { buildKasifQualityStats, isKasifIssueInteraction } from '@/lib/kasif/qualityStats';
 
 function getQualityPriority(issues, duplicateNameCount, duplicateLinkCount) {
   if (issues.some((issue) => issue.key === 'link-invalid')) return 'high';
@@ -1616,7 +1616,7 @@ function KasifQualityTab({ interactions = [] }) {
               <p className="mt-1">{t('kasifEmptyHint')}</p>
             </div>
           ) : null}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div className="rounded-xl border bg-background/60 p-4">
               <p className="text-xs text-muted-foreground">{t('kasifStatTotal')}</p>
               <p className="mt-1 text-2xl font-bold">{stats.total}</p>
@@ -1645,6 +1645,11 @@ function KasifQualityTab({ interactions = [] }) {
             <div className="rounded-xl border bg-background/60 p-4">
               <p className="text-xs text-muted-foreground">{t('kasifStatUngrounded')}</p>
               <p className="mt-1 text-2xl font-bold">{stats.ungrounded}</p>
+            </div>
+            <div className="rounded-xl border bg-background/60 p-4">
+              <p className="text-xs text-muted-foreground">{t('kasifStatMeta')}</p>
+              <p className="mt-1 text-2xl font-bold">{stats.meta || 0}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t('kasifStatMetaHint')}</p>
             </div>
           </div>
         </CardContent>
@@ -1791,12 +1796,8 @@ export function AdminPageClient({ data }) {
   const pendingReviewCount = (allPosts || []).filter((post) => post.status === 'İncelemede').length;
   const creatorAppCount = (creatorApplications || []).length;
   const contentBadgeCount = pendingReviewCount + creatorAppCount;
-  const kasifIssueCount = (kasifInteractions || []).filter(
-    (row) =>
-      row.feedback === -1 ||
-      (Number(row.confidence) > 0 && Number(row.confidence) < 0.55) ||
-      !Array.isArray(row.source_ids) ||
-      row.source_ids.length === 0
+  const kasifIssueCount = (kasifInteractions || []).filter((row) =>
+    isKasifIssueInteraction(row)
   ).length;
 
   return (

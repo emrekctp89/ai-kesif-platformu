@@ -96,11 +96,12 @@ export function understandQuestion(question) {
     }))
     .filter(({ signals }) => signals.length > 0);
   const concepts = matchedConcepts.map(({ concept }) => concept);
-  const goals = Object.entries(KASIF_GOALS)
+  const rawGoals = Object.entries(KASIF_GOALS)
     .filter(([, goal]) =>
       goal.queryGroups.every((group) => group.some((word) => includesNormalized(normalized, word)))
     )
     .map(([goal]) => goal);
+  const goals = prioritizeGoals(rawGoals);
   return {
     tokens: extractSearchTerms(question),
     wantsFree: (freeMentioned && !rejectsFree) || rejectsPaid,
@@ -113,6 +114,36 @@ export function understandQuestion(question) {
     signals: matchedConcepts.flatMap(({ signals }) => signals),
     goals,
   };
+}
+
+/**
+ * Daha spesifik hedefler genel olanların üzerine yazılır.
+ * Örn. logo-design > image-generation, coding-assistant > learning-tutor.
+ */
+const GOAL_DOMINANCE = [
+  ['logo-design', 'image-generation'],
+  ['ui-design', 'image-generation'],
+  ['three-d-generation', 'image-generation'],
+  ['coding-assistant', 'learning-tutor'],
+  ['coding-assistant', 'chatbot-assistant'],
+  ['email-writing', 'content-writing'],
+  ['ecommerce-copy', 'content-writing'],
+  ['seo-optimization', 'data-analysis'],
+  ['seo-optimization', 'content-writing'],
+  ['customer-support', 'chatbot-assistant'],
+  ['voice-generation', 'music-generation'],
+  ['meeting-notes', 'voice-generation'],
+];
+
+export function prioritizeGoals(goals = []) {
+  if (!Array.isArray(goals) || goals.length <= 1) return goals || [];
+  let result = [...goals];
+  for (const [winner, loser] of GOAL_DOMINANCE) {
+    if (result.includes(winner) && result.includes(loser)) {
+      result = result.filter((goal) => goal !== loser);
+    }
+  }
+  return result;
 }
 
 export function understandConversation(question, history = []) {

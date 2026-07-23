@@ -1,4 +1,8 @@
-const { buildKasifQualityStats } = require('../kasif/qualityStats');
+const {
+  buildKasifQualityStats,
+  isKasifIssueInteraction,
+  isKasifUngroundedInteraction,
+} = require('../kasif/qualityStats');
 
 describe('buildKasifQualityStats', () => {
   const sample = [
@@ -29,21 +33,38 @@ describe('buildKasifQualityStats', () => {
       source_ids: [],
       created_at: '2026-07-22T10:00:00Z',
     },
+    {
+      id: '4',
+      question: 'Sen kimsin?',
+      intent: { meta: 'identity', goals: [] },
+      confidence: 0.99,
+      feedback: null,
+      source_ids: [],
+      created_at: '2026-07-22T11:00:00Z',
+    },
   ];
 
   it('özet metrikleri ve kural adaylarını hesaplar', () => {
     const stats = buildKasifQualityStats(sample, { windowDays: 30, sampleLimit: 5 });
 
-    expect(stats.total).toBe(3);
+    expect(stats.total).toBe(4);
     expect(stats.withFeedback).toBe(2);
     expect(stats.positive).toBe(1);
     expect(stats.negative).toBe(1);
     expect(stats.helpfulRate).toBe(50);
     expect(stats.ungrounded).toBe(1);
+    expect(stats.meta).toBe(1);
     expect(stats.lowConfidence).toBe(1);
-    expect(stats.topGoals[0].goals).toMatch(/presentation-creation|logo-design/);
+    expect(stats.topGoals[0].goals).toMatch(/presentation-creation|logo-design|hedef yok/);
     expect(stats.recentNegative[0].id).toBe('2');
     expect(stats.ruleCandidates.length).toBeGreaterThan(0);
+  });
+
+  it('meta yanıtları ungrounded/issue saymaz', () => {
+    const metaRow = sample[3];
+    expect(isKasifUngroundedInteraction(metaRow)).toBe(false);
+    expect(isKasifIssueInteraction(metaRow)).toBe(false);
+    expect(isKasifUngroundedInteraction(sample[2])).toBe(true);
   });
 
   it('boş listede güvenli varsayılanlar döner', () => {

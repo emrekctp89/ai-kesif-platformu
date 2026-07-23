@@ -5,6 +5,7 @@ import {
   answerMetaQuestion,
   answerQuestion,
   detectMetaIntent,
+  prioritizeGoals,
   rankTools,
   understandConversation,
   understandQuestion,
@@ -620,5 +621,19 @@ describe('Kâşif engine', () => {
     const result = answerQuestion('Ücretsiz sunum aracı', records);
     expect(result.intent.goals).toContain('presentation-creation');
     expect(result.confidence).toBeGreaterThanOrEqual(0.78);
+  });
+
+  it('daha spesifik goal genel olanı baskılar', () => {
+    expect(prioritizeGoals(['image-generation', 'logo-design'])).toEqual(['logo-design']);
+    expect(prioritizeGoals(['learning-tutor', 'coding-assistant'])).toEqual(['coding-assistant']);
+    expect(prioritizeGoals(['content-writing', 'email-writing'])).toEqual(['email-writing']);
+  });
+
+  it('kod öğrenme starterında coding-assistant öğrenme hedefini baskılar', () => {
+    const intent = understandQuestion(
+      'Kodlama öğrenirken bana yardımcı olacak ücretsiz AI araçları öner'
+    );
+    expect(intent.goals).toContain('coding-assistant');
+    expect(intent.goals).not.toContain('learning-tutor');
   });
 });

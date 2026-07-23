@@ -260,12 +260,14 @@ export default function KasifExperiment() {
                         <p className="whitespace-pre-wrap text-sm leading-6">
                           {turn.result.answer}
                         </p>
-                        {turn.result.grounded === false && (
+                        {turn.result.grounded === false && !turn.result.meta && (
                           <p className="mt-3 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
                             {t('ungroundedHint')}
                           </p>
                         )}
                         {turn.result.grounded !== false &&
+                          !turn.result.meta &&
+                          !turn.result.intent?.meta &&
                           typeof turn.result.confidence === 'number' &&
                           turn.result.confidence > 0 &&
                           turn.result.confidence < 0.55 && (
@@ -273,10 +275,17 @@ export default function KasifExperiment() {
                               {t('lowConfidenceHint')}
                             </p>
                           )}
-                        {(turn.result.intent?.goals?.length > 0 ||
+                        {(turn.result.meta ||
+                          turn.result.intent?.meta ||
+                          turn.result.intent?.goals?.length > 0 ||
                           turn.result.intent?.pricePreference) && (
                           <div className="mt-3 flex flex-wrap gap-1.5">
-                            {turn.result.intent.goals?.map((goal) => (
+                            {(turn.result.meta || turn.result.intent?.meta) && (
+                              <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-[11px] font-medium text-violet-800 dark:text-violet-200">
+                                {t('metaBadge')}
+                              </span>
+                            )}
+                            {turn.result.intent?.goals?.map((goal) => (
                               <span
                                 key={goal}
                                 className="rounded-full border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
@@ -284,7 +293,7 @@ export default function KasifExperiment() {
                                 {goal}
                               </span>
                             ))}
-                            {turn.result.intent.pricePreference &&
+                            {turn.result.intent?.pricePreference &&
                               turn.result.intent.pricePreference !== 'any' && (
                                 <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
                                   {turn.result.intent.pricePreference === 'free'

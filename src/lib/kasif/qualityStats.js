@@ -19,6 +19,22 @@ function tokenizeQuestion(question) {
     .filter((term) => term.length >= 4);
 }
 
+export function isKasifMetaInteraction(row) {
+  return Boolean(row?.intent?.meta || row?.meta);
+}
+
+export function isKasifUngroundedInteraction(row) {
+  if (isKasifMetaInteraction(row)) return false;
+  return !Array.isArray(row?.source_ids) || row.source_ids.length === 0;
+}
+
+export function isKasifIssueInteraction(row) {
+  if (row?.feedback === -1) return true;
+  if (isKasifUngroundedInteraction(row)) return true;
+  const c = asNumber(row?.confidence);
+  return c > 0 && c < 0.55;
+}
+
 /**
  * @param {Array<{
  *   id?: string,
@@ -40,13 +56,14 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
   const withFeedback = rows.filter((row) => row.feedback === 1 || row.feedback === -1);
   const positive = withFeedback.filter((row) => row.feedback === 1);
   const negative = withFeedback.filter((row) => row.feedback === -1);
-  const ungrounded = rows.filter(
-    (row) => !Array.isArray(row.source_ids) || row.source_ids.length === 0
-  );
+  const meta = rows.filter((row) => isKasifMetaInteraction(row));
+  const ungrounded = rows.filter((row) => isKasifUngroundedInteraction(row));
   const lowConfidence = rows.filter((row) => {
+    if (isKasifMetaInteraction(row)) return false;
     const c = asNumber(row.confidence);
     return c > 0 && c < 0.55;
   });
+  const issueCount = rows.filter((row) => isKasifIssueInteraction(row)).length;
 
   const confidences = rows.map((row) => asNumber(row.confidence)).filter((c) => c > 0);
   const avgConfidence =
@@ -117,8 +134,10 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
     positive: positive.length,
     negative: negative.length,
     helpfulRate,
+    meta: meta.length,
     ungrounded: ungrounded.length,
     lowConfidence: lowConfidence.length,
+    issueCount,
     avgConfidence,
     topGoals,
     topNegativeTokens,
