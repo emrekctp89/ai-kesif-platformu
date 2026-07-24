@@ -1,0 +1,25 @@
+{
+  "id": "OPS-001",
+  "objective": "Install the controlled Antigravity, Codex, Grok, and Verifier workflow",
+  "roles": {
+    "planner": "antigravity",
+    "implementer": "codex",
+    "reviewer": "grok",
+    "verifier": "verifier"
+  },
+  "base_sha": "14a378d4a1391a0155863399b1010abddfdeca47",
+  "allow_paths": [
+    "AGENTS.md",
+    ".agents/**",
+    "scripts/agent-governance.mjs",
+    "docs/MULTI_AGENT_WORKFLOW.md",
+    ".github/workflows/agent-governance.yml"
+  ],
+  "deny_paths": ["src/**", "supabase/**", ".env*"],
+  "acceptance_commands": [
+    "node scripts/agent-governance.mjs --contracts --base 14a378d4a1391a0155863399b1010abddfdeca47"
+  ],
+  "risk": "high",
+  "reviewers": ["repository-owner", "independent-verifier"],
+  "lease_minutes": 45
+}

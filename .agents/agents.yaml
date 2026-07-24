@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "agents": {
+    "antigravity": {
+      "role": "planner",
+      "write_scope": [".agents/tasks/**"],
+      "max_parallel": 1
+    },
+    "codex": {
+      "role": "implementer",
+      "write_scope": ["task.allow_paths"],
+      "max_parallel": 2
+    },
+    "grok": {
+      "role": "reviewer",
+      "write_scope": [],
+      "max_parallel": 2
+    },
+    "verifier": {
+      "role": "verifier",
+      "write_scope": [],
+      "activation": "high-risk-or-logical-conflict",
+      "max_parallel": 1
+    }
+  }
+}
+

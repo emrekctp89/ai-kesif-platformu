@@ -1,0 +1,39 @@
+name: Agent Governance
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  governance:
+    name: Contract and scope guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Validate agent contracts and changed-file scope
+        env:
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+        run: node scripts/agent-governance.mjs --contracts --base "${{ github.event.pull_request.base.sha }}"
+
+      - name: Upload governance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-governance-evidence
+          path: agent-evidence.json
+          if-no-files-found: error
+          retention-days: 30
+
