@@ -1301,6 +1301,8 @@
     "kasifStatUngrounded": "Eşleşmesiz",
     "kasifStatMeta": "Meta soru",
     "kasifStatMetaHint": "Kimsin / ne yapabilirsin",
+    "kasifStatSoftLanding": "Soft-landing",
+    "kasifStatSoftLandingHint": "Geçmişsiz follow-up",
     "kasifGoalsTitle": "Hedef kovaları",
     "kasifGoalsDesc": "En sık görülen intent/goal dağılımı.",
     "kasifGoalNone": "Hedef yok",

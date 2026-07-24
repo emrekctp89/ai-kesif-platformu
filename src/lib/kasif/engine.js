@@ -152,16 +152,30 @@ export function understandConversation(question, history = []) {
   const currentHasPricePreference = currentIntent.wantsFree || currentIntent.wantsPaid;
   const currentHasTopic = currentIntent.concepts.length > 0;
   const currentHasGoal = currentIntent.goals.length > 0;
+  const goals = currentHasGoal
+    ? currentIntent.goals
+    : currentHasTopic
+      ? []
+      : contextualIntent.goals;
+  const carriedFromHistory =
+    !currentHasGoal &&
+    !currentHasTopic &&
+    goals.length > 0 &&
+    (history || []).some((message) => message?.role === 'user');
 
   return {
     ...contextualIntent,
     tokens: currentHasTopic ? currentIntent.tokens : contextualIntent.tokens,
     concepts: currentHasTopic ? currentIntent.concepts : contextualIntent.concepts,
     signals: currentHasTopic ? currentIntent.signals : contextualIntent.signals,
-    goals: currentHasGoal ? currentIntent.goals : currentHasTopic ? [] : contextualIntent.goals,
+    goals,
     wantsFree: currentHasPricePreference ? currentIntent.wantsFree : contextualIntent.wantsFree,
     wantsPaid: currentHasPricePreference ? currentIntent.wantsPaid : contextualIntent.wantsPaid,
-    wantsComparison: currentIntent.wantsComparison,
+    // Follow-up "hangileri" çoğu zaman fiyat daraltmasıdır; katı karşılaştırma formatına zorlama.
+    wantsComparison: carriedFromHistory
+      ? currentIntent.wantsComparison && !currentHasPricePreference
+      : currentIntent.wantsComparison,
+    carriedFromHistory,
   };
 }
 
@@ -238,7 +252,39 @@ export function rankTools(records, intent, limit = 5) {
     diverse.push(item);
     if (diverse.length >= limit) break;
   }
-  return diverse;
+
+  // Karşılaştırmada mümkünse hem free hem paid banttan en az bir örnek tut.
+  if (
+    intent.wantsComparison &&
+    !intent.wantsFree &&
+    !intent.wantsPaid &&
+    diverse.length >= 2 &&
+    diverse.length <= limit
+  ) {
+    const hasFree = diverse.some(({ record }) => isFreePricing(record));
+    const hasPaid = diverse.some(({ record }) => isPaidPricing(record));
+    if (!hasFree || !hasPaid) {
+      const wantFree = !hasFree;
+      const fill = sorted.find((item) => {
+        if (diverse.some((picked) => picked.record.id === item.record.id)) return false;
+        const family = toolFamily(item.record);
+        if (family && families.has(family)) return false;
+        return wantFree ? isFreePricing(item.record) : isPaidPricing(item.record);
+      });
+      if (fill) {
+        if (diverse.length >= limit) diverse.pop();
+        const family = toolFamily(fill.record);
+        if (family) families.add(family);
+        diverse.push(fill);
+        diverse.sort(
+          (a, b) =>
+            b.score - a.score || String(a.record.name).localeCompare(String(b.record.name), 'tr')
+        );
+      }
+    }
+  }
+
+  return diverse.slice(0, limit);
 }
 
 const META_PATTERNS = {
@@ -422,7 +468,7 @@ export function answerQuestion(question, records, history = [], locale = 'tr') {
   if (meta) return meta;
 
   if (isContextlessFollowUp(question, history)) {
-    return answerContextlessFollowUp(question, locale);
+    return answerContextlessFollowUp(question, locale, history);
   }
 
   const intent = understandConversation(question, history);
@@ -461,10 +507,43 @@ export function answerQuestion(question, records, history = [], locale = 'tr') {
         record.category?.name ||
         (locale === 'en' ? 'Category not specified' : 'Kategori belirtilmemiş');
       const pricing = pricingLabel(record, locale);
-      return `${index + 1}. ${record.name} — ${category} · ${pricing}${why}${detail ? `\n${detail}` : ''}`;
+      const platforms = Array.isArray(record.platforms)
+        ? record.platforms.filter(Boolean).slice(0, 3).join(', ')
+        : '';
+      const platformPart = platforms
+        ? locale === 'en'
+          ? ` · Platforms: ${platforms}`
+          : ` · Platformlar: ${platforms}`
+        : '';
+      return `${index + 1}. ${record.name} — ${category} · ${pricing}${platformPart}${why}${detail ? `\n${detail}` : ''}`;
     }
     return `${index + 1}. ${record.name}${why}${detail ? `: ${detail}` : ''}`;
   });
+
+  let verdict = '';
+  if (intent.wantsComparison && ranked.length >= 2) {
+    const freePick = ranked.find(({ record }) => isFreePricing(record));
+    const paidPick = ranked.find(({ record }) => isPaidPricing(record));
+    const top = ranked[0].record;
+    if (locale === 'en') {
+      verdict = `\nQuick take: ${top.name} ranks highest overall.`;
+      if (freePick && freePick.record.id !== top.id) {
+        verdict += ` Best free/freemium lean: ${freePick.record.name}.`;
+      }
+      if (paidPick && paidPick.record.id !== top.id && paidPick !== freePick) {
+        verdict += ` Stronger paid lean: ${paidPick.record.name}.`;
+      }
+    } else {
+      verdict = `\nKısa özet: Genel sıralamada ${top.name} öne çıkıyor.`;
+      if (freePick && freePick.record.id !== top.id) {
+        verdict += ` Ücretsiz/freemium tarafında ${freePick.record.name} güçlü.`;
+      }
+      if (paidPick && paidPick.record.id !== top.id && paidPick !== freePick) {
+        verdict += ` Ücretli tarafta ${paidPick.record.name} öne çıkıyor.`;
+      }
+    }
+  }
+
   const topScore = ranked[0].score;
   // Skor tabanlı güven + niyet netliği için taban (eski düşük güven gürültüsünü azaltır).
   let confidence = Math.min(0.98, Number((topScore / 30).toFixed(2)));
@@ -472,13 +551,16 @@ export function answerQuestion(question, records, history = [], locale = 'tr') {
   if (intent.goals.length > 0 && (intent.wantsFree || intent.wantsPaid)) {
     confidence = Math.max(confidence, 0.78);
   }
+  if (intent.carriedFromHistory && intent.goals.length > 0) {
+    confidence = Math.max(confidence, 0.8);
+  }
   if (ranked[0].reasons?.includes('direct-match')) {
     confidence = Math.max(confidence, 0.8);
   }
   confidence = Math.min(0.98, Number(confidence.toFixed(2)));
 
   return {
-    answer: `${intro}\n\n${lines.join('\n')}\n\n${
+    answer: `${intro}\n\n${lines.join('\n')}${verdict}\n\n${
       locale === 'en'
         ? 'Results were calculated exclusively from AI Keşif Platformu records.'
         : 'Sonuçlar yalnızca AI Keşif Platformu kayıtlarından hesaplandı.'
@@ -491,6 +573,7 @@ export function answerQuestion(question, records, history = [], locale = 'tr') {
       goals: intent.goals,
       pricePreference: intent.wantsFree ? 'free' : intent.wantsPaid ? 'paid' : 'any',
       comparison: intent.wantsComparison,
+      carriedFromHistory: Boolean(intent.carriedFromHistory),
     },
   };
 }

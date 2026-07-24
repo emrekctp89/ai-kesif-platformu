@@ -1616,7 +1616,7 @@ function KasifQualityTab({ interactions = [] }) {
               <p className="mt-1">{t('kasifEmptyHint')}</p>
             </div>
           ) : null}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <div className="rounded-xl border bg-background/60 p-4">
               <p className="text-xs text-muted-foreground">{t('kasifStatTotal')}</p>
               <p className="mt-1 text-2xl font-bold">{stats.total}</p>
@@ -1650,6 +1650,11 @@ function KasifQualityTab({ interactions = [] }) {
               <p className="text-xs text-muted-foreground">{t('kasifStatMeta')}</p>
               <p className="mt-1 text-2xl font-bold">{stats.meta || 0}</p>
               <p className="mt-1 text-xs text-muted-foreground">{t('kasifStatMetaHint')}</p>
+            </div>
+            <div className="rounded-xl border bg-background/60 p-4">
+              <p className="text-xs text-muted-foreground">{t('kasifStatSoftLanding')}</p>
+              <p className="mt-1 text-2xl font-bold">{stats.softLanding || 0}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t('kasifStatSoftLandingHint')}</p>
             </div>
           </div>
         </CardContent>

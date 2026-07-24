@@ -138,6 +138,9 @@ export function compareToolsWithKasif(tools, locale = 'tr') {
   const freeTools = normalized.filter((tool) =>
     /free|ucretsiz|freemium|acik kaynak|open.?source/i.test(String(tool.pricing_model || ''))
   );
+  const paidTools = normalized.filter((tool) =>
+    /paid|ucretli|premium|enterprise|abonelik/i.test(String(tool.pricing_model || ''))
+  );
   const names = normalized.map((tool) => tool.name).join(', ');
 
   const ratingSummary =
@@ -154,11 +157,18 @@ export function compareToolsWithKasif(tools, locale = 'tr') {
         : ` Ücretsiz/freemium seçenekler: ${freeTools.map((tool) => tool.name).join(', ')}.`
       : '';
 
+  const paidSummary =
+    paidTools.length > 0
+      ? locale === 'en'
+        ? ` Paid lean: ${paidTools.map((tool) => tool.name).join(', ')}.`
+        : ` Ücretli taraf: ${paidTools.map((tool) => tool.name).join(', ')}.`
+      : '';
+
   return {
     comparison_summary:
       locale === 'en'
-        ? `${names} were compared using verified platform records only.${ratingSummary}${pricingSummary}`
-        : `${names} yalnızca doğrulanmış platform kayıtlarına göre karşılaştırıldı.${ratingSummary}${pricingSummary}`,
+        ? `${names} were compared using verified platform records only.${ratingSummary}${pricingSummary}${paidSummary}`
+        : `${names} yalnızca doğrulanmış platform kayıtlarına göre karşılaştırıldı.${ratingSummary}${pricingSummary}${paidSummary}`,
     detailed_analysis: normalized.map((tool) => ({
       tool_name: tool.name,
       best_for: tool.category_name

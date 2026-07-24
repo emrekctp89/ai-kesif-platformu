@@ -1301,6 +1301,8 @@
     "kasifStatUngrounded": "Ungrounded",
     "kasifStatMeta": "Meta questions",
     "kasifStatMetaHint": "Who are you / what can you do",
+    "kasifStatSoftLanding": "Soft-landing",
+    "kasifStatSoftLandingHint": "Contextless follow-ups",
     "kasifGoalsTitle": "Goal buckets",
     "kasifGoalsDesc": "Most common intent/goal distribution.",
     "kasifGoalNone": "No goal",

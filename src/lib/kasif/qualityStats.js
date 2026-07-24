@@ -19,18 +19,33 @@ function tokenizeQuestion(question) {
     .filter((term) => term.length >= 4);
 }
 
+export function isKasifSoftLandingInteraction(row) {
+  return (
+    row?.softLanding === true ||
+    row?.metaKind === 'soft-landing' ||
+    row?.intent?.meta === 'soft-landing'
+  );
+}
+
+/** Kimlik / yetenek / how meta (soft-landing hariç). */
 export function isKasifMetaInteraction(row) {
+  if (isKasifSoftLandingInteraction(row)) return false;
   return Boolean(row?.intent?.meta || row?.meta);
 }
 
+export function isKasifGuidedInteraction(row) {
+  return isKasifMetaInteraction(row) || isKasifSoftLandingInteraction(row);
+}
+
 export function isKasifUngroundedInteraction(row) {
-  if (isKasifMetaInteraction(row)) return false;
+  if (isKasifGuidedInteraction(row)) return false;
   return !Array.isArray(row?.source_ids) || row.source_ids.length === 0;
 }
 
 export function isKasifIssueInteraction(row) {
   if (row?.feedback === -1) return true;
   if (isKasifUngroundedInteraction(row)) return true;
+  if (isKasifGuidedInteraction(row)) return false;
   const c = asNumber(row?.confidence);
   return c > 0 && c < 0.55;
 }
@@ -57,9 +72,10 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
   const positive = withFeedback.filter((row) => row.feedback === 1);
   const negative = withFeedback.filter((row) => row.feedback === -1);
   const meta = rows.filter((row) => isKasifMetaInteraction(row));
+  const softLanding = rows.filter((row) => isKasifSoftLandingInteraction(row));
   const ungrounded = rows.filter((row) => isKasifUngroundedInteraction(row));
   const lowConfidence = rows.filter((row) => {
-    if (isKasifMetaInteraction(row)) return false;
+    if (isKasifGuidedInteraction(row)) return false;
     const c = asNumber(row.confidence);
     return c > 0 && c < 0.55;
   });
@@ -135,6 +151,7 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
     negative: negative.length,
     helpfulRate,
     meta: meta.length,
+    softLanding: softLanding.length,
     ungrounded: ungrounded.length,
     lowConfidence: lowConfidence.length,
     issueCount,

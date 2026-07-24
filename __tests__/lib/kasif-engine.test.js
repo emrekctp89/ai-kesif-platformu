@@ -131,10 +131,22 @@ describe('Kâşif engine', () => {
     const comparisonRecords = records.map((record) => ({
       ...record,
       category: { name: 'Üretkenlik' },
+      platforms: ['Web'],
     }));
     const result = answerQuestion('Bu sunum araçlarını karşılaştır', comparisonRecords);
     expect(result.answer).toContain('Üretkenlik');
     expect(result.answer).toContain('Freemium');
+    expect(result.answer).toMatch(/Platformlar: Web|Kısa özet/i);
+  });
+
+  it('geçmişli fiyat follow-up taşıdığı hedefi korur ve karşılaştırmaya zorlamaz', () => {
+    const intent = understandConversation('Peki bunlardan ücretsiz olanlar hangileri?', [
+      { role: 'user', content: 'Sunum hazırlamak için araç öner' },
+    ]);
+    expect(intent.goals).toContain('presentation-creation');
+    expect(intent.wantsFree).toBe(true);
+    expect(intent.carriedFromHistory).toBe(true);
+    expect(intent.wantsComparison).toBe(false);
   });
 
   it('doğal sunum aracı sorgusunu oluşturma hedefi olarak anlar', () => {
