@@ -42,7 +42,9 @@ import {
   updateToolLinkReportStatus,
   scrapeToolUrlAdmin,
   scrapeToolUrlsAdmin,
+  runScrapeSeedQueueAdmin,
 } from '@/app/actions';
+import { summarizeSeedCatalog } from '@/lib/toolScrape/seedUrls';
 import { deleteReportedComment, dismissAlert } from '@/app/actions/moderation';
 import { AiToolFactory } from './AiToolFactory';
 import { BlogManager } from './BlogManager';
@@ -755,7 +757,13 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
   const [scrapeBulkText, setScrapeBulkText] = React.useState('');
   const [scrapeReport, setScrapeReport] = React.useState(null);
   const [scrapeBulkReport, setScrapeBulkReport] = React.useState(null);
+  const [scrapeSeedSlug, setScrapeSeedSlug] = React.useState('all');
+  const [scrapeSeedReport, setScrapeSeedReport] = React.useState(null);
   const [isScrapePending, startScrapeTransition] = React.useTransition();
+  const seedCategoryOptions = React.useMemo(() => {
+    const summary = summarizeSeedCatalog();
+    return [{ slug: 'all', count: summary.reduce((sum, item) => sum + item.count, 0) }, ...summary];
+  }, []);
 
   const runAutomation = () => {
     startAutomationTransition(async () => {
@@ -871,6 +879,35 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         `Toplu dry-run: ${result.report?.okCount || 0} ok, ${result.report?.failCount || 0} hata` +
           (result.report?.truncated ? ` (limit ${result.report.limit})` : '')
       );
+    });
+  };
+
+  const runSeedQueue = (dryRun = true) => {
+    startScrapeTransition(async () => {
+      const result = await runScrapeSeedQueueAdmin({
+        categorySlug: scrapeSeedSlug || 'all',
+        provider: scrapeProvider,
+        categoryId: scrapeCategoryId || undefined,
+        enrichWithGemini: scrapeEnrichGemini,
+        limit: 5,
+        dryRun,
+      });
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+      setScrapeSeedReport(result.report);
+      const skipped = result.report?.skippedPrefilter?.length || 0;
+      if (dryRun) {
+        toast.success(
+          `Seed dry-run: ${result.report?.okCount || 0} ok, ${result.report?.failCount || 0} hata, ${skipped} ön-filtre`
+        );
+      } else {
+        toast.success(
+          `Seed kuyruk: ${result.report?.insertedCount || 0} eklendi, ${result.report?.failCount || 0} hata`
+        );
+        router.refresh();
+      }
     });
   };
 
@@ -1144,6 +1181,62 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                   {isScrapePending ? 'Scrape…' : 'Toplu dry-run'}
                 </Button>
               </div>
+              <div className="mt-3 space-y-2 rounded-lg border border-dashed bg-background/50 p-3">
+                <p className="text-xs font-medium text-foreground">
+                  Seed kuyruğu (kategori, host+name dedupe)
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Yerleşik ürün URL listesinden katalogda olmayan host’ları seçer (max 5). Önce
+                  dry-run.
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <select
+                    value={scrapeSeedSlug}
+                    onChange={(event) => setScrapeSeedSlug(event.target.value)}
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm sm:max-w-xs"
+                    disabled={isScrapePending}
+                    aria-label="Seed kategori"
+                  >
+                    {seedCategoryOptions.map((item) => (
+                      <option key={item.slug} value={item.slug}>
+                        {item.slug} ({item.count})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => runSeedQueue(true)}
+                      disabled={isScrapePending}
+                    >
+                      {isScrapePending ? 'Scrape…' : 'Seed dry-run'}
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="secondary" disabled={isScrapePending}>
+                          Seed → onay kuyruğu
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Seed kuyruğunu kaydet?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Katalogda olmayan seed URL’ler scrape edilip is_approved=false ile
+                            eklenecek (max 5). Host/isim tekrarı atlanır. Önce dry-run önerilir.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => runSeedQueue(false)}>
+                            Evet, ekle
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              </div>
               {scrapeReport && (
                 <div className="mt-3 space-y-1 text-xs text-muted-foreground">
                   <p>
@@ -1189,6 +1282,35 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                     <p key={item.url} className="truncate pl-2">
                       • {item.ok ? item.report?.candidate?.name || 'aday' : 'hata'}: {item.url}
                       {item.error ? ` — ${item.error}` : ''}
+                    </p>
+                  ))}
+                </div>
+              )}
+              {scrapeSeedReport && (
+                <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                  <p>
+                    Seed [{scrapeSeedReport.categorySlug}]: kuyruk {scrapeSeedReport.queueCount}/
+                    {scrapeSeedReport.seedCount}
+                    {', '}
+                    {scrapeSeedReport.okCount} ok, {scrapeSeedReport.failCount} hata
+                    {scrapeSeedReport.skippedPrefilter?.length
+                      ? `, ${scrapeSeedReport.skippedPrefilter.length} ön-filtre`
+                      : ''}
+                    {scrapeSeedReport.dryRun
+                      ? ' · dry-run'
+                      : ` · eklendi ${scrapeSeedReport.insertedCount || 0}`}
+                  </p>
+                  {(scrapeSeedReport.results || []).slice(0, 8).map((item) => (
+                    <p key={item.url} className="truncate pl-2">
+                      • {item.ok ? item.candidateName || item.seedName || 'aday' : 'hata'}:{' '}
+                      {item.url}
+                      {item.error ? ` — ${item.error}` : ''}
+                      {item.inserted?.slug ? ` → /tool/${item.inserted.slug}` : ''}
+                    </p>
+                  ))}
+                  {(scrapeSeedReport.skippedPrefilter || []).slice(0, 4).map((item) => (
+                    <p key={`skip-${item.url}`} className="truncate pl-2 opacity-70">
+                      − atlandı ({item.reason}): {item.url}
                     </p>
                   ))}
                 </div>

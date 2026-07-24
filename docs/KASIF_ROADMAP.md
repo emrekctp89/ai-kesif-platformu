@@ -86,7 +86,7 @@ Env taslağı (ileride):
 | --------- | ----------------------------------------------------------------------------------- |
 | **P0** ✅ | `scrapeToolPage(url)` + `native`/`jina`/`auto`; admin dry-run + onay kuyruğuna ekle |
 | **P1** ✅ | Admin: kategori seçimi, opsiyonel Gemini enrich, toplu URL dry-run (max 5)          |
-| **P2**    | Seed URL listeleri / kategori bazlı tarama kuyruğu; dedupe by host+name             |
+| **P2** ✅ | Seed URL listeleri; kategori kuyruğu; host+name dedupe (prefilter + insert gate)    |
 | **P3**    | Zamanlanmış cron; kota takibi; başarısız scrape retry; admin alert                  |
 | **P4**    | Kâşif sohbetinden “bu aracı ekle/incele” intent’i (admin gate)                      |
 

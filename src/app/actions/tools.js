@@ -849,24 +849,51 @@ export async function scrapeToolUrlAdmin(options = {}) {
       };
     }
 
-    // Dedupe
+    // Dedupe: name + exact link + host (aynı ürün domain'i)
+    const { extractHostKey, findCatalogDuplicates, buildCatalogDedupeIndex } =
+      await import('@/lib/toolScrape');
+    const hostKey = extractHostKey(candidate.link);
+
     const { data: existingByName } = await supabaseAdmin
       .from('tools')
       .select('id, name, slug, link, is_approved')
       .ilike('name', candidate.name)
-      .limit(3);
+      .limit(5);
 
     const { data: existingByLink } = await supabaseAdmin
       .from('tools')
       .select('id, name, slug, link, is_approved')
       .eq('link', candidate.link)
-      .limit(3);
+      .limit(5);
+
+    let existingByHost = [];
+    if (hostKey) {
+      const { data: hostRows } = await supabaseAdmin
+        .from('tools')
+        .select('id, name, slug, link, is_approved')
+        .ilike('link', `%${hostKey}%`)
+        .limit(20);
+      existingByHost = (hostRows || []).filter((row) => extractHostKey(row.link) === hostKey);
+    }
+
+    const catalogIndex = buildCatalogDedupeIndex([
+      ...(existingByName || []),
+      ...(existingByLink || []),
+      ...existingByHost,
+    ]);
+    const hostNameDup = findCatalogDuplicates(candidate, catalogIndex);
 
     const duplicates = {
       byName: existingByName || [],
       byLink: existingByLink || [],
+      byHost: existingByHost,
+      reasons: hostNameDup.reasons,
     };
-    const isDuplicate = (existingByName || []).length > 0 || (existingByLink || []).length > 0;
+    const isDuplicate =
+      hostNameDup.isDuplicate ||
+      (existingByName || []).length > 0 ||
+      (existingByLink || []).length > 0 ||
+      existingByHost.length > 0;
 
     // Link audit
     let linkCheck = null;
@@ -888,7 +915,13 @@ export async function scrapeToolUrlAdmin(options = {}) {
     const qualityWarnings = [];
     if (candidate.description.length < 80) qualityWarnings.push('Açıklama kısa.');
     if (linkCheck?.status === 'invalid') qualityWarnings.push('Link invalid.');
-    if (isDuplicate) qualityWarnings.push('Muhtemel tekrar kayıt.');
+    if (isDuplicate) {
+      qualityWarnings.push(
+        `Muhtemel tekrar kayıt${
+          duplicates.reasons?.length ? ` (${duplicates.reasons.join('+')})` : ''
+        }.`
+      );
+    }
     if (!category) qualityWarnings.push('Kategori bulunamadı.');
     if (enrichMeta.requested && !enrichMeta.enriched) {
       qualityWarnings.push(`Gemini enrich atlandı: ${enrichMeta.error || 'bilinmiyor'}`);
@@ -926,7 +959,12 @@ export async function scrapeToolUrlAdmin(options = {}) {
     }
 
     if (isDuplicate) {
-      return { error: 'Bu araç zaten katalogda görünüyor (isim veya link).', report };
+      return {
+        error: `Bu araç zaten katalogda görünüyor (${
+          duplicates.reasons?.join('+') || 'isim/link/host'
+        }).`,
+        report,
+      };
     }
     if (linkCheck?.status === 'invalid') {
       return { error: 'Link geçersiz; kayıt yapılmadı.', report };
@@ -1088,6 +1126,171 @@ export async function scrapeToolUrlsAdmin(options = {}) {
     logger.error('scrapeToolUrlsAdmin failed:', error);
     return {
       error: error instanceof Error ? error.message : 'Toplu scrape çalıştırılamadı.',
+    };
+  }
+}
+
+/**
+ * Admin: seed URL kuyruğu (kategori bazlı) — host+name dedupe sonrası scrape.
+ * dryRun varsayılan true; live insert yalnızca kuyruk adaylarında tek tek onay kuyruğuna yazar.
+ */
+export async function runScrapeSeedQueueAdmin(options = {}) {
+  'use server';
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: 'Yetkiniz yok.' };
+  }
+
+  try {
+    const { buildScrapeQueue, clampQueueLimit, listSeedCategorySlugs, summarizeSeedCatalog } =
+      await import('@/lib/toolScrape');
+
+    const dryRun = options.dryRun !== false;
+    const limit = clampQueueLimit(options.limit);
+    const categorySlug = String(options.categorySlug || 'all')
+      .trim()
+      .toLowerCase();
+    const provider = String(options.provider || 'auto')
+      .trim()
+      .toLowerCase();
+    const enrichWithGemini = Boolean(options.enrichWithGemini);
+    const categoryIdOverride = String(options.categoryId || '').trim();
+
+    const supabaseAdmin = createAdminClient();
+
+    // Katalog indeksi (host+name prefilter)
+    const { data: catalogTools, error: catalogError } = await supabaseAdmin
+      .from('tools')
+      .select('id, name, slug, link, is_approved')
+      .limit(4000);
+
+    if (catalogError) {
+      logger.warn('Seed kuyruk katalog okunamadı:', catalogError.message);
+    }
+
+    // Kategori slug → id (seed categorySlug eşlemesi)
+    const { data: categories } = await supabaseAdmin
+      .from('categories')
+      .select('id, name, slug')
+      .order('name')
+      .limit(100);
+
+    const categoryBySlug = new Map(
+      (categories || []).map((item) => [String(item.slug || '').toLowerCase(), item])
+    );
+
+    const built = buildScrapeQueue({
+      categorySlug,
+      catalogTools: catalogTools || [],
+      limit,
+      includeGeneral: true,
+    });
+
+    if (built.queue.length === 0) {
+      return {
+        success: true,
+        report: {
+          dryRun,
+          categorySlug,
+          limit,
+          seedCount: built.seedCount,
+          queueCount: 0,
+          skippedPrefilter: built.skipped,
+          okCount: 0,
+          failCount: 0,
+          insertedCount: 0,
+          results: [],
+          availableCategories: listSeedCategorySlugs(),
+          summary: summarizeSeedCatalog(),
+          message: 'Kuyruk boş: seed yok veya hepsi katalogda (host/isim).',
+        },
+      };
+    }
+
+    const results = [];
+    let insertedCount = 0;
+
+    for (const job of built.queue) {
+      const resolvedCategory =
+        categoryIdOverride ||
+        categoryBySlug.get(String(job.categorySlug || '').toLowerCase())?.id ||
+        '';
+
+      try {
+        const single = await scrapeToolUrlAdmin({
+          url: job.url,
+          provider,
+          categoryId: resolvedCategory || undefined,
+          enrichWithGemini,
+          dryRun,
+        });
+
+        const inserted = single.report?.inserted || null;
+        if (inserted) insertedCount += 1;
+
+        results.push({
+          url: job.url,
+          seedName: job.name,
+          host: job.host,
+          categorySlug: job.categorySlug,
+          ok: !single.error,
+          error: single.error || null,
+          duplicate: Boolean(single.report?.duplicates?.reasons?.length),
+          candidateName: single.report?.candidate?.name || null,
+          inserted,
+          warnings: single.report?.warnings || [],
+        });
+      } catch (itemError) {
+        results.push({
+          url: job.url,
+          seedName: job.name,
+          host: job.host,
+          categorySlug: job.categorySlug,
+          ok: false,
+          error: itemError instanceof Error ? itemError.message : String(itemError),
+          duplicate: false,
+          candidateName: null,
+          inserted: null,
+          warnings: [],
+        });
+      }
+    }
+
+    const okCount = results.filter((item) => item.ok).length;
+    const failCount = results.length - okCount;
+
+    if (!dryRun && insertedCount > 0) {
+      revalidatePath('/admin');
+    }
+
+    return {
+      success: true,
+      report: {
+        dryRun,
+        categorySlug,
+        limit,
+        seedCount: built.seedCount,
+        queueCount: built.queue.length,
+        skippedPrefilter: built.skipped,
+        processed: results.length,
+        okCount,
+        failCount,
+        insertedCount,
+        enrichWithGemini,
+        results,
+        availableCategories: listSeedCategorySlugs(),
+        summary: summarizeSeedCatalog(),
+      },
+    };
+  } catch (error) {
+    logger.error('runScrapeSeedQueueAdmin failed:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Seed kuyruğu çalıştırılamadı.',
     };
   }
 }

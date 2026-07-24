@@ -202,3 +202,26 @@ export {
   DEFAULT_BULK_LIMIT,
   MAX_BULK_LIMIT,
 } from '@/lib/toolScrape/bulk';
+
+export {
+  extractHostKey,
+  normalizeNameKey,
+  buildCatalogDedupeIndex,
+  findCatalogDuplicates,
+  filterSeedsAgainstCatalog,
+} from '@/lib/toolScrape/dedupe';
+
+export {
+  SEED_URLS_BY_CATEGORY,
+  listSeedCategorySlugs,
+  getSeedEntries,
+  summarizeSeedCatalog,
+} from '@/lib/toolScrape/seedUrls';
+
+export {
+  buildScrapeQueue,
+  checkCandidateDedupe,
+  clampQueueLimit,
+  DEFAULT_QUEUE_LIMIT,
+  MAX_QUEUE_LIMIT,
+} from '@/lib/toolScrape/queue';

@@ -12,6 +12,15 @@ const {
 const { scrapeToolPage } = require('../toolScrape');
 const { parseBulkUrls, clampBulkLimit } = require('../toolScrape/bulk');
 const { mergeEnrichedCandidate } = require('../toolScrape/enrichCandidate');
+const {
+  extractHostKey,
+  normalizeNameKey,
+  buildCatalogDedupeIndex,
+  findCatalogDuplicates,
+  filterSeedsAgainstCatalog,
+} = require('../toolScrape/dedupe');
+const { getSeedEntries, listSeedCategorySlugs } = require('../toolScrape/seedUrls');
+const { buildScrapeQueue, clampQueueLimit } = require('../toolScrape/queue');
 
 describe('toolScrape parsePage', () => {
   it('HTML og etiketlerinden aday alanları çıkarır', () => {
@@ -227,5 +236,69 @@ describe('toolScrape enrich merge', () => {
     });
     expect(merged.description).toBe(base.description);
     expect(merged.features.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('toolScrape dedupe host+name', () => {
+  it('host ve isim anahtarlarını normalize eder', () => {
+    expect(extractHostKey('https://www.Midjourney.com/app')).toBe('midjourney.com');
+    expect(normalizeNameKey('Mid Journey AI!')).toBe('midjourneyai');
+  });
+
+  it('katalog host çakışmasını yakalar', () => {
+    const index = buildCatalogDedupeIndex([
+      { id: 1, name: 'Midjourney', link: 'https://www.midjourney.com/' },
+      { id: 2, name: 'Other', link: 'https://other.example/' },
+    ]);
+    const dup = findCatalogDuplicates(
+      { name: 'MJ', link: 'https://midjourney.com/pricing' },
+      index
+    );
+    expect(dup.isDuplicate).toBe(true);
+    expect(dup.reasons).toContain('host');
+    expect(dup.byHost[0].name).toBe('Midjourney');
+  });
+
+  it('seed listesini katalog ve kuyruk-içi hosta göre ayıklar', () => {
+    const seeds = [
+      { url: 'https://new-tool.ai/', name: 'New Tool' },
+      { url: 'https://www.midjourney.com/', name: 'Midjourney' },
+      { url: 'https://new-tool.ai/pricing', name: 'New Tool Pricing' },
+    ];
+    const index = buildCatalogDedupeIndex([
+      { id: 1, name: 'Midjourney', link: 'https://midjourney.com/' },
+    ]);
+    const filtered = filterSeedsAgainstCatalog(seeds, index, { limit: 10 });
+    expect(filtered.queue).toHaveLength(1);
+    expect(filtered.queue[0].url).toMatch(/new-tool\.ai/);
+    expect(filtered.skipped.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('toolScrape seed queue', () => {
+  it('seed kategorileri ve girdileri döner', () => {
+    const slugs = listSeedCategorySlugs();
+    expect(slugs.length).toBeGreaterThan(3);
+    expect(slugs).toContain('kod-yazilim');
+    const coding = getSeedEntries('kod-yazilim');
+    expect(coding.length).toBeGreaterThan(0);
+    expect(coding[0].url).toMatch(/^https?:\/\//);
+    expect(coding[0].categorySlug).toBe('kod-yazilim');
+  });
+
+  it('buildScrapeQueue limit ve prefilter uygular', () => {
+    expect(clampQueueLimit(99)).toBe(10);
+    const built = buildScrapeQueue({
+      categorySlug: 'all',
+      limit: 3,
+      catalogTools: [
+        { id: 1, name: 'ChatGPT', link: 'https://chat.openai.com/' },
+        { id: 2, name: 'Claude', link: 'https://claude.ai/' },
+      ],
+    });
+    expect(built.queue.length).toBeLessThanOrEqual(3);
+    expect(built.seedCount).toBeGreaterThan(3);
+    // Bilinen hostlar kuyruğa girmemeli
+    expect(built.queue.every((job) => !/openai\.com|claude\.ai/i.test(job.url))).toBe(true);
   });
 });
