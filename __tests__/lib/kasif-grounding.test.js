@@ -12,8 +12,25 @@ describe('Kâşif grounding', () => {
     ).toEqual({
       answer: 'Yanıt',
       grounded: true,
-      sources: [{ id: 'tool:7', type: 'tool', title: 'Test Aracı', url: '/tr/tool/test-araci' }],
+      sources: [
+        {
+          id: 'tool:7',
+          type: 'tool',
+          title: 'Test Aracı',
+          url: '/tr/tool/test-araci',
+          pricing: null,
+          slug: 'test-araci',
+        },
+      ],
     });
+  });
+
+  it('kaynaklara fiyat bilgisini ekler', () => {
+    expect(
+      groundModelResponse({ answer: 'Yanıt', sourceIds: ['tool:7'], insufficientContext: false }, [
+        { id: 7, name: 'Test Aracı', slug: 'test-araci', pricing_model: 'Freemium' },
+      ]).sources[0]
+    ).toMatchObject({ pricing: 'Freemium', slug: 'test-araci' });
   });
 
   it('İngilizce yanıtta yerelleştirilmiş boş durum ve kaynak bağlantısı üretir', () => {

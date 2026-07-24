@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import {
@@ -22,31 +22,17 @@ import {
 import { formatKasifGoalLabel } from '@/lib/kasif/goalLabels';
 
 const STARTER_QUESTIONS = [
-  {
-    key: 'presentation',
-    icon: Presentation,
-  },
-  {
-    key: 'image',
-    icon: ImageIcon,
-  },
-  {
-    key: 'code',
-    icon: Code2,
-  },
-  {
-    key: 'seo',
-    icon: Search,
-  },
-  {
-    key: 'email',
-    icon: Mail,
-  },
-  {
-    key: 'chatbot',
-    icon: MessageSquare,
-  },
+  { key: 'presentation', icon: Presentation },
+  { key: 'image', icon: ImageIcon },
+  { key: 'code', icon: Code2 },
+  { key: 'seo', icon: Search },
+  { key: 'email', icon: Mail },
+  { key: 'chatbot', icon: MessageSquare },
 ];
+
+function storageKeyFor(locale) {
+  return `kasif-conversation-v1:${locale || 'tr'}`;
+}
 
 export default function KasifExperiment() {
   const t = useTranslations('Kasif');
@@ -55,10 +41,21 @@ export default function KasifExperiment() {
   const [turns, setTurns] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const conversationEndRef = useRef(null);
   const questionRef = useRef(null);
   const activeRequestRef = useRef(null);
   const feedbackRequestsRef = useRef(new Set());
+  const historyRef = useRef(history);
+  const loadingRef = useRef(loading);
+
+  useEffect(() => {
+    historyRef.current = history;
+  }, [history]);
+
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
 
   useEffect(() => {
     conversationEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -66,52 +63,111 @@ export default function KasifExperiment() {
 
   useEffect(() => () => activeRequestRef.current?.abort(), []);
 
+  // Oturum geçmişini locale bazlı geri yükle.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(storageKeyFor(locale));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed?.turns)) setTurns(parsed.turns);
+        if (Array.isArray(parsed?.history)) setHistory(parsed.history);
+      } else {
+        setTurns([]);
+        setHistory([]);
+      }
+    } catch {
+      setTurns([]);
+      setHistory([]);
+    } finally {
+      setHydrated(true);
+    }
+  }, [locale]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      sessionStorage.setItem(
+        storageKeyFor(locale),
+        JSON.stringify({
+          turns: turns.map((turn) => ({
+            id: turn.id,
+            question: turn.question,
+            result: turn.result
+              ? {
+                  ...turn.result,
+                  // feedback UI state'i de sakla (interactionId ile yeniden gönderilebilir)
+                }
+              : turn.result,
+            feedback: turn.feedback,
+            feedbackStatus: turn.feedbackStatus,
+          })),
+          history,
+        })
+      );
+    } catch {
+      // private mode / quota
+    }
+  }, [turns, history, locale, hydrated]);
+
+  const askQuestion = useCallback(
+    async (rawQuestion) => {
+      const submittedQuestion = String(rawQuestion || '').trim();
+      if (submittedQuestion.length < 3 || loadingRef.current) return;
+
+      const turnId = crypto.randomUUID();
+      const controller = new AbortController();
+      activeRequestRef.current = controller;
+      setLoading(true);
+      setQuestion('');
+      setTurns((current) => [...current, { id: turnId, question: submittedQuestion }]);
+
+      const historySnapshot = historyRef.current;
+
+      try {
+        const response = await fetch('/api/kasif/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            question: submittedQuestion,
+            history: historySnapshot,
+            locale,
+          }),
+        });
+        const data = await response.json();
+        const result = response.ok ? data : { error: data.error || t('genericError') };
+        setTurns((current) =>
+          current.map((turn) => (turn.id === turnId ? { ...turn, result } : turn))
+        );
+        if (response.ok) {
+          setHistory((current) =>
+            [
+              ...current,
+              { role: 'user', content: submittedQuestion },
+              { role: 'assistant', content: data.answer },
+            ].slice(-6)
+          );
+        }
+      } catch (error) {
+        if (error?.name === 'AbortError') return;
+        setTurns((current) =>
+          current.map((turn) =>
+            turn.id === turnId ? { ...turn, result: { error: t('connectionError') } } : turn
+          )
+        );
+      } finally {
+        if (activeRequestRef.current === controller) {
+          activeRequestRef.current = null;
+          setLoading(false);
+        }
+      }
+    },
+    [locale, t]
+  );
+
   async function submit(event) {
     event.preventDefault();
-    const submittedQuestion = question.trim();
-    if (submittedQuestion.length < 3 || loading) return;
-
-    const turnId = crypto.randomUUID();
-    const controller = new AbortController();
-    activeRequestRef.current = controller;
-    setLoading(true);
-    setQuestion('');
-    setTurns((current) => [...current, { id: turnId, question: submittedQuestion }]);
-
-    try {
-      const response = await fetch('/api/kasif/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({ question: submittedQuestion, history, locale }),
-      });
-      const data = await response.json();
-      const result = response.ok ? data : { error: data.error || t('genericError') };
-      setTurns((current) =>
-        current.map((turn) => (turn.id === turnId ? { ...turn, result } : turn))
-      );
-      if (response.ok) {
-        setHistory((current) =>
-          [
-            ...current,
-            { role: 'user', content: submittedQuestion },
-            { role: 'assistant', content: data.answer },
-          ].slice(-6)
-        );
-      }
-    } catch (error) {
-      if (error?.name === 'AbortError') return;
-      setTurns((current) =>
-        current.map((turn) =>
-          turn.id === turnId ? { ...turn, result: { error: t('connectionError') } } : turn
-        )
-      );
-    } finally {
-      if (activeRequestRef.current === controller) {
-        activeRequestRef.current = null;
-        setLoading(false);
-      }
-    }
+    await askQuestion(question);
   }
 
   async function sendFeedback(turnId, result, value) {
@@ -165,16 +221,46 @@ export default function KasifExperiment() {
     setTurns([]);
     setHistory([]);
     setQuestion('');
+    try {
+      sessionStorage.removeItem(storageKeyFor(locale));
+    } catch {
+      // ignore
+    }
   }
 
-  function chooseStarterQuestion(starterQuestion) {
+  function chooseStarterQuestion(starterQuestion, { autoAsk = false } = {}) {
+    if (autoAsk) {
+      void askQuestion(starterQuestion);
+      return;
+    }
     setQuestion(starterQuestion);
     requestAnimationFrame(() => questionRef.current?.focus());
   }
 
   function retryQuestion(failedQuestion) {
-    setQuestion(failedQuestion);
-    requestAnimationFrame(() => questionRef.current?.focus());
+    void askQuestion(failedQuestion);
+  }
+
+  function StarterChips({ prefix, autoAsk = false, limit = 6 }) {
+    return STARTER_QUESTIONS.slice(0, limit).map(({ key, icon: Icon }) => (
+      <button
+        key={`${prefix}-${key}`}
+        type="button"
+        onClick={() => chooseStarterQuestion(t(`starters.${key}.question`), { autoAsk })}
+        className={
+          autoAsk
+            ? 'inline-flex min-h-8 items-center gap-1.5 rounded-full border border-violet-500/20 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50'
+            : 'flex min-h-12 items-center gap-2 rounded-xl border bg-background px-3 py-2 text-left text-sm font-medium transition-colors hover:border-primary/50 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+        }
+        disabled={loading}
+      >
+        <Icon
+          className={autoAsk ? 'h-3.5 w-3.5 text-primary' : 'h-4 w-4 shrink-0 text-primary'}
+          aria-hidden="true"
+        />
+        {t(`starters.${key}.label`)}
+      </button>
+    ));
   }
 
   return (
@@ -208,17 +294,7 @@ export default function KasifExperiment() {
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('startersDescription')}</p>
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {STARTER_QUESTIONS.map(({ key, icon: Icon }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => chooseStarterQuestion(t(`starters.${key}.question`))}
-                className="flex min-h-12 items-center gap-2 rounded-xl border bg-background px-3 py-2 text-left text-sm font-medium transition-colors hover:border-primary/50 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                {t(`starters.${key}.label`)}
-              </button>
-            ))}
+            <StarterChips prefix="home" autoAsk={false} />
           </div>
         </section>
       )}
@@ -262,9 +338,14 @@ export default function KasifExperiment() {
                           {turn.result.answer}
                         </p>
                         {turn.result.grounded === false && !turn.result.meta && (
-                          <p className="mt-3 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
-                            {t('ungroundedHint')}
-                          </p>
+                          <div className="mt-3 space-y-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+                            <p className="text-xs text-amber-900 dark:text-amber-100">
+                              {t('ungroundedHint')}
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              <StarterChips prefix={`ungrounded-${turn.id}`} autoAsk limit={4} />
+                            </div>
+                          </div>
                         )}
                         {(turn.result.softLanding || turn.result.metaKind === 'soft-landing') && (
                           <div className="mt-3 space-y-2 rounded-md border border-violet-500/30 bg-violet-500/10 px-3 py-2">
@@ -272,19 +353,7 @@ export default function KasifExperiment() {
                               {t('softLandingHint')}
                             </p>
                             <div className="flex flex-wrap gap-1.5">
-                              {STARTER_QUESTIONS.slice(0, 4).map(({ key, icon: Icon }) => (
-                                <button
-                                  key={`soft-${turn.id}-${key}`}
-                                  type="button"
-                                  onClick={() =>
-                                    chooseStarterQuestion(t(`starters.${key}.question`))
-                                  }
-                                  className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-violet-500/20 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-muted"
-                                >
-                                  <Icon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                                  {t(`starters.${key}.label`)}
-                                </button>
-                              ))}
+                              <StarterChips prefix={`soft-${turn.id}`} autoAsk limit={4} />
                             </div>
                           </div>
                         )}
@@ -352,10 +421,15 @@ export default function KasifExperiment() {
                               {turn.result.sources.map((source) => (
                                 <li key={source.id}>
                                   <Link
-                                    className="inline-flex items-center rounded-full border bg-background px-3 py-1 text-sm font-medium text-primary transition-colors hover:bg-muted"
+                                    className="inline-flex max-w-full items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-medium text-primary transition-colors hover:bg-muted"
                                     href={source.url}
                                   >
-                                    {source.title}
+                                    <span className="truncate">{source.title}</span>
+                                    {source.pricing ? (
+                                      <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">
+                                        {source.pricing}
+                                      </span>
+                                    ) : null}
                                   </Link>
                                 </li>
                               ))}

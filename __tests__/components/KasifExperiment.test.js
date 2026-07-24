@@ -15,6 +15,7 @@ describe('Kâşif ekranı', () => {
     window.requestAnimationFrame = (callback) => callback();
     Element.prototype.scrollIntoView = jest.fn();
     global.fetch = jest.fn();
+    sessionStorage.clear();
   });
 
   it('başlangıç sorusunu giriş alanına taşır ve odağı korur', () => {
@@ -126,6 +127,50 @@ describe('Kâşif ekranı', () => {
     expect(screen.getAllByRole('button', { name: 'Sunum hazırla' }).length).toBeGreaterThan(0);
   });
 
+  it('soft-landing chip tıklanınca yeni soruyu otomatik gönderir', async () => {
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          answer: 'Önceki liste yok',
+          sources: [],
+          grounded: true,
+          softLanding: true,
+          meta: true,
+          metaKind: 'soft-landing',
+          confidence: 0.92,
+          intent: { meta: 'soft-landing', goals: [] },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          answer: 'Sunum önerisi',
+          sources: [{ id: 'tool:1', title: 'Slayt', url: '/tr/tool/slayt', pricing: 'Freemium' }],
+          grounded: true,
+          confidence: 0.9,
+          intent: { goals: ['presentation-creation'] },
+        }),
+      });
+
+    render(<KasifExperiment />);
+
+    fireEvent.change(screen.getByRole('textbox', { name: "Kâşif'e sor" }), {
+      target: { value: 'Peki bunlardan ücretsiz olanlar hangileri?' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: "Kâşif'e sor" }));
+    await screen.findByText(/Görevi netleştir/i);
+
+    // Soft-landing bloğundaki Sunum chip'i (sonraki aynı isimli home chip olmayabilir)
+    const sunumChips = screen.getAllByRole('button', { name: 'Sunum hazırla' });
+    fireEvent.click(sunumChips[sunumChips.length - 1]);
+
+    await screen.findByText('Sunum önerisi');
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    const secondBody = JSON.parse(global.fetch.mock.calls[1][1].body);
+    expect(secondBody.question).toMatch(/sunum/i);
+  });
+
   it('yeni konuşma başlatıldığında bekleyen isteği iptal eder', () => {
     let requestSignal;
     global.fetch.mockImplementation((_url, options) => {
@@ -144,19 +189,23 @@ describe('Kâşif ekranı', () => {
     expect(screen.getByRole('heading', { name: 'Nereden başlamak istersin?' })).toBeInTheDocument();
   });
 
-  it('başarısız soruyu yeniden giriş alanına taşır', async () => {
-    global.fetch.mockRejectedValue(new Error('network'));
+  it('başarısız soruyu yeniden dene ile otomatik tekrar gönderir', async () => {
+    global.fetch.mockRejectedValueOnce(new Error('network')).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ answer: 'İkinci deneme yanıtı', sources: [] }),
+    });
     render(<KasifExperiment />);
 
-    const question = screen.getByRole('textbox', { name: "Kâşif'e sor" });
-    fireEvent.change(question, { target: { value: 'Ücretsiz sunum aracı öner' } });
+    fireEvent.change(screen.getByRole('textbox', { name: "Kâşif'e sor" }), {
+      target: { value: 'Ücretsiz sunum aracı öner' },
+    });
     fireEvent.click(screen.getByRole('button', { name: "Kâşif'e sor" }));
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Yeniden dene' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Yeniden dene' }));
 
-    expect(question).toHaveValue('Ücretsiz sunum aracı öner');
-    expect(question).toHaveFocus();
+    await screen.findByText('İkinci deneme yanıtı');
+    expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
   it('geri bildirimi gönderirken çift isteği engeller ve hatayı gösterir', async () => {
@@ -183,7 +232,7 @@ describe('Kâşif ekranı', () => {
     fireEvent.click(usefulButton);
 
     await screen.findByText('Geri bildirim kaydedilemedi. Lütfen tekrar deneyin.');
-    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
     expect(global.fetch).toHaveBeenCalledTimes(2);
     expect(usefulButton).toBeEnabled();
   });

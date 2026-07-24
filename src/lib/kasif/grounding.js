@@ -34,6 +34,8 @@ export function groundModelResponse(modelResponse, records, locale = 'tr') {
       type: 'tool',
       title: item.name,
       url: `/${locale}/tool/${item.slug}`,
+      pricing: item.pricing_model || item.pricing_type || null,
+      slug: item.slug || null,
     }));
 
   if (modelResponse?.insufficientContext || !answer || validSources.length === 0) {
