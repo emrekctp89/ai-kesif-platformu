@@ -484,6 +484,60 @@ const cases = [
     minConfidence: 0.85,
     skipSources: true,
   },
+  {
+    name: 'concept-noise-image-not-data',
+    question: 'Bir resim çizmek ve görsel üretmek istiyorum',
+    expectedAny: [
+      'Bing Image Creator',
+      'Leonardo AI',
+      'Midjourney',
+      'Craiyon (formerly DALL-E mini)',
+      'SeaArt AI',
+      'Hotpot.ai',
+      'Artbreeder',
+    ],
+    expectedTop: [
+      'Bing Image Creator',
+      'Leonardo AI',
+      'Midjourney',
+      'Craiyon (formerly DALL-E mini)',
+      'SeaArt AI',
+      'Hotpot.ai',
+      'Artbreeder',
+    ],
+    expectedGoal: 'image-generation',
+    forbiddenConcepts: ['veri-analiz'],
+    minConfidence: 0.75,
+  },
+  {
+    name: 'concept-noise-coding-not-chatbot',
+    question: 'Kod yazmak için asistan öner',
+    expectedAny: [
+      'GitHub Copilot',
+      'Cursor',
+      'Tabnine',
+      'Codeium',
+      'AskCodi',
+      'CodeGeeX',
+      'CodePal',
+      'Amazon CodeWhisperer',
+      'Sourcegraph Cody',
+    ],
+    expectedTop: [
+      'GitHub Copilot',
+      'Cursor',
+      'Tabnine',
+      'Codeium',
+      'AskCodi',
+      'CodeGeeX',
+      'CodePal',
+      'Amazon CodeWhisperer',
+      'Sourcegraph Cody',
+    ],
+    expectedGoal: 'coding-assistant',
+    forbiddenConcepts: ['chatbotlar'],
+    minConfidence: 0.75,
+  },
 ];
 
 let failed = 0;
@@ -505,6 +559,7 @@ for (const evaluation of cases) {
     const payload = await response.json();
     const latencyMs = Math.round(performance.now() - startedAt);
     const titles = (payload.sources || []).map((source) => source.title);
+    const concepts = payload.intent?.concepts || [];
     const skipSources = Boolean(evaluation.skipSources);
     const relevant = skipSources
       ? true
@@ -522,6 +577,10 @@ for (const evaluation of cases) {
       !evaluation.expectSoftLanding ||
       payload.softLanding === true ||
       payload.metaKind === 'soft-landing';
+    const forbiddenConcepts = evaluation.forbiddenConcepts || [];
+    const conceptsClean = forbiddenConcepts.every((concept) => !concepts.includes(concept));
+    const requiredConcepts = evaluation.requiredConcepts || [];
+    const conceptsRequired = requiredConcepts.every((concept) => concepts.includes(concept));
     const passed =
       response.ok &&
       payload.grounded === true &&
@@ -532,6 +591,8 @@ for (const evaluation of cases) {
       confidenceMatched &&
       metaMatched &&
       softLandingMatched &&
+      conceptsClean &&
+      conceptsRequired &&
       latencyMs <= maxLatencyMs;
     if (!passed) failed += 1;
     console.log(
@@ -544,6 +605,7 @@ for (const evaluation of cases) {
         meta: payload.meta,
         softLanding: payload.softLanding,
         sources: titles,
+        conceptsClean,
         error: payload.error,
       })
     );

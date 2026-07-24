@@ -1,4 +1,8 @@
-import { groundModelResponse, NO_INFORMATION_ANSWER } from '@/lib/kasif/grounding';
+import {
+  formatSourceReasons,
+  groundModelResponse,
+  NO_INFORMATION_ANSWER,
+} from '@/lib/kasif/grounding';
 
 const records = [{ id: 7, name: 'Test Aracı', slug: 'test-araci' }];
 
@@ -22,9 +26,27 @@ describe('Kâşif grounding', () => {
           slug: 'test-araci',
           category: null,
           rating: null,
+          reasons: [],
         },
       ],
     });
+  });
+
+  it('kaynaklara eşleşme nedenlerini ekler', () => {
+    expect(
+      groundModelResponse(
+        {
+          answer: 'Yanıt',
+          sourceIds: ['tool:7'],
+          sourceReasons: { 'tool:7': ['direct-match', 'free-plan'] },
+          insufficientContext: false,
+        },
+        [{ id: 7, name: 'Test Aracı', slug: 'test-araci', pricing_model: 'Freemium' }]
+      ).sources[0]
+    ).toMatchObject({
+      reasons: ['göreve uygun', 'ücretsiz/freemium'],
+    });
+    expect(formatSourceReasons(['high-rated'], 'en')).toEqual(['highly rated']);
   });
 
   it('kaynaklara fiyat bilgisini ekler', () => {

@@ -150,6 +150,25 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
       created_at: row.created_at || null,
     }));
 
+  const softLandingPriceBuckets = { free: 0, paid: 0, any: 0 };
+  for (const row of softLanding) {
+    const pref = row.intent?.pricePreference;
+    if (pref === 'free') softLandingPriceBuckets.free += 1;
+    else if (pref === 'paid') softLandingPriceBuckets.paid += 1;
+    else softLandingPriceBuckets.any += 1;
+  }
+
+  const softLandingTokenCounts = new Map();
+  for (const row of softLanding) {
+    for (const token of tokenizeQuestion(row.question)) {
+      softLandingTokenCounts.set(token, (softLandingTokenCounts.get(token) || 0) + 1);
+    }
+  }
+  const topSoftLandingTokens = [...softLandingTokenCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([token, count]) => ({ token, count }));
+
   const helpfulRate =
     withFeedback.length > 0
       ? Number(((positive.length / withFeedback.length) * 100).toFixed(1))
@@ -164,6 +183,8 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
     helpfulRate,
     meta: meta.length,
     softLanding: softLanding.length,
+    softLandingPriceBuckets,
+    topSoftLandingTokens,
     ungrounded: ungrounded.length,
     lowConfidence: lowConfidence.length,
     issueCount,

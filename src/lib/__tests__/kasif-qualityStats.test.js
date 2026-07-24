@@ -68,6 +68,8 @@ describe('buildKasifQualityStats', () => {
     expect(stats.meta).toBe(1);
     expect(stats.softLanding).toBe(1);
     expect(stats.recentSoftLanding?.[0]?.id).toBe('5');
+    expect(stats.softLandingPriceBuckets?.free).toBe(1);
+    expect(stats.topSoftLandingTokens?.length).toBeGreaterThan(0);
     expect(stats.lowConfidence).toBe(1);
     expect(stats.topGoals[0].goals).toMatch(/presentation-creation|logo-design|hedef yok/);
     expect(stats.recentNegative[0].id).toBe('2');

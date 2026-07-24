@@ -1822,27 +1822,47 @@ function KasifQualityTab({ interactions = [] }) {
           <CardTitle className="text-base">{t('kasifSoftLandingTitle')}</CardTitle>
           <CardDescription>{t('kasifSoftLandingDesc')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
+          {(stats.softLanding || 0) > 0 ? (
+            <div className="flex flex-wrap gap-2 text-xs">
+              <Badge variant="secondary">
+                {t('kasifSoftPriceFree')}: {stats.softLandingPriceBuckets?.free || 0}
+              </Badge>
+              <Badge variant="secondary">
+                {t('kasifSoftPricePaid')}: {stats.softLandingPriceBuckets?.paid || 0}
+              </Badge>
+              <Badge variant="outline">
+                {t('kasifSoftPriceAny')}: {stats.softLandingPriceBuckets?.any || 0}
+              </Badge>
+              {(stats.topSoftLandingTokens || []).slice(0, 5).map((item) => (
+                <Badge key={item.token} variant="outline" className="font-mono font-normal">
+                  {item.token} · {item.count}
+                </Badge>
+              ))}
+            </div>
+          ) : null}
           {(stats.recentSoftLanding || []).length === 0 ? (
             <p className="text-sm text-muted-foreground">{t('kasifSoftLandingEmpty')}</p>
           ) : (
-            stats.recentSoftLanding.map((row) => (
-              <article key={row.id} className="rounded-lg border p-3 text-sm">
-                <p className="font-medium leading-5">{row.question}</p>
-                <div className="mt-2 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
-                  <span>{formatKasifDate(row.created_at)}</span>
-                  <span>·</span>
-                  <span>
-                    {t('kasifConfidence')}: %{Math.round((row.confidence || 0) * 100)}
-                  </span>
-                  {row.pricePreference && row.pricePreference !== 'any' && (
-                    <Badge variant="outline" className="font-normal">
-                      {row.pricePreference}
-                    </Badge>
-                  )}
-                </div>
-              </article>
-            ))
+            <div className="space-y-3">
+              {stats.recentSoftLanding.map((row) => (
+                <article key={row.id} className="rounded-lg border p-3 text-sm">
+                  <p className="font-medium leading-5">{row.question}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                    <span>{formatKasifDate(row.created_at)}</span>
+                    <span>·</span>
+                    <span>
+                      {t('kasifConfidence')}: %{Math.round((row.confidence || 0) * 100)}
+                    </span>
+                    {row.pricePreference && row.pricePreference !== 'any' && (
+                      <Badge variant="outline" className="font-normal">
+                        {row.pricePreference}
+                      </Badge>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

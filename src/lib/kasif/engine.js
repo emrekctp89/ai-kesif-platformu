@@ -563,13 +563,19 @@ export function answerQuestion(question, records, history = [], locale = 'tr') {
   }
   confidence = Math.min(0.98, Number(confidence.toFixed(2)));
 
+  const sourceIds = ranked.map(({ record }) => `tool:${record.id}`);
+  const sourceReasons = Object.fromEntries(
+    ranked.map(({ record, reasons }) => [`tool:${record.id}`, reasons || []])
+  );
+
   return {
     answer: `${intro}\n\n${lines.join('\n')}${verdict}\n\n${
       locale === 'en'
         ? 'Results were calculated exclusively from AI Keşif Platformu records.'
         : 'Sonuçlar yalnızca AI Keşif Platformu kayıtlarından hesaplandı.'
     }`,
-    sourceIds: ranked.map(({ record }) => `tool:${record.id}`),
+    sourceIds,
+    sourceReasons,
     insufficientContext: false,
     confidence,
     intent: {

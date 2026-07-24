@@ -425,6 +425,11 @@ export default function KasifExperiment() {
                                     href={source.url}
                                   >
                                     <span className="font-medium text-primary">{source.title}</span>
+                                    {Array.isArray(source.reasons) && source.reasons.length > 0 ? (
+                                      <span className="text-[11px] leading-4 text-muted-foreground">
+                                        {source.reasons.join(' · ')}
+                                      </span>
+                                    ) : null}
                                     <span className="flex flex-wrap gap-1 text-[10px] text-muted-foreground">
                                       {source.category ? (
                                         <span className="rounded-full border px-1.5 py-0.5">
