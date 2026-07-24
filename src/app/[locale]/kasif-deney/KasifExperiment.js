@@ -417,19 +417,31 @@ export default function KasifExperiment() {
                             <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
                               {t('sources')}
                             </p>
-                            <ul className="flex flex-wrap gap-2">
+                            <ul className="grid gap-2 sm:grid-cols-2">
                               {turn.result.sources.map((source) => (
                                 <li key={source.id}>
                                   <Link
-                                    className="inline-flex max-w-full items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-medium text-primary transition-colors hover:bg-muted"
+                                    className="flex h-full flex-col gap-1 rounded-xl border bg-background px-3 py-2 text-sm transition-colors hover:bg-muted/60"
                                     href={source.url}
                                   >
-                                    <span className="truncate">{source.title}</span>
-                                    {source.pricing ? (
-                                      <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">
-                                        {source.pricing}
-                                      </span>
-                                    ) : null}
+                                    <span className="font-medium text-primary">{source.title}</span>
+                                    <span className="flex flex-wrap gap-1 text-[10px] text-muted-foreground">
+                                      {source.category ? (
+                                        <span className="rounded-full border px-1.5 py-0.5">
+                                          {source.category}
+                                        </span>
+                                      ) : null}
+                                      {source.pricing ? (
+                                        <span className="rounded-full border px-1.5 py-0.5">
+                                          {source.pricing}
+                                        </span>
+                                      ) : null}
+                                      {typeof source.rating === 'number' ? (
+                                        <span className="rounded-full border px-1.5 py-0.5">
+                                          ★ {source.rating}
+                                        </span>
+                                      ) : null}
+                                    </span>
                                   </Link>
                                 </li>
                               ))}

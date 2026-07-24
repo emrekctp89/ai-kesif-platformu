@@ -1291,6 +1291,7 @@
     "kasifQualityDesc": "Interactions, feedback, and low-confidence signals from the last {days} days.",
     "kasifOpenLive": "Open live Kâşif",
     "kasifRefresh": "Refresh",
+    "kasifExportJson": "Download JSON",
     "kasifEmptyTitle": "No interactions yet",
     "kasifEmptyHint": "This fills as users ask on /kasif. Try the live page if you want sample data.",
     "kasifFeedbackCoverage": "Feedback coverage",

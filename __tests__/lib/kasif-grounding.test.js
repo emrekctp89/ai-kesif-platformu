@@ -20,6 +20,8 @@ describe('Kâşif grounding', () => {
           url: '/tr/tool/test-araci',
           pricing: null,
           slug: 'test-araci',
+          category: null,
+          rating: null,
         },
       ],
     });
@@ -31,6 +33,21 @@ describe('Kâşif grounding', () => {
         { id: 7, name: 'Test Aracı', slug: 'test-araci', pricing_model: 'Freemium' },
       ]).sources[0]
     ).toMatchObject({ pricing: 'Freemium', slug: 'test-araci' });
+  });
+
+  it('kaynaklara kategori ve puan ekler', () => {
+    expect(
+      groundModelResponse({ answer: 'Yanıt', sourceIds: ['tool:7'], insufficientContext: false }, [
+        {
+          id: 7,
+          name: 'Test Aracı',
+          slug: 'test-araci',
+          pricing_model: 'Freemium',
+          average_rating: 4.66,
+          category: { name: 'Üretkenlik' },
+        },
+      ]).sources[0]
+    ).toMatchObject({ category: 'Üretkenlik', rating: 4.7, pricing: 'Freemium' });
   });
 
   it('İngilizce yanıtta yerelleştirilmiş boş durum ve kaynak bağlantısı üretir', () => {

@@ -670,4 +670,16 @@ describe('Kâşif engine', () => {
   it('açık görevli soruyu soft-landing saymaz', () => {
     expect(isContextlessFollowUp('Ücretsiz sunum aracı öner', [])).toBe(false);
   });
+
+  it('görsel sorgusunda veri-analiz kavramını yanlış tetiklemez', () => {
+    const intent = understandQuestion('Bir resim çizmek ve görsel üretmek istiyorum');
+    expect(intent.concepts).toContain('gorsel-uretim');
+    expect(intent.concepts).not.toContain('veri-analiz');
+  });
+
+  it('kod asistanı sorgusunda chatbotlar kavramını yalnızca asistan kelimesiyle tetiklemez', () => {
+    const intent = understandQuestion('Kod yazmak için asistan öner');
+    expect(intent.concepts).toContain('kod-yazilim');
+    expect(intent.concepts).not.toContain('chatbotlar');
+  });
 });

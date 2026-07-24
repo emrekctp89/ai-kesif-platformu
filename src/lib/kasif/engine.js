@@ -2,6 +2,7 @@ import {
   buildRetrievalQuery,
   extractSearchTerms,
   includesNormalized,
+  includesNormalizedConcept,
   normalizeText,
 } from './retrieval';
 import { FREE_WORDS, KASIF_CONCEPTS, KASIF_GOALS, PAID_WORDS } from './lexicon';
@@ -92,7 +93,10 @@ export function understandQuestion(question) {
   const matchedConcepts = Object.entries(KASIF_CONCEPTS)
     .map(([concept, words]) => ({
       concept,
-      signals: words.filter((word) => includesNormalized(normalized, word)).map(normalizeText),
+      // Kısa kavramlarda tam token; uzunlarda stem/includes. "bi"→"bir" engellenir.
+      signals: words
+        .filter((word) => includesNormalizedConcept(normalized, word))
+        .map(normalizeText),
     }))
     .filter(({ signals }) => signals.length > 0);
   const concepts = matchedConcepts.map(({ concept }) => concept);

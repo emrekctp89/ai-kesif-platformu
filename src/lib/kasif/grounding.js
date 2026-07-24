@@ -29,14 +29,19 @@ export function groundModelResponse(modelResponse, records, locale = 'tr') {
   const validSources = [...new Set(requestedIds)]
     .map((id) => allowed.get(String(id)))
     .filter(Boolean)
-    .map((item) => ({
-      id: `tool:${item.id}`,
-      type: 'tool',
-      title: item.name,
-      url: `/${locale}/tool/${item.slug}`,
-      pricing: item.pricing_model || item.pricing_type || null,
-      slug: item.slug || null,
-    }));
+    .map((item) => {
+      const rating = Number(item.average_rating);
+      return {
+        id: `tool:${item.id}`,
+        type: 'tool',
+        title: item.name,
+        url: `/${locale}/tool/${item.slug}`,
+        pricing: item.pricing_model || item.pricing_type || null,
+        slug: item.slug || null,
+        category: item.category?.name || item.category_name || null,
+        rating: Number.isFinite(rating) && rating > 0 ? Number(rating.toFixed(1)) : null,
+      };
+    });
 
   if (modelResponse?.insufficientContext || !answer || validSources.length === 0) {
     return {

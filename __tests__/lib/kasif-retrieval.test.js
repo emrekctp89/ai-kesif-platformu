@@ -6,6 +6,8 @@ import {
   buildSearchFilter,
   expandSearchTerms,
   includesNormalized,
+  includesNormalizedConcept,
+  includesNormalizedToken,
   normalizeText,
 } from '@/lib/kasif/retrieval';
 
@@ -89,5 +91,14 @@ describe('Kâşif semantic retrieval', () => {
     expect(includesNormalized('seo analizi', 'seo')).toBe(true);
     expect(includesNormalized('blog yazısı', 'yaz')).toBe(true);
     expect(includesNormalized('gorsel', 'seo')).toBe(false);
+  });
+
+  it('katı token eşlemesi bi→bir false-positive üretmez', () => {
+    expect(includesNormalizedToken('bir resim çizmek istiyorum', 'bi')).toBe(false);
+    expect(includesNormalizedConcept('bir resim çizmek istiyorum', 'bi')).toBe(false);
+    expect(includesNormalizedToken('seo analizi', 'seo')).toBe(true);
+    expect(includesNormalizedToken('sohbet asistanı öner', 'sohbet asistan')).toBe(true);
+    // Uzun stem kavramlar hâlâ çalışır
+    expect(includesNormalizedConcept('metni çevirmek istiyorum', 'çevir')).toBe(true);
   });
 });

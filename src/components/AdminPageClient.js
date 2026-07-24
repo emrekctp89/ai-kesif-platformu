@@ -1589,6 +1589,34 @@ function KasifQualityTab({ interactions = [] }) {
   const feedbackCoverage =
     stats.total > 0 ? Math.round((stats.withFeedback / stats.total) * 100) : null;
 
+  function exportQualityJson() {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      locale,
+      windowDays: stats.windowDays,
+      stats,
+      sampleInteractions: (interactions || []).slice(0, 100).map((row) => ({
+        id: row.id,
+        question: row.question,
+        confidence: row.confidence,
+        feedback: row.feedback,
+        goals: row.intent?.goals || [],
+        meta: row.intent?.meta || null,
+        pricePreference: row.intent?.pricePreference || null,
+        sourceCount: Array.isArray(row.source_ids) ? row.source_ids.length : 0,
+        created_at: row.created_at,
+      })),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    anchor.href = url;
+    anchor.download = `kasif-quality-${stamp}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="space-y-6">
       <Card className="glass-panel border-border/50">
@@ -1602,6 +1630,16 @@ function KasifQualityTab({ interactions = [] }) {
               <Link href={kasifHref} prefetch={false}>
                 {t('kasifOpenLive')}
               </Link>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="min-h-9"
+              onClick={exportQualityJson}
+              disabled={!stats.total}
+            >
+              {t('kasifExportJson')}
             </Button>
             <Button
               type="button"

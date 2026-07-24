@@ -1291,6 +1291,7 @@
     "kasifQualityDesc": "Son {days} günün etkileşim, geri bildirim ve düşük güven sinyalleri.",
     "kasifOpenLive": "Canlı Kâşif",
     "kasifRefresh": "Yenile",
+    "kasifExportJson": "JSON indir",
     "kasifEmptyTitle": "Henüz etkileşim yok",
     "kasifEmptyHint": "Kullanıcılar /kasif üzerinde soru sordukça burası dolacak. İstersen canlı sayfadan dene.",
     "kasifFeedbackCoverage": "Geri bildirim kapsamı",

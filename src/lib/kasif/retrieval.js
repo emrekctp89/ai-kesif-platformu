@@ -95,6 +95,31 @@ export function includesNormalized(haystack, needle) {
   return h.includes(n);
 }
 
+/**
+ * Tam token eşlemesi (veya çok kelimeli ifade).
+ * "bi" ≠ "bir".
+ */
+export function includesNormalizedToken(haystack, needle) {
+  const h = normalizeText(haystack);
+  const n = normalizeText(needle);
+  if (!h || !n) return false;
+  if (n.includes(' ')) return h.includes(n);
+  return new RegExp(`(?:^|\\s)${escapeRegExp(n)}(?:\\s|$)`).test(h);
+}
+
+/**
+ * Kavram sinyali: kısa kelimelerde tam token, uzunlarda mevcut stem/includes.
+ * Goal/evidence için includesNormalized kullanılmaya devam eder.
+ */
+export function includesNormalizedConcept(haystack, needle) {
+  const n = normalizeText(needle);
+  if (!n) return false;
+  if (n.length <= 3 && !n.includes(' ')) {
+    return includesNormalizedToken(haystack, needle);
+  }
+  return includesNormalized(haystack, needle);
+}
+
 export function extractSearchTerms(question) {
   return normalizeText(question)
     .split(/\s+/)
@@ -111,7 +136,7 @@ function matchesGoal(goal, normalizedQuery) {
 function hasRecognizedTopic(question) {
   const normalized = normalizeText(question);
   const hasConcept = Object.values(KASIF_CONCEPTS).some((words) =>
-    words.some((word) => includesNormalized(normalized, word))
+    words.some((word) => includesNormalizedConcept(normalized, word))
   );
   if (hasConcept) return true;
   return Object.values(KASIF_GOALS).some((goal) => matchesGoal(goal, normalized));
@@ -149,7 +174,7 @@ export function expandSearchTerms(query) {
   const normalized = normalizeText(query);
   const baseTerms = extractSearchTerms(query);
   const conceptTerms = Object.values(KASIF_CONCEPTS)
-    .filter((words) => words.some((word) => includesNormalized(normalized, word)))
+    .filter((words) => words.some((word) => includesNormalizedConcept(normalized, word)))
     .flat();
   // Eşleşen hedeflerin evidence/query kelimeleri retrieval hatırlamasını güçlendirir.
   // Goal terimleri concept'ten önce gelir; slice diliminde kaybolmasınlar.
