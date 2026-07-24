@@ -19,6 +19,7 @@ import {
   ThumbsUp,
   User,
 } from 'lucide-react';
+import { formatKasifGoalLabel } from '@/lib/kasif/goalLabels';
 
 const STARTER_QUESTIONS = [
   {
@@ -266,9 +267,26 @@ export default function KasifExperiment() {
                           </p>
                         )}
                         {(turn.result.softLanding || turn.result.metaKind === 'soft-landing') && (
-                          <p className="mt-3 rounded-md border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-violet-900 dark:text-violet-100">
-                            {t('softLandingHint')}
-                          </p>
+                          <div className="mt-3 space-y-2 rounded-md border border-violet-500/30 bg-violet-500/10 px-3 py-2">
+                            <p className="text-xs text-violet-900 dark:text-violet-100">
+                              {t('softLandingHint')}
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {STARTER_QUESTIONS.slice(0, 4).map(({ key, icon: Icon }) => (
+                                <button
+                                  key={`soft-${turn.id}-${key}`}
+                                  type="button"
+                                  onClick={() =>
+                                    chooseStarterQuestion(t(`starters.${key}.question`))
+                                  }
+                                  className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-violet-500/20 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-muted"
+                                >
+                                  <Icon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                                  {t(`starters.${key}.label`)}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         )}
                         {turn.result.grounded !== false &&
                           !turn.result.meta &&
@@ -305,7 +323,7 @@ export default function KasifExperiment() {
                                 key={goal}
                                 className="rounded-full border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
                               >
-                                {goal}
+                                {formatKasifGoalLabel(goal, locale)}
                               </span>
                             ))}
                             {turn.result.intent?.pricePreference &&

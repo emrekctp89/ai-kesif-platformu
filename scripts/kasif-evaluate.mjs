@@ -469,6 +469,21 @@ const cases = [
     expectedPrice: 'paid',
     minConfidence: 0.65,
   },
+  {
+    name: 'meta-identity',
+    question: 'Sen kimsin?',
+    expectMeta: true,
+    minConfidence: 0.9,
+    skipSources: true,
+  },
+  {
+    name: 'soft-landing-contextless',
+    question: 'Peki bunlardan ücretsiz olanlar hangileri?',
+    expectSoftLanding: true,
+    expectedPrice: 'free',
+    minConfidence: 0.85,
+    skipSources: true,
+  },
 ];
 
 let failed = 0;
@@ -483,19 +498,30 @@ for (const evaluation of cases) {
         question: evaluation.question,
         history: evaluation.history || [],
         evaluation: true,
+        locale: evaluation.locale || 'tr',
       }),
       signal: AbortSignal.timeout(maxLatencyMs + 1000),
     });
     const payload = await response.json();
     const latencyMs = Math.round(performance.now() - startedAt);
     const titles = (payload.sources || []).map((source) => source.title);
-    const relevant = evaluation.expectedAny.some((title) => titles.includes(title));
-    const topRelevant = evaluation.expectedTop.includes(titles[0]);
+    const skipSources = Boolean(evaluation.skipSources);
+    const relevant = skipSources
+      ? true
+      : (evaluation.expectedAny || []).some((title) => titles.includes(title));
+    const topRelevant = skipSources
+      ? true
+      : (evaluation.expectedTop || []).includes(titles[0]);
     const goalMatched =
       !evaluation.expectedGoal || payload.intent?.goals?.includes(evaluation.expectedGoal);
     const priceMatched =
       !evaluation.expectedPrice || payload.intent?.pricePreference === evaluation.expectedPrice;
     const confidenceMatched = payload.confidence >= (evaluation.minConfidence || 0);
+    const metaMatched = !evaluation.expectMeta || payload.meta === true;
+    const softLandingMatched =
+      !evaluation.expectSoftLanding ||
+      payload.softLanding === true ||
+      payload.metaKind === 'soft-landing';
     const passed =
       response.ok &&
       payload.grounded === true &&
@@ -504,6 +530,8 @@ for (const evaluation of cases) {
       goalMatched &&
       priceMatched &&
       confidenceMatched &&
+      metaMatched &&
+      softLandingMatched &&
       latencyMs <= maxLatencyMs;
     if (!passed) failed += 1;
     console.log(
@@ -513,6 +541,8 @@ for (const evaluation of cases) {
         latencyMs,
         confidence: payload.confidence,
         intent: payload.intent,
+        meta: payload.meta,
+        softLanding: payload.softLanding,
         sources: titles,
         error: payload.error,
       })

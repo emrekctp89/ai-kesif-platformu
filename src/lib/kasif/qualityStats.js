@@ -138,6 +138,18 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
       feedback: row.feedback ?? null,
     }));
 
+  const recentSoftLanding = softLanding
+    .slice()
+    .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
+    .slice(0, sampleLimit)
+    .map((row) => ({
+      id: row.id,
+      question: row.question,
+      confidence: asNumber(row.confidence),
+      pricePreference: row.intent?.pricePreference || 'any',
+      created_at: row.created_at || null,
+    }));
+
   const helpfulRate =
     withFeedback.length > 0
       ? Number(((positive.length / withFeedback.length) * 100).toFixed(1))
@@ -160,6 +172,7 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
     topNegativeTokens,
     recentNegative,
     recentLowConfidence,
+    recentSoftLanding,
     ruleCandidates: topNegativeTokens.slice(0, 8).map(({ token, count }) => ({
       token,
       count,

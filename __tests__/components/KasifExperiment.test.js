@@ -100,6 +100,32 @@ describe('Kâşif ekranı', () => {
     ).toBeInTheDocument();
   });
 
+  it('soft-landing yanıtında starter chip gösterir', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        answer: 'Önceki liste yok',
+        sources: [],
+        grounded: true,
+        softLanding: true,
+        meta: true,
+        metaKind: 'soft-landing',
+        confidence: 0.92,
+        intent: { meta: 'soft-landing', pricePreference: 'free', goals: [] },
+      }),
+    });
+    render(<KasifExperiment />);
+
+    fireEvent.change(screen.getByRole('textbox', { name: "Kâşif'e sor" }), {
+      target: { value: 'Peki bunlardan ücretsiz olanlar hangileri?' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: "Kâşif'e sor" }));
+
+    expect(await screen.findByText(/Görevi netleştir/i)).toBeInTheDocument();
+    // Soft-landing bloğunda starter chip'ler görünür (boş durum starterlarından ayrı).
+    expect(screen.getAllByRole('button', { name: 'Sunum hazırla' }).length).toBeGreaterThan(0);
+  });
+
   it('yeni konuşma başlatıldığında bekleyen isteği iptal eder', () => {
     let requestSignal;
     global.fetch.mockImplementation((_url, options) => {

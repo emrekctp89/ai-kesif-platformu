@@ -59,6 +59,7 @@ import {
   normalizeToolLink,
 } from '@/lib/toolQuality';
 import { buildKasifQualityStats, isKasifIssueInteraction } from '@/lib/kasif/qualityStats';
+import { formatKasifGoalLabel } from '@/lib/kasif/goalLabels';
 
 function getQualityPriority(issues, duplicateNameCount, duplicateLinkCount) {
   if (issues.some((issue) => issue.key === 'link-invalid')) return 'high';
@@ -1567,9 +1568,13 @@ function formatKasifDate(value) {
   }
 }
 
-function formatGoalLabel(goals, t) {
+function formatGoalLabel(goals, t, locale = 'tr') {
   if (!goals || goals === '(hedef yok)') return t('kasifGoalNone');
-  return goals;
+  return String(goals)
+    .split(',')
+    .map((part) => formatKasifGoalLabel(part.trim(), locale) || part.trim())
+    .filter(Boolean)
+    .join(', ');
 }
 
 function KasifQualityTab({ interactions = [] }) {
@@ -1676,7 +1681,7 @@ function KasifQualityTab({ interactions = [] }) {
                   className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm"
                 >
                   <span className="min-w-0 truncate font-medium">
-                    {formatGoalLabel(bucket.goals, t)}
+                    {formatGoalLabel(bucket.goals, t, locale)}
                   </span>
                   <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
                     <Badge variant="secondary">{bucket.total}</Badge>
@@ -1731,7 +1736,7 @@ function KasifQualityTab({ interactions = [] }) {
                     </span>
                     {row.goals?.length > 0 && (
                       <Badge variant="outline" className="font-normal">
-                        {row.goals.join(', ')}
+                        {row.goals.map((goal) => formatKasifGoalLabel(goal, locale)).join(', ')}
                       </Badge>
                     )}
                   </div>
@@ -1759,7 +1764,7 @@ function KasifQualityTab({ interactions = [] }) {
                     </span>
                     {row.goals?.length > 0 ? (
                       <Badge variant="outline" className="font-normal">
-                        {row.goals.join(', ')}
+                        {row.goals.map((goal) => formatKasifGoalLabel(goal, locale)).join(', ')}
                       </Badge>
                     ) : (
                       <Badge variant="secondary" className="font-normal">
@@ -1773,6 +1778,36 @@ function KasifQualityTab({ interactions = [] }) {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="glass-panel border-border/50">
+        <CardHeader>
+          <CardTitle className="text-base">{t('kasifSoftLandingTitle')}</CardTitle>
+          <CardDescription>{t('kasifSoftLandingDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {(stats.recentSoftLanding || []).length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('kasifSoftLandingEmpty')}</p>
+          ) : (
+            stats.recentSoftLanding.map((row) => (
+              <article key={row.id} className="rounded-lg border p-3 text-sm">
+                <p className="font-medium leading-5">{row.question}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                  <span>{formatKasifDate(row.created_at)}</span>
+                  <span>·</span>
+                  <span>
+                    {t('kasifConfidence')}: %{Math.round((row.confidence || 0) * 100)}
+                  </span>
+                  {row.pricePreference && row.pricePreference !== 'any' && (
+                    <Badge variant="outline" className="font-normal">
+                      {row.pricePreference}
+                    </Badge>
+                  )}
+                </div>
+              </article>
+            ))
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
