@@ -2,9 +2,11 @@ jest.mock('server-only', () => ({}));
 jest.mock('@/utils/supabase/server', () => ({ createClient: jest.fn() }));
 
 import {
+  answerContextlessFollowUp,
   answerMetaQuestion,
   answerQuestion,
   detectMetaIntent,
+  isContextlessFollowUp,
   prioritizeGoals,
   rankTools,
   understandConversation,
@@ -635,5 +637,25 @@ describe('Kâşif engine', () => {
     );
     expect(intent.goals).toContain('coding-assistant');
     expect(intent.goals).not.toContain('learning-tutor');
+  });
+
+  it('geçmişsiz follow-up sorusunda soft-landing üretir', () => {
+    expect(isContextlessFollowUp('Peki bunlardan ücretsiz olanlar hangileri?', [])).toBe(true);
+    const result = answerContextlessFollowUp('Peki bunlardan ücretsiz olanlar hangileri?', 'tr');
+    expect(result.softLanding).toBe(true);
+    expect(result.answer).toMatch(/önceki öneri listesi yok/i);
+    expect(result.intent.pricePreference).toBe('free');
+  });
+
+  it('geçmiş varken follow-up soft-landing devreye girmez', () => {
+    expect(
+      isContextlessFollowUp('Peki bunlardan ücretsiz olanlar hangileri?', [
+        { role: 'user', content: 'Sunum aracı öner' },
+      ])
+    ).toBe(false);
+  });
+
+  it('açık görevli soruyu soft-landing saymaz', () => {
+    expect(isContextlessFollowUp('Ücretsiz sunum aracı öner', [])).toBe(false);
   });
 });

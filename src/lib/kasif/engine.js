@@ -330,9 +330,100 @@ export function answerMetaQuestion(question, locale = 'tr') {
   };
 }
 
+const CONTEXTLESS_FOLLOW_UP =
+  /^(peki|peki ya|ok|tamam|ya)\b|bunlardan|hangileri|oncekiler|yukaridakiler|onerdigin|onerdiklerin|which of these|of these|the ones you|those ones|listed above|you (recommended|suggested)|from (those|them)|which ones/;
+
+/**
+ * Konuşma geçmişi yokken "Peki bunlardan ücretsiz olanlar hangileri?" gibi
+ * referanslı follow-up'ları yakalar; zayıf katalog araması yerine soft-landing üretir.
+ */
+export function isContextlessFollowUp(question, history = []) {
+  const hasUserHistory = (history || []).some(
+    (message) => message?.role === 'user' && String(message.content || '').trim()
+  );
+  if (hasUserHistory) return false;
+
+  const intent = understandQuestion(question);
+  // Açık görev/konu varsa normal motor devam etsin.
+  if (intent.goals.length > 0 || intent.concepts.length > 0) return false;
+
+  const normalized = normalizeText(question);
+  if (!normalized) return false;
+
+  if (CONTEXTLESS_FOLLOW_UP.test(normalized)) return true;
+
+  // Yalnızca fiyat + belirsiz seçim ifadesi
+  if (
+    (intent.wantsFree || intent.wantsPaid) &&
+    /hangileri|olanlar|secenek|which|ones|options|filter|filtre/.test(normalized)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+export function answerContextlessFollowUp(question, locale = 'tr', history = []) {
+  if (!isContextlessFollowUp(question, history)) return null;
+
+  const intent = understandQuestion(question);
+  const priceNote =
+    locale === 'en'
+      ? intent.wantsFree
+        ? ' I can still prefer free/freemium options once the task is clear.'
+        : intent.wantsPaid
+          ? ' I can still prefer paid options once the task is clear.'
+          : ''
+      : intent.wantsFree
+        ? ' Görevi netleştirince ücretsiz/freemium tercihine göre sıralayabilirim.'
+        : intent.wantsPaid
+          ? ' Görevi netleştirince ücretli tercihine göre sıralayabilirim.'
+          : '';
+
+  const answer =
+    locale === 'en'
+      ? `I don’t have the previous recommendation list in this message, so I can’t filter “those” tools yet.${priceNote}
+
+Please restate the task in one sentence, for example:
+• Free presentation tools
+• SEO analysis tools
+• Cold email writing assistants
+
+Then I can rank verified platform tools for you.`
+      : `Bu mesajda önceki öneri listesi yok; bu yüzden “bunlardan hangileri?” sorusunu güvenle daraltamıyorum.${priceNote}
+
+Görevi tek cümlede yeniden yazman yeterli. Örnek:
+• Ücretsiz sunum aracı öner
+• SEO analizi araçları
+• Soğuk e-posta yazma asistanı
+
+Böylece platformdaki onaylı araçları senin için sıralayabilirim.`;
+
+  return {
+    answer,
+    sourceIds: [],
+    insufficientContext: false,
+    confidence: 0.92,
+    meta: true,
+    metaKind: 'soft-landing',
+    softLanding: true,
+    intent: {
+      concepts: [],
+      goals: [],
+      pricePreference: intent.wantsFree ? 'free' : intent.wantsPaid ? 'paid' : 'any',
+      comparison: intent.wantsComparison,
+      meta: 'soft-landing',
+    },
+  };
+}
+
 export function answerQuestion(question, records, history = [], locale = 'tr') {
   const meta = answerMetaQuestion(question, locale);
   if (meta) return meta;
+
+  if (isContextlessFollowUp(question, history)) {
+    return answerContextlessFollowUp(question, locale);
+  }
 
   const intent = understandConversation(question, history);
   const ranked = rankTools(records, intent, intent.wantsComparison ? 4 : 5);

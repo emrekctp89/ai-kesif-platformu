@@ -53,6 +53,13 @@ Bu komut veritabanına yazmaz; goal kazanan veya meta sayılan örnekleri listel
 `sen kimsin`, `ne yapabilirsin`, `how do you work` gibi sorular katalog aramasına gitmeden
 sabit platform açıklaması döndürür (`answerMetaQuestion`).
 
+## Soft-landing (geçmişsiz follow-up)
+
+Konuşma geçmişi yokken `Peki bunlardan ücretsiz olanlar hangileri?` gibi referanslı
+follow-up’lar zayıf katalog araması yerine soft-landing üretir (`answerContextlessFollowUp`):
+kullanıcıdan görevi tek cümlede yeniden yazmasını ister. Geçmiş varsa normal intent taşıma
+devam eder.
+
 Bu sürüm platforma özel bir öneri motorudur; genel amaçlı serbest metin üreten temel dil
 modeli değildir. Gerçek kullanım geri bildirimleri biriktikçe ağırlıklar çevrimdışı olarak
 öğrenilebilir ve motor sürümlenmiş bir değerlendirme veri setiyle geliştirilebilir.

@@ -12,7 +12,7 @@ export function noInformationAnswer(locale = 'tr') {
 export function groundModelResponse(modelResponse, records, locale = 'tr') {
   const answer = String(modelResponse?.answer || '').trim();
 
-  // Meta yanıtlar (kimlik / yetenek) katalog kaynağı gerektirmez.
+  // Meta / soft-landing yanıtlar katalog kaynağı gerektirmez.
   if (modelResponse?.meta && answer) {
     return {
       answer: answer.slice(0, 2000),
@@ -20,6 +20,7 @@ export function groundModelResponse(modelResponse, records, locale = 'tr') {
       grounded: true,
       meta: true,
       metaKind: modelResponse.metaKind || modelResponse.intent?.meta || null,
+      softLanding: Boolean(modelResponse.softLanding),
     };
   }
 

@@ -3,6 +3,7 @@ const assertKasifEnabled = jest.fn();
 const retrievePlatformContext = jest.fn();
 const answerQuestion = jest.fn();
 const answerMetaQuestion = jest.fn();
+const answerContextlessFollowUp = jest.fn();
 const groundModelResponse = jest.fn();
 const createAdminClient = jest.fn();
 
@@ -26,6 +27,7 @@ jest.mock('@/lib/kasif/retrieval', () => ({
 jest.mock('@/lib/kasif/engine', () => ({
   answerQuestion: (...args) => answerQuestion(...args),
   answerMetaQuestion: (...args) => answerMetaQuestion(...args),
+  answerContextlessFollowUp: (...args) => answerContextlessFollowUp(...args),
 }));
 jest.mock('@/lib/kasif/grounding', () => ({
   noInformationAnswer: (locale) =>
@@ -56,6 +58,7 @@ describe('Kâşif ask API', () => {
     jest.clearAllMocks();
     enforceRateLimit.mockResolvedValue({ allowed: true });
     answerMetaQuestion.mockReturnValue(null);
+    answerContextlessFollowUp.mockReturnValue(null);
     retrievePlatformContext.mockResolvedValue([{ id: 7, name: 'Slide Tool', slug: 'slide-tool' }]);
     answerQuestion.mockReturnValue({
       answer: 'Answer',
@@ -145,5 +148,35 @@ describe('Kâşif ask API', () => {
     });
     expect(retrievePlatformContext).not.toHaveBeenCalled();
     expect(answerQuestion).not.toHaveBeenCalled();
+  });
+
+  it('geçmişsiz follow-up için soft-landing döner', async () => {
+    answerContextlessFollowUp.mockReturnValue({
+      answer: 'Önceki liste yok',
+      sourceIds: [],
+      confidence: 0.92,
+      meta: true,
+      softLanding: true,
+      metaKind: 'soft-landing',
+      intent: { meta: 'soft-landing', pricePreference: 'free', goals: [] },
+    });
+    groundModelResponse.mockReturnValue({
+      answer: 'Önceki liste yok',
+      sources: [],
+      grounded: true,
+      meta: true,
+      softLanding: true,
+    });
+
+    const response = await POST(
+      requestWith({ question: 'Peki bunlardan ücretsiz olanlar hangileri?', locale: 'tr' })
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      softLanding: true,
+      grounded: true,
+    });
+    expect(retrievePlatformContext).not.toHaveBeenCalled();
   });
 });

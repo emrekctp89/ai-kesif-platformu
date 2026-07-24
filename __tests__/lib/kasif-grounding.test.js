@@ -59,6 +59,7 @@ describe('Kâşif grounding', () => {
       grounded: true,
       meta: true,
       metaKind: 'identity',
+      softLanding: false,
     });
   });
 });

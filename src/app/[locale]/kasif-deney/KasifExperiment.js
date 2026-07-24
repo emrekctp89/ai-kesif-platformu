@@ -265,9 +265,15 @@ export default function KasifExperiment() {
                             {t('ungroundedHint')}
                           </p>
                         )}
+                        {(turn.result.softLanding || turn.result.metaKind === 'soft-landing') && (
+                          <p className="mt-3 rounded-md border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-violet-900 dark:text-violet-100">
+                            {t('softLandingHint')}
+                          </p>
+                        )}
                         {turn.result.grounded !== false &&
                           !turn.result.meta &&
                           !turn.result.intent?.meta &&
+                          !turn.result.softLanding &&
                           typeof turn.result.confidence === 'number' &&
                           turn.result.confidence > 0 &&
                           turn.result.confidence < 0.55 && (
@@ -277,14 +283,23 @@ export default function KasifExperiment() {
                           )}
                         {(turn.result.meta ||
                           turn.result.intent?.meta ||
+                          turn.result.softLanding ||
                           turn.result.intent?.goals?.length > 0 ||
                           turn.result.intent?.pricePreference) && (
                           <div className="mt-3 flex flex-wrap gap-1.5">
-                            {(turn.result.meta || turn.result.intent?.meta) && (
+                            {(turn.result.softLanding ||
+                              turn.result.metaKind === 'soft-landing') && (
                               <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-[11px] font-medium text-violet-800 dark:text-violet-200">
-                                {t('metaBadge')}
+                                {t('softLandingBadge')}
                               </span>
                             )}
+                            {(turn.result.meta || turn.result.intent?.meta) &&
+                              turn.result.metaKind !== 'soft-landing' &&
+                              !turn.result.softLanding && (
+                                <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-[11px] font-medium text-violet-800 dark:text-violet-200">
+                                  {t('metaBadge')}
+                                </span>
+                              )}
                             {turn.result.intent?.goals?.map((goal) => (
                               <span
                                 key={goal}

@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { enforceRateLimit } from '@/utils/antiAbuse';
 import { assertKasifEnabled } from '@/lib/kasif/config';
-import { answerMetaQuestion, answerQuestion } from '@/lib/kasif/engine';
+import { answerContextlessFollowUp, answerMetaQuestion, answerQuestion } from '@/lib/kasif/engine';
 import { retrievePlatformContext } from '@/lib/kasif/retrieval';
 import { groundModelResponse, noInformationAnswer } from '@/lib/kasif/grounding';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -113,17 +113,19 @@ export async function POST(request) {
   try {
     const isLocalEvaluation = body?.evaluation === true && isLocalEvaluationRequest;
 
-    // Meta sorular (kimsin / ne yapabilirsin) katalog aramadan yanıtlanır.
-    const metaResponse = answerMetaQuestion(question, locale);
-    if (metaResponse) {
-      const groundedMeta = groundModelResponse(metaResponse, [], locale);
+    // Meta / soft-landing yanıtları katalog aramadan döner.
+    const directResponse =
+      answerMetaQuestion(question, locale) || answerContextlessFollowUp(question, locale, history);
+    if (directResponse) {
+      const groundedDirect = groundModelResponse(directResponse, [], locale);
       const interaction = isLocalEvaluation
         ? {}
-        : await withTimeout(recordInteraction(question, metaResponse, groundedMeta), 3000, {});
+        : await withTimeout(recordInteraction(question, directResponse, groundedDirect), 3000, {});
       return NextResponse.json({
-        ...groundedMeta,
-        confidence: metaResponse.confidence || 0.99,
-        intent: metaResponse.intent || {},
+        ...groundedDirect,
+        confidence: directResponse.confidence || 0.99,
+        intent: directResponse.intent || {},
+        softLanding: Boolean(directResponse.softLanding),
         ...interaction,
       });
     }

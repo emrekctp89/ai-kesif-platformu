@@ -1579,6 +1579,8 @@
     "pricePaid": "Paid preference",
     "confidence": "Confidence {value}%",
     "metaBadge": "Platform explainer",
+    "softLandingBadge": "Clarify the task",
+    "softLandingHint": "I don’t have the previous list in this request. Restate the task in one sentence for the best match.",
     "lowConfidenceHint": "This match has low confidence. Try narrowing the question with a clearer task, price, or platform.",
     "ungroundedHint": "No clear match was found in platform records. Try a starter prompt or describe your need more specifically.",
     "feedbackQuestion": "Was this result helpful?",
