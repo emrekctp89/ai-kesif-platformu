@@ -3,6 +3,8 @@
 Kâşif dış AI API'si, Ollama veya üçüncü taraf bir dil modeli kullanmaz. Sorgu anlama,
 araç puanlama, fiyat tercihi, kaynak seçimi ve cevap oluşturma platform kodunda çalışır.
 
+Sıradaki işler ve **web’den araç çekme (scrape)** yönü için: [`docs/KASIF_ROADMAP.md`](./KASIF_ROADMAP.md).
+
 ## Etkinleştirme
 
 Kâşif varsayılan olarak açıktır. Gerektiğinde `.env.local` dosyasında
