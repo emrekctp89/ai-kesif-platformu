@@ -82,13 +82,13 @@ Env taslağı (ileride):
 
 ### Uygulama fazları
 
-| Faz    | İş                                                                                   |
-| ------ | ------------------------------------------------------------------------------------ |
-| **P0** | `scrapeToolPage(url)` soyut arayüz + `native` + `jina` provider; tek URL → aday JSON |
-| **P1** | Admin UI: “URL’den aday çek” dry-run; mevcut discovery formuna bağla                 |
-| **P2** | Seed URL listeleri / kategori bazlı tarama kuyruğu; dedupe by host+name              |
-| **P3** | Zamanlanmış cron; kota takibi; başarısız scrape retry; admin alert                   |
-| **P4** | Kâşif sohbetinden “bu aracı ekle/incele” intent’i (admin gate)                       |
+| Faz       | İş                                                                                  |
+| --------- | ----------------------------------------------------------------------------------- |
+| **P0** ✅ | `scrapeToolPage(url)` + `native`/`jina`/`auto`; admin dry-run + onay kuyruğuna ekle |
+| **P1**    | Admin UI: “URL’den aday çek” dry-run; mevcut discovery formuna bağla                |
+| **P2**    | Seed URL listeleri / kategori bazlı tarama kuyruğu; dedupe by host+name             |
+| **P3**    | Zamanlanmış cron; kota takibi; başarısız scrape retry; admin alert                  |
+| **P4**    | Kâşif sohbetinden “bu aracı ekle/incele” intent’i (admin gate)                      |
 
 ### Güvenlik / kalite kapıları (zorunlu)
 

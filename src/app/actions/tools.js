@@ -778,6 +778,206 @@ export async function runToolDiscoveryAdmin(options = {}) {
 }
 
 /**
+ * Admin: tek URL scrape → aday önizleme (dry-run varsayılan).
+ * dryRun=false ve kalite uygunsa onay kuyruğuna (is_approved=false) ekler.
+ */
+export async function scrapeToolUrlAdmin(options = {}) {
+  'use server';
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: 'Yetkiniz yok.' };
+  }
+
+  const url = String(options.url || '').trim();
+  const provider = String(options.provider || 'auto')
+    .trim()
+    .toLowerCase();
+  const dryRun = options.dryRun !== false;
+  const categoryId = String(options.categoryId || '').trim();
+
+  if (!url) return { error: 'URL gerekli.' };
+
+  try {
+    const { scrapeToolPage } = await import('@/lib/toolScrape');
+    const scrape = await scrapeToolPage(url, { provider });
+    if (!scrape.ok) {
+      return { error: scrape.error || 'Scrape başarısız.', report: scrape };
+    }
+
+    const candidate = scrape.candidate;
+    const supabaseAdmin = createAdminClient();
+
+    // Dedupe
+    const { data: existingByName } = await supabaseAdmin
+      .from('tools')
+      .select('id, name, slug, link, is_approved')
+      .ilike('name', candidate.name)
+      .limit(3);
+
+    const { data: existingByLink } = await supabaseAdmin
+      .from('tools')
+      .select('id, name, slug, link, is_approved')
+      .eq('link', candidate.link)
+      .limit(3);
+
+    const duplicates = {
+      byName: existingByName || [],
+      byLink: existingByLink || [],
+    };
+    const isDuplicate = (existingByName || []).length > 0 || (existingByLink || []).length > 0;
+
+    // Link audit
+    let linkCheck = null;
+    try {
+      const { checkToolLink } = await import('@/lib/linkAuditCron');
+      linkCheck = await checkToolLink(candidate.link, {
+        name: candidate.name,
+        previousStatus: null,
+      });
+    } catch (linkError) {
+      logger.warn('Scrape aday link kontrolü atlandı:', linkError?.message || linkError);
+      linkCheck = {
+        status: 'review',
+        errorDetail: 'Link kontrolü tamamlanamadı.',
+        httpStatus: null,
+      };
+    }
+
+    // Kategori
+    let category = null;
+    if (categoryId) {
+      const { data } = await supabaseAdmin
+        .from('categories')
+        .select('id, name, slug')
+        .eq('id', categoryId)
+        .maybeSingle();
+      category = data || null;
+    }
+    if (!category) {
+      const { data: categories } = await supabaseAdmin
+        .from('categories')
+        .select('id, name, slug')
+        .order('name')
+        .limit(50);
+      category =
+        (categories || []).find((item) => /yapay zeka|genel|ai/i.test(String(item.name || ''))) ||
+        (categories || [])[0] ||
+        null;
+    }
+
+    const qualityWarnings = [];
+    if (candidate.description.length < 80) qualityWarnings.push('Açıklama kısa.');
+    if (linkCheck?.status === 'invalid') qualityWarnings.push('Link invalid.');
+    if (isDuplicate) qualityWarnings.push('Muhtemel tekrar kayıt.');
+    if (!category) qualityWarnings.push('Kategori bulunamadı.');
+
+    const report = {
+      dryRun,
+      provider: scrape.provider,
+      finalUrl: scrape.finalUrl,
+      scrapedAt: scrape.scrapedAt,
+      candidate,
+      meta: scrape.meta,
+      quality: scrape.quality,
+      warnings: [...(scrape.warnings || []), ...qualityWarnings],
+      attempts: scrape.attempts,
+      linkCheck: linkCheck
+        ? {
+            status: linkCheck.status,
+            httpStatus: linkCheck.httpStatus,
+            error: linkCheck.errorDetail || linkCheck.error || null,
+          }
+        : null,
+      duplicates,
+      category,
+      inserted: null,
+    };
+
+    if (dryRun) {
+      return { success: true, report };
+    }
+
+    if (isDuplicate) {
+      return { error: 'Bu araç zaten katalogda görünüyor (isim veya link).', report };
+    }
+    if (linkCheck?.status === 'invalid') {
+      return { error: 'Link geçersiz; kayıt yapılmadı.', report };
+    }
+    if (!category) {
+      return { error: 'Kategori seçilemedi; kayıt yapılmadı.', report };
+    }
+
+    const baseSlug = slugify(candidate.name) || `tool-${Date.now()}`;
+    let slug = baseSlug;
+    const { data: slugClash } = await supabaseAdmin
+      .from('tools')
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle();
+    if (slugClash) slug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
+
+    const insertPayload = {
+      name: candidate.name,
+      slug,
+      description: candidate.description,
+      link: candidate.link,
+      category_id: category.id,
+      pricing_model: candidate.pricing_model || 'Freemium',
+      platforms: candidate.platforms || ['Web'],
+      tier: candidate.tier || 'Normal',
+      is_approved: false,
+      suggester_email: 'tool-scrape-bot@aikesif.com',
+      technical_details: [
+        '## Özellikler',
+        ...(candidate.features || []).map((item) => `- ${item}`),
+        '',
+        '## Kullanım alanları',
+        ...(candidate.use_cases || []).map((item) => `- ${item}`),
+        '',
+        `> Kaynak: ${candidate.source_reason || 'URL scrape'}`,
+      ].join('\n'),
+      link_check_status: linkCheck?.status || null,
+      link_check_error: linkCheck?.errorDetail || linkCheck?.error || null,
+      link_check_http_status: linkCheck?.httpStatus ?? null,
+      link_checked_at: new Date().toISOString(),
+    };
+
+    try {
+      const textToEmbed = `${candidate.name}. ${candidate.description}.`;
+      const embedding = await getEmbedding(textToEmbed);
+      insertPayload.embedding = `[${embedding.join(',')}]`;
+    } catch (embedError) {
+      logger.warn('Scrape aday embedding atlandı:', embedError?.message || embedError);
+    }
+
+    const { data: inserted, error: insertError } = await supabaseAdmin
+      .from('tools')
+      .insert(insertPayload)
+      .select('id, name, slug, link, is_approved')
+      .single();
+
+    if (insertError) {
+      logger.error('Scrape aday insert hatası:', insertError);
+      return { error: 'Aday kaydedilemedi.', report };
+    }
+
+    report.inserted = inserted;
+    revalidatePath('/admin');
+    return { success: true, report };
+  } catch (error) {
+    logger.error('scrapeToolUrlAdmin failed:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Scrape çalıştırılamadı.',
+    };
+  }
+}
+
+/**
  * Existing tool enrichment.
  * Brings older approved tools closer to the rich metadata produced by AI discovery.
  * Dry-run is the default; live updates must pass dryRun=false explicitly.

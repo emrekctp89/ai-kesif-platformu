@@ -40,6 +40,7 @@ import {
   runExistingToolEnrichmentAdmin,
   bulkTranslateToolsToEnglish,
   updateToolLinkReportStatus,
+  scrapeToolUrlAdmin,
 } from '@/app/actions';
 import { deleteReportedComment, dismissAlert } from '@/app/actions/moderation';
 import { AiToolFactory } from './AiToolFactory';
@@ -746,6 +747,10 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
   const [isEnrichmentPending, startEnrichmentTransition] = React.useTransition();
   const [enBulkReport, setEnBulkReport] = React.useState(null);
   const [isEnBulkPending, startEnBulkTransition] = React.useTransition();
+  const [scrapeUrl, setScrapeUrl] = React.useState('');
+  const [scrapeProvider, setScrapeProvider] = React.useState('auto');
+  const [scrapeReport, setScrapeReport] = React.useState(null);
+  const [isScrapePending, startScrapeTransition] = React.useTransition();
 
   const runAutomation = () => {
     startAutomationTransition(async () => {
@@ -798,6 +803,33 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         dryRun
           ? `Keşif dry-run: ${accepted} aday, ${skipped} atlandı`
           : `Keşif tamam: ${accepted} eklendi (onay kuyruğu), ${skipped} atlandı`
+      );
+      if (!dryRun) router.refresh();
+    });
+  };
+
+  const runUrlScrape = (dryRun = true) => {
+    const url = scrapeUrl.trim();
+    if (!url) {
+      toast.error('Scrape için bir ürün URL’si girin.');
+      return;
+    }
+    startScrapeTransition(async () => {
+      const result = await scrapeToolUrlAdmin({
+        url,
+        provider: scrapeProvider,
+        dryRun,
+      });
+      if (result?.error) {
+        toast.error(result.error);
+        if (result.report) setScrapeReport(result.report);
+        return;
+      }
+      setScrapeReport(result.report);
+      toast.success(
+        dryRun
+          ? `Scrape dry-run: ${result.report?.candidate?.name || 'aday'} (${result.report?.provider})`
+          : `Aday onay kuyruğuna eklendi: ${result.report?.inserted?.name || result.report?.candidate?.name}`
       );
       if (!dryRun) router.refresh();
     });
@@ -965,6 +997,92 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                   ))}
               </div>
             )}
+            <div className="mt-4 rounded-xl border bg-muted/20 p-3">
+              <p className="text-sm font-semibold">URL’den araç adayı (scrape)</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Resmî ürün sayfasını çekip aday alanları üretir. Varsayılan dry-run; kayıt onay
+                kuyruğuna düşer.
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <Input
+                  value={scrapeUrl}
+                  onChange={(event) => setScrapeUrl(event.target.value)}
+                  placeholder="https://ornek-urun.com"
+                  className="sm:flex-1"
+                  disabled={isScrapePending}
+                />
+                <select
+                  value={scrapeProvider}
+                  onChange={(event) => setScrapeProvider(event.target.value)}
+                  className="h-10 rounded-md border bg-background px-3 text-sm"
+                  disabled={isScrapePending}
+                  aria-label="Scrape provider"
+                >
+                  <option value="auto">auto (native→jina)</option>
+                  <option value="native">native</option>
+                  <option value="jina">jina</option>
+                </select>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => runUrlScrape(true)}
+                  disabled={isScrapePending}
+                >
+                  {isScrapePending ? 'Scrape…' : 'Dry-run scrape'}
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="secondary" disabled={isScrapePending}>
+                      Onay kuyruğuna ekle
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Scrape adayını kaydet?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Araç onaylanmamış olarak eklenecek (is_approved=false). Link ve tekrar
+                        kontrolleri yapılmış olmalı.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => runUrlScrape(false)}>
+                        Evet, ekle
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+              {scrapeReport && (
+                <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                  <p>
+                    Provider: <strong>{scrapeReport.provider}</strong>
+                    {scrapeReport.dryRun ? ' · dry-run' : ' · kayıtlı'}
+                    {scrapeReport.linkCheck?.status
+                      ? ` · link: ${scrapeReport.linkCheck.status}`
+                      : ''}
+                  </p>
+                  <p className="font-medium text-foreground">
+                    {scrapeReport.candidate?.name || 'Aday yok'}
+                  </p>
+                  {scrapeReport.candidate?.link ? (
+                    <p className="truncate">{scrapeReport.candidate.link}</p>
+                  ) : null}
+                  {scrapeReport.candidate?.description ? (
+                    <p className="line-clamp-3">{scrapeReport.candidate.description}</p>
+                  ) : null}
+                  {(scrapeReport.warnings || []).length > 0 ? (
+                    <p>Uyarı: {scrapeReport.warnings.join(' · ')}</p>
+                  ) : null}
+                  {scrapeReport.inserted?.slug ? (
+                    <p>Eklendi: /tool/{scrapeReport.inserted.slug}</p>
+                  ) : null}
+                </div>
+              )}
+            </div>
+
             {enrichmentReport && (
               <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                 <p>
