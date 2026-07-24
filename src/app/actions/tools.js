@@ -780,6 +780,7 @@ export async function runToolDiscoveryAdmin(options = {}) {
 /**
  * Admin: tek URL scrape → aday önizleme (dry-run varsayılan).
  * dryRun=false ve kalite uygunsa onay kuyruğuna (is_approved=false) ekler.
+ * options.enrichWithGemini=true ise adayı Gemini ile zenginleştirir (opsiyonel).
  */
 export async function scrapeToolUrlAdmin(options = {}) {
   'use server';
@@ -799,18 +800,54 @@ export async function scrapeToolUrlAdmin(options = {}) {
     .toLowerCase();
   const dryRun = options.dryRun !== false;
   const categoryId = String(options.categoryId || '').trim();
+  const enrichWithGemini = Boolean(options.enrichWithGemini);
 
   if (!url) return { error: 'URL gerekli.' };
 
   try {
-    const { scrapeToolPage } = await import('@/lib/toolScrape');
+    const { scrapeToolPage, enrichScrapeCandidate } = await import('@/lib/toolScrape');
     const scrape = await scrapeToolPage(url, { provider });
     if (!scrape.ok) {
       return { error: scrape.error || 'Scrape başarısız.', report: scrape };
     }
 
-    const candidate = scrape.candidate;
+    let candidate = scrape.candidate;
     const supabaseAdmin = createAdminClient();
+
+    // Kategori (enrich prompt'u için önce çöz)
+    let category = null;
+    if (categoryId) {
+      const { data } = await supabaseAdmin
+        .from('categories')
+        .select('id, name, slug')
+        .eq('id', categoryId)
+        .maybeSingle();
+      category = data || null;
+    }
+    if (!category) {
+      const { data: categories } = await supabaseAdmin
+        .from('categories')
+        .select('id, name, slug')
+        .order('name')
+        .limit(50);
+      category =
+        (categories || []).find((item) => /yapay zeka|genel|ai/i.test(String(item.name || ''))) ||
+        (categories || [])[0] ||
+        null;
+    }
+
+    let enrichMeta = { requested: enrichWithGemini, enriched: false, error: null };
+    if (enrichWithGemini) {
+      const enrichResult = await enrichScrapeCandidate(candidate, {
+        categoryName: category?.name || '',
+      });
+      candidate = enrichResult.candidate;
+      enrichMeta = {
+        requested: true,
+        enriched: Boolean(enrichResult.enriched),
+        error: enrichResult.error || null,
+      };
+    }
 
     // Dedupe
     const { data: existingByName } = await supabaseAdmin
@@ -848,33 +885,14 @@ export async function scrapeToolUrlAdmin(options = {}) {
       };
     }
 
-    // Kategori
-    let category = null;
-    if (categoryId) {
-      const { data } = await supabaseAdmin
-        .from('categories')
-        .select('id, name, slug')
-        .eq('id', categoryId)
-        .maybeSingle();
-      category = data || null;
-    }
-    if (!category) {
-      const { data: categories } = await supabaseAdmin
-        .from('categories')
-        .select('id, name, slug')
-        .order('name')
-        .limit(50);
-      category =
-        (categories || []).find((item) => /yapay zeka|genel|ai/i.test(String(item.name || ''))) ||
-        (categories || [])[0] ||
-        null;
-    }
-
     const qualityWarnings = [];
     if (candidate.description.length < 80) qualityWarnings.push('Açıklama kısa.');
     if (linkCheck?.status === 'invalid') qualityWarnings.push('Link invalid.');
     if (isDuplicate) qualityWarnings.push('Muhtemel tekrar kayıt.');
     if (!category) qualityWarnings.push('Kategori bulunamadı.');
+    if (enrichMeta.requested && !enrichMeta.enriched) {
+      qualityWarnings.push(`Gemini enrich atlandı: ${enrichMeta.error || 'bilinmiyor'}`);
+    }
 
     const report = {
       dryRun,
@@ -883,7 +901,12 @@ export async function scrapeToolUrlAdmin(options = {}) {
       scrapedAt: scrape.scrapedAt,
       candidate,
       meta: scrape.meta,
-      quality: scrape.quality,
+      quality: {
+        ...scrape.quality,
+        descriptionLength: candidate.description?.length || 0,
+        featureCount: (candidate.features || []).length,
+      },
+      enrich: enrichMeta,
       warnings: [...(scrape.warnings || []), ...qualityWarnings],
       attempts: scrape.attempts,
       linkCheck: linkCheck
@@ -939,8 +962,16 @@ export async function scrapeToolUrlAdmin(options = {}) {
         '## Kullanım alanları',
         ...(candidate.use_cases || []).map((item) => `- ${item}`),
         '',
+        candidate.target_users?.length
+          ? `## Kimler için\n${candidate.target_users.map((item) => `- ${item}`).join('\n')}\n`
+          : '',
+        candidate.limitations?.length
+          ? `## Dikkat\n${candidate.limitations.map((item) => `- ${item}`).join('\n')}\n`
+          : '',
         `> Kaynak: ${candidate.source_reason || 'URL scrape'}`,
-      ].join('\n'),
+      ]
+        .filter(Boolean)
+        .join('\n'),
       link_check_status: linkCheck?.status || null,
       link_check_error: linkCheck?.errorDetail || linkCheck?.error || null,
       link_check_http_status: linkCheck?.httpStatus ?? null,
@@ -973,6 +1004,90 @@ export async function scrapeToolUrlAdmin(options = {}) {
     logger.error('scrapeToolUrlAdmin failed:', error);
     return {
       error: error instanceof Error ? error.message : 'Scrape çalıştırılamadı.',
+    };
+  }
+}
+
+/**
+ * Admin: toplu URL scrape — yalnızca dry-run listesi (varsayılan ve önerilen).
+ * Canlı insert için tekil scrapeToolUrlAdmin kullanılmalı.
+ */
+export async function scrapeToolUrlsAdmin(options = {}) {
+  'use server';
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: 'Yetkiniz yok.' };
+  }
+
+  try {
+    const { parseBulkUrls, clampBulkLimit } = await import('@/lib/toolScrape');
+    const limit = clampBulkLimit(options.limit);
+    const parsed = parseBulkUrls(options.urls || options.text || '', { limit });
+
+    if (parsed.urls.length === 0) {
+      return { error: 'En az bir URL girin (satır veya virgülle ayırın).' };
+    }
+
+    // Toplu akış her zaman dry-run; canlı insert tekil yoldan.
+    const dryRun = true;
+    const provider = String(options.provider || 'auto')
+      .trim()
+      .toLowerCase();
+    const categoryId = String(options.categoryId || '').trim();
+    const enrichWithGemini = Boolean(options.enrichWithGemini);
+
+    const results = [];
+    for (const url of parsed.urls) {
+      try {
+        const single = await scrapeToolUrlAdmin({
+          url,
+          provider,
+          categoryId,
+          enrichWithGemini,
+          dryRun: true,
+        });
+        results.push({
+          url,
+          ok: !single.error,
+          error: single.error || null,
+          report: single.report || null,
+        });
+      } catch (itemError) {
+        results.push({
+          url,
+          ok: false,
+          error: itemError instanceof Error ? itemError.message : String(itemError),
+          report: null,
+        });
+      }
+    }
+
+    const okCount = results.filter((item) => item.ok).length;
+    const failCount = results.length - okCount;
+
+    return {
+      success: true,
+      report: {
+        dryRun,
+        limit,
+        totalFound: parsed.totalFound,
+        truncated: parsed.truncated,
+        processed: results.length,
+        okCount,
+        failCount,
+        enrichWithGemini,
+        results,
+      },
+    };
+  } catch (error) {
+    logger.error('scrapeToolUrlsAdmin failed:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Toplu scrape çalıştırılamadı.',
     };
   }
 }

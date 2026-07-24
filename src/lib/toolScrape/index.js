@@ -193,3 +193,12 @@ export {
   parseMarkdownDocument,
   toToolCandidate,
 } from '@/lib/toolScrape/parsePage';
+
+export { enrichScrapeCandidate, mergeEnrichedCandidate } from '@/lib/toolScrape/enrichCandidate';
+
+export {
+  parseBulkUrls,
+  clampBulkLimit,
+  DEFAULT_BULK_LIMIT,
+  MAX_BULK_LIMIT,
+} from '@/lib/toolScrape/bulk';

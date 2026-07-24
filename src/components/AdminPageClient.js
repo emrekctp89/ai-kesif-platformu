@@ -41,6 +41,7 @@ import {
   bulkTranslateToolsToEnglish,
   updateToolLinkReportStatus,
   scrapeToolUrlAdmin,
+  scrapeToolUrlsAdmin,
 } from '@/app/actions';
 import { deleteReportedComment, dismissAlert } from '@/app/actions/moderation';
 import { AiToolFactory } from './AiToolFactory';
@@ -749,7 +750,11 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
   const [isEnBulkPending, startEnBulkTransition] = React.useTransition();
   const [scrapeUrl, setScrapeUrl] = React.useState('');
   const [scrapeProvider, setScrapeProvider] = React.useState('auto');
+  const [scrapeCategoryId, setScrapeCategoryId] = React.useState('');
+  const [scrapeEnrichGemini, setScrapeEnrichGemini] = React.useState(false);
+  const [scrapeBulkText, setScrapeBulkText] = React.useState('');
   const [scrapeReport, setScrapeReport] = React.useState(null);
+  const [scrapeBulkReport, setScrapeBulkReport] = React.useState(null);
   const [isScrapePending, startScrapeTransition] = React.useTransition();
 
   const runAutomation = () => {
@@ -818,6 +823,8 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
       const result = await scrapeToolUrlAdmin({
         url,
         provider: scrapeProvider,
+        categoryId: scrapeCategoryId || undefined,
+        enrichWithGemini: scrapeEnrichGemini,
         dryRun,
       });
       if (result?.error) {
@@ -826,12 +833,44 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
         return;
       }
       setScrapeReport(result.report);
+      const enrichNote =
+        result.report?.enrich?.requested && result.report?.enrich?.enriched
+          ? ' · Gemini'
+          : result.report?.enrich?.requested
+            ? ' · Gemini yok'
+            : '';
       toast.success(
         dryRun
-          ? `Scrape dry-run: ${result.report?.candidate?.name || 'aday'} (${result.report?.provider})`
+          ? `Scrape dry-run: ${result.report?.candidate?.name || 'aday'} (${result.report?.provider}${enrichNote})`
           : `Aday onay kuyruğuna eklendi: ${result.report?.inserted?.name || result.report?.candidate?.name}`
       );
       if (!dryRun) router.refresh();
+    });
+  };
+
+  const runBulkUrlScrape = () => {
+    const text = scrapeBulkText.trim();
+    if (!text) {
+      toast.error('Toplu scrape için en az bir URL girin.');
+      return;
+    }
+    startScrapeTransition(async () => {
+      const result = await scrapeToolUrlsAdmin({
+        text,
+        provider: scrapeProvider,
+        categoryId: scrapeCategoryId || undefined,
+        enrichWithGemini: scrapeEnrichGemini,
+        limit: 5,
+      });
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+      setScrapeBulkReport(result.report);
+      toast.success(
+        `Toplu dry-run: ${result.report?.okCount || 0} ok, ${result.report?.failCount || 0} hata` +
+          (result.report?.truncated ? ` (limit ${result.report.limit})` : '')
+      );
     });
   };
 
@@ -1001,7 +1040,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
               <p className="text-sm font-semibold">URL’den araç adayı (scrape)</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Resmî ürün sayfasını çekip aday alanları üretir. Varsayılan dry-run; kayıt onay
-                kuyruğuna düşer.
+                kuyruğuna düşer. Toplu liste yalnızca dry-run.
               </p>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <Input
@@ -1022,6 +1061,32 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                   <option value="native">native</option>
                   <option value="jina">jina</option>
                 </select>
+              </div>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <select
+                  value={scrapeCategoryId}
+                  onChange={(event) => setScrapeCategoryId(event.target.value)}
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm sm:max-w-xs"
+                  disabled={isScrapePending}
+                  aria-label="Scrape kategori"
+                >
+                  <option value="">Kategori (otomatik)</option>
+                  {(categories || []).map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={scrapeEnrichGemini}
+                    onChange={(event) => setScrapeEnrichGemini(event.target.checked)}
+                    disabled={isScrapePending}
+                    className="h-4 w-4 rounded border"
+                  />
+                  Gemini ile zenginleştir (opsiyonel)
+                </label>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 <Button
@@ -1044,6 +1109,10 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                       <AlertDialogDescription>
                         Araç onaylanmamış olarak eklenecek (is_approved=false). Link ve tekrar
                         kontrolleri yapılmış olmalı.
+                        {scrapeCategoryId
+                          ? ' Seçili kategori kullanılacak.'
+                          : ' Kategori otomatik seçilecek.'}
+                        {scrapeEnrichGemini ? ' Gemini zenginleştirme açık.' : ''}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -1055,6 +1124,26 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
+              <div className="mt-3 space-y-2">
+                <p className="text-xs font-medium text-foreground">Toplu URL (dry-run, max 5)</p>
+                <textarea
+                  value={scrapeBulkText}
+                  onChange={(event) => setScrapeBulkText(event.target.value)}
+                  placeholder={'https://urun-a.com\nhttps://urun-b.com'}
+                  rows={3}
+                  disabled={isScrapePending}
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                  aria-label="Toplu scrape URL listesi"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={runBulkUrlScrape}
+                  disabled={isScrapePending}
+                >
+                  {isScrapePending ? 'Scrape…' : 'Toplu dry-run'}
+                </Button>
+              </div>
               {scrapeReport && (
                 <div className="mt-3 space-y-1 text-xs text-muted-foreground">
                   <p>
@@ -1063,9 +1152,15 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                     {scrapeReport.linkCheck?.status
                       ? ` · link: ${scrapeReport.linkCheck.status}`
                       : ''}
+                    {scrapeReport.enrich?.enriched
+                      ? ' · Gemini: ok'
+                      : scrapeReport.enrich?.requested
+                        ? ' · Gemini: atlandı'
+                        : ''}
                   </p>
                   <p className="font-medium text-foreground">
                     {scrapeReport.candidate?.name || 'Aday yok'}
+                    {scrapeReport.category?.name ? ` · ${scrapeReport.category.name}` : ''}
                   </p>
                   {scrapeReport.candidate?.link ? (
                     <p className="truncate">{scrapeReport.candidate.link}</p>
@@ -1079,6 +1174,23 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                   {scrapeReport.inserted?.slug ? (
                     <p>Eklendi: /tool/{scrapeReport.inserted.slug}</p>
                   ) : null}
+                </div>
+              )}
+              {scrapeBulkReport && (
+                <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+                  <p>
+                    Toplu: {scrapeBulkReport.okCount}/{scrapeBulkReport.processed} ok
+                    {scrapeBulkReport.truncated
+                      ? ` · kesildi (${scrapeBulkReport.totalFound} bulundu, limit ${scrapeBulkReport.limit})`
+                      : ''}
+                    {' · dry-run'}
+                  </p>
+                  {(scrapeBulkReport.results || []).slice(0, 8).map((item) => (
+                    <p key={item.url} className="truncate pl-2">
+                      • {item.ok ? item.report?.candidate?.name || 'aday' : 'hata'}: {item.url}
+                      {item.error ? ` — ${item.error}` : ''}
+                    </p>
+                  ))}
                 </div>
               )}
             </div>
