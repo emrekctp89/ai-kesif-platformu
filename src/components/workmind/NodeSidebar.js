@@ -2,21 +2,38 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { BrainCircuit, ExternalLink, FlaskConical, Loader2, X } from 'lucide-react';
+import { BrainCircuit, Check, ExternalLink, FlaskConical, Loader2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { getWorkmindToolRecommendations } from '@/app/actions/workmind';
+import { JobFunnelPanel } from '@/components/kasif/JobFunnelPanel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { resolveJobWizard } from '@/lib/kasif/jobWizards';
 
-export function NodeSidebar({ node, workflowGoal, onClose }) {
+export function NodeSidebar({
+  node,
+  workflowGoal,
+  goals = [],
+  interactionId,
+  feedbackToken,
+  stepDone = false,
+  locale = 'tr',
+  onClose,
+  onStepComplete,
+  onToolSelect,
+}) {
   const t = useTranslations('Workmind');
   const [tools, setTools] = useState([]);
   const [loading, setLoading] = useState(false);
   const [recommendationSource, setRecommendationSource] = useState(null);
+  const [activeToolId, setActiveToolId] = useState(null);
+
+  const wizard = resolveJobWizard(goals, locale);
 
   useEffect(() => {
     let active = true;
+    setActiveToolId(null);
     if (node?.data?.raw?.categorySlug) {
       setLoading(true);
       setTools([]);
@@ -54,9 +71,10 @@ export function NodeSidebar({ node, workflowGoal, onClose }) {
   if (!node) return null;
 
   const raw = node.data?.raw;
+  const stepId = node.id;
 
   return (
-    <aside className="z-20 flex h-full w-80 shrink-0 flex-col border-l bg-card shadow-2xl">
+    <aside className="z-20 flex h-full w-80 shrink-0 flex-col border-l bg-card shadow-2xl sm:w-96">
       <div className="flex items-center justify-between gap-2 border-b p-4">
         <h3 className="line-clamp-2 text-base font-bold leading-snug">
           {raw?.label || t('details')}
@@ -69,11 +87,18 @@ export function NodeSidebar({ node, workflowGoal, onClose }) {
       <div className="flex-1 space-y-5 overflow-y-auto p-4">
         <div>
           <p className="text-sm leading-relaxed text-muted-foreground">{raw?.description}</p>
-          {raw?.categorySlug ? (
-            <Badge variant="secondary" className="mt-2 font-medium">
-              {raw.categorySlug}
-            </Badge>
-          ) : null}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {raw?.categorySlug ? (
+              <Badge variant="secondary" className="font-medium">
+                {raw.categorySlug}
+              </Badge>
+            ) : null}
+            {stepDone ? (
+              <Badge className="bg-emerald-600 font-medium hover:bg-emerald-600">
+                {t('stepDoneBadge')}
+              </Badge>
+            ) : null}
+          </div>
         </div>
 
         <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:text-amber-100">
@@ -82,6 +107,37 @@ export function NodeSidebar({ node, workflowGoal, onClose }) {
             {t('betaBadge')}
           </span>
           <p className="mt-1 opacity-90">{t('sidebarBetaNote')}</p>
+        </div>
+
+        {wizard?.id && wizard.id !== 'default' ? (
+          <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2">
+            <p className="text-xs font-semibold text-emerald-900 dark:text-emerald-100">
+              {wizard.title}
+            </p>
+            {wizard.hint ? (
+              <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                {wizard.hint}
+              </p>
+            ) : null}
+            {wizard.firstResultHint ? (
+              <p className="mt-1.5 text-[11px] font-medium text-emerald-800 dark:text-emerald-200">
+                {wizard.firstResultHint}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div>
+          <Button
+            type="button"
+            variant={stepDone ? 'secondary' : 'default'}
+            className="w-full gap-2"
+            disabled={stepDone}
+            onClick={() => onStepComplete?.(stepId)}
+          >
+            <Check className="h-4 w-4" aria-hidden="true" />
+            {stepDone ? t('stepAlreadyDone') : t('markStepDone')}
+          </Button>
         </div>
 
         <div>
@@ -102,67 +158,104 @@ export function NodeSidebar({ node, workflowGoal, onClose }) {
             </div>
           ) : tools.length > 0 ? (
             <div className="space-y-3">
-              {tools.map((tool) => (
-                <div
-                  key={tool.id}
-                  className="group rounded-lg border bg-background p-3 transition-colors hover:border-primary/50"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <h5 className="text-sm font-semibold transition-colors group-hover:text-primary">
-                        {tool.name}
-                      </h5>
-                      {tool.tier ? (
-                        <Badge
-                          variant={tool.tier === 'Sponsorlu' ? 'default' : 'secondary'}
-                          className="mt-1 h-4 px-1 py-0 text-[10px]"
-                        >
-                          {tool.tier}
-                        </Badge>
-                      ) : null}
-                      {tool.kasifReason ? (
-                        <Badge
-                          variant="outline"
-                          className="ml-1 mt-1 h-4 gap-1 px-1 py-0 text-[10px]"
-                        >
-                          <BrainCircuit className="h-2.5 w-2.5" aria-hidden="true" />
-                          {t('kasifPick')}
-                        </Badge>
-                      ) : null}
+              {tools.map((tool) => {
+                const toolUrl = `/tool/${tool.slug}`;
+                const isActive = activeToolId === tool.id;
+                return (
+                  <div
+                    key={tool.id}
+                    className="group rounded-lg border bg-background p-3 transition-colors hover:border-primary/50"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h5 className="text-sm font-semibold transition-colors group-hover:text-primary">
+                          {tool.name}
+                        </h5>
+                        {tool.tier ? (
+                          <Badge
+                            variant={tool.tier === 'Sponsorlu' ? 'default' : 'secondary'}
+                            className="mt-1 h-4 px-1 py-0 text-[10px]"
+                          >
+                            {tool.tier}
+                          </Badge>
+                        ) : null}
+                        {tool.kasifReason ? (
+                          <Badge
+                            variant="outline"
+                            className="ml-1 mt-1 h-4 gap-1 px-1 py-0 text-[10px]"
+                          >
+                            <BrainCircuit className="h-2.5 w-2.5" aria-hidden="true" />
+                            {t('kasifPick')}
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <Button
+                        asChild
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 shrink-0 opacity-70 transition-opacity group-hover:opacity-100"
+                      >
+                        <Link href={toolUrl} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          <span className="sr-only">{t('openTool')}</span>
+                        </Link>
+                      </Button>
                     </div>
-                    <Button
-                      asChild
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 shrink-0 opacity-70 transition-opacity group-hover:opacity-100"
-                    >
-                      <Link href={`/tool/${tool.slug}`} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        <span className="sr-only">{t('openTool')}</span>
-                      </Link>
-                    </Button>
+                    {tool.description ? (
+                      <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
+                        {tool.description}
+                      </p>
+                    ) : null}
+                    {tool.pricing_model ? (
+                      <p className="mt-1.5 text-[11px] text-muted-foreground">
+                        {tool.pricing_model}
+                        {Array.isArray(tool.platforms) && tool.platforms.length
+                          ? ` · ${tool.platforms.slice(0, 3).join(', ')}`
+                          : ''}
+                      </p>
+                    ) : null}
+                    {tool.kasifReason ? (
+                      <p className="mt-2 rounded-md bg-primary/5 px-2 py-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                        <span className="font-semibold text-primary">{t('kasifReason')}:</span>{' '}
+                        {tool.kasifReason}
+                      </p>
+                    ) : null}
+
+                    {interactionId && feedbackToken ? (
+                      <div className="mt-2">
+                        {!isActive ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="w-full text-xs"
+                            onClick={() => {
+                              setActiveToolId(tool.id);
+                              onToolSelect?.(stepId, tool);
+                            }}
+                          >
+                            {t('continueWithTool')}
+                          </Button>
+                        ) : (
+                          <JobFunnelPanel
+                            interactionId={interactionId}
+                            feedbackToken={feedbackToken}
+                            source={{
+                              id: tool.id,
+                              slug: tool.slug,
+                              title: tool.name,
+                              url: toolUrl,
+                            }}
+                            locale={locale}
+                            goals={goals}
+                            initialSelected
+                          />
+                        )}
+                      </div>
+                    ) : null}
                   </div>
-                  {tool.description ? (
-                    <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
-                      {tool.description}
-                    </p>
-                  ) : null}
-                  {tool.pricing_model ? (
-                    <p className="mt-1.5 text-[11px] text-muted-foreground">
-                      {tool.pricing_model}
-                      {Array.isArray(tool.platforms) && tool.platforms.length
-                        ? ` · ${tool.platforms.slice(0, 3).join(', ')}`
-                        : ''}
-                    </p>
-                  ) : null}
-                  {tool.kasifReason ? (
-                    <p className="mt-2 rounded-md bg-primary/5 px-2 py-1.5 text-[11px] leading-relaxed text-muted-foreground">
-                      <span className="font-semibold text-primary">{t('kasifReason')}:</span>{' '}
-                      {tool.kasifReason}
-                    </p>
-                  ) : null}
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="rounded-lg bg-muted/50 p-4 text-center text-sm text-muted-foreground">

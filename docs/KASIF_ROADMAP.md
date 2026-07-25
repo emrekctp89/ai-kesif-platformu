@@ -16,8 +16,8 @@ North Star artık yalnızca tıklama/affiliate değil:
 | ------ | ------ | ------------------------------------------------------------- |
 | **P0** | ✅     | Job funnel kolon + API + self-report UI + admin hunisi        |
 | **P1** | ✅     | Top job sihirbazları (goal checklist + kopyalanabilir şablon) |
-| **P2** | Sırada | Workmind ↔ Kâşif tek “görev oturumu”                          |
-| **P3** | Sonra  | 1–2 nişte gerçek bağlantı (OAuth / kopyala-yapıştır bridge)   |
+| **P2** | ✅     | Workmind ↔ Kâşif tek “görev oturumu”                          |
+| **P3** | Sırada | 1–2 nişte gerçek bağlantı (OAuth / kopyala-yapıştır bridge)   |
 | **P4** | Sonra  | Pack / orkestrasyon aboneliği                                 |
 
 ### P0 teknik yüzey
@@ -34,6 +34,14 @@ North Star artık yalnızca tıklama/affiliate değil:
 - `src/lib/kasif/jobWizards.js` — 10 goal + default sihirbaz (adımlar, prompt şablonları, first-result tanımı)
 - `JobFunnelPanel` — intent.goals → goal-specific checklist + kopyala
 - Funnel meta: `goal`, `wizard_id`; analytics: `kasif_wizard_prompt_copy`
+
+### P2 teknik yüzey
+
+- `src/lib/kasif/jobSession.js` — session model, progress, Kâşif→Workmind handoff URL
+- `POST /api/kasif/job-session` — Workmind oturumu için `kasif_interactions` + funnel seed
+- Workmind: `JobSessionBar`, adım tamamla, araç seç → funnel, node yeşil durum
+- `/kasif` → “Workmind'de adım adım planla” (`?goal=&from=kasif&interactionId=…&auto=1`)
+- Generate meta: her yanıtta `goals` (Gemini yolunda da `understandQuestion`)
 
 ---
 
@@ -57,7 +65,7 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 Öncelik sırasıyla tutulacak:
 
-1. **P2 görev oturumu** — Workmind plan adımlarını Kâşif funnel ile birleştir (tek job session)
+1. **P3 bağlantı** — 1–2 nişte OAuth veya kopyala-yapıştır bridge (gerçek first_result sinyali)
 2. **Canlı eval regresyonu** — `npm run kasif:evaluate` CI veya periyodik koşu
 3. **Soft-landing → conversion** — soft-landing sonrası starter tıklama / başarılı öneri oranı
 4. **Funnel kalitesi** — first_result self-report oranı, dakika dağılımı, goal bazlı conversion

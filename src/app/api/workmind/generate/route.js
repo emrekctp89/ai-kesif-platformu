@@ -2,6 +2,7 @@ import logger from '@/utils/logger';
 import { NextResponse } from 'next/server';
 
 import { PRIMARY_CATEGORIES } from '@/lib/categoryTaxonomy';
+import { understandQuestion } from '@/lib/kasif/engine';
 import { normalizeWorkmindWorkflow, planWorkmindWorkflow } from '@/lib/kasif/workmindPlanner';
 
 export const runtime = 'nodejs';
@@ -176,6 +177,12 @@ export async function POST(req) {
       );
     }
 
+    const intent = understandQuestion(prompt);
+    const goals =
+      (Array.isArray(plannerMeta?.goals) && plannerMeta.goals.length
+        ? plannerMeta.goals
+        : intent.goals) || [];
+
     return NextResponse.json({
       ...workflowData,
       meta: {
@@ -183,7 +190,8 @@ export async function POST(req) {
         source,
         model: modelName || undefined,
         planner: plannerMeta?.planner,
-        goals: plannerMeta?.goals,
+        goals,
+        concepts: plannerMeta?.concepts || intent.concepts || [],
         disclaimer: 'Öneriler otomatik üretilir; sonuçlar hatalı veya eksik olabilir.',
         fallbackFromGemini: Boolean(geminiError),
       },

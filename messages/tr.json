@@ -363,7 +363,17 @@
     "sourceCategoryFallback": "Kategori eşleşmesine göre listelendi.",
     "noTools": "Bu adıma uygun araç bulunamadı veya kategori eşleşmedi (beta).",
     "openTool": "Aracı aç",
-    "sidebarBetaNote": "Öneriler otomatik ve deneme amaçlıdır; her zaman en iyi eşleşme olmayabilir."
+    "sidebarBetaNote": "Öneriler otomatik ve deneme amaçlıdır; her zaman en iyi eşleşme olmayabilir.",
+    "sessionTitle": "Görev oturumu",
+    "sessionProgress": "tamamlanan adım",
+    "sessionSurveyTitle": "Tüm adımlar bitti — görev ne durumda?",
+    "sessionFirstResultYes": "İlk sonucu aldım",
+    "sessionJobDone": "İş bitti",
+    "sessionThanks": "Teşekkürler — oturum kaydı güncellendi.",
+    "markStepDone": "Bu adımı tamamladım",
+    "stepAlreadyDone": "Adım tamamlandı",
+    "stepDoneBadge": "Tamamlandı",
+    "continueWithTool": "Bu araçla devam et"
   },
   "Learn": {
     "metaTitle": "Öğren — AI Öğrenme Merkezi",
@@ -1602,6 +1612,8 @@
     "retry": "Yeniden dene",
     "sources": "Platform kaynakları",
     "openTool": "Aracı incele",
+    "openWorkmind": "Workmind'de adım adım planla",
+    "openWorkmindHint": "Aynı görevi çok adımlı plana çevir; her adımda araç seç ve tamamla.",
     "trust": {
       "catalog": "Yalnızca onaylı katalog",
       "compare": "Şeffaf karşılaştırma"

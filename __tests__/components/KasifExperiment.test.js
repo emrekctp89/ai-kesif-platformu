@@ -308,6 +308,10 @@ describe('Kâşif ekranı', () => {
       await screen.findByRole('button', { name: 'Slayt AI ile kuruluma başla' })
     ).toBeInTheDocument();
     expect(screen.getByText('Bu araçla devam et')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Workmind'de adım adım planla/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('/workmind?')
+    );
   });
 
   it('devam edince goal-specific sihirbaz adımlarını ve şablonu gösterir', async () => {

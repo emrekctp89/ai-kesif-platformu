@@ -363,7 +363,17 @@
     "sourceCategoryFallback": "Listed using the category match.",
     "noTools": "No matching tools for this step (or category match failed — beta).",
     "openTool": "Open tool",
-    "sidebarBetaNote": "Suggestions are automatic and experimental; they may not always be the best match."
+    "sidebarBetaNote": "Suggestions are automatic and experimental; they may not always be the best match.",
+    "sessionTitle": "Job session",
+    "sessionProgress": "steps done",
+    "sessionSurveyTitle": "All steps done — how is the job?",
+    "sessionFirstResultYes": "I got a first result",
+    "sessionJobDone": "Job done",
+    "sessionThanks": "Thanks — session progress was saved.",
+    "markStepDone": "Mark step complete",
+    "stepAlreadyDone": "Step completed",
+    "stepDoneBadge": "Done",
+    "continueWithTool": "Continue with this tool"
   },
   "Learn": {
     "metaTitle": "Learn — AI Learning Hub",
@@ -1602,6 +1612,8 @@
     "retry": "Try again",
     "sources": "Platform sources",
     "openTool": "View tool",
+    "openWorkmind": "Plan step-by-step in Workmind",
+    "openWorkmindHint": "Turn the same job into a multi-step plan; pick tools and complete each step.",
     "trust": {
       "catalog": "Approved catalog only",
       "compare": "Transparent comparison"

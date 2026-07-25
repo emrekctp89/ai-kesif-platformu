@@ -26,6 +26,7 @@ import {
   User,
 } from 'lucide-react';
 import { formatKasifGoalLabel } from '@/lib/kasif/goalLabels';
+import { buildWorkmindHandoffUrl } from '@/lib/kasif/jobSession';
 import { JobFunnelPanel } from '@/components/kasif/JobFunnelPanel';
 import { trackEvent } from '@/utils/analytics';
 
@@ -473,6 +474,36 @@ export default function KasifExperiment() {
                             )}
                           </div>
                         )}
+                        {turn.result.sources?.length > 0 &&
+                          !turn.result.softLanding &&
+                          !turn.result.meta &&
+                          !turn.result.intent?.meta && (
+                            <div className="mt-3">
+                              <Link
+                                href={buildWorkmindHandoffUrl(turn.question, {
+                                  locale,
+                                  from: 'kasif',
+                                  interactionId: turn.result.interactionId,
+                                  feedbackToken: turn.result.feedbackToken,
+                                  goals: turn.result.intent?.goals,
+                                  autoGenerate: true,
+                                })}
+                                onClick={() => {
+                                  trackEvent('kasif_workmind_handoff', {
+                                    goal: turn.result.intent?.goals?.[0] || undefined,
+                                    source_count: turn.result.sources.length,
+                                  });
+                                }}
+                                className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-sm font-semibold text-violet-900 transition-colors hover:bg-violet-500/15 dark:text-violet-100 sm:w-auto"
+                              >
+                                {t('openWorkmind')}
+                                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                              </Link>
+                              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                                {t('openWorkmindHint')}
+                              </p>
+                            </div>
+                          )}
                         {turn.result.sources?.length > 0 && (
                           <div className="mt-4 border-t pt-3">
                             <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 const getWorkmindToolRecommendations = jest.fn();
 
@@ -19,7 +19,24 @@ jest.mock('next-intl', () => ({
       noTools: 'Araç bulunamadı.',
       close: 'Kapat',
       details: 'Detaylar',
+      markStepDone: 'Bu adımı tamamladım',
+      stepAlreadyDone: 'Adım tamamlandı',
+      stepDoneBadge: 'Tamamlandı',
+      continueWithTool: 'Bu araçla devam et',
     })[key] || key,
+}));
+jest.mock('@/components/kasif/JobFunnelPanel', () => ({
+  JobFunnelPanel: () => <div data-testid="job-funnel-panel" />,
+}));
+jest.mock('@/lib/kasif/jobWizards', () => ({
+  resolveJobWizard: () => ({
+    id: 'presentation-creation',
+    title: 'Sunum kurulum sihirbazı',
+    hint: 'İlk taslağı çıkar',
+    firstResultHint: '5 slayt',
+    steps: [],
+    prompts: [],
+  }),
 }));
 
 import { NodeSidebar } from '@/components/workmind/NodeSidebar';
@@ -65,6 +82,24 @@ describe('Workmind Kâşif araç paneli', () => {
       label: 'Sunumu hazırla',
       description: 'Ürün için slayt oluştur.',
     });
+  });
+
+  it('adım tamamla butonunu çağırır ve sihirbaz ipucu gösterir', async () => {
+    getWorkmindToolRecommendations.mockResolvedValue({ source: 'kasif', tools: [] });
+    const onStepComplete = jest.fn();
+    render(
+      <NodeSidebar
+        node={node}
+        workflowGoal="Ürünümü tanıt"
+        goals={['presentation-creation']}
+        onClose={jest.fn()}
+        onStepComplete={onStepComplete}
+      />
+    );
+
+    expect(await screen.findByText('Sunum kurulum sihirbazı')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Bu adımı tamamladım' }));
+    expect(onStepComplete).toHaveBeenCalledWith('step-1');
   });
 
   it('kategori yedeğinin kaynağını açıkça belirtir', async () => {

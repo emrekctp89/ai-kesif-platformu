@@ -29,6 +29,8 @@ Workmind iki Kâşif katmanı kullanır:
    Kullanıcı “Bu araçla devam et” ve self-report ile huniyi ilerletir (`POST /api/kasif/funnel`).
 7. `intent.goals` doluysa `src/lib/kasif/jobWizards.js` üzerinden goal-specific checklist ve
    kopyalanabilir ilk-çıktı şablonları gösterilir (P1).
+8. Workmind ile tek görev oturumu (P2): `/kasif` → Workmind handoff; `POST /api/kasif/job-session`;
+   adım tamamla + araç seçimi funnel’a yazılır (`src/lib/kasif/jobSession.js`).
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır.

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
@@ -53,7 +54,15 @@ export default async function WorkmindPage() {
       </header>
 
       <div className="relative h-full min-h-0 w-full flex-1">
-        <WorkflowBuilder />
+        <Suspense
+          fallback={
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              {t('generating')}
+            </div>
+          }
+        >
+          <WorkflowBuilder />
+        </Suspense>
       </div>
     </div>
   );
