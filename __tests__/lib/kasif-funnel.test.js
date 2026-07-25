@@ -96,4 +96,32 @@ describe('kasif funnel', () => {
     expect(stats.conversion.firstResultOfStated).toBe(50);
     expect(stats.conversion.doneOfStated).toBe(50);
   });
+
+  it('pack_id conversion kovalarını hesaplar', () => {
+    const stats = buildJobFunnelStats([
+      {
+        intent: { packId: 'content-studio' },
+        funnel: {
+          stages: {
+            job_stated: '2026-07-25T10:00:00.000Z',
+            first_result: '2026-07-25T10:05:00.000Z',
+          },
+          result_artifact: { bridge: 'runner', packId: 'content-studio' },
+          events: [],
+        },
+      },
+      {
+        intent: { packId: 'content-studio' },
+        funnel: {
+          stages: { job_stated: '2026-07-25T11:00:00.000Z' },
+          events: [],
+        },
+      },
+    ]);
+    expect(stats.packStats[0].packId).toBe('content-studio');
+    expect(stats.packStats[0].total).toBe(2);
+    expect(stats.packStats[0].firstResult).toBe(1);
+    expect(stats.packStats[0].firstResultRate).toBe(50);
+    expect(stats.runnerCount).toBe(1);
+  });
 });

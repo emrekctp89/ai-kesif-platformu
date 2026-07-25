@@ -2120,6 +2120,12 @@ function KasifQualityTab({ interactions = [] }) {
                     ? ` · %${stats.jobFunnel.conversion.bridgeOfFirstResult}`
                     : ''}
                 </Badge>
+                <Badge variant="outline">
+                  {t('kasifFunnelRunner')}: {stats.jobFunnel?.runnerCount || 0}
+                  {stats.jobFunnel?.conversion?.runnerOfFirstResult != null
+                    ? ` · %${stats.jobFunnel.conversion.runnerOfFirstResult}`
+                    : ''}
+                </Badge>
               </div>
               {(stats.jobFunnel?.topSelectedTools || []).length > 0 ? (
                 <div className="space-y-2">
@@ -2131,6 +2137,29 @@ function KasifQualityTab({ interactions = [] }) {
                       <Badge key={tool.key} variant="outline" className="font-normal">
                         {tool.label} · {tool.count}
                       </Badge>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {(stats.jobFunnel?.packStats || []).length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {t('kasifFunnelPackStats')}
+                  </p>
+                  <div className="space-y-1.5">
+                    {stats.jobFunnel.packStats.map((pack) => (
+                      <div
+                        key={pack.packId}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs"
+                      >
+                        <code className="font-semibold">{pack.packId}</code>
+                        <span className="text-muted-foreground">
+                          n={pack.total}
+                          {pack.firstResultRate != null ? ` · FR %${pack.firstResultRate}` : ''}
+                          {pack.jobDoneRate != null ? ` · Done %${pack.jobDoneRate}` : ''}
+                          {pack.runner ? ` · runner ${pack.runner}` : ''}
+                        </span>
+                      </div>
                     ))}
                   </div>
                 </div>

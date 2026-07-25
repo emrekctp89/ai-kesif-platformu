@@ -1342,6 +1342,8 @@
     "kasifFunnelConvSelected": "Seçim / öneri",
     "kasifFunnelTopTools": "En çok seçilen araçlar",
     "kasifFunnelBridgePaste": "Yapıştırma bridge",
+    "kasifFunnelRunner": "Pack runner",
+    "kasifFunnelPackStats": "Paket conversion (pack_id)",
     "kasifGoalsTitle": "Hedef kovaları",
     "kasifGoalsDesc": "En sık görülen intent/goal dağılımı.",
     "kasifGoalNone": "Hedef yok",
@@ -1717,7 +1719,21 @@
       "askKasif": "Paketi sor",
       "openWorkmind": "Planla",
       "matchedTitle": "Bu görev bir iş paketine uyuyor",
-      "runPack": "Paketi Workmind'de çalıştır"
+      "runPack": "Paketi Workmind'de çalıştır",
+      "quotaHint": "Pro paket ücretsiz deneme: {left}/{total} kaldı (30 gün)",
+      "loginCta": "Giriş yap",
+      "upgradeCta": "Pro’ya geç",
+      "runnerOpen": "Platformda ilk çıktıyı üret",
+      "runnerTitle": "İçerik stüdyosu runner",
+      "runnerHint": "Brief yaz; aikeşif taslak + görsel prompt + SEO üretir ve first_result kaydeder.",
+      "runnerBriefLabel": "İçerik brief’i",
+      "runnerBriefPlaceholder": "Örn. Küçük ekipler için AI araç seçimi rehberi, 600 kelime, pratik ton",
+      "runnerBriefShort": "Brief en az 8 karakter olmalı.",
+      "runnerCta": "Çalıştır",
+      "runnerRunning": "Üretiliyor…",
+      "runnerFailed": "Runner çalışmadı. Tekrar dene.",
+      "runnerDone": "İlk sonuç hazır ({source})",
+      "runnerCopy": "Tümünü kopyala"
     }
   },
   "ContentStudio": {

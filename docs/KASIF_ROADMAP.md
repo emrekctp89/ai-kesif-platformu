@@ -12,13 +12,13 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 `job_stated → tool_recommended → tool_selected → setup_started → setup_completed → first_result → job_done`
 
-| Faz    | Durum | Ne                                                            |
-| ------ | ----- | ------------------------------------------------------------- |
-| **P0** | ✅    | Job funnel kolon + API + self-report UI + admin hunisi        |
-| **P1** | ✅    | Top job sihirbazları (goal checklist + kopyalanabilir şablon) |
-| **P2** | ✅    | Workmind ↔ Kâşif tek “görev oturumu”                          |
-| **P3** | ✅    | Metin nişlerinde kopyala-yapıştır first_result bridge         |
-| **P4** | ✅    | İş paketleri + bridge genişletme + üyelik konumlandırma       |
+| Faz    | Durum | Ne                                                                |
+| ------ | ----- | ----------------------------------------------------------------- |
+| **P0** | ✅    | Job funnel kolon + API + self-report UI + admin hunisi            |
+| **P1** | ✅    | Top job sihirbazları (goal checklist + kopyalanabilir şablon)     |
+| **P2** | ✅    | Workmind ↔ Kâşif tek “görev oturumu”                              |
+| **P3** | ✅    | Metin nişlerinde kopyala-yapıştır first_result bridge             |
+| **P4** | ✅    | İş paketleri + Pro gate/kota + content-studio runner + pack stats |
 
 ### P0 teknik yüzey
 
@@ -59,6 +59,9 @@ North Star artık yalnızca tıklama/affiliate değil:
 - Bridge genişletme: `image-generation` (URL), `workflow-automation`, `meeting-notes`
 - `/uyelik` — iş paketleri / orkestrasyon Pro konumlandırması
 - Analytics: `kasif_pack_ask`, `kasif_pack_workmind`, `kasif_pack_matched_workmind`
+- **Pro gate / kota**: proHint paketler — giriş + 2 ücretsiz/30g, sonrası Pro (`packAccess`)
+- **Runner**: `POST /api/kasif/pack-runner` (content-studio) → Gemini veya local first_result
+- **Admin**: pack_id conversion kovaları + runner sayacı
 
 ---
 
@@ -82,13 +85,12 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 Öncelik sırasıyla tutulacak:
 
-1. **Pack monetizasyon** — seçili pack’leri Pro gate / usage quota ile kilitle
-2. **Gerçek runner** — 1 pack’te partner API veya browser automation
+1. **Daha fazla runner** — sales-outreach / meeting-to-action pack runner
+2. **Partner API runner** — seçili araç OAuth ile gerçek dış çağrı
 3. **Canlı eval regresyonu** — `npm run kasif:evaluate` CI veya periyodik koşu
 4. **Soft-landing → conversion** — soft-landing sonrası starter tıklama / başarılı öneri oranı
-5. **Funnel kalitesi** — pack_id bazlı conversion, bridge vs self-report
-6. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
-7. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
+5. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
+6. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
 
 ---
 

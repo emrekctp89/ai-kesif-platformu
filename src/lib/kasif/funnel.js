@@ -277,7 +277,10 @@ export function buildJobFunnelStats(interactions = []) {
     .slice(0, 8);
 
   let bridgePasteCount = 0;
+  let runnerCount = 0;
   const bridgeGoals = new Map();
+  const packBuckets = new Map();
+
   for (const row of rows) {
     const funnel = normalizeFunnel(row?.funnel);
     if (funnel.result_artifact?.bridge === 'paste') {
@@ -285,7 +288,40 @@ export function buildJobFunnelStats(interactions = []) {
       const g = funnel.result_artifact.goal || '(unknown)';
       bridgeGoals.set(g, (bridgeGoals.get(g) || 0) + 1);
     }
+    if (funnel.result_artifact?.bridge === 'runner') {
+      runnerCount += 1;
+    }
+
+    const packId =
+      row?.intent?.packId ||
+      funnel.result_artifact?.packId ||
+      funnel.events?.find((e) => e?.meta?.packId)?.meta?.packId ||
+      null;
+    if (packId) {
+      const key = String(packId);
+      const bucket = packBuckets.get(key) || {
+        packId: key,
+        total: 0,
+        firstResult: 0,
+        jobDone: 0,
+        runner: 0,
+      };
+      bucket.total += 1;
+      if (funnel.stages?.first_result) bucket.firstResult += 1;
+      if (funnel.stages?.job_done) bucket.jobDone += 1;
+      if (funnel.result_artifact?.bridge === 'runner') bucket.runner += 1;
+      packBuckets.set(key, bucket);
+    }
   }
+
+  const packStats = [...packBuckets.values()]
+    .map((bucket) => ({
+      ...bucket,
+      firstResultRate: rate(bucket.firstResult, bucket.total),
+      jobDoneRate: rate(bucket.jobDone, bucket.total),
+    }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 12);
 
   return {
     withFunnel,
@@ -299,14 +335,17 @@ export function buildJobFunnelStats(interactions = []) {
       firstResultOfStated: rate(counts.first_result, counts.job_stated || base),
       doneOfStated: rate(counts.job_done, counts.job_stated || base),
       bridgeOfFirstResult: rate(bridgePasteCount, counts.first_result),
+      runnerOfFirstResult: rate(runnerCount, counts.first_result),
     },
     avgMinutesToFirstResult: avgMinutes,
     firstResultSamples: minutesSamples.length,
     topSelectedTools,
     bridgePasteCount,
+    runnerCount,
     bridgeGoals: [...bridgeGoals.entries()]
       .map(([goal, count]) => ({ goal, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 8),
+    packStats,
   };
 }

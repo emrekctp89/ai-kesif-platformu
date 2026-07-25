@@ -1342,6 +1342,8 @@
     "kasifFunnelConvSelected": "Select / recommend",
     "kasifFunnelTopTools": "Most selected tools",
     "kasifFunnelBridgePaste": "Paste bridge",
+    "kasifFunnelRunner": "Pack runner",
+    "kasifFunnelPackStats": "Pack conversion (pack_id)",
     "kasifGoalsTitle": "Goal buckets",
     "kasifGoalsDesc": "Most common intent/goal distribution.",
     "kasifGoalNone": "No goal",
@@ -1717,7 +1719,21 @@
       "askKasif": "Ask pack",
       "openWorkmind": "Plan it",
       "matchedTitle": "This job matches a pack",
-      "runPack": "Run pack in Workmind"
+      "runPack": "Run pack in Workmind",
+      "quotaHint": "Pro pack free trials: {left}/{total} left (30 days)",
+      "loginCta": "Sign in",
+      "upgradeCta": "Go Pro",
+      "runnerOpen": "Generate first output on-platform",
+      "runnerTitle": "Content studio runner",
+      "runnerHint": "Write a brief; aikeşif generates draft + image prompt + SEO and records first_result.",
+      "runnerBriefLabel": "Content brief",
+      "runnerBriefPlaceholder": "e.g. AI tool selection guide for small teams, 600 words, practical tone",
+      "runnerBriefShort": "Brief must be at least 8 characters.",
+      "runnerCta": "Run",
+      "runnerRunning": "Generating…",
+      "runnerFailed": "Runner failed. Try again.",
+      "runnerDone": "First result ready ({source})",
+      "runnerCopy": "Copy all"
     }
   },
   "ContentStudio": {

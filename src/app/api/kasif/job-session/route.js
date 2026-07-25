@@ -4,6 +4,7 @@ import { enforceRateLimit } from '@/utils/antiAbuse';
 import { assertKasifEnabled } from '@/lib/kasif/config';
 import { understandQuestion } from '@/lib/kasif/engine';
 import { applyFunnelStage, seedFunnelFromResponse } from '@/lib/kasif/funnel';
+import { assertPackAllowed } from '@/lib/kasif/packAccessServer';
 import { createAdminClient } from '@/utils/supabase/admin';
 import logger from '@/utils/logger';
 
@@ -15,12 +16,16 @@ const API_MESSAGES = {
     rateLimit: 'Çok fazla istek.',
     invalid: 'Geçersiz istek.',
     failed: 'Görev oturumu kaydedilemedi.',
+    login_required: 'Pro paketler için giriş yap.',
+    pro_required: 'Ücretsiz Pro paket kotan doldu. Pro’ya yükselt.',
   },
   en: {
     disabled: 'Kâşif is not enabled.',
     rateLimit: 'Too many requests.',
     invalid: 'Invalid request.',
     failed: 'Could not create job session.',
+    login_required: 'Sign in to use Pro packs.',
+    pro_required: 'Free Pro pack quota used. Upgrade to Pro.',
   },
 };
 
@@ -74,6 +79,24 @@ export async function POST(request) {
     .trim()
     .slice(0, 80);
 
+  let packUserId = null;
+  if (packId) {
+    const access = await assertPackAllowed(packId);
+    if (!access.allowed) {
+      const status = access.reason === 'login_required' ? 401 : 402;
+      return NextResponse.json(
+        {
+          error: messages[access.reason] || messages.failed,
+          reason: access.reason,
+          freeRunsLeft: access.freeRunsLeft,
+          upgradePath: locale === 'en' ? '/en/uyelik' : '/uyelik',
+        },
+        { status }
+      );
+    }
+    packUserId = access.userId || null;
+  }
+
   const answer =
     locale === 'en'
       ? `Workmind job session started${stepCount ? ` (${stepCount} steps)` : ''}${packId ? ` · pack:${packId}` : ''}.`
@@ -86,6 +109,7 @@ export async function POST(request) {
       concepts: intent.concepts || [],
       source,
       ...(packId ? { packId } : {}),
+      ...(packUserId ? { userId: packUserId } : {}),
     },
     confidence: goals.length ? 0.75 : 0.55,
     sourceIds: [],
