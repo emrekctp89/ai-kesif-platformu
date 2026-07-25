@@ -68,9 +68,14 @@ export function groundModelResponse(modelResponse, records, locale = 'tr') {
         type: 'tool',
         title: item.name,
         url: `/${locale}/tool/${item.slug}`,
+        description: String(item.description || '')
+          .trim()
+          .replace(/\s+/g, ' ')
+          .slice(0, 180),
         pricing: item.pricing_model || item.pricing_type || null,
         slug: item.slug || null,
         category: item.category?.name || item.category_name || null,
+        platforms: Array.isArray(item.platforms) ? item.platforms.filter(Boolean).slice(0, 4) : [],
         rating: Number.isFinite(rating) && rating > 0 ? Number(rating.toFixed(1)) : null,
         reasons: formatSourceReasons(reasonCodes, locale),
       };

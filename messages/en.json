@@ -350,6 +350,7 @@
     "emptyTitle": "Your workflow will appear here",
     "emptyBody": "Type a goal above and hit Generate. e.g. start a podcast, market a SaaS, or validate a mobile app idea.",
     "toastGenerated": "Workflow created. Click nodes to inspect.",
+    "toastGeneratedKasif": "Workflow created with the Kâşif planner. Click nodes for tool suggestions.",
     "toastSaved": "Workflow saved.",
     "errorGenerate": "Could not generate a workflow. Beta — try again with different wording.",
     "errorSave": "Save failed.",
@@ -1584,6 +1585,27 @@
     "connectionError": "Kâşif could not reach the server.",
     "retry": "Try again",
     "sources": "Platform sources",
+    "openTool": "View tool",
+    "trust": {
+      "catalog": "Approved catalog only",
+      "compare": "Transparent comparison"
+    },
+    "comparison": {
+      "select": "Compare",
+      "toggle": "Add or remove {tool} from comparison",
+      "title": "Decision table",
+      "description": "See your selected tools side by side.",
+      "tool": "Tool",
+      "category": "Category",
+      "pricing": "Pricing",
+      "rating": "Rating"
+    },
+    "followUps": {
+      "title": "Refine the result",
+      "free": "Show me which of these are free",
+      "compare": "Compare the first two options in detail",
+      "beginner": "Which one is easiest for a beginner?"
+    },
     "priceFree": "Free preference",
     "pricePaid": "Paid preference",
     "confidence": "Confidence {value}%",

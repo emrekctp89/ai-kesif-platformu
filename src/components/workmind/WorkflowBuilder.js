@@ -107,7 +107,9 @@ export function WorkflowBuilder() {
 
       setNodes(formattedNodes);
       setEdges(formattedEdges);
-      toast.success(t('toastGenerated'));
+      toast.success(
+        data?.meta?.source === 'kasif' ? t('toastGeneratedKasif') : t('toastGenerated')
+      );
     } catch (error) {
       toast.error(error?.message || t('errorGenerate'));
       logger.error(error);

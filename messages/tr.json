@@ -350,6 +350,7 @@
     "emptyTitle": "İş akışın burada görünecek",
     "emptyBody": "Yukarıya hedefini yaz ve Üret’e bas. Örn. podcast başlatmak, SaaS pazarlamak veya bir mobil uygulama fikri doğrulamak.",
     "toastGenerated": "İş akışı oluşturuldu. İncelemek için kutulara tıkla.",
+    "toastGeneratedKasif": "İş akışı Kâşif planlayıcıyla oluşturuldu. Kutulara tıklayarak araç önerilerine bak.",
     "toastSaved": "İş akışın kaydedildi.",
     "errorGenerate": "İş akışı oluşturulamadı. Beta — biraz sonra veya farklı bir ifadeyle dene.",
     "errorSave": "Kaydetme başarısız oldu.",
@@ -1584,6 +1585,27 @@
     "connectionError": "Kâşif sunucusuna ulaşılamadı.",
     "retry": "Yeniden dene",
     "sources": "Platform kaynakları",
+    "openTool": "Aracı incele",
+    "trust": {
+      "catalog": "Yalnızca onaylı katalog",
+      "compare": "Şeffaf karşılaştırma"
+    },
+    "comparison": {
+      "select": "Karşılaştır",
+      "toggle": "{tool} aracını karşılaştırmaya ekle veya çıkar",
+      "title": "Karar tablosu",
+      "description": "Seçtiğin araçları temel özellikleriyle yan yana gör.",
+      "tool": "Araç",
+      "category": "Kategori",
+      "pricing": "Fiyat",
+      "rating": "Puan"
+    },
+    "followUps": {
+      "title": "Sonucu daralt",
+      "free": "Bunların ücretsiz olanlarını göster",
+      "compare": "İlk iki seçeneği ayrıntılı karşılaştır",
+      "beginner": "Yeni başlayan için en kolay olan hangisi?"
+    },
     "priceFree": "Ücretsiz tercih",
     "pricePaid": "Ücretli tercih",
     "confidence": "Güven %{value}",

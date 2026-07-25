@@ -22,9 +22,11 @@ describe('Kâşif grounding', () => {
           type: 'tool',
           title: 'Test Aracı',
           url: '/tr/tool/test-araci',
+          description: '',
           pricing: null,
           slug: 'test-araci',
           category: null,
+          platforms: [],
           rating: null,
           reasons: [],
         },
@@ -70,6 +72,23 @@ describe('Kâşif grounding', () => {
         },
       ]).sources[0]
     ).toMatchObject({ category: 'Üretkenlik', rating: 4.7, pricing: 'Freemium' });
+  });
+
+  it('karar kartları için açıklama ve platform bilgisi ekler', () => {
+    expect(
+      groundModelResponse({ answer: 'Yanıt', sourceIds: ['tool:7'], insufficientContext: false }, [
+        {
+          id: 7,
+          name: 'Test Aracı',
+          slug: 'test-araci',
+          description: '  Ekiplerin   daha hızlı çalışmasını sağlar. ',
+          platforms: ['Web', 'iOS', null, 'Android', 'macOS', 'Windows'],
+        },
+      ]).sources[0]
+    ).toMatchObject({
+      description: 'Ekiplerin daha hızlı çalışmasını sağlar.',
+      platforms: ['Web', 'iOS', 'Android', 'macOS'],
+    });
   });
 
   it('İngilizce yanıtta yerelleştirilmiş boş durum ve kaynak bağlantısı üretir', () => {

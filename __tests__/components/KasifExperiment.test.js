@@ -79,6 +79,57 @@ describe('Kâşif ekranı', () => {
     expect(await screen.findByText(/Bu eşleşme düşük güvenli/i)).toBeInTheDocument();
   });
 
+  it('kaynakları karar kartına dönüştürür ve seçilen araçları karşılaştırır', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        answer: 'İki güçlü seçenek buldum.',
+        grounded: true,
+        confidence: 0.9,
+        intent: { goals: ['presentation-creation'], pricePreference: 'any' },
+        sources: [
+          {
+            id: 'tool:1',
+            title: 'Slayt AI',
+            url: '/tr/tool/slayt-ai',
+            description: 'Sunum taslakları ve görsel düzenler üretir.',
+            category: 'Sunum',
+            pricing: 'Freemium',
+            rating: 4.8,
+            reasons: ['göreve uygun'],
+          },
+          {
+            id: 'tool:2',
+            title: 'Deck Pro',
+            url: '/tr/tool/deck-pro',
+            description: 'Ekipler için ortak sunum çalışma alanı.',
+            category: 'Üretkenlik',
+            pricing: 'Ücretli',
+            rating: 4.5,
+            reasons: ['yüksek puan'],
+          },
+        ],
+      }),
+    });
+    render(<KasifExperiment />);
+
+    fireEvent.change(screen.getByRole('textbox', { name: "Kâşif'e sor" }), {
+      target: { value: 'Sunum araçlarını karşılaştır' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: "Kâşif'e sor" }));
+
+    await screen.findByText('Sunum taslakları ve görsel düzenler üretir.');
+    const compareButtons = screen.getAllByRole('button', { name: /karşılaştırmaya ekle/i });
+    fireEvent.click(compareButtons[0]);
+    fireEvent.click(compareButtons[1]);
+
+    expect(screen.getByText('Karar tablosu')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Fiyat' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'İlk iki seçeneği ayrıntılı karşılaştır' })
+    ).toBeInTheDocument();
+  });
+
   it('eşleşmesiz yanıtta platform ipucu gösterir', async () => {
     global.fetch.mockResolvedValue({
       ok: true,

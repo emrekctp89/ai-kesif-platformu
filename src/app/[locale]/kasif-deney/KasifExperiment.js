@@ -4,8 +4,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import {
+  ArrowRight,
   Bot,
+  Check,
   Code2,
+  ExternalLink,
+  GitCompareArrows,
   ImageIcon,
   LoaderCircle,
   Mail,
@@ -15,6 +19,8 @@ import {
   RotateCcw,
   Search,
   Send,
+  ShieldCheck,
+  Sparkles,
   ThumbsDown,
   ThumbsUp,
   User,
@@ -42,6 +48,7 @@ export default function KasifExperiment() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [comparison, setComparison] = useState({});
   const conversationEndRef = useRef(null);
   const questionRef = useRef(null);
   const activeRequestRef = useRef(null);
@@ -220,6 +227,7 @@ export default function KasifExperiment() {
     setLoading(false);
     setTurns([]);
     setHistory([]);
+    setComparison({});
     setQuestion('');
     try {
       sessionStorage.removeItem(storageKeyFor(locale));
@@ -239,6 +247,28 @@ export default function KasifExperiment() {
 
   function retryQuestion(failedQuestion) {
     void askQuestion(failedQuestion);
+  }
+
+  function toggleComparison(turnId, sourceId) {
+    setComparison((current) => {
+      const selected = current[turnId] || [];
+      const next = selected.includes(sourceId)
+        ? selected.filter((id) => id !== sourceId)
+        : selected.length < 3
+          ? [...selected, sourceId]
+          : selected;
+      return { ...current, [turnId]: next };
+    });
+  }
+
+  function followUpQuestions(result) {
+    if (!result?.sources?.length) return [];
+    const pricePreference = result.intent?.pricePreference;
+    const prompts = [];
+    if (pricePreference !== 'free') prompts.push(t('followUps.free'));
+    if (result.sources.length > 1) prompts.push(t('followUps.compare'));
+    prompts.push(t('followUps.beginner'));
+    return prompts.slice(0, 3);
   }
 
   function StarterChips({ prefix, autoAsk = false, limit = 6 }) {
@@ -264,43 +294,61 @@ export default function KasifExperiment() {
   }
 
   return (
-    <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl flex-col gap-6 px-2 py-8 sm:px-4 sm:py-12">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-primary">{t('eyebrow')}</p>
-          <h1 className="text-3xl font-bold">{t('title')}</h1>
-          <p className="mt-2 text-muted-foreground">{t('subtitle')}</p>
+    <main className="mx-auto flex min-h-[70vh] w-full max-w-5xl flex-col gap-6 px-2 py-8 sm:px-4 sm:py-12">
+      <header className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-violet-500/10 via-background to-cyan-500/10 p-5 sm:p-8">
+        <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-violet-500/15 blur-3xl" />
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="max-w-2xl">
+            <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-background/70 px-3 py-1 text-xs font-semibold text-primary backdrop-blur">
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('eyebrow')}
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">{t('title')}</h1>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
+              {t('subtitle')}
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5 rounded-full border bg-background/70 px-2.5 py-1">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                {t('trust.catalog')}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border bg-background/70 px-2.5 py-1">
+                <GitCompareArrows className="h-3.5 w-3.5 text-violet-500" />
+                {t('trust.compare')}
+              </span>
+            </div>
+          </div>
+          {turns.length > 0 && (
+            <button
+              type="button"
+              onClick={resetConversation}
+              className="shrink-0 rounded-xl border bg-background/70 p-2.5 text-muted-foreground backdrop-blur transition-colors hover:bg-muted hover:text-foreground"
+              aria-label={t('newConversation')}
+              title={t('newConversation')}
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          )}
         </div>
-        {turns.length > 0 && (
-          <button
-            type="button"
-            onClick={resetConversation}
-            className="shrink-0 rounded-md border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label={t('newConversation')}
-            title={t('newConversation')}
-          >
-            <RotateCcw className="h-4 w-4" />
-          </button>
-        )}
       </header>
 
       {turns.length === 0 && (
         <section
           aria-labelledby="kasif-starters-heading"
-          className="rounded-2xl border bg-card p-4"
+          className="rounded-3xl border bg-card/80 p-5 shadow-sm sm:p-6"
         >
           <h2 id="kasif-starters-heading" className="text-sm font-semibold">
             {t('startersTitle')}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('startersDescription')}</p>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             <StarterChips prefix="home" autoAsk={false} />
           </div>
         </section>
       )}
 
       {turns.length > 0 && (
-        <section aria-label={t('conversationLabel')} aria-live="polite" className="space-y-5">
+        <section aria-label={t('conversationLabel')} aria-live="polite" className="space-y-7">
           {turns.map((turn) => (
             <div key={turn.id} className="space-y-3">
               <div className="ml-auto flex max-w-[85%] items-start justify-end gap-2">
@@ -317,7 +365,7 @@ export default function KasifExperiment() {
                   <span className="mt-1 rounded-full border bg-muted p-1.5" aria-hidden="true">
                     <Bot className="h-4 w-4" />
                   </span>
-                  <div className="min-w-0 flex-1 rounded-md border bg-card p-4">
+                  <div className="min-w-0 flex-1 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
                     {turn.result.error ? (
                       <div>
                         <p role="alert" className="text-sm text-destructive">
@@ -417,18 +465,57 @@ export default function KasifExperiment() {
                             <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
                               {t('sources')}
                             </p>
-                            <ul className="grid gap-2 sm:grid-cols-2">
+                            <ul className="grid gap-3 md:grid-cols-2">
                               {turn.result.sources.map((source) => (
-                                <li key={source.id}>
-                                  <Link
-                                    className="flex h-full flex-col gap-1 rounded-xl border bg-background px-3 py-2 text-sm transition-colors hover:bg-muted/60"
-                                    href={source.url}
-                                  >
-                                    <span className="font-medium text-primary">{source.title}</span>
+                                <li
+                                  key={source.id}
+                                  className={`relative flex min-h-44 flex-col rounded-2xl border bg-background p-4 transition-all ${
+                                    comparison[turn.id]?.includes(source.id)
+                                      ? 'border-violet-500/60 ring-2 ring-violet-500/10'
+                                      : 'hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md'
+                                  }`}
+                                >
+                                  <div className="flex items-start justify-between gap-3">
+                                    <Link
+                                      className="text-base font-semibold text-foreground hover:text-primary"
+                                      href={source.url}
+                                    >
+                                      {source.title}
+                                    </Link>
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleComparison(turn.id, source.id)}
+                                      className="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-medium transition-colors hover:bg-muted"
+                                      aria-pressed={
+                                        comparison[turn.id]?.includes(source.id) || false
+                                      }
+                                      aria-label={t('comparison.toggle', { tool: source.title })}
+                                    >
+                                      {comparison[turn.id]?.includes(source.id) ? (
+                                        <Check className="h-3 w-3 text-emerald-500" />
+                                      ) : (
+                                        <GitCompareArrows className="h-3 w-3" />
+                                      )}
+                                      {t('comparison.select')}
+                                    </button>
+                                  </div>
+                                  {source.description ? (
+                                    <p className="mt-2 line-clamp-3 text-xs leading-5 text-muted-foreground">
+                                      {source.description}
+                                    </p>
+                                  ) : null}
+                                  <div className="mt-auto pt-3">
                                     {Array.isArray(source.reasons) && source.reasons.length > 0 ? (
-                                      <span className="text-[11px] leading-4 text-muted-foreground">
-                                        {source.reasons.join(' · ')}
-                                      </span>
+                                      <div className="mb-2 flex flex-wrap gap-1">
+                                        {source.reasons.map((reason) => (
+                                          <span
+                                            key={reason}
+                                            className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-300"
+                                          >
+                                            {reason}
+                                          </span>
+                                        ))}
+                                      </div>
                                     ) : null}
                                     <span className="flex flex-wrap gap-1 text-[10px] text-muted-foreground">
                                       {source.category ? (
@@ -447,10 +534,85 @@ export default function KasifExperiment() {
                                         </span>
                                       ) : null}
                                     </span>
-                                  </Link>
+                                    <Link
+                                      href={source.url}
+                                      className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                                    >
+                                      {t('openTool')}
+                                      <ExternalLink className="h-3 w-3" />
+                                    </Link>
+                                  </div>
                                 </li>
                               ))}
                             </ul>
+                            {(comparison[turn.id]?.length || 0) >= 2 && (
+                              <div className="mt-3 overflow-hidden rounded-2xl border bg-muted/20">
+                                <div className="flex items-center justify-between border-b px-4 py-3">
+                                  <div>
+                                    <p className="text-sm font-semibold">{t('comparison.title')}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {t('comparison.description')}
+                                    </p>
+                                  </div>
+                                  <GitCompareArrows className="h-5 w-5 text-primary" />
+                                </div>
+                                <div className="overflow-x-auto">
+                                  <table className="w-full min-w-[520px] text-left text-xs">
+                                    <thead className="text-muted-foreground">
+                                      <tr>
+                                        <th className="px-4 py-2 font-medium">
+                                          {t('comparison.tool')}
+                                        </th>
+                                        <th className="px-4 py-2 font-medium">
+                                          {t('comparison.category')}
+                                        </th>
+                                        <th className="px-4 py-2 font-medium">
+                                          {t('comparison.pricing')}
+                                        </th>
+                                        <th className="px-4 py-2 font-medium">
+                                          {t('comparison.rating')}
+                                        </th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {turn.result.sources
+                                        .filter((source) => comparison[turn.id].includes(source.id))
+                                        .map((source) => (
+                                          <tr key={source.id} className="border-t">
+                                            <td className="px-4 py-3 font-semibold">
+                                              {source.title}
+                                            </td>
+                                            <td className="px-4 py-3">{source.category || '—'}</td>
+                                            <td className="px-4 py-3">{source.pricing || '—'}</td>
+                                            <td className="px-4 py-3">
+                                              {source.rating ? `★ ${source.rating}` : '—'}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            )}
+                            <div className="mt-4">
+                              <p className="mb-2 text-xs font-medium text-muted-foreground">
+                                {t('followUps.title')}
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {followUpQuestions(turn.result).map((prompt) => (
+                                  <button
+                                    key={prompt}
+                                    type="button"
+                                    onClick={() => askQuestion(prompt)}
+                                    disabled={loading}
+                                    className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary/40 hover:bg-muted disabled:opacity-50"
+                                  >
+                                    {prompt}
+                                    <ArrowRight className="h-3 w-3" />
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         )}
                         {turn.result.interactionId && (
@@ -514,7 +676,7 @@ export default function KasifExperiment() {
 
       <form
         onSubmit={submit}
-        className="sticky bottom-3 space-y-2 rounded-md border bg-background p-3 shadow-lg"
+        className="sticky bottom-3 z-10 space-y-2 rounded-2xl border bg-background/95 p-3 shadow-xl backdrop-blur"
       >
         <label htmlFor="kasif-question" className="sr-only">
           {t('askLabel')}
@@ -532,7 +694,7 @@ export default function KasifExperiment() {
           }}
           maxLength={800}
           rows={3}
-          className="w-full resize-none bg-transparent p-2 outline-none"
+          className="w-full resize-none bg-transparent p-2 text-sm outline-none"
           placeholder={t('placeholder')}
         />
         <div className="flex items-center justify-between gap-3">

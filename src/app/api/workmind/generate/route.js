@@ -1,8 +1,8 @@
 import logger from '@/utils/logger';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 
 import { PRIMARY_CATEGORIES } from '@/lib/categoryTaxonomy';
+import { normalizeWorkmindWorkflow, planWorkmindWorkflow } from '@/lib/kasif/workmindPlanner';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -12,95 +12,14 @@ const GEMINI_MODELS = [
   'gemini-flash-latest',
   'gemini-2.5-flash-lite',
   'gemini-2.0-flash',
+  'gemini-1.5-flash',
 ].filter(Boolean);
 
-function parseJsonObject(text) {
-  const raw = String(text || '').trim();
-  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fenced?.[1] || raw;
-  const firstBrace = candidate.indexOf('{');
-  const lastBrace = candidate.lastIndexOf('}');
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-    throw new Error('Model geçerli JSON döndürmedi.');
-  }
-  return JSON.parse(candidate.slice(firstBrace, lastBrace + 1));
-}
+const GEMINI_TIMEOUT_MS = 18_000;
 
-function normalizeWorkflow(data) {
-  const nodes = Array.isArray(data?.nodes) ? data.nodes : [];
-  const edges = Array.isArray(data?.edges) ? data.edges : [];
-
-  const cleanNodes = nodes
-    .map((node, index) => {
-      const id = String(node?.id || `step-${index + 1}`).slice(0, 40);
-      const label = String(node?.label || `Adım ${index + 1}`)
-        .trim()
-        .slice(0, 80);
-      const description = String(node?.description || '')
-        .trim()
-        .slice(0, 220);
-      const categorySlug = String(node?.categorySlug || 'diger')
-        .trim()
-        .toLowerCase()
-        .slice(0, 80);
-
-      if (!label) return null;
-      return { id, label, description, categorySlug };
-    })
-    .filter(Boolean)
-    .slice(0, 6);
-
-  const nodeIds = new Set(cleanNodes.map((n) => n.id));
-  let cleanEdges = edges
-    .map((edge, index) => {
-      const source = String(edge?.source || '');
-      const target = String(edge?.target || '');
-      if (!nodeIds.has(source) || !nodeIds.has(target) || source === target) return null;
-      return {
-        id: String(edge?.id || `e-${source}-${target}-${index}`),
-        source,
-        target,
-      };
-    })
-    .filter(Boolean);
-
-  // Ensure a simple chain if model omitted edges
-  if (!cleanEdges.length && cleanNodes.length > 1) {
-    cleanEdges = cleanNodes.slice(0, -1).map((node, index) => ({
-      id: `e-${node.id}-${cleanNodes[index + 1].id}`,
-      source: node.id,
-      target: cleanNodes[index + 1].id,
-    }));
-  }
-
-  return { nodes: cleanNodes, edges: cleanEdges };
-}
-
-export async function POST(req) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: 'Gemini API anahtarı yapılandırılmamış.' }, { status: 500 });
-  }
-
-  try {
-    const body = await req.json();
-    const prompt = String(body?.prompt || '').trim();
-
-    if (prompt.length < 8) {
-      return NextResponse.json(
-        { error: 'Lütfen hedefini en az birkaç kelimeyle yaz.' },
-        { status: 400 }
-      );
-    }
-
-    if (prompt.length > 800) {
-      return NextResponse.json({ error: 'Prompt çok uzun (max 800 karakter).' }, { status: 400 });
-    }
-
-    const categoryList = PRIMARY_CATEGORIES.map((c) => `${c.slug} (${c.name})`).join(', ');
-    const genAI = new GoogleGenerativeAI(apiKey);
-
-    const systemInstruction = `Sen bir AI iş akışı mimarısın (Workmind BETA).
+function buildSystemInstruction() {
+  const categoryList = PRIMARY_CATEGORIES.map((c) => `${c.slug} (${c.name})`).join(', ');
+  return `Sen bir AI iş akışı mimarısın (Workmind BETA).
 Kullanıcının hedefini 3-6 adımlık pratik bir iş akışına böl.
 Her adım için platformdaki bir kategori slug'ı seç.
 
@@ -128,31 +47,126 @@ Kurallar:
 - Uydurma araç adı yazma; sadece adımlar
 - Türkçe label/description
 - En fazla 6 node`;
+}
 
-    let lastError = null;
-    let workflowData = null;
+function parseJsonObject(text) {
+  const raw = String(text || '').trim();
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fenced?.[1] || raw;
+  const firstBrace = candidate.indexOf('{');
+  const lastBrace = candidate.lastIndexOf('}');
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    throw new Error('Model geçerli JSON döndürmedi.');
+  }
+  return JSON.parse(candidate.slice(firstBrace, lastBrace + 1));
+}
 
-    for (const modelName of GEMINI_MODELS) {
-      try {
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          generationConfig: {
-            responseMimeType: 'application/json',
-          },
-        });
-        const result = await model.generateContent(
-          `${systemInstruction}\n\nKullanıcı hedefi: ${prompt}`
+async function generateWithGemini(prompt, apiKey) {
+  const systemInstruction = buildSystemInstruction();
+  const userPrompt = `${systemInstruction}\n\nKullanıcı hedefi: ${prompt}`;
+  const payload = {
+    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+    generationConfig: {
+      temperature: 0.4,
+      maxOutputTokens: 2048,
+      responseMimeType: 'application/json',
+    },
+  };
+
+  let lastError = null;
+
+  for (const modelName of GEMINI_MODELS) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
+    try {
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        lastError = new Error(
+          `Gemini ${modelName} HTTP ${response.status}: ${errBody?.error?.message || response.statusText}`
         );
-        const text = result?.response?.text?.() || '';
-        workflowData = normalizeWorkflow(parseJsonObject(text));
-        if (workflowData.nodes.length > 0) break;
-      } catch (err) {
-        lastError = err;
+        continue;
       }
+
+      const result = await response.json();
+      const text =
+        result?.candidates?.[0]?.content?.parts?.map((p) => p?.text || '').join('') || '';
+      if (!text) {
+        lastError = new Error(`Gemini ${modelName} boş yanıt`);
+        continue;
+      }
+
+      const workflow = normalizeWorkmindWorkflow(parseJsonObject(text));
+      if (workflow.nodes.length > 0) {
+        return { workflow, modelName };
+      }
+      lastError = new Error(`Gemini ${modelName} boş node listesi`);
+    } catch (err) {
+      lastError = err?.name === 'AbortError' ? new Error(`Gemini ${modelName} zaman aşımı`) : err;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  return { workflow: null, lastError };
+}
+
+export async function POST(req) {
+  try {
+    const body = await req.json();
+    const prompt = String(body?.prompt || '').trim();
+
+    if (prompt.length < 8) {
+      return NextResponse.json(
+        { error: 'Lütfen hedefini en az birkaç kelimeyle yaz.' },
+        { status: 400 }
+      );
+    }
+
+    if (prompt.length > 800) {
+      return NextResponse.json({ error: 'Prompt çok uzun (max 800 karakter).' }, { status: 400 });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    let workflowData = null;
+    let source = 'kasif';
+    let modelName = null;
+    let geminiError = null;
+    let plannerMeta = null;
+
+    if (apiKey) {
+      const geminiResult = await generateWithGemini(prompt, apiKey);
+      if (geminiResult.workflow?.nodes?.length) {
+        workflowData = geminiResult.workflow;
+        source = 'gemini';
+        modelName = geminiResult.modelName;
+      } else {
+        geminiError = geminiResult.lastError;
+        logger.warn(
+          'Workmind Gemini unavailable, using Kâşif planner:',
+          geminiError?.message || geminiError
+        );
+      }
+    } else {
+      logger.warn('Workmind: GEMINI_API_KEY yok; Kâşif yerel planlayıcı kullanılıyor.');
     }
 
     if (!workflowData?.nodes?.length) {
-      logger.error('Workmind generate failed:', lastError);
+      const planned = planWorkmindWorkflow(prompt);
+      workflowData = { nodes: planned.nodes, edges: planned.edges };
+      source = 'kasif';
+      plannerMeta = planned.meta || null;
+    }
+
+    if (!workflowData?.nodes?.length) {
+      logger.error('Workmind generate failed completely:', geminiError);
       return NextResponse.json(
         {
           error:
@@ -166,7 +180,12 @@ Kurallar:
       ...workflowData,
       meta: {
         beta: true,
+        source,
+        model: modelName || undefined,
+        planner: plannerMeta?.planner,
+        goals: plannerMeta?.goals,
         disclaimer: 'Öneriler otomatik üretilir; sonuçlar hatalı veya eksik olabilir.',
+        fallbackFromGemini: Boolean(geminiError),
       },
     });
   } catch (error) {

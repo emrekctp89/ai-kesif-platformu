@@ -10,8 +10,13 @@ Sıradaki işler ve **web’den araç çekme (scrape)** yönü için: [`docs/KAS
 Kâşif varsayılan olarak açıktır. Gerektiğinde `.env.local` dosyasında
 `KASIF_ENABLED=false` ile kapatılabilir. Üretim ekranı `/kasif` adresindedir.
 Bu bayrak tavsiye, karşılaştırma, sesli asistan ve konsiyerj entegrasyonlarının tamamına uygulanır.
-Workmind, her iş akışı adımında ana hedefi ve adım bağlamını Kâşif'e ileterek yalnızca onaylı
-platform araçlarını sıralar; Kâşif sonuç üretemezse kategori tabanlı listeyi yedek olarak kullanır.
+Workmind iki Kâşif katmanı kullanır:
+
+1. **İş akışı planlama** (`src/lib/kasif/workmindPlanner.js`): Gemini kapalı, rate-limit veya
+   hata verdiğinde hedef metninden 3–6 adımlık yerel iş akışı üretir (proje kalıpları, goal
+   şablonları, kavram ipuçları, genel yedek). Harici LLM yok.
+2. **Adım araç önerisi**: Her adımda ana hedef + adım bağlamı Kâşif'e iletilir; yalnızca onaylı
+   platform araçları sıralanır. Kâşif sonuç üretemezse kategori tabanlı liste yedeklenir.
 
 ## Çalışma biçimi
 

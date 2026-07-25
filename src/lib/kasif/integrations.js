@@ -63,6 +63,7 @@ export async function getKasifWorkmindRecommendations(step, limit = 4, locale = 
   const ranked = rankTools(records, intent, safeLimit);
 
   // Kategori ipucu varsa aynı kategoriyi hafifçe öne al (sıralamayı bozmadan).
+  // slug (categorySlug) veya kategori adı ile eşleşmeyi destekle.
   const categoryHint = cleanText(step?.categorySlug || step?.categoryName).toLocaleLowerCase(
     'tr-TR'
   );
@@ -86,13 +87,34 @@ export async function getKasifWorkmindRecommendations(step, limit = 4, locale = 
     kasifReason: recommendationReason(record, reasons, locale),
     score,
     goals: intent.goals,
+    categorySlug: cleanText(record.category?.slug || step?.categorySlug) || null,
   }));
 }
 
+/** Workmind graph üretimi (Gemini yedek): yerel planlayıcı re-export. */
+export { planWorkmindWorkflow, normalizeWorkmindWorkflow } from './workmindPlanner';
+
 function normalizeCategoryHit(record, categoryHint) {
+  if (!categoryHint) return 0;
   const categoryName = cleanText(record.category?.name).toLocaleLowerCase('tr-TR');
-  if (!categoryHint || !categoryName) return 0;
-  if (categoryName.includes(categoryHint) || categoryHint.includes(categoryName)) return 1;
+  const categorySlug = cleanText(record.category?.slug || record.category_slug).toLocaleLowerCase(
+    'tr-TR'
+  );
+  if (categorySlug && (categorySlug === categoryHint || categorySlug.includes(categoryHint))) {
+    return 2;
+  }
+  if (
+    categoryName &&
+    (categoryName.includes(categoryHint) || categoryHint.includes(categoryName))
+  ) {
+    return 1;
+  }
+  // slug tirelerini boşlukla karşılaştır (metin-yazarligi ↔ metin yazarligi)
+  const slugAsWords = categorySlug.replace(/-/g, ' ');
+  const hintAsWords = categoryHint.replace(/-/g, ' ');
+  if (slugAsWords && (slugAsWords.includes(hintAsWords) || hintAsWords.includes(slugAsWords))) {
+    return 2;
+  }
   return 0;
 }
 
