@@ -50,6 +50,16 @@ describe('Kâşif ekranı', () => {
     expect(screen.getByRole('button', { name: 'Sohbet asistanı' })).toBeInTheDocument();
   });
 
+  it('boş durumda iş paketleri şeridini gösterir', () => {
+    render(<KasifExperiment />);
+
+    expect(
+      screen.getByRole('heading', { name: /Tek araç değil — işi bitiren paket/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/İçerik stüdyosu/i)).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Paketi sor' }).length).toBeGreaterThan(0);
+  });
+
   it('yanıtın arayüz diliyle üretilmesi için locale bilgisini gönderir', async () => {
     global.fetch.mockResolvedValue({
       ok: true,

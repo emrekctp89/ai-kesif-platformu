@@ -130,6 +130,7 @@ export default async function PricingPage(props) {
     t('proFeatureBadge'),
     t('proFeatureStudio'),
     t('proFeatureProjects'),
+    t('proFeaturePacks'),
     t('proFeatureSupport'),
   ];
 
@@ -143,6 +144,11 @@ export default async function PricingPage(props) {
       icon: Crown,
       title: t('featureToolsTitle'),
       body: t('featureToolsBody'),
+    },
+    {
+      icon: Compass,
+      title: t('featurePacksTitle'),
+      body: t('featurePacksBody'),
     },
     {
       icon: BadgeCheck,
@@ -161,6 +167,7 @@ export default async function PricingPage(props) {
     { label: t('compareRatings'), basic: true, pro: true },
     { label: t('compareStudio'), basic: false, pro: true },
     { label: t('compareProTools'), basic: false, pro: true },
+    { label: t('comparePacks'), basic: true, pro: true },
     { label: t('compareBadge'), basic: false, pro: true },
   ];
 

@@ -31,8 +31,9 @@ Workmind iki Kâşif katmanı kullanır:
    kopyalanabilir ilk-çıktı şablonları gösterilir (P1).
 8. Workmind ile tek görev oturumu (P2): `/kasif` → Workmind handoff; `POST /api/kasif/job-session`;
    adım tamamla + araç seçimi funnel’a yazılır (`src/lib/kasif/jobSession.js`).
-9. P3 result bridge: email / content / presentation için araç çıktısını yapıştır →
-   `POST /api/kasif/result-bridge` ile `first_result` (+ opsiyonel `job_done`).
+9. P3 result bridge: email / content / presentation (+ image URL, automation, meeting) için
+   araç çıktısını yapıştır → `POST /api/kasif/result-bridge` ile `first_result`.
+10. P4 iş paketleri: `jobPacks.js` + `/kasif` strip; paket Workmind handoff (`from=pack`).
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır.

@@ -783,6 +783,7 @@
     "proFeatureStudio": "AI İçerik Stüdyosu (metin ve görsel)",
     "proFeatureSupport": "Topluluğu ve yol haritasını destekleme",
     "proFeatureProjects": "Proje stratejisti ve gelişmiş iş akışları",
+    "proFeaturePacks": "İş paketleri: orkestrasyon katmanı (Workmind + Kâşif hunisi)",
     "proActive": "Aktif plan",
     "proUnavailable": "Pro plan şu an kullanılamıyor",
     "proUnavailableBody": "Ödeme yapılandırması sürüyor. Kısa süre sonra tekrar deneyin veya bize yazın.",
@@ -804,6 +805,8 @@
     "featureBadgeBody": "Toplulukta Pro olduğunuzu gösteren profil rozetiyle öne çıkın.",
     "featureSupportTitle": "Topluluk desteği",
     "featureSupportBody": "Üyeliğiniz keşif kalitesini, link sağlığını ve yeni özellikleri finanse eder.",
+    "featurePacksTitle": "İş paketleri",
+    "featurePacksBody": "Tek tek araç abonelikleri yerine “şu işi bitir” paketleri: Kâşif + Workmind orkestrasyonu.",
     "compareHeading": "Temel ve Pro",
     "compareFeature": "Özellik",
     "compareBasic": "Temel",
@@ -813,6 +816,7 @@
     "compareStudio": "AI İçerik Stüdyosu",
     "compareProTools": "Pro seviye araçlar",
     "compareBadge": "Pro profil rozeti",
+    "comparePacks": "İş paketleri / orkestrasyon",
     "compareYes": "Var",
     "compareNo": "—",
     "faqHeading": "Sıkça sorulan sorular",
@@ -1699,7 +1703,21 @@
       "bridgeErrorTooLong": "Metin çok uzun (limit aşıldı).",
       "bridgeErrorWeak": "Taslak gibi görünmüyor; başlık veya paragraflı metin dene.",
       "bridgeErrorUnsupported": "Bu görev tipi için yapıştırma köprüsü yok.",
-      "bridgeErrorFailed": "Sonuç kaydedilemedi. Tekrar dene."
+      "bridgeErrorFailed": "Sonuç kaydedilemedi. Tekrar dene.",
+      "bridgePlaceholderImage": "https://…/image.png\nveya: Görseli ürettim ve indirdim — URL: …",
+      "bridgePlaceholderAutomation": "Test run: success\nRun id: …\nStatus: completed",
+      "bridgePlaceholderMeeting": "Özet:\n- …\nAksiyonlar:\n- …"
+    },
+    "packs": {
+      "eyebrow": "İş paketleri",
+      "title": "Tek araç değil — işi bitiren paket",
+      "description": "Abonelik yorgunluğuna karşı: ne yapmak istediğini seç, arka planda uygun araç kombinasyonunu planla.",
+      "layerBadge": "Orkestrasyon katmanı",
+      "proHint": "Pro yol",
+      "askKasif": "Paketi sor",
+      "openWorkmind": "Planla",
+      "matchedTitle": "Bu görev bir iş paketine uyuyor",
+      "runPack": "Paketi Workmind'de çalıştır"
     }
   },
   "ContentStudio": {

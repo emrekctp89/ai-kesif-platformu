@@ -783,6 +783,7 @@
     "proFeatureStudio": "AI Content Studio (text & image)",
     "proFeatureSupport": "Support the community & roadmap",
     "proFeatureProjects": "Project strategist & advanced workflows",
+    "proFeaturePacks": "Job packs: orchestration layer (Workmind + Kâşif funnel)",
     "proActive": "Active plan",
     "proUnavailable": "Pro plan is temporarily unavailable",
     "proUnavailableBody": "Checkout is being configured. Please check back shortly or contact us.",
@@ -804,6 +805,8 @@
     "featureBadgeBody": "Stand out in the community with a profile badge that shows you’re Pro.",
     "featureSupportTitle": "Community support",
     "featureSupportBody": "Your membership funds discovery quality, link health, and new features.",
+    "featurePacksTitle": "Job packs",
+    "featurePacksBody": "Instead of juggling tool subscriptions, run “finish this job” packs via Kâşif + Workmind.",
     "compareHeading": "Basic vs Pro",
     "compareFeature": "Feature",
     "compareBasic": "Basic",
@@ -813,6 +816,7 @@
     "compareStudio": "AI Content Studio",
     "compareProTools": "Pro-tier tools",
     "compareBadge": "Pro profile badge",
+    "comparePacks": "Job packs / orchestration",
     "compareYes": "Yes",
     "compareNo": "—",
     "faqHeading": "Frequently asked questions",
@@ -1699,7 +1703,21 @@
       "bridgeErrorTooLong": "Text is too long (limit exceeded).",
       "bridgeErrorWeak": "Does not look like a draft — try headings or paragraphs.",
       "bridgeErrorUnsupported": "Paste bridge is not available for this goal.",
-      "bridgeErrorFailed": "Could not save result. Try again."
+      "bridgeErrorFailed": "Could not save result. Try again.",
+      "bridgePlaceholderImage": "https://…/image.png\nor: Generated and downloaded — URL: …",
+      "bridgePlaceholderAutomation": "Test run: success\nRun id: …\nStatus: completed",
+      "bridgePlaceholderMeeting": "Summary:\n- …\nActions:\n- …"
+    },
+    "packs": {
+      "eyebrow": "Job packs",
+      "title": "Not one tool — a pack that finishes the job",
+      "description": "Against subscription fatigue: pick the job, we orchestrate the right tool combination.",
+      "layerBadge": "Orchestration layer",
+      "proHint": "Pro path",
+      "askKasif": "Ask pack",
+      "openWorkmind": "Plan it",
+      "matchedTitle": "This job matches a pack",
+      "runPack": "Run pack in Workmind"
     }
   },
   "ContentStudio": {

@@ -21,6 +21,9 @@ const PLACEHOLDER_KEYS = {
   'email-writing': 'bridgePlaceholderEmail',
   'content-writing': 'bridgePlaceholderContent',
   'presentation-creation': 'bridgePlaceholderPresentation',
+  'image-generation': 'bridgePlaceholderImage',
+  'workflow-automation': 'bridgePlaceholderAutomation',
+  'meeting-notes': 'bridgePlaceholderMeeting',
 };
 
 /**

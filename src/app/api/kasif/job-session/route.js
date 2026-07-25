@@ -70,11 +70,14 @@ export async function POST(request) {
   const intent = understandQuestion(prompt);
   const goals = clientGoals.length ? clientGoals : intent.goals || [];
   const source = String(body?.source || 'workmind').slice(0, 40);
+  const packId = String(body?.packId || body?.pack || '')
+    .trim()
+    .slice(0, 80);
 
   const answer =
     locale === 'en'
-      ? `Workmind job session started${stepCount ? ` (${stepCount} steps)` : ''}.`
-      : `Workmind görev oturumu başlatıldı${stepCount ? ` (${stepCount} adım)` : ''}.`;
+      ? `Workmind job session started${stepCount ? ` (${stepCount} steps)` : ''}${packId ? ` · pack:${packId}` : ''}.`
+      : `Workmind görev oturumu başlatıldı${stepCount ? ` (${stepCount} adım)` : ''}${packId ? ` · paket:${packId}` : ''}.`;
 
   const modelResponse = {
     intent: {
@@ -82,6 +85,7 @@ export async function POST(request) {
       pricePreference: intent.pricePreference || 'any',
       concepts: intent.concepts || [],
       source,
+      ...(packId ? { packId } : {}),
     },
     confidence: goals.length ? 0.75 : 0.55,
     sourceIds: [],

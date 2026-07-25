@@ -8,7 +8,8 @@ const {
 describe('resultBridge', () => {
   it('desteklenen goal’ları çözer', () => {
     expect(resolveBridgeGoal(['logo-design', 'email-writing'])).toBe('email-writing');
-    expect(resolveBridgeGoal(['image-generation'])).toBeNull();
+    expect(resolveBridgeGoal(['image-generation'])).toBe('image-generation');
+    expect(resolveBridgeGoal(['logo-design', 'ui-design'])).toBeNull();
   });
 
   it('e-posta çıktısını kabul eder', () => {
@@ -45,6 +46,19 @@ ${'Metin '.repeat(40)}`;
   it('fingerprint kararlıdır', () => {
     expect(fingerprintArtifact('abc')).toBe(fingerprintArtifact('abc'));
     expect(fingerprintArtifact('abc')).not.toBe(fingerprintArtifact('abcd'));
+  });
+
+  it('görsel URL ve otomasyon logunu kabul eder', () => {
+    expect(
+      validateBridgeArtifact('image-generation', 'https://cdn.example.com/out/cover.png').ok
+    ).toBe(true);
+    expect(
+      validateBridgeArtifact(
+        'workflow-automation',
+        'Test run: success\nRun id: abc-123\nStatus: completed'
+      ).ok
+    ).toBe(true);
+    expect(validateBridgeArtifact('image-generation', 'sadece not').ok).toBe(false);
   });
 
   it('funnel zamanından dakika tahmin eder', () => {

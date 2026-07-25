@@ -28,6 +28,36 @@ export const RESULT_BRIDGE_GOALS = {
     maxChars: 20000,
     patterns: [/slayt|slide|outline|anahat/i, /^\s*[-*•\d]+[.)]\s+\S+/m],
   },
+  'image-generation': {
+    minChars: 12,
+    maxChars: 8000,
+    // image URL or short “I generated …” note with URL
+    patterns: [
+      /^https?:\/\/\S+/i,
+      /https?:\/\/\S+\.(png|jpe?g|webp|gif)(\?\S*)?$/i,
+      /https?:\/\/\S*(cdn|imgur|cloudinary|oaidalle|openai|midjourney|replicate)\S*/i,
+      /üretil|generated|download|indirdim/i,
+    ],
+  },
+  'workflow-automation': {
+    minChars: 40,
+    maxChars: 20000,
+    patterns: [
+      /success|başarılı|passed|completed|ok\b/i,
+      /failed|error|hata/i,
+      /run\s*id|execution|workflow|scenario|zap|make\.com|n8n|test run/i,
+      /status\s*[:=]/i,
+    ],
+  },
+  'meeting-notes': {
+    minChars: 80,
+    maxChars: 40000,
+    patterns: [
+      /aksiyon|action item|karar|decision|özet|summary/i,
+      /katılımcı|attendee|toplantı|meeting/i,
+      /^\s*[-*•]\s+\S+/m,
+    ],
+  },
 };
 
 export function isResultBridgeGoal(goal) {
@@ -115,6 +145,26 @@ export function validateBridgeArtifact(goal, text) {
 
   // Soft signal: short emails without pattern still OK if long enough; content needs pattern OR 400+ chars
   if (bridgeGoal === 'content-writing' && !patternHit && artifact.length < 400) {
+    return {
+      ok: false,
+      reason: 'weak_structure',
+      goal: bridgeGoal,
+      charCount: artifact.length,
+      patternHit: false,
+    };
+  }
+
+  if (bridgeGoal === 'image-generation' && !patternHit) {
+    return {
+      ok: false,
+      reason: 'weak_structure',
+      goal: bridgeGoal,
+      charCount: artifact.length,
+      patternHit: false,
+    };
+  }
+
+  if (bridgeGoal === 'workflow-automation' && !patternHit && artifact.length < 120) {
     return {
       ok: false,
       reason: 'weak_structure',

@@ -12,13 +12,13 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 `job_stated → tool_recommended → tool_selected → setup_started → setup_completed → first_result → job_done`
 
-| Faz    | Durum  | Ne                                                            |
-| ------ | ------ | ------------------------------------------------------------- |
-| **P0** | ✅     | Job funnel kolon + API + self-report UI + admin hunisi        |
-| **P1** | ✅     | Top job sihirbazları (goal checklist + kopyalanabilir şablon) |
-| **P2** | ✅     | Workmind ↔ Kâşif tek “görev oturumu”                          |
-| **P3** | ✅     | Metin nişlerinde kopyala-yapıştır first_result bridge         |
-| **P4** | Sırada | Pack / orkestrasyon aboneliği                                 |
+| Faz    | Durum | Ne                                                            |
+| ------ | ----- | ------------------------------------------------------------- |
+| **P0** | ✅    | Job funnel kolon + API + self-report UI + admin hunisi        |
+| **P1** | ✅    | Top job sihirbazları (goal checklist + kopyalanabilir şablon) |
+| **P2** | ✅    | Workmind ↔ Kâşif tek “görev oturumu”                          |
+| **P3** | ✅    | Metin nişlerinde kopyala-yapıştır first_result bridge         |
+| **P4** | ✅    | İş paketleri + bridge genişletme + üyelik konumlandırma       |
 
 ### P0 teknik yüzey
 
@@ -51,6 +51,15 @@ North Star artık yalnızca tıklama/affiliate değil:
 - Admin hunisi: bridge paste sayısı / oranı
 - Analytics: `kasif_result_bridge_paste`
 
+### P4 teknik yüzey
+
+- `src/lib/kasif/jobPacks.js` — 5 iş paketi (hedefler, Workmind prompt, adım etiketleri)
+- `/kasif` — `JobPacksStrip` + öneri sonrası `JobPackSuggestion`
+- Pack → Workmind: `?from=pack&pack=&goals=&auto=1`; job-session `packId` intent
+- Bridge genişletme: `image-generation` (URL), `workflow-automation`, `meeting-notes`
+- `/uyelik` — iş paketleri / orkestrasyon Pro konumlandırması
+- Analytics: `kasif_pack_ask`, `kasif_pack_workmind`, `kasif_pack_matched_workmind`
+
 ---
 
 ## Bugün ne var?
@@ -73,11 +82,11 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 Öncelik sırasıyla tutulacak:
 
-1. **P4 paketleme** — iş paketi / orkestrasyon aboneliği taslağı
-2. **Bridge genişletme** — görsel (URL) ve otomasyon test log paste
+1. **Pack monetizasyon** — seçili pack’leri Pro gate / usage quota ile kilitle
+2. **Gerçek runner** — 1 pack’te partner API veya browser automation
 3. **Canlı eval regresyonu** — `npm run kasif:evaluate` CI veya periyodik koşu
 4. **Soft-landing → conversion** — soft-landing sonrası starter tıklama / başarılı öneri oranı
-5. **Funnel kalitesi** — bridge vs self-report first_result ayrımı, goal bazlı conversion
+5. **Funnel kalitesi** — pack_id bazlı conversion, bridge vs self-report
 6. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
 7. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
 

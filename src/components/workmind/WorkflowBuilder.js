@@ -136,13 +136,15 @@ export function WorkflowBuilder() {
     interactionId: null,
     feedbackToken: null,
     goals: [],
+    packId: null,
   });
 
-  // URL / storage handoff from Kâşif
+  // URL / storage handoff from Kâşif / job packs
   useEffect(() => {
     const goal = String(searchParams?.get('goal') || searchParams?.get('q') || '').trim();
     const interactionId = searchParams?.get('interactionId') || null;
     const feedbackToken = searchParams?.get('feedbackToken') || null;
+    const packId = searchParams?.get('pack') || null;
     const goalsParam = String(searchParams?.get('goals') || '')
       .split(',')
       .map((g) => g.trim())
@@ -152,6 +154,7 @@ export function WorkflowBuilder() {
       interactionId,
       feedbackToken,
       goals: goalsParam,
+      packId,
     };
 
     if (goal.length >= 3) {
@@ -249,7 +252,8 @@ export function WorkflowBuilder() {
             goals,
             stepCount,
             locale,
-            source: 'workmind',
+            source: handoffRef.current.packId ? 'pack' : 'workmind',
+            packId: handoffRef.current.packId || undefined,
           }),
         });
         if (!response.ok) return {};
@@ -258,11 +262,13 @@ export function WorkflowBuilder() {
           interactionId: data.interactionId || null,
           feedbackToken: data.feedbackToken || null,
           goals: data.goals || goals || [],
+          packId: handoffRef.current.packId,
         };
         trackEvent('kasif_job_session_created', {
-          source: 'workmind',
+          source: handoffRef.current.packId ? 'pack' : 'workmind',
           step_count: stepCount,
           goal: goals?.[0] || undefined,
+          pack_id: handoffRef.current.packId || undefined,
         });
         return {
           interactionId: data.interactionId,
@@ -340,7 +346,8 @@ export function WorkflowBuilder() {
     if (autoStartedRef.current || isLoading) return;
     const goal = String(searchParams?.get('goal') || searchParams?.get('q') || '').trim();
     const fromKasif = searchParams?.get('from') === 'kasif';
-    const auto = searchParams?.get('auto') === '1' || fromKasif;
+    const fromPack = searchParams?.get('from') === 'pack';
+    const auto = searchParams?.get('auto') === '1' || fromKasif || fromPack;
     if (!auto || goal.length < 8) return;
     autoStartedRef.current = true;
     const nextGoal = goal.slice(0, 800);

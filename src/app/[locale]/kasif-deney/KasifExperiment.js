@@ -26,8 +26,10 @@ import {
   User,
 } from 'lucide-react';
 import { formatKasifGoalLabel } from '@/lib/kasif/goalLabels';
+import { matchJobPack } from '@/lib/kasif/jobPacks';
 import { buildWorkmindHandoffUrl } from '@/lib/kasif/jobSession';
 import { JobFunnelPanel } from '@/components/kasif/JobFunnelPanel';
+import { JobPacksStrip, JobPackSuggestion } from '@/components/kasif/JobPacksStrip';
 import { trackEvent } from '@/utils/analytics';
 
 const STARTER_QUESTIONS = [
@@ -347,18 +349,26 @@ export default function KasifExperiment() {
       </header>
 
       {turns.length === 0 && (
-        <section
-          aria-labelledby="kasif-starters-heading"
-          className="rounded-3xl border bg-card/80 p-5 shadow-sm sm:p-6"
-        >
-          <h2 id="kasif-starters-heading" className="text-sm font-semibold">
-            {t('startersTitle')}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t('startersDescription')}</p>
-          <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            <StarterChips prefix="home" autoAsk={false} />
-          </div>
-        </section>
+        <>
+          <JobPacksStrip
+            locale={locale}
+            onAskPack={(pack) => {
+              void askQuestion(pack.starterQuestion);
+            }}
+          />
+          <section
+            aria-labelledby="kasif-starters-heading"
+            className="rounded-3xl border bg-card/80 p-5 shadow-sm sm:p-6"
+          >
+            <h2 id="kasif-starters-heading" className="text-sm font-semibold">
+              {t('startersTitle')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t('startersDescription')}</p>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <StarterChips prefix="home" autoAsk={false} />
+            </div>
+          </section>
+        </>
       )}
 
       {turns.length > 0 && (
@@ -478,7 +488,7 @@ export default function KasifExperiment() {
                           !turn.result.softLanding &&
                           !turn.result.meta &&
                           !turn.result.intent?.meta && (
-                            <div className="mt-3">
+                            <div className="mt-3 space-y-2">
                               <Link
                                 href={buildWorkmindHandoffUrl(turn.question, {
                                   locale,
@@ -499,9 +509,15 @@ export default function KasifExperiment() {
                                 {t('openWorkmind')}
                                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
                               </Link>
-                              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                              <p className="text-[11px] text-muted-foreground">
                                 {t('openWorkmindHint')}
                               </p>
+                              <JobPackSuggestion
+                                pack={matchJobPack(turn.result.intent?.goals, locale)}
+                                locale={locale}
+                                interactionId={turn.result.interactionId}
+                                feedbackToken={turn.result.feedbackToken}
+                              />
                             </div>
                           )}
                         {turn.result.sources?.length > 0 && (
