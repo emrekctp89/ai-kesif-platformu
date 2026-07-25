@@ -84,12 +84,28 @@ export function normalizeFunnel(value) {
       ? null
       : Number(raw.minutes_to_first_result);
 
+  const resultArtifact =
+    raw.result_artifact && typeof raw.result_artifact === 'object'
+      ? {
+          goal: cleanText(raw.result_artifact.goal, 80) || null,
+          char_count: Number.isFinite(Number(raw.result_artifact.char_count))
+            ? Math.min(Math.max(0, Number(raw.result_artifact.char_count)), 100000)
+            : null,
+          fingerprint: cleanText(raw.result_artifact.fingerprint, 80) || null,
+          pattern_hit: Boolean(raw.result_artifact.pattern_hit),
+          preview: cleanText(raw.result_artifact.preview, 240) || null,
+          bridge: cleanText(raw.result_artifact.bridge, 40) || null,
+          at: raw.result_artifact.at ? asIso(raw.result_artifact.at) : null,
+        }
+      : null;
+
   return {
     stages,
     selected_tool: normalizeSelectedTool(raw.selected_tool),
     minutes_to_first_result:
       Number.isFinite(minutes) && minutes >= 0 ? Math.min(minutes, 24 * 60) : null,
     events,
+    result_artifact: resultArtifact,
   };
 }
 
@@ -169,6 +185,7 @@ export function applyFunnelStage(existing, stage, options = {}) {
     selected_tool: selectedTool,
     minutes_to_first_result: minutes,
     events: [...current.events, event].slice(-40),
+    result_artifact: current.result_artifact || null,
   };
 }
 
@@ -259,6 +276,17 @@ export function buildJobFunnelStats(interactions = []) {
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
+  let bridgePasteCount = 0;
+  const bridgeGoals = new Map();
+  for (const row of rows) {
+    const funnel = normalizeFunnel(row?.funnel);
+    if (funnel.result_artifact?.bridge === 'paste') {
+      bridgePasteCount += 1;
+      const g = funnel.result_artifact.goal || '(unknown)';
+      bridgeGoals.set(g, (bridgeGoals.get(g) || 0) + 1);
+    }
+  }
+
   return {
     withFunnel,
     counts,
@@ -270,9 +298,15 @@ export function buildJobFunnelStats(interactions = []) {
       doneOfFirstResult: rate(counts.job_done, counts.first_result),
       firstResultOfStated: rate(counts.first_result, counts.job_stated || base),
       doneOfStated: rate(counts.job_done, counts.job_stated || base),
+      bridgeOfFirstResult: rate(bridgePasteCount, counts.first_result),
     },
     avgMinutesToFirstResult: avgMinutes,
     firstResultSamples: minutesSamples.length,
     topSelectedTools,
+    bridgePasteCount,
+    bridgeGoals: [...bridgeGoals.entries()]
+      .map(([goal, count]) => ({ goal, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8),
   };
 }

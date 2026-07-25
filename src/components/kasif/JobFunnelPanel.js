@@ -7,6 +7,8 @@ import { Check, Copy, ExternalLink, LoaderCircle } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
 import { resolveJobWizard } from '@/lib/kasif/jobWizards';
 import { formatKasifGoalLabel } from '@/lib/kasif/goalLabels';
+import { ResultBridgePanel } from '@/components/kasif/ResultBridgePanel';
+import { resolveBridgeGoal } from '@/lib/kasif/resultBridge';
 
 const MINUTE_OPTIONS = [5, 15, 30, 60];
 
@@ -37,6 +39,7 @@ export function JobFunnelPanel({
   const [error, setError] = useState(null);
   const [completed, setCompleted] = useState(false);
   const [copiedPromptId, setCopiedPromptId] = useState(null);
+  const [bridgeDone, setBridgeDone] = useState(false);
 
   const selectedTool = source
     ? {
@@ -324,95 +327,124 @@ export function JobFunnelPanel({
             )}
           </div>
 
-          {(setupDone || allStepsDone || Object.values(checked).some(Boolean)) && !completed && (
-            <div className="space-y-3 border-t border-emerald-500/20 pt-3">
-              <div>
-                <p className="text-sm font-semibold">{t('job.surveyTitle')}</p>
-                {wizard.firstResultHint ? (
-                  <p className="mt-1 text-xs text-muted-foreground">{wizard.firstResultHint}</p>
-                ) : null}
-              </div>
+          {resolveBridgeGoal(goals) && !bridgeDone ? (
+            <ResultBridgePanel
+              interactionId={interactionId}
+              feedbackToken={feedbackToken}
+              goals={goals}
+              locale={locale}
+              onSuccess={(data) => {
+                setBridgeDone(true);
+                setFirstResult(true);
+                if (data?.minutesToFirstResult != null) {
+                  setMinutes(data.minutesToFirstResult);
+                }
+                if (!setupDone) {
+                  setSetupDone(true);
+                  setChecked((current) => {
+                    const next = { ...current };
+                    for (const step of wizard.steps) next[step.id] = true;
+                    return next;
+                  });
+                }
+                if (data?.jobDone) {
+                  setJobDone(true);
+                  setCompleted(true);
+                }
+              }}
+            />
+          ) : null}
 
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">{t('job.firstResultQ')}</p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void confirmFirstResult(true, minutes)}
-                    className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                      firstResult === true ? 'border-emerald-600 bg-emerald-600 text-white' : ''
-                    }`}
-                  >
-                    {t('job.yes')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void reportFirstResult(false)}
-                    className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                      firstResult === false ? 'bg-muted' : ''
-                    }`}
-                  >
-                    {t('job.no')}
-                  </button>
+          {(setupDone || allStepsDone || Object.values(checked).some(Boolean) || bridgeDone) &&
+            !completed && (
+              <div className="space-y-3 border-t border-emerald-500/20 pt-3">
+                <div>
+                  <p className="text-sm font-semibold">{t('job.surveyTitle')}</p>
+                  {wizard.firstResultHint ? (
+                    <p className="mt-1 text-xs text-muted-foreground">{wizard.firstResultHint}</p>
+                  ) : null}
                 </div>
-              </div>
 
-              {firstResult === true && (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">{t('job.minutesQ')}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {MINUTE_OPTIONS.map((value) => (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => void confirmFirstResult(true, value)}
-                        className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                          minutes === value ? 'border-emerald-600 bg-emerald-600 text-white' : ''
-                        }`}
-                      >
-                        {t(`job.minutes.${value}`)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {(firstResult === true || firstResult === false) && (
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">{t('job.jobDoneQ')}</p>
+                  <p className="text-xs text-muted-foreground">{t('job.firstResultQ')}</p>
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => void reportJobDone(true)}
+                      onClick={() => void confirmFirstResult(true, minutes)}
                       className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                        jobDone === true ? 'border-emerald-600 bg-emerald-600 text-white' : ''
+                        firstResult === true ? 'border-emerald-600 bg-emerald-600 text-white' : ''
                       }`}
                     >
                       {t('job.yes')}
                     </button>
                     <button
                       type="button"
-                      onClick={() => void reportJobDone('partial')}
+                      onClick={() => void reportFirstResult(false)}
                       className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                        jobDone === 'partial' ? 'bg-muted' : ''
-                      }`}
-                    >
-                      {t('job.partial')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void reportJobDone(false)}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                        jobDone === false ? 'bg-muted' : ''
+                        firstResult === false ? 'bg-muted' : ''
                       }`}
                     >
                       {t('job.no')}
                     </button>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
+
+                {firstResult === true && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">{t('job.minutesQ')}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {MINUTE_OPTIONS.map((value) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => void confirmFirstResult(true, value)}
+                          className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
+                            minutes === value ? 'border-emerald-600 bg-emerald-600 text-white' : ''
+                          }`}
+                        >
+                          {t(`job.minutes.${value}`)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(firstResult === true || firstResult === false) && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">{t('job.jobDoneQ')}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void reportJobDone(true)}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
+                          jobDone === true ? 'border-emerald-600 bg-emerald-600 text-white' : ''
+                        }`}
+                      >
+                        {t('job.yes')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void reportJobDone('partial')}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
+                          jobDone === 'partial' ? 'bg-muted' : ''
+                        }`}
+                      >
+                        {t('job.partial')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void reportJobDone(false)}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
+                          jobDone === false ? 'bg-muted' : ''
+                        }`}
+                      >
+                        {t('job.no')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
           {completed && (
             <p className="text-xs font-medium text-emerald-800 dark:text-emerald-200">

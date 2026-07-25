@@ -1337,6 +1337,7 @@
     "kasifFunnelConvDone": "Done / job",
     "kasifFunnelConvSelected": "Select / recommend",
     "kasifFunnelTopTools": "Most selected tools",
+    "kasifFunnelBridgePaste": "Paste bridge",
     "kasifGoalsTitle": "Goal buckets",
     "kasifGoalsDesc": "Most common intent/goal distribution.",
     "kasifGoalNone": "No goal",
@@ -1679,7 +1680,26 @@
         "60": "1h+"
       },
       "thanks": "Thanks — this data improves the product.",
-      "saveError": "Could not save progress. Try again."
+      "saveError": "Could not save progress. Try again.",
+      "bridgeTitle": "Paste first result",
+      "bridgeHint": "Paste the {goal} output you produced in the tool — first_result proof without OAuth.",
+      "bridgeLabel": "First output text",
+      "bridgeSubmit": "Save result",
+      "bridgeReady": "ready to submit",
+      "bridgeAlsoJobDone": "Job is also done",
+      "bridgeSuccessTitle": "First result saved",
+      "bridgeSuccessBody": "{chars} characters · ~{minutes} min (estimated)",
+      "bridgeJobDoneNote": "Also marked as job done.",
+      "bridgePlaceholderDefault": "Paste the first output from the tool…",
+      "bridgePlaceholderEmail": "Subject: …\n\nHi …\n(email body)",
+      "bridgePlaceholderContent": "Title\n\nIntro paragraph…\n\n## Section\n…",
+      "bridgePlaceholderPresentation": "1. Problem\n2. Solution\n3. Proof\n(slide outline or copy)",
+      "bridgeErrorEmpty": "Pasted text is empty.",
+      "bridgeErrorTooShort": "Text is too short — paste a fuller first output.",
+      "bridgeErrorTooLong": "Text is too long (limit exceeded).",
+      "bridgeErrorWeak": "Does not look like a draft — try headings or paragraphs.",
+      "bridgeErrorUnsupported": "Paste bridge is not available for this goal.",
+      "bridgeErrorFailed": "Could not save result. Try again."
     }
   },
   "ContentStudio": {

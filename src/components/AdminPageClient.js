@@ -2114,6 +2114,12 @@ function KasifQualityTab({ interactions = [] }) {
                     ? '—'
                     : `%${stats.jobFunnel.conversion.selectedOfRecommended}`}
                 </Badge>
+                <Badge variant="outline">
+                  {t('kasifFunnelBridgePaste')}: {stats.jobFunnel?.bridgePasteCount || 0}
+                  {stats.jobFunnel?.conversion?.bridgeOfFirstResult != null
+                    ? ` · %${stats.jobFunnel.conversion.bridgeOfFirstResult}`
+                    : ''}
+                </Badge>
               </div>
               {(stats.jobFunnel?.topSelectedTools || []).length > 0 ? (
                 <div className="space-y-2">

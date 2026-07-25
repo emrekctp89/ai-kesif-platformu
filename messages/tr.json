@@ -1337,6 +1337,7 @@
     "kasifFunnelConvDone": "Bitti / görev",
     "kasifFunnelConvSelected": "Seçim / öneri",
     "kasifFunnelTopTools": "En çok seçilen araçlar",
+    "kasifFunnelBridgePaste": "Yapıştırma bridge",
     "kasifGoalsTitle": "Hedef kovaları",
     "kasifGoalsDesc": "En sık görülen intent/goal dağılımı.",
     "kasifGoalNone": "Hedef yok",
@@ -1679,7 +1680,26 @@
         "60": "1 sa+"
       },
       "thanks": "Teşekkürler — bu veri ürünü iyileştiriyor.",
-      "saveError": "İlerleme kaydedilemedi. Tekrar dene."
+      "saveError": "İlerleme kaydedilemedi. Tekrar dene.",
+      "bridgeTitle": "İlk sonucu yapıştır",
+      "bridgeHint": "Araçta ürettiğin {goal} çıktısını buraya yapıştır — OAuth olmadan first_result kanıtı.",
+      "bridgeLabel": "İlk çıktı metni",
+      "bridgeSubmit": "Sonucu kaydet",
+      "bridgeReady": "gönderime hazır",
+      "bridgeAlsoJobDone": "Görev de bitti",
+      "bridgeSuccessTitle": "İlk sonuç kaydedildi",
+      "bridgeSuccessBody": "{chars} karakter · ~{minutes} dk (tahmini)",
+      "bridgeJobDoneNote": "İş bitti olarak da işaretlendi.",
+      "bridgePlaceholderDefault": "Araçtan aldığın ilk çıktıyı buraya yapıştır…",
+      "bridgePlaceholderEmail": "Konu: …\n\nMerhaba …\n(e-posta gövdesi)",
+      "bridgePlaceholderContent": "Başlık\n\nGiriş paragrafı…\n\n## Bölüm\n…",
+      "bridgePlaceholderPresentation": "1. Problem\n2. Çözüm\n3. Kanıt\n(slayt anahatı veya metin)",
+      "bridgeErrorEmpty": "Yapıştırılan metin boş.",
+      "bridgeErrorTooShort": "Metin çok kısa — ilk çıktıyı daha eksiksiz yapıştır.",
+      "bridgeErrorTooLong": "Metin çok uzun (limit aşıldı).",
+      "bridgeErrorWeak": "Taslak gibi görünmüyor; başlık veya paragraflı metin dene.",
+      "bridgeErrorUnsupported": "Bu görev tipi için yapıştırma köprüsü yok.",
+      "bridgeErrorFailed": "Sonuç kaydedilemedi. Tekrar dene."
     }
   },
   "ContentStudio": {

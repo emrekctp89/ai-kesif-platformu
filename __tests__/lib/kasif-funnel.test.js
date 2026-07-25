@@ -57,6 +57,24 @@ describe('kasif funnel', () => {
     expect(funnel.stages.tool_selected).toBeFalsy();
   });
 
+  it('result_artifact bilgisini korur', () => {
+    const withArtifact = {
+      stages: { first_result: '2026-07-25T10:00:00.000Z' },
+      result_artifact: {
+        bridge: 'paste',
+        goal: 'email-writing',
+        char_count: 120,
+        fingerprint: 'fnv1a_abc',
+        preview: 'Merhaba',
+      },
+      events: [],
+    };
+    const next = applyFunnelStage(withArtifact, 'job_done');
+    expect(next.result_artifact.bridge).toBe('paste');
+    expect(next.result_artifact.goal).toBe('email-writing');
+    expect(next.stages.job_done).toBeTruthy();
+  });
+
   it('admin hunisi dönüşüm oranlarını hesaplar', () => {
     const stats = buildJobFunnelStats([
       {

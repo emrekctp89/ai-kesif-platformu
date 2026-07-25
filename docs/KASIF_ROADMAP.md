@@ -17,8 +17,8 @@ North Star artık yalnızca tıklama/affiliate değil:
 | **P0** | ✅     | Job funnel kolon + API + self-report UI + admin hunisi        |
 | **P1** | ✅     | Top job sihirbazları (goal checklist + kopyalanabilir şablon) |
 | **P2** | ✅     | Workmind ↔ Kâşif tek “görev oturumu”                          |
-| **P3** | Sırada | 1–2 nişte gerçek bağlantı (OAuth / kopyala-yapıştır bridge)   |
-| **P4** | Sonra  | Pack / orkestrasyon aboneliği                                 |
+| **P3** | ✅     | Metin nişlerinde kopyala-yapıştır first_result bridge         |
+| **P4** | Sırada | Pack / orkestrasyon aboneliği                                 |
 
 ### P0 teknik yüzey
 
@@ -43,6 +43,14 @@ North Star artık yalnızca tıklama/affiliate değil:
 - `/kasif` → “Workmind'de adım adım planla” (`?goal=&from=kasif&interactionId=…&auto=1`)
 - Generate meta: her yanıtta `goals` (Gemini yolunda da `understandQuestion`)
 
+### P3 teknik yüzey
+
+- `src/lib/kasif/resultBridge.js` — email / content / presentation doğrulama + fingerprint
+- `POST /api/kasif/result-bridge` — paste → `first_result` (+ opsiyonel `job_done`), `funnel.result_artifact`
+- `ResultBridgePanel` — JobFunnelPanel içinde (OAuth’sız kanıt)
+- Admin hunisi: bridge paste sayısı / oranı
+- Analytics: `kasif_result_bridge_paste`
+
 ---
 
 ## Bugün ne var?
@@ -65,12 +73,12 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 Öncelik sırasıyla tutulacak:
 
-1. **P3 bağlantı** — 1–2 nişte OAuth veya kopyala-yapıştır bridge (gerçek first_result sinyali)
-2. **Canlı eval regresyonu** — `npm run kasif:evaluate` CI veya periyodik koşu
-3. **Soft-landing → conversion** — soft-landing sonrası starter tıklama / başarılı öneri oranı
-4. **Funnel kalitesi** — first_result self-report oranı, dakika dağılımı, goal bazlı conversion
-5. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
-6. **Kaynak kartı A/B kopyası** — `reasons` metinlerinin okunabilirlik ince ayarı
+1. **P4 paketleme** — iş paketi / orkestrasyon aboneliği taslağı
+2. **Bridge genişletme** — görsel (URL) ve otomasyon test log paste
+3. **Canlı eval regresyonu** — `npm run kasif:evaluate` CI veya periyodik koşu
+4. **Soft-landing → conversion** — soft-landing sonrası starter tıklama / başarılı öneri oranı
+5. **Funnel kalitesi** — bridge vs self-report first_result ayrımı, goal bazlı conversion
+6. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
 7. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
 
 ---
