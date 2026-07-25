@@ -225,3 +225,10 @@ export {
   DEFAULT_QUEUE_LIMIT,
   MAX_QUEUE_LIMIT,
 } from '@/lib/toolScrape/queue';
+
+export {
+  runScheduledScrapeQueue,
+  clampScrapeQuota,
+  clampScrapeRetries,
+  isRetryableScrapeFailure,
+} from '@/lib/toolScrape/scheduler';
