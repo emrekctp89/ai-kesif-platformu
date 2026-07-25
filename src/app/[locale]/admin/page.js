@@ -117,7 +117,7 @@ async function getAdminData() {
       .limit(100),
     supabaseAdmin
       .from('kasif_interactions')
-      .select('id, question, answer, intent, confidence, feedback, source_ids, created_at')
+      .select('id, question, answer, intent, confidence, feedback, source_ids, funnel, created_at')
       .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
       .limit(300),

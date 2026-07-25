@@ -25,6 +25,10 @@ Workmind iki Kâşif katmanı kullanır:
 3. Yalnızca onaylı platform araçları Supabase'ten alınır.
 4. İsim, kategori, açıklama, fiyat tercihi, doğrulama ve puan sinyalleri ağırlıklandırılır.
 5. Cevap ve bağlantılar yalnızca sıralanan veritabanı kayıtlarından üretilir.
+6. Başarılı önerilerde `kasif_interactions.funnel` seedlenir (`job_stated` / `tool_recommended`).
+   Kullanıcı “Bu araçla devam et” ve self-report ile huniyi ilerletir (`POST /api/kasif/funnel`).
+7. `intent.goals` doluysa `src/lib/kasif/jobWizards.js` üzerinden goal-specific checklist ve
+   kopyalanabilir ilk-çıktı şablonları gösterilir (P1).
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır.

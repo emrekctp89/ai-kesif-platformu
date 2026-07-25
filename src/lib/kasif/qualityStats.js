@@ -3,6 +3,8 @@
  * DB erişimi yok; saf hesaplama (test edilebilir).
  */
 
+import { buildJobFunnelStats } from './funnel';
+
 function asNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -174,6 +176,8 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
       ? Number(((positive.length / withFeedback.length) * 100).toFixed(1))
       : null;
 
+  const jobFunnel = buildJobFunnelStats(rows);
+
   return {
     windowDays,
     total: rows.length,
@@ -194,6 +198,7 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
     recentNegative,
     recentLowConfidence,
     recentSoftLanding,
+    jobFunnel,
     ruleCandidates: topNegativeTokens.slice(0, 8).map(({ token, count }) => ({
       token,
       count,

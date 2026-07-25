@@ -6,6 +6,7 @@ import { assertKasifEnabled } from '@/lib/kasif/config';
 import { answerContextlessFollowUp, answerMetaQuestion, answerQuestion } from '@/lib/kasif/engine';
 import { retrievePlatformContext } from '@/lib/kasif/retrieval';
 import { groundModelResponse, noInformationAnswer } from '@/lib/kasif/grounding';
+import { seedFunnelFromResponse } from '@/lib/kasif/funnel';
 import { createAdminClient } from '@/utils/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -51,20 +52,43 @@ async function recordInteraction(question, modelResponse, groundedResponse) {
   const feedbackToken = randomUUID();
   try {
     const admin = createAdminClient();
-    const { data, error } = await admin
+    const funnel = seedFunnelFromResponse(modelResponse, groundedResponse);
+    const baseRow = {
+      feedback_token: feedbackToken,
+      question,
+      answer: groundedResponse.answer,
+      source_ids: modelResponse.sourceIds || [],
+      intent: modelResponse.intent || {},
+      confidence: modelResponse.confidence || 0,
+    };
+
+    let data = null;
+    let error = null;
+    ({ data, error } = await admin
       .from('kasif_interactions')
-      .insert({
-        feedback_token: feedbackToken,
-        question,
-        answer: groundedResponse.answer,
-        source_ids: modelResponse.sourceIds || [],
-        intent: modelResponse.intent || {},
-        confidence: modelResponse.confidence || 0,
-      })
+      .insert(funnel ? { ...baseRow, funnel } : baseRow)
       .select('id')
-      .single();
+      .single());
+
+    // Migration henüz uygulanmadıysa funnel kolonu yoktur; etkileşimi yine kaydet.
+    if (error && funnel) {
+      logger.warn('Kâşif funnel insert failed; retrying without funnel.', error?.message);
+      ({ data, error } = await admin
+        .from('kasif_interactions')
+        .insert(baseRow)
+        .select('id')
+        .single());
+      if (!error && data) {
+        return { interactionId: data.id, feedbackToken };
+      }
+    }
+
     if (error) throw error;
-    return { interactionId: data.id, feedbackToken };
+    return {
+      interactionId: data.id,
+      feedbackToken,
+      ...(funnel ? { funnel } : {}),
+    };
   } catch (error) {
     logger.warn('Kâşif interaction could not be recorded.', error?.message);
     return {};

@@ -2,7 +2,38 @@
 
 Bu dosya Kâşif’in **öneri motoru** ile **kataloga araç çekme** yönünü ayırır ve sıradaki işleri tutar.
 
-Son güncelleme: 2026-07-24
+Son güncelleme: 2026-07-25
+
+---
+
+## Strateji: dizin → iş bitirme
+
+North Star artık yalnızca tıklama/affiliate değil:
+
+`job_stated → tool_recommended → tool_selected → setup_started → setup_completed → first_result → job_done`
+
+| Faz    | Durum  | Ne                                                            |
+| ------ | ------ | ------------------------------------------------------------- |
+| **P0** | ✅     | Job funnel kolon + API + self-report UI + admin hunisi        |
+| **P1** | ✅     | Top job sihirbazları (goal checklist + kopyalanabilir şablon) |
+| **P2** | Sırada | Workmind ↔ Kâşif tek “görev oturumu”                          |
+| **P3** | Sonra  | 1–2 nişte gerçek bağlantı (OAuth / kopyala-yapıştır bridge)   |
+| **P4** | Sonra  | Pack / orkestrasyon aboneliği                                 |
+
+### P0 teknik yüzey
+
+- `kasif_interactions.funnel` (jsonb) — migration `20260725120000_kasif_interactions_funnel.sql`
+- `src/lib/kasif/funnel.js` — stage sırası, seed, stats
+- `POST /api/kasif/funnel` — client stage ilerletme (token ile)
+- `/kasif` — “Bu araçla devam et” + checklist + ilk sonuç / iş bitti self-report
+- Admin **Kâşif kalite** — görev tamamlama hunisi kartı
+- Analytics event’leri: `kasif_funnel_*`
+
+### P1 teknik yüzey
+
+- `src/lib/kasif/jobWizards.js` — 10 goal + default sihirbaz (adımlar, prompt şablonları, first-result tanımı)
+- `JobFunnelPanel` — intent.goals → goal-specific checklist + kopyala
+- Funnel meta: `goal`, `wizard_id`; analytics: `kasif_wizard_prompt_copy`
 
 ---
 
@@ -11,13 +42,14 @@ Son güncelleme: 2026-07-24
 ### Öneri motoru (`src/lib/kasif/*`)
 
 - Katalog içi ranking, follow-up, meta, soft-landing, admin kalite paneli
+- Job completion funnel (seed + self-report)
 - Dış LLM ile serbest sohbet yok; cevaplar platform kayıtlarından üretilir
 
 ### Katalog keşfi (`src/lib/toolDiscoveryCron.js`)
 
 - Gemini aday üretimi + link doğrulama (HEAD/GET)
 - Admin dry-run / live insert
-- Henüz genel amaçlı web scraping pipeline’ı yok
+- Scrape pipeline P0–P3 tamam; P4 Kâşif “bu aracı ekle” intent’i açık
 
 ---
 
@@ -25,11 +57,13 @@ Son güncelleme: 2026-07-24
 
 Öncelik sırasıyla tutulacak:
 
-1. **Canlı eval regresyonu** — `npm run kasif:evaluate` (meta/soft/concept case’leri dahil) CI veya periyodik koşu
-2. **Soft-landing → conversion** — soft-landing sonrası starter tıklama / başarılı öneri oranı (analytics)
-3. **Kaynak kartı A/B kopyası** — `reasons` metinlerinin okunabilirlik ince ayarı
-4. **Concept gürültüsü izleme** — feedback report + forbiddenConcepts eval setini büyütme
-5. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
+1. **P2 görev oturumu** — Workmind plan adımlarını Kâşif funnel ile birleştir (tek job session)
+2. **Canlı eval regresyonu** — `npm run kasif:evaluate` CI veya periyodik koşu
+3. **Soft-landing → conversion** — soft-landing sonrası starter tıklama / başarılı öneri oranı
+4. **Funnel kalitesi** — first_result self-report oranı, dakika dağılımı, goal bazlı conversion
+5. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
+6. **Kaynak kartı A/B kopyası** — `reasons` metinlerinin okunabilirlik ince ayarı
+7. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
 
 ---
 

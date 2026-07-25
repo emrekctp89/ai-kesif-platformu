@@ -74,6 +74,38 @@ describe('buildKasifQualityStats', () => {
     expect(stats.topGoals[0].goals).toMatch(/presentation-creation|logo-design|hedef yok/);
     expect(stats.recentNegative[0].id).toBe('2');
     expect(stats.ruleCandidates.length).toBeGreaterThan(0);
+    expect(stats.jobFunnel).toBeDefined();
+    expect(stats.jobFunnel.withFunnel).toBe(0);
+  });
+
+  it('funnel kayıtlarını jobFunnel özetine yansıtır', () => {
+    const withFunnel = [
+      ...sample,
+      {
+        id: '6',
+        question: 'sunum yap',
+        intent: { goals: ['presentation-creation'] },
+        confidence: 0.8,
+        feedback: null,
+        source_ids: ['tool:1'],
+        funnel: {
+          stages: {
+            job_stated: '2026-07-25T10:00:00Z',
+            tool_recommended: '2026-07-25T10:00:00Z',
+            first_result: '2026-07-25T10:20:00Z',
+          },
+          minutes_to_first_result: 20,
+          selected_tool: { title: 'Slayt AI', slug: 'slayt-ai' },
+          events: [],
+        },
+        created_at: '2026-07-25T10:00:00Z',
+      },
+    ];
+    const stats = buildKasifQualityStats(withFunnel);
+    expect(stats.jobFunnel.withFunnel).toBe(1);
+    expect(stats.jobFunnel.counts.first_result).toBe(1);
+    expect(stats.jobFunnel.avgMinutesToFirstResult).toBe(20);
+    expect(stats.jobFunnel.topSelectedTools[0].label).toBe('Slayt AI');
   });
 
   it('meta ve soft-landing yanıtları ungrounded/issue saymaz', () => {

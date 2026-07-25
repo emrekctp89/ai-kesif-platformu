@@ -26,6 +26,8 @@ import {
   User,
 } from 'lucide-react';
 import { formatKasifGoalLabel } from '@/lib/kasif/goalLabels';
+import { JobFunnelPanel } from '@/components/kasif/JobFunnelPanel';
+import { trackEvent } from '@/utils/analytics';
 
 const STARTER_QUESTIONS = [
   { key: 'presentation', icon: Presentation },
@@ -154,6 +156,17 @@ export default function KasifExperiment() {
               { role: 'assistant', content: data.answer },
             ].slice(-6)
           );
+          if (data.funnel?.stages?.job_stated || data.sources?.length > 0) {
+            trackEvent('kasif_funnel_job_stated', {
+              goal: data.intent?.goals?.[0] || undefined,
+              source_count: Array.isArray(data.sources) ? data.sources.length : 0,
+            });
+          }
+          if (data.funnel?.stages?.tool_recommended || data.sources?.length > 0) {
+            trackEvent('kasif_funnel_tool_recommended', {
+              source_count: Array.isArray(data.sources) ? data.sources.length : 0,
+            });
+          }
         }
       } catch (error) {
         if (error?.name === 'AbortError') return;
@@ -537,10 +550,29 @@ export default function KasifExperiment() {
                                     <Link
                                       href={source.url}
                                       className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                                      onClick={() => {
+                                        trackEvent('kasif_tool_open_click', {
+                                          tool_id: source.id,
+                                          tool_title: source.title,
+                                        });
+                                      }}
                                     >
                                       {t('openTool')}
                                       <ExternalLink className="h-3 w-3" />
                                     </Link>
+                                    {turn.result.interactionId && turn.result.feedbackToken ? (
+                                      <JobFunnelPanel
+                                        interactionId={turn.result.interactionId}
+                                        feedbackToken={turn.result.feedbackToken}
+                                        source={source}
+                                        locale={locale}
+                                        goals={
+                                          Array.isArray(turn.result.intent?.goals)
+                                            ? turn.result.intent.goals
+                                            : []
+                                        }
+                                      />
+                                    ) : null}
                                   </div>
                                 </li>
                               ))}

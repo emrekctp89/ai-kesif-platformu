@@ -1956,6 +1956,7 @@ function KasifQualityTab({ interactions = [] }) {
         meta: row.intent?.meta || null,
         pricePreference: row.intent?.pricePreference || null,
         sourceCount: Array.isArray(row.source_ids) ? row.source_ids.length : 0,
+        funnel: row.funnel || null,
         created_at: row.created_at,
       })),
     };
@@ -2052,6 +2053,84 @@ function KasifQualityTab({ interactions = [] }) {
               <p className="mt-1 text-xs text-muted-foreground">{t('kasifStatSoftLandingHint')}</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="glass-panel border-border/50">
+        <CardHeader>
+          <CardTitle className="text-base">{t('kasifFunnelTitle')}</CardTitle>
+          <CardDescription>{t('kasifFunnelDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {(stats.jobFunnel?.withFunnel || 0) === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('kasifFunnelEmpty')}</p>
+          ) : (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  ['job_stated', t('kasifFunnelJobStated')],
+                  ['tool_recommended', t('kasifFunnelRecommended')],
+                  ['tool_selected', t('kasifFunnelSelected')],
+                  ['setup_started', t('kasifFunnelSetup')],
+                  ['setup_completed', t('kasifFunnelSetupDone')],
+                  ['first_result', t('kasifFunnelFirstResult')],
+                  ['job_done', t('kasifFunnelJobDone')],
+                ].map(([key, label]) => (
+                  <div key={key} className="rounded-xl border bg-background/60 p-3">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="mt-1 text-xl font-bold">{stats.jobFunnel?.counts?.[key] || 0}</p>
+                  </div>
+                ))}
+                <div className="rounded-xl border bg-background/60 p-3">
+                  <p className="text-xs text-muted-foreground">{t('kasifFunnelAvgMinutes')}</p>
+                  <p className="mt-1 text-xl font-bold">
+                    {stats.jobFunnel?.avgMinutesToFirstResult == null
+                      ? '—'
+                      : stats.jobFunnel.avgMinutesToFirstResult}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t('kasifFunnelSamples', {
+                      count: stats.jobFunnel?.firstResultSamples || 0,
+                    })}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="secondary">
+                  {t('kasifFunnelConvFirstResult')}:{' '}
+                  {stats.jobFunnel?.conversion?.firstResultOfStated == null
+                    ? '—'
+                    : `%${stats.jobFunnel.conversion.firstResultOfStated}`}
+                </Badge>
+                <Badge variant="secondary">
+                  {t('kasifFunnelConvDone')}:{' '}
+                  {stats.jobFunnel?.conversion?.doneOfStated == null
+                    ? '—'
+                    : `%${stats.jobFunnel.conversion.doneOfStated}`}
+                </Badge>
+                <Badge variant="outline">
+                  {t('kasifFunnelConvSelected')}:{' '}
+                  {stats.jobFunnel?.conversion?.selectedOfRecommended == null
+                    ? '—'
+                    : `%${stats.jobFunnel.conversion.selectedOfRecommended}`}
+                </Badge>
+              </div>
+              {(stats.jobFunnel?.topSelectedTools || []).length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {t('kasifFunnelTopTools')}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {stats.jobFunnel.topSelectedTools.map((tool) => (
+                      <Badge key={tool.key} variant="outline" className="font-normal">
+                        {tool.label} · {tool.count}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </>
+          )}
         </CardContent>
       </Card>
 

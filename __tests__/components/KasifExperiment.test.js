@@ -4,7 +4,15 @@ jest.mock('next-intl', () => ({
   useLocale: () => 'tr',
   useTranslations: (namespace) => {
     const messages = require('../../messages/tr.json')[namespace];
-    return (key) => key.split('.').reduce((value, part) => value?.[part], messages);
+    return (key, values) => {
+      let text = key.split('.').reduce((value, part) => value?.[part], messages);
+      if (typeof text === 'string' && values && typeof values === 'object') {
+        for (const [name, value] of Object.entries(values)) {
+          text = text.replaceAll(`{${name}}`, String(value));
+        }
+      }
+      return text;
+    };
   },
 }));
 
@@ -257,6 +265,95 @@ describe('Kâşif ekranı', () => {
 
     await screen.findByText('İkinci deneme yanıtı');
     expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('öneri kartında görev kurulum CTA gösterir', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        answer: 'İki seçenek.',
+        grounded: true,
+        confidence: 0.9,
+        intent: { goals: ['presentation-creation'] },
+        interactionId: 'int-1',
+        feedbackToken: 'tok-1',
+        funnel: {
+          stages: {
+            job_stated: '2026-07-25T10:00:00Z',
+            tool_recommended: '2026-07-25T10:00:00Z',
+          },
+        },
+        sources: [
+          {
+            id: 'tool:1',
+            title: 'Slayt AI',
+            url: '/tr/tool/slayt-ai',
+            description: 'Sunum.',
+            category: 'Sunum',
+            pricing: 'Freemium',
+            rating: 4.8,
+            reasons: ['göreve uygun'],
+          },
+        ],
+      }),
+    });
+    render(<KasifExperiment />);
+
+    fireEvent.change(screen.getByRole('textbox', { name: "Kâşif'e sor" }), {
+      target: { value: 'Ücretsiz sunum aracı öner' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: "Kâşif'e sor" }));
+
+    expect(
+      await screen.findByRole('button', { name: 'Slayt AI ile kuruluma başla' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Bu araçla devam et')).toBeInTheDocument();
+  });
+
+  it('devam edince goal-specific sihirbaz adımlarını ve şablonu gösterir', async () => {
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          answer: 'Sunum için Slayt AI.',
+          grounded: true,
+          confidence: 0.92,
+          intent: { goals: ['presentation-creation'] },
+          interactionId: 'int-2',
+          feedbackToken: 'tok-2',
+          sources: [
+            {
+              id: 'tool:1',
+              title: 'Slayt AI',
+              url: '/tr/tool/slayt-ai',
+              description: 'Sunum.',
+              category: 'Sunum',
+              pricing: 'Freemium',
+              rating: 4.9,
+              reasons: ['göreve uygun'],
+            },
+          ],
+        }),
+      })
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true, funnel: { stages: {} } }),
+      });
+
+    render(<KasifExperiment />);
+
+    fireEvent.change(screen.getByRole('textbox', { name: "Kâşif'e sor" }), {
+      target: { value: 'Ücretsiz sunum aracı öner' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: "Kâşif'e sor" }));
+
+    const start = await screen.findByRole('button', { name: 'Slayt AI ile kuruluma başla' });
+    fireEvent.click(start);
+
+    expect(await screen.findByText(/Sunum kurulum sihirbazı/i)).toBeInTheDocument();
+    expect(screen.getByText(/Anahat \/ slayt iskeletini oluştur/i)).toBeInTheDocument();
+    expect(screen.getByText(/İlk çıktı şablonları/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sunum brief şablonu/i)).toBeInTheDocument();
   });
 
   it('geri bildirimi gönderirken çift isteği engeller ve hatayı gösterir', async () => {
