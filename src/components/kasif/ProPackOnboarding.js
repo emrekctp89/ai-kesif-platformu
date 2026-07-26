@@ -32,7 +32,7 @@ export function ProPackOnboarding({ locale = 'tr', packId = '', enabled = true }
   const isLast = stepIndex >= PRO_PACK_ONBOARDING_STEPS.length - 1;
 
   function dismiss(final = false) {
-    markProPackOnboardingSeen();
+    markProPackOnboardingSeen(final ? 'complete' : 'dismiss');
     setOpen(false);
     trackEvent(final ? 'kasif_pro_onboarding_complete' : 'kasif_pro_onboarding_dismiss', {
       pack_id: packId || undefined,

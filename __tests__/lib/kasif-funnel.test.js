@@ -155,4 +155,63 @@ describe('kasif funnel', () => {
     );
     expect(stats.packStats.find((p) => p.packId === 'content-studio')?.sources?.partner).toBe(1);
   });
+
+  it('pro onboarding → first_result metriklerini hesaplar', () => {
+    const stats = buildJobFunnelStats([
+      {
+        intent: {
+          packId: 'content-studio',
+          source: 'pack-runner',
+          proOnboardingStatus: 'complete',
+          proOnboardingCompleted: true,
+        },
+        funnel: {
+          stages: {
+            job_stated: '2026-07-26T10:00:00.000Z',
+            first_result: '2026-07-26T10:01:00.000Z',
+          },
+          result_artifact: {
+            bridge: 'runner',
+            packId: 'content-studio',
+            runner_source: 'local',
+          },
+          events: [],
+        },
+      },
+      {
+        intent: {
+          packId: 'content-studio',
+          source: 'pack-runner',
+          proOnboardingStatus: 'dismiss',
+        },
+        funnel: {
+          stages: {
+            job_stated: '2026-07-26T11:00:00.000Z',
+            first_result: '2026-07-26T11:01:00.000Z',
+          },
+          result_artifact: { bridge: 'runner', packId: 'content-studio' },
+          events: [],
+        },
+      },
+      {
+        intent: { packId: 'seo-brief', source: 'pack-runner' },
+        funnel: {
+          stages: {
+            job_stated: '2026-07-26T12:00:00.000Z',
+            first_result: '2026-07-26T12:01:00.000Z',
+          },
+          result_artifact: { bridge: 'runner', packId: 'seo-brief' },
+          events: [],
+        },
+      },
+    ]);
+
+    expect(stats.proOnboarding.runnerTotal).toBe(3);
+    expect(stats.proOnboarding.complete).toBe(1);
+    expect(stats.proOnboarding.dismiss).toBe(1);
+    expect(stats.proOnboarding.none).toBe(1);
+    expect(stats.proOnboarding.completeFirstResult).toBe(1);
+    expect(stats.proOnboarding.firstResultOfComplete).toBe(100);
+    expect(stats.proOnboarding.completeShareOfFirstResult).toBeCloseTo(33.3, 0);
+  });
 });

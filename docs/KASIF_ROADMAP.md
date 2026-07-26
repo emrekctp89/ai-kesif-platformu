@@ -168,13 +168,21 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ---
 
+### P6.6 Onboarding metrics + i18n parity
+
+- Pack runner stamps `proOnboardingStatus` / `proOnboardingCompleted` on intent
+- Admin hunisi: complete / dismiss / none + Complete→FR + complete share of FR
+- Jest i18n parity: packs paywall/onboarding + soft-landing/add-tool + admin keys
+
+---
+
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.5~~ ✅
-2. **i18n polish** — Pro tour + paywall EN/TR parity check
-3. **Metrics: pro onboarding complete → first_result** funnel in admin
+1. ~~P0–P6.6~~ ✅
+2. **LearnKasif i18n** — full LearnKasif key parity test (if any drift)
+3. **Product polish backlog** — user research on soft-landing B win rate
 
 ---
 

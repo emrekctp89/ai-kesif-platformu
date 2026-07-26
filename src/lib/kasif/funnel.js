@@ -372,6 +372,49 @@ export function buildJobFunnelStats(interactions = []) {
     }))
     .sort((a, b) => b.count - a.count);
 
+  // Pro onboarding → first_result (among pack-runner rows).
+  let proOnboardingRunnerTotal = 0;
+  let proOnboardingComplete = 0;
+  let proOnboardingDismiss = 0;
+  let proOnboardingNone = 0;
+  let proOnboardingFirstResult = 0;
+  let proOnboardingCompleteFirstResult = 0;
+
+  for (const row of rows) {
+    const isRunner =
+      row?.intent?.source === 'pack-runner' ||
+      normalizeFunnel(row?.funnel).result_artifact?.bridge === 'runner';
+    if (!isRunner) continue;
+    proOnboardingRunnerTotal += 1;
+    const status = String(row?.intent?.proOnboardingStatus || '').toLowerCase();
+    const completed = row?.intent?.proOnboardingCompleted === true || status === 'complete';
+    const dismissed = status === 'dismiss';
+    if (completed) proOnboardingComplete += 1;
+    else if (dismissed) proOnboardingDismiss += 1;
+    else proOnboardingNone += 1;
+
+    const funnel = normalizeFunnel(row?.funnel);
+    const hasFr = Boolean(
+      funnel.stages?.first_result || funnel.result_artifact?.bridge === 'runner'
+    );
+    if (hasFr) {
+      proOnboardingFirstResult += 1;
+      if (completed) proOnboardingCompleteFirstResult += 1;
+    }
+  }
+
+  const proOnboarding = {
+    runnerTotal: proOnboardingRunnerTotal,
+    complete: proOnboardingComplete,
+    dismiss: proOnboardingDismiss,
+    none: proOnboardingNone,
+    firstResult: proOnboardingFirstResult,
+    completeFirstResult: proOnboardingCompleteFirstResult,
+    completeRate: rate(proOnboardingComplete, proOnboardingRunnerTotal),
+    firstResultOfComplete: rate(proOnboardingCompleteFirstResult, proOnboardingComplete),
+    completeShareOfFirstResult: rate(proOnboardingCompleteFirstResult, proOnboardingFirstResult),
+  };
+
   return {
     withFunnel,
     counts,
@@ -393,6 +436,7 @@ export function buildJobFunnelStats(interactions = []) {
     runnerCount,
     runnerSourceCounts,
     runnerSourceMix,
+    proOnboarding,
     bridgeGoals: [...bridgeGoals.entries()]
       .map(([goal, count]) => ({ goal, count }))
       .sort((a, b) => b.count - a.count)

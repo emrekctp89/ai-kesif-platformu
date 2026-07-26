@@ -49,19 +49,33 @@ export function pickLocale(value, locale = 'tr') {
   return locale === 'en' ? value.en || value.tr : value.tr || value.en;
 }
 
-export function hasSeenProPackOnboarding() {
-  if (typeof window === 'undefined') return true;
+/**
+ * @returns {null|'complete'|'dismiss'}
+ */
+export function getProPackOnboardingStatus() {
+  if (typeof window === 'undefined') return null;
   try {
-    return localStorage.getItem(PRO_PACK_ONBOARDING_KEY) === '1';
+    const raw = String(localStorage.getItem(PRO_PACK_ONBOARDING_KEY) || '').trim();
+    if (raw === 'complete' || raw === '1') return 'complete';
+    if (raw === 'dismiss') return 'dismiss';
+    return null;
   } catch {
-    return true;
+    return null;
   }
 }
 
-export function markProPackOnboardingSeen() {
+export function hasSeenProPackOnboarding() {
+  return getProPackOnboardingStatus() != null;
+}
+
+/**
+ * @param {'complete'|'dismiss'} [how]
+ */
+export function markProPackOnboardingSeen(how = 'complete') {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(PRO_PACK_ONBOARDING_KEY, '1');
+    const value = how === 'dismiss' ? 'dismiss' : 'complete';
+    localStorage.setItem(PRO_PACK_ONBOARDING_KEY, value);
   } catch {
     /* private mode */
   }

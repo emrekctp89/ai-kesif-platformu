@@ -2241,6 +2241,42 @@ function KasifQualityTab({ interactions = [] }) {
                   </div>
                 </div>
               ) : null}
+              {(stats.jobFunnel?.proOnboarding?.runnerTotal || 0) > 0 ? (
+                <div className="space-y-2 rounded-xl border bg-background/50 p-3">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {t('kasifProOnboardingTitle')}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">{t('kasifProOnboardingDesc')}</p>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <Badge variant="secondary">
+                      {t('kasifProOnboardingComplete')}:{' '}
+                      {stats.jobFunnel.proOnboarding.complete || 0}
+                      {stats.jobFunnel.proOnboarding.completeRate != null
+                        ? ` · %${stats.jobFunnel.proOnboarding.completeRate}`
+                        : ''}
+                    </Badge>
+                    <Badge variant="outline">
+                      {t('kasifProOnboardingDismiss')}: {stats.jobFunnel.proOnboarding.dismiss || 0}
+                    </Badge>
+                    <Badge variant="outline">
+                      {t('kasifProOnboardingNone')}: {stats.jobFunnel.proOnboarding.none || 0}
+                    </Badge>
+                    <Badge variant="default">
+                      {t('kasifProOnboardingFrOfComplete')}:{' '}
+                      {stats.jobFunnel.proOnboarding.completeFirstResult || 0}
+                      {stats.jobFunnel.proOnboarding.firstResultOfComplete != null
+                        ? ` · %${stats.jobFunnel.proOnboarding.firstResultOfComplete}`
+                        : ''}
+                    </Badge>
+                    <Badge variant="outline">
+                      {t('kasifProOnboardingCompleteShareFr')}:{' '}
+                      {stats.jobFunnel.proOnboarding.completeShareOfFirstResult != null
+                        ? `%${stats.jobFunnel.proOnboarding.completeShareOfFirstResult}`
+                        : '—'}
+                    </Badge>
+                  </div>
+                </div>
+              ) : null}
               {(stats.jobFunnel?.topSelectedTools || []).length > 0 ? (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground">

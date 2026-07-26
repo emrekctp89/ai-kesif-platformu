@@ -60,6 +60,7 @@ Workmind iki Kâşif katmanı kullanır:
 23. Soft-landing A/B admin kovaları (shown/follow-up/convert). Pack smoke: `npm run kasif:pack-smoke`.
 24. Pro paywall: login/kota kopyası + ücretsiz runner alternatifi. Add-tool: UI badge + admin `?tab=approval_queue`.
 25. Pro onboarding turu (ilk Pro runner). Add-tool her kuyrukta `admin_alerts` (`kasif_add_tool`).
+26. Pro onboarding metrikleri admin hunisinde (complete→first_result). i18n parity testleri.
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır. Saf fiyat daraltması

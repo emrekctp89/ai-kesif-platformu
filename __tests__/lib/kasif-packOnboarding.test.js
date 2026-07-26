@@ -21,11 +21,16 @@ describe('packOnboarding', () => {
     expect(PRO_PACK_ONBOARDING_STEPS.map((s) => s.id)).toEqual(['brief', 'run', 'copy', 'finish']);
   });
 
-  it('localStorage ile görüldü işaretler', () => {
+  it('localStorage ile complete/dismiss ayırır', () => {
+    const { getProPackOnboardingStatus } = require('../../src/lib/kasif/packOnboarding');
     expect(hasSeenProPackOnboarding()).toBe(false);
-    markProPackOnboardingSeen();
+    markProPackOnboardingSeen('complete');
     expect(hasSeenProPackOnboarding()).toBe(true);
-    expect(localStorage.getItem(PRO_PACK_ONBOARDING_KEY)).toBe('1');
+    expect(getProPackOnboardingStatus()).toBe('complete');
+    expect(localStorage.getItem(PRO_PACK_ONBOARDING_KEY)).toBe('complete');
+    resetProPackOnboardingForTests();
+    markProPackOnboardingSeen('dismiss');
+    expect(getProPackOnboardingStatus()).toBe('dismiss');
   });
 
   it('pickLocale çalışır', () => {

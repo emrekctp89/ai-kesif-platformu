@@ -113,11 +113,26 @@ export async function POST(request) {
     const pack = getJobPackById(packId, locale);
 
     const feedbackToken = randomUUID();
+    const onboardingStatusRaw = String(body?.proOnboardingStatus || '')
+      .trim()
+      .toLowerCase();
+    const onboardingStatus =
+      onboardingStatusRaw === 'complete' || onboardingStatusRaw === 'dismiss'
+        ? onboardingStatusRaw
+        : body?.proOnboardingCompleted === true
+          ? 'complete'
+          : null;
     const intent = {
       goals: pack?.goals || [run.goal].filter(Boolean),
       packId,
       source: 'pack-runner',
       ...(access.userId ? { userId: access.userId } : {}),
+      ...(onboardingStatus
+        ? {
+            proOnboardingStatus: onboardingStatus,
+            proOnboardingCompleted: onboardingStatus === 'complete',
+          }
+        : {}),
     };
 
     let funnel =

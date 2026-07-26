@@ -8,6 +8,7 @@ import { trackEvent } from '@/utils/analytics';
 import { isRunnablePack } from '@/lib/kasif/jobPacks';
 import { isProPackId, buildPackPaywall } from '@/lib/kasif/packAccess';
 import { buildPartnerConnectSteps } from '@/lib/kasif/partnerConnect';
+import { getProPackOnboardingStatus } from '@/lib/kasif/packOnboarding';
 import { ProPackOnboarding } from '@/components/kasif/ProPackOnboarding';
 
 const PLACEHOLDER_KEYS = {
@@ -131,6 +132,7 @@ export function PackRunnerPanel({
     }
     setStatus('running');
     try {
+      const onboardingStatus = getProPackOnboardingStatus();
       const response = await fetch('/api/kasif/pack-runner', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,6 +140,8 @@ export function PackRunnerPanel({
           packId: safePackId,
           brief: brief.trim(),
           locale,
+          proOnboardingStatus: onboardingStatus,
+          proOnboardingCompleted: onboardingStatus === 'complete',
         }),
       });
       const data = await response.json().catch(() => ({}));
