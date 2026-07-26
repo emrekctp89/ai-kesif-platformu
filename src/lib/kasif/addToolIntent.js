@@ -118,6 +118,8 @@ What happens next:
 2. Reviews description / link / category
 3. Approves → it becomes recommendable in Kâşif
 
+Later you can ask **“check my tool status”** (or paste the URL/slug again).
+
 I never auto-publish scraped tools.`
     : `**${name}** admin inceleme kuyruğuna alındı (henüz yayında değil).${link ? `\nBağlantı: ${link}` : ''}${
         slug ? `\nTaslak slug: \`${slug}\`` : ''
@@ -129,6 +131,8 @@ Sonraki adımlar:
 1. Admin bekleyen araçlar kuyruğunu açar
 2. Açıklama / link / kategoriyi inceler
 3. Onaylarsa Kâşif önermeye başlar
+
+Sonra **“durumumu sor”** yazabilirsin (veya URL/slug’ı tekrar yapıştır).
 
 Scrape edilen araçlar asla otomatik yayınlanmaz.`;
 }

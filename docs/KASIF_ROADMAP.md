@@ -192,13 +192,30 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ---
 
+### P6.9 Auto-pin soft-landing winner (ops, env-free)
+
+- **DB**: `app_settings` key `kasif_soft_landing_pin` (migration `20260726120000_create_app_settings.sql`)
+- **Priority**: env FORCE → ops pin → env DEFAULT → ab split
+- **Admin**: Kâşif kalite → “Kazananı pinle” / “Pini kaldır” (`pinKasifSoftLandingWinner`)
+- **Client**: `GET /api/kasif/soft-landing-config` sticky init
+- **Server**: ask soft-landing path loads ops pin into `resolveSoftLandingVariant`
+
+### P6.10 Add-tool “durumumu sor” follow-up
+
+- `detectAddToolStatusIntent` + history URL/slug extract
+- Lookup `tools` by slug/link/host → pending | approved | not_found
+- Queued answer hints “durumumu sor” / “check my tool status”
+- Intent `meta: add-tool-status` for analytics/admin samples
+
+---
+
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.8~~ ✅
-2. **Auto-pin soft-landing winner** — admin “kazananı pinle” butonu (env yazmadan ops not)
-3. **Kullanıcı bekleme durumu** — add-tool queued sonrası “durumumu sor” follow-up
+1. ~~P0–P6.10~~ ✅
+2. **Shareable job receipt** — first_result/job_done özet kartı + kopyala link
+3. **Pro pack ROI snapshot** — admin: pack başına FR/job_done maliyeti (runner source mix ile)
 
 ---
 

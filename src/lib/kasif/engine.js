@@ -523,7 +523,12 @@ export function answerContextlessFollowUp(question, locale = 'tr', history = [],
   const intent = understandQuestion(question);
   const variant = resolveSoftLandingVariant(
     options.variant || options.softLandingVariant,
-    options.seed || question
+    options.seed || question,
+    {
+      force: options.force,
+      defaultVariant: options.defaultVariant,
+      opsPin: options.opsPin,
+    }
   );
 
   const answer = buildSoftLandingAnswer(intent, locale, variant);

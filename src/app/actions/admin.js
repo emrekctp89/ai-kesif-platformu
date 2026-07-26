@@ -76,3 +76,64 @@ export async function updateAdminAlertStatus(formData) {
   revalidatePath('/admin');
   return { success: 'Uyarı durumu güncellendi.' };
 }
+
+/**
+ * Pin soft-landing A/B winner without editing env vars (DB app_settings).
+ * @param {FormData|{ variant?: string, note?: string }} formData
+ */
+export async function pinKasifSoftLandingWinner(formData) {
+  'use server';
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: 'Yetkiniz yok.' };
+  }
+
+  const raw =
+    formData instanceof FormData
+      ? formData.get('variant')
+      : formData && typeof formData === 'object'
+        ? formData.variant
+        : null;
+  const note =
+    formData instanceof FormData
+      ? formData.get('note')
+      : formData && typeof formData === 'object'
+        ? formData.note
+        : null;
+
+  const variantRaw = String(raw || '')
+    .trim()
+    .toUpperCase();
+  const clear = variantRaw === 'CLEAR' || variantRaw === 'NONE' || variantRaw === '';
+  const variant = clear ? null : variantRaw === 'A' || variantRaw === 'B' ? variantRaw : null;
+  if (!clear && !variant) {
+    return { error: 'Geçersiz varyant. A, B veya clear kullanın.' };
+  }
+
+  try {
+    const { setSoftLandingOpsPin } = await import('@/lib/kasif/softLandingPin');
+    const pin = await setSoftLandingOpsPin(variant, {
+      userId: user.id,
+      note: note ? String(note).slice(0, 280) : null,
+    });
+    revalidatePath('/admin');
+    return {
+      success: pin.variant
+        ? `Soft-landing kazananı pinlendi: ${pin.variant}`
+        : 'Soft-landing ops pin kaldırıldı (A/B split).',
+      pin,
+    };
+  } catch (error) {
+    logger.error('Soft-landing pin failed:', error);
+    return {
+      error:
+        error?.message?.includes('app_settings') || error?.code === '42P01'
+          ? 'app_settings tablosu yok. Migration 20260726120000_create_app_settings.sql uygulayın.'
+          : error?.message || 'Pin kaydedilemedi.',
+    };
+  }
+}

@@ -43,6 +43,7 @@ import {
   scrapeToolUrlAdmin,
   scrapeToolUrlsAdmin,
   runScrapeSeedQueueAdmin,
+  pinKasifSoftLandingWinner,
 } from '@/app/actions';
 import { summarizeSeedCatalog } from '@/lib/toolScrape/seedUrls';
 import { deleteReportedComment, dismissAlert } from '@/app/actions/moderation';
@@ -62,8 +63,7 @@ import {
   isLikelyEnglishDescription,
   normalizeToolLink,
 } from '@/lib/toolQuality';
-import { buildKasifQualityStats, isKasifIssueInteraction } from '@/lib/kasif/qualityStats';
-import { formatKasifGoalLabel } from '@/lib/kasif/goalLabels';
+import { buildKasifQualityStats, formatKasifGoalLabel, isKasifIssueInteraction } from '@/lib/kasif';
 
 function getQualityPriority(issues, duplicateNameCount, duplicateLinkCount) {
   if (issues.some((issue) => issue.key === 'link-invalid')) return 'high';
@@ -1960,6 +1960,8 @@ function KasifQualityTab({ interactions = [] }) {
   const locale = useLocale();
   const kasifHref = locale === 'en' ? '/en/kasif' : '/kasif';
   const [partnerStatus, setPartnerStatus] = React.useState(null);
+  const [softLandingPin, setSoftLandingPin] = React.useState(null);
+  const [pinBusy, setPinBusy] = React.useState(false);
   const stats = React.useMemo(
     () => buildKasifQualityStats(interactions, { windowDays: 30, sampleLimit: 12 }),
     [interactions]
@@ -1977,6 +1979,16 @@ function KasifQualityTab({ interactions = [] }) {
         if (!response.ok) return;
         const data = await response.json();
         if (!cancelled) setPartnerStatus(data);
+      } catch {
+        /* optional */
+      }
+    })();
+    (async () => {
+      try {
+        const response = await fetch('/api/kasif/soft-landing-config');
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!cancelled) setSoftLandingPin(data);
       } catch {
         /* optional */
       }
@@ -2487,7 +2499,7 @@ function KasifQualityTab({ interactions = [] }) {
                 {t('kasifSoftVariantBuckets')}
               </p>
               {stats.softLandingConversion?.winner ? (
-                <div className="rounded-xl border border-dashed bg-muted/30 px-3 py-2 text-xs">
+                <div className="space-y-2 rounded-xl border border-dashed bg-muted/30 px-3 py-2 text-xs">
                   {stats.softLandingConversion.winner.winner === 'A' ||
                   stats.softLandingConversion.winner.winner === 'B' ? (
                     <p className="font-semibold text-foreground">
@@ -2511,6 +2523,87 @@ function KasifQualityTab({ interactions = [] }) {
                   ) : (
                     <p className="text-muted-foreground">{t('kasifSoftWinnerPending')}</p>
                   )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={softLandingPin?.opsPin ? 'default' : 'secondary'}>
+                      {softLandingPin?.opsPin
+                        ? t('kasifSoftPinActive', { v: softLandingPin.opsPin })
+                        : softLandingPin?.force
+                          ? t('kasifSoftPinEnvForce', { v: softLandingPin.force })
+                          : t('kasifSoftPinInactive')}
+                    </Badge>
+                    {(stats.softLandingConversion.winner.winner === 'A' ||
+                      stats.softLandingConversion.winner.winner === 'B') && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="default"
+                        className="h-7 text-xs"
+                        disabled={pinBusy}
+                        onClick={async () => {
+                          const winner = stats.softLandingConversion.winner.winner;
+                          setPinBusy(true);
+                          try {
+                            const result = await pinKasifSoftLandingWinner({
+                              variant: winner,
+                              note: `admin pin from quality panel winner=${winner}`,
+                            });
+                            if (result?.error) {
+                              toast.error(result.error);
+                            } else {
+                              toast.success(result.success || t('kasifSoftPinSaved'));
+                              setSoftLandingPin((prev) => ({
+                                ...(prev || {}),
+                                opsPin: winner,
+                                effectivePin: winner,
+                                mode: `ops_pin_${winner}`,
+                              }));
+                              router.refresh();
+                            }
+                          } catch (error) {
+                            toast.error(error?.message || t('kasifSoftPinFailed'));
+                          } finally {
+                            setPinBusy(false);
+                          }
+                        }}
+                      >
+                        {t('kasifSoftPinWinnerCta', {
+                          v: stats.softLandingConversion.winner.winner,
+                        })}
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      disabled={pinBusy || !softLandingPin?.opsPin}
+                      onClick={async () => {
+                        setPinBusy(true);
+                        try {
+                          const result = await pinKasifSoftLandingWinner({ variant: 'clear' });
+                          if (result?.error) {
+                            toast.error(result.error);
+                          } else {
+                            toast.success(result.success || t('kasifSoftPinCleared'));
+                            setSoftLandingPin((prev) => ({
+                              ...(prev || {}),
+                              opsPin: null,
+                              effectivePin: prev?.force || null,
+                              mode: prev?.force ? `force_${prev.force}` : 'ab_split',
+                            }));
+                            router.refresh();
+                          }
+                        } catch (error) {
+                          toast.error(error?.message || t('kasifSoftPinFailed'));
+                        } finally {
+                          setPinBusy(false);
+                        }
+                      }}
+                    >
+                      {t('kasifSoftPinClearCta')}
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">{t('kasifSoftPinHint')}</p>
                 </div>
               ) : null}
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">

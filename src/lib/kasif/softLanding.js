@@ -76,15 +76,42 @@ export const SOFT_LANDING_STARTERS = [
 export const SOFT_LANDING_VARIANTS = ['A', 'B'];
 
 /**
- * Env-driven soft-landing default (feature flag).
+ * @param {unknown} value
+ * @returns {'A'|'B'|null}
+ */
+export function normalizeSoftLandingPinVariant(value) {
+  const raw = String(value || '')
+    .trim()
+    .toUpperCase();
+  return raw === 'A' || raw === 'B' ? raw : null;
+}
+
+/**
+ * @param {object|null|undefined} row app_settings row
+ * @returns {{ variant: 'A'|'B'|null, pinnedAt: string|null, note: string|null, source: string }}
+ */
+export function parseSoftLandingPinRow(row) {
+  const value = row?.value && typeof row.value === 'object' ? row.value : {};
+  const variant = normalizeSoftLandingPinVariant(value.variant);
+  return {
+    variant,
+    pinnedAt: row?.updated_at || value.pinnedAt || null,
+    note: value.note ? String(value.note).slice(0, 280) : null,
+    source: 'app_settings',
+  };
+}
+
+/**
+ * Env + ops pin soft-landing default (feature flag).
  *
- * - KASIF_SOFT_LANDING_FORCE_VARIANT / NEXT_PUBLIC_… = A|B → always use for new assign
- * - KASIF_SOFT_LANDING_DEFAULT_VARIANT / NEXT_PUBLIC_… = A|B|ab
- *   - A or B: pin new users to that variant (after admin declares a winner)
- *   - ab (default): 50/50 hash split
+ * Priority:
+ * 1. KASIF_SOFT_LANDING_FORCE_VARIANT / NEXT_PUBLIC_… = A|B (env kill-switch)
+ * 2. opsPin from admin “pin winner” (DB app_settings, no env edit)
+ * 3. KASIF_SOFT_LANDING_DEFAULT_VARIANT / NEXT_PUBLIC_… = A|B|ab
+ * 4. ab → 50/50 hash split
  *
- * @param {{ force?: string, defaultVariant?: string }|null} [envOverride] test injection
- * @returns {{ force: 'A'|'B'|null, defaultVariant: 'A'|'B'|'ab', mode: string }}
+ * @param {{ force?: string, defaultVariant?: string, opsPin?: string|null }|null} [envOverride]
+ * @returns {{ force: 'A'|'B'|null, opsPin: 'A'|'B'|null, defaultVariant: 'A'|'B'|'ab', mode: string }}
  */
 export function getSoftLandingVariantConfig(envOverride = null) {
   const read = (key) => {
@@ -100,28 +127,47 @@ export function getSoftLandingVariantConfig(envOverride = null) {
     .toUpperCase();
   const force = forceRaw === 'A' || forceRaw === 'B' ? forceRaw : null;
 
+  const opsRaw = String(
+    envOverride && Object.prototype.hasOwnProperty.call(envOverride, 'opsPin')
+      ? envOverride.opsPin
+      : ''
+  )
+    .trim()
+    .toUpperCase();
+  const opsPin = opsRaw === 'A' || opsRaw === 'B' ? opsRaw : null;
+
   const defRaw = String(envOverride?.defaultVariant ?? read('KASIF_SOFT_LANDING_DEFAULT_VARIANT'))
     .trim()
     .toUpperCase();
   const defaultVariant =
     defRaw === 'A' || defRaw === 'B' ? defRaw : defRaw === 'AB' || defRaw === '' ? 'ab' : 'ab';
 
+  const effective = force || opsPin || defaultVariant;
+
   return {
     force,
-    defaultVariant: force || defaultVariant,
-    mode: force ? `force_${force}` : defaultVariant === 'ab' ? 'ab_split' : `pin_${defaultVariant}`,
+    opsPin,
+    defaultVariant: effective === 'A' || effective === 'B' ? effective : 'ab',
+    mode: force
+      ? `force_${force}`
+      : opsPin
+        ? `ops_pin_${opsPin}`
+        : defaultVariant === 'ab'
+          ? 'ab_split'
+          : `pin_${defaultVariant}`,
   };
 }
 
 /**
  * Assign variant for a new user/session.
  * @param {string} [seed]
- * @param {{ force?: string, defaultVariant?: string }|null} [envOverride]
+ * @param {{ force?: string, defaultVariant?: string, opsPin?: string|null }|null} [envOverride]
  * @returns {'A'|'B'}
  */
 export function pickSoftLandingVariant(seed, envOverride = null) {
   const config = getSoftLandingVariantConfig(envOverride);
   if (config.force === 'A' || config.force === 'B') return config.force;
+  if (config.opsPin === 'A' || config.opsPin === 'B') return config.opsPin;
   if (config.defaultVariant === 'A' || config.defaultVariant === 'B') {
     return config.defaultVariant;
   }
@@ -138,16 +184,18 @@ export function pickSoftLandingVariant(seed, envOverride = null) {
 }
 
 /**
- * Resolve variant for this request: explicit client value wins, else env/default/seed.
+ * Resolve variant for this request.
+ * Env force and ops pin override sticky client; otherwise client sticky wins.
  * @param {string|null|undefined} clientVariant
  * @param {string} [seed]
- * @param {{ force?: string, defaultVariant?: string }|null} [envOverride]
+ * @param {{ force?: string, defaultVariant?: string, opsPin?: string|null }|null} [envOverride]
  * @returns {'A'|'B'}
  */
 export function resolveSoftLandingVariant(clientVariant, seed, envOverride = null) {
   const config = getSoftLandingVariantConfig(envOverride);
-  // Force always wins (ops kill-switch / post-experiment pin).
+  // Env force + ops pin win (post-experiment pin / kill-switch).
   if (config.force === 'A' || config.force === 'B') return config.force;
+  if (config.opsPin === 'A' || config.opsPin === 'B') return config.opsPin;
 
   const client = String(clientVariant || '')
     .trim()

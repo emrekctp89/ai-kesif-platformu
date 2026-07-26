@@ -61,22 +61,39 @@ function storageKeyFor(locale) {
   return `kasif-conversation-v1:${locale || 'tr'}`;
 }
 
-function getOrCreateSoftLandingVariant() {
+function getOrCreateSoftLandingVariant(remoteConfig = null) {
   try {
     // Force flag always re-pins (ops after A/B winner decision).
-    const force = String(process.env.NEXT_PUBLIC_KASIF_SOFT_LANDING_FORCE_VARIANT || '')
+    const envForce = String(process.env.NEXT_PUBLIC_KASIF_SOFT_LANDING_FORCE_VARIANT || '')
       .trim()
       .toUpperCase();
+    const remoteForce =
+      remoteConfig?.force === 'A' || remoteConfig?.force === 'B' ? remoteConfig.force : null;
+    const force = envForce === 'A' || envForce === 'B' ? envForce : remoteForce;
     if (force === 'A' || force === 'B') {
       localStorage.setItem(SOFT_LANDING_STORAGE_KEY, force);
       return force;
+    }
+
+    // Admin DB ops pin (no env edit) — re-pin sticky for all sessions while active.
+    const opsPin =
+      remoteConfig?.opsPin === 'A' || remoteConfig?.opsPin === 'B'
+        ? remoteConfig.opsPin
+        : remoteConfig?.effectivePin === 'A' || remoteConfig?.effectivePin === 'B'
+          ? remoteConfig.effectivePin
+          : null;
+    if (opsPin === 'A' || opsPin === 'B') {
+      localStorage.setItem(SOFT_LANDING_STORAGE_KEY, opsPin);
+      return opsPin;
     }
 
     const existing = localStorage.getItem(SOFT_LANDING_STORAGE_KEY);
     if (existing === 'A' || existing === 'B') return existing;
 
     // Pin new users to configured default (A|B) or hash-split (ab).
-    const next = pickSoftLandingVariant(`${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+    const next = pickSoftLandingVariant(`${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, {
+      defaultVariant: remoteConfig?.defaultVariant,
+    });
     localStorage.setItem(SOFT_LANDING_STORAGE_KEY, next);
     return next;
   } catch {
@@ -118,25 +135,40 @@ export default function KasifExperiment() {
 
   useEffect(() => () => activeRequestRef.current?.abort(), []);
 
-  // Oturum geçmişini locale bazlı geri yükle.
+  // Oturum geçmişini locale bazlı geri yükle + soft-landing pin config.
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(storageKeyFor(locale));
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed?.turns)) setTurns(parsed.turns);
-        if (Array.isArray(parsed?.history)) setHistory(parsed.history);
-      } else {
+    let cancelled = false;
+    (async () => {
+      try {
+        const raw = sessionStorage.getItem(storageKeyFor(locale));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed?.turns)) setTurns(parsed.turns);
+          if (Array.isArray(parsed?.history)) setHistory(parsed.history);
+        } else {
+          setTurns([]);
+          setHistory([]);
+        }
+      } catch {
         setTurns([]);
         setHistory([]);
       }
-    } catch {
-      setTurns([]);
-      setHistory([]);
-    } finally {
-      softLandingVariantRef.current = getOrCreateSoftLandingVariant();
+
+      let remoteConfig = null;
+      try {
+        const res = await fetch('/api/kasif/soft-landing-config', { method: 'GET' });
+        if (res.ok) remoteConfig = await res.json();
+      } catch {
+        remoteConfig = null;
+      }
+
+      if (cancelled) return;
+      softLandingVariantRef.current = getOrCreateSoftLandingVariant(remoteConfig);
       setHydrated(true);
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [locale]);
 
   useEffect(() => {

@@ -9,10 +9,17 @@ import {
   detectAddToolIntent,
   formatAddToolResultAnswer,
 } from '@/lib/kasif/addToolIntent';
+import {
+  detectAddToolStatusIntent,
+  extractAddToolRefsFromHistory,
+  formatAddToolStatusAnswer,
+  classifyToolQueueStatus,
+} from '@/lib/kasif/addToolStatus';
 import { retrievePlatformContext } from '@/lib/kasif/retrieval';
 import { groundModelResponse, noInformationAnswer } from '@/lib/kasif/grounding';
 import { seedFunnelFromResponse } from '@/lib/kasif/funnel';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { getSoftLandingOpsPin } from '@/lib/kasif/softLandingPin';
 
 export const dynamic = 'force-dynamic';
 
@@ -171,18 +178,24 @@ export async function POST(request) {
   try {
     const isLocalEvaluation = body?.evaluation === true && isLocalEvaluationRequest;
 
-    // Meta / soft-landing yanıtları katalog aramadan döner.
-    // Soft-landing A/B: client sticky variant + server force/default env flags.
+    // Soft-landing A/B: client sticky + env force/default + admin ops pin (DB).
     const softLandingVariant =
       body?.softLandingVariant === 'B' || body?.softLandingVariant === 'A'
         ? body.softLandingVariant
         : null;
+    const opsPinRow = isLocalEvaluation
+      ? { variant: null }
+      : await withTimeout(getSoftLandingOpsPin(), 1500, { variant: null });
+    const softLandingOverride = {
+      variant: softLandingVariant || undefined,
+      seed: question,
+      opsPin: opsPinRow?.variant || null,
+    };
+
+    // Meta / soft-landing yanıtları katalog aramadan döner.
     const directResponse =
       answerMetaQuestion(question, locale) ||
-      answerContextlessFollowUp(question, locale, history, {
-        variant: softLandingVariant || undefined,
-        seed: question,
-      });
+      answerContextlessFollowUp(question, locale, history, softLandingOverride);
     if (directResponse) {
       const taggedDirect = attachClientIntentMeta(directResponse, body);
       const groundedDirect = groundModelResponse(taggedDirect, [], locale);
@@ -199,6 +212,126 @@ export async function POST(request) {
         starters: Array.isArray(taggedDirect.starters)
           ? taggedDirect.starters
           : groundedDirect.starters,
+        ...interaction,
+      });
+    }
+
+    // “Durumumu sor” → kuyruktaki adayın onay durumunu kontrol et.
+    const statusIntent = detectAddToolStatusIntent(question);
+    if (statusIntent.isStatus) {
+      const fromHistory = extractAddToolRefsFromHistory(history);
+      const url = statusIntent.url || fromHistory.url;
+      const slug = statusIntent.slug || fromHistory.slug;
+
+      let statusPayload = {
+        status: 'need_ref',
+        tool: null,
+        queried: { url, slug },
+      };
+
+      if (url || slug) {
+        if (isLocalEvaluation) {
+          statusPayload = {
+            status: 'pending',
+            tool: {
+              name: 'Eval Tool',
+              slug: slug || 'eval-tool',
+              link: url || 'https://example.com',
+              is_approved: false,
+            },
+            queried: { url, slug },
+          };
+        } else {
+          try {
+            const admin = createAdminClient();
+            let tool = null;
+            if (slug) {
+              const { data } = await admin
+                .from('tools')
+                .select('id, name, slug, link, is_approved, created_at')
+                .eq('slug', slug)
+                .maybeSingle();
+              tool = data || null;
+            }
+            if (!tool && url) {
+              const { data: byLink } = await admin
+                .from('tools')
+                .select('id, name, slug, link, is_approved, created_at')
+                .eq('link', url)
+                .limit(1);
+              tool = byLink?.[0] || null;
+            }
+            if (!tool && url) {
+              try {
+                const host = new URL(url).hostname.replace(/^www\./, '');
+                if (host) {
+                  const { data: byHost } = await admin
+                    .from('tools')
+                    .select('id, name, slug, link, is_approved, created_at')
+                    .ilike('link', `%${host}%`)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                  tool =
+                    (byHost || []).find((row) => {
+                      try {
+                        return new URL(row.link).hostname.replace(/^www\./, '') === host;
+                      } catch {
+                        return false;
+                      }
+                    }) || null;
+                }
+              } catch {
+                // ignore bad URL
+              }
+            }
+            statusPayload = {
+              status: classifyToolQueueStatus(tool),
+              tool,
+              queried: { url, slug },
+            };
+          } catch (error) {
+            logger.warn('add-tool status lookup failed:', error?.message || error);
+            statusPayload = {
+              status: 'not_found',
+              tool: null,
+              queried: { url, slug },
+            };
+          }
+        }
+      }
+
+      const statusResponse = {
+        answer: formatAddToolStatusAnswer(statusPayload, locale),
+        sourceIds: [],
+        insufficientContext: false,
+        confidence: 0.92,
+        meta: true,
+        metaKind: 'add-tool-status',
+        intent: {
+          concepts: [],
+          goals: [],
+          pricePreference: 'any',
+          comparison: false,
+          meta: 'add-tool-status',
+          addToolStatus: {
+            status: statusPayload.status,
+            url: url || null,
+            slug: slug || statusPayload.tool?.slug || null,
+            name: statusPayload.tool?.name || null,
+            is_approved: statusPayload.tool?.is_approved ?? null,
+          },
+        },
+      };
+      const taggedStatus = attachClientIntentMeta(statusResponse, body);
+      const groundedStatus = groundModelResponse(taggedStatus, [], locale);
+      const interaction = isLocalEvaluation
+        ? {}
+        : await withTimeout(recordInteraction(question, taggedStatus, groundedStatus), 3000, {});
+      return NextResponse.json({
+        ...groundedStatus,
+        confidence: taggedStatus.confidence,
+        intent: taggedStatus.intent,
+        addToolStatus: taggedStatus.intent.addToolStatus,
         ...interaction,
       });
     }
