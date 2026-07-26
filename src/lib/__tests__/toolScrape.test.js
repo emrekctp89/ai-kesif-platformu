@@ -96,6 +96,19 @@ describe('scrapeToolPage', () => {
     expect(result.ok).toBe(false);
   });
 
+  it.each([
+    'http://127.0.0.1/admin',
+    'http://10.0.0.8/internal',
+    'http://169.254.169.254/latest/meta-data',
+    'http://service.internal/private',
+    'http://[::1]/admin',
+  ])('özel ağ URL adresini reddeder: %s', async (url) => {
+    global.fetch = jest.fn();
+    const result = await scrapeToolPage(url, { provider: 'native' });
+    expect(result.ok).toBe(false);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
   it('native provider ile aday üretir', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
@@ -149,6 +162,39 @@ describe('scrapeToolPage', () => {
     expect(result.candidate.name).toMatch(/Thin AI/i);
     expect(result.warnings?.join(' ')).toMatch(/jina/i);
     expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('native redirect özel ağa gidiyorsa takip etmez', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 302,
+      url: 'https://example-product.com/',
+      headers: {
+        get: (name) => (name === 'location' ? 'http://127.0.0.1/admin' : null),
+      },
+      text: async () => '',
+    });
+
+    const result = await scrapeToolPage('https://example-product.com', { provider: 'native' });
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/özel|yerel/i);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('yanıt boyutu sınırını aşan native içeriği reddeder', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      url: 'https://example-product.com/',
+      headers: {
+        get: (name) => (name === 'content-length' ? String(6 * 1024 * 1024) : 'text/html'),
+      },
+      text: async () => '<html></html>',
+    });
+
+    const result = await scrapeToolPage('https://example-product.com', { provider: 'native' });
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/çok büyük/i);
   });
 });
 

@@ -15,6 +15,7 @@ import {
   toToolCandidate,
 } from '@/lib/toolScrape/parsePage';
 import {
+  assertSafeScrapeUrl,
   clampTimeout,
   isThinContent,
   scrapeWithJina,
@@ -38,9 +39,9 @@ function normalizeInputUrl(raw) {
     if (!host.includes('.') && host !== 'localhost') {
       return { error: 'Geçersiz URL.' };
     }
-    return { url: url.toString() };
+    return { url: assertSafeScrapeUrl(url.toString()) };
   } catch {
-    return { error: 'Geçersiz URL.' };
+    return { error: 'Geçersiz veya güvenli olmayan URL.' };
   }
 }
 
