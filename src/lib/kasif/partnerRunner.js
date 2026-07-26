@@ -108,6 +108,76 @@ export async function callLlmJson(prompt) {
   return { data: null, source: null };
 }
 
+/**
+ * Free-text partner chat (no JSON response_format).
+ * Used by Kâşif content assist and other non-pack writers.
+ * @param {string} userPrompt
+ * @param {{ system?: string, temperature?: number, maxTokens?: number }} [options]
+ * @returns {Promise<string|null>}
+ */
+export async function callPartnerChatText(userPrompt, options = {}) {
+  const config = getPartnerRunnerConfig();
+  if (!config) return null;
+
+  const endpoint = `${config.baseUrl}/chat/completions`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), config.timeoutMs);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: config.model,
+        temperature: Number.isFinite(options.temperature) ? options.temperature : 0.55,
+        max_tokens: Math.min(Math.max(Number(options.maxTokens) || 2048, 128), 4096),
+        messages: [
+          {
+            role: 'system',
+            content:
+              options.system ||
+              'You are Kâşif, the writing assistant for the AI Keşif tools platform. Return only the requested text.',
+          },
+          { role: 'user', content: String(userPrompt || '').slice(0, 10000) },
+        ],
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    const text = String(data?.choices?.[0]?.message?.content || '').trim();
+    return text || null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Free-text provider chain: partner → Gemini → null.
+ * Returns { text, source } where source is partner|gemini|null.
+ * @param {string} prompt
+ * @param {{ system?: string, temperature?: number, maxTokens?: number }} [options]
+ */
+export async function callLlmText(prompt, options = {}) {
+  const partner = await callPartnerChatText(prompt, options);
+  if (partner) {
+    return { text: partner, source: 'partner' };
+  }
+
+  const gemini = await callGeminiText(prompt, options);
+  if (gemini) {
+    return { text: gemini, source: 'gemini' };
+  }
+
+  return { text: null, source: null };
+}
+
 async function callGeminiJson(prompt) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
@@ -134,6 +204,49 @@ async function callGeminiJson(prompt) {
     const text = result?.candidates?.[0]?.content?.parts?.map((p) => p?.text || '').join('') || '';
     if (!text) return null;
     return extractJsonObject(text);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function callGeminiText(prompt, options = {}) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  const model =
+    String(process.env.GEMINI_TEXT_MODEL || 'gemini-2.0-flash').trim() || 'gemini-2.0-flash';
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+  const system = String(options.system || '').trim();
+  const maxTokens = Math.min(Math.max(Number(options.maxTokens) || 2048, 128), 4096);
+  const temperature = Number.isFinite(options.temperature) ? options.temperature : 0.55;
+
+  try {
+    const body = {
+      contents: [{ role: 'user', parts: [{ text: String(prompt || '') }] }],
+      generationConfig: {
+        temperature,
+        maxOutputTokens: maxTokens,
+      },
+    };
+    if (system) {
+      body.systemInstruction = { parts: [{ text: system }] };
+    }
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
+    const result = await response.json();
+    const text =
+      result?.candidates?.[0]?.content?.parts?.map((p) => p?.text || '').join('') || '';
+    return String(text || '').trim() || null;
   } catch {
     return null;
   } finally {
@@ -182,16 +295,16 @@ export function formatRunnerSourceLabel(source, locale = 'tr') {
     .toLowerCase()
     .replace(/-fallback$/, '');
   const en = {
-    partner: 'Partner AI',
-    gemini: 'Gemini',
-    local: 'Local draft',
-    provider: 'Cloud AI',
+    partner: 'Kasif (partner)',
+    gemini: 'Kasif (Gemini)',
+    local: 'Kasif local draft',
+    provider: 'Kasif cloud',
   };
   const tr = {
-    partner: 'Partner AI',
-    gemini: 'Gemini',
-    local: 'Yerel taslak',
-    provider: 'Bulut AI',
+    partner: 'Kâşif (partner)',
+    gemini: 'Kâşif (Gemini)',
+    local: 'Kâşif yerel taslak',
+    provider: 'Kâşif bulut',
   };
   const pack = locale === 'en' ? en : tr;
   return pack[key] || pack.local;

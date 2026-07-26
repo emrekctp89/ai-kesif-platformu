@@ -128,4 +128,42 @@ describe('partnerRunner', () => {
     const { callLlmJson } = loadPartner();
     await expect(callLlmJson('x')).resolves.toEqual({ data: null, source: null });
   });
+
+  it('callLlmText partner metnini döner; json formatı istemez', async () => {
+    process.env.KASIF_PARTNER_API_URL = 'https://api.example.com/v1';
+    process.env.KASIF_PARTNER_API_KEY = 'k';
+    process.env.GEMINI_API_KEY = 'g';
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: '  Kâşif başlık önerisi  ' } }],
+      }),
+    });
+    const { callLlmText } = loadPartner();
+    const result = await callLlmText('başlık yaz', { system: 'Kâşif asistan' });
+    expect(result).toEqual({ text: 'Kâşif başlık önerisi', source: 'partner' });
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.response_format).toBeUndefined();
+    expect(body.messages[0].content).toContain('Kâşif');
+  });
+
+  it('callLlmText partner fail olursa Gemini metnine düşer', async () => {
+    process.env.KASIF_PARTNER_API_URL = 'https://api.example.com/v1';
+    process.env.KASIF_PARTNER_API_KEY = 'k';
+    process.env.GEMINI_API_KEY = 'g';
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 500 })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: 'Gemini metin çıktısı' }] } }],
+        }),
+      });
+    const { callLlmText } = loadPartner();
+    await expect(callLlmText('özet yaz')).resolves.toEqual({
+      text: 'Gemini metin çıktısı',
+      source: 'gemini',
+    });
+  });
 });

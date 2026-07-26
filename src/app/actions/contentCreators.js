@@ -15,7 +15,7 @@ import {
   plainTextFromMarkdown,
   validatePostForReview,
 } from '@/lib/contentCreatorRules';
-import { generateGeminiText } from '@/utils/gemini';
+import { assistCreatorContent, CREATOR_ASSIST_MODES } from '@/lib/kasif/contentAssist';
 import { enforceRateLimit } from '@/utils/antiAbuse';
 
 const CREATOR_EDITABLE_STATUSES = new Set(['Taslak', 'İncelemede', 'Reddedildi']);
@@ -1052,11 +1052,10 @@ export async function getPostsPendingReview() {
   return data || [];
 }
 
-const CREATOR_ASSIST_MODES = new Set(['description', 'outline', 'title', 'improve']);
-
 /**
- * AI writing helper for approved creators (Gemini).
+ * Kâşif writing helper for approved creators.
  * Modes: description | outline | title | improve
+ * Provider chain: Partner → Gemini → local draft (see lib/kasif/contentAssist).
  * @param {{ mode?: string, title?: string, description?: string, content?: string, locale?: string }} input
  */
 export async function assistCreatorPost(input = {}) {
@@ -1102,56 +1101,23 @@ export async function assistCreatorPost(input = {}) {
     return { error: await tStudio('errAssistNeedContent') };
   }
 
-  const langLine =
-    locale === 'en' ? 'Write in clear, natural English.' : 'Türkçe, akıcı ve doğal bir dilde yaz.';
-
-  let systemInstruction = `You help content creators on an AI tools discovery platform (AI Keşif). ${langLine}
-Return ONLY the requested text — no preamble, no quotes around the whole answer, no markdown fences unless asked for outline headings.`;
-
-  let prompt = '';
-  if (mode === 'description') {
-    prompt = `Write a short SEO-friendly summary (max 180 characters) for this post.
-Title: ${title || '(none)'}
-Body excerpt: ${contentPlain || '(empty)'}
-Current description: ${description || '(none)'}
-Rules: one or two sentences, no hashtags, no clickbait.`;
-  } else if (mode === 'title') {
-    prompt = `Suggest a clearer, more specific blog/guide title (max 80 characters).
-Current title: ${title || '(none)'}
-Body excerpt: ${contentPlain || '(empty)'}
-Return only the title text.`;
-  } else if (mode === 'outline') {
-    systemInstruction += ' Use Markdown headings (## and ###) and short bullet points.';
-    prompt = `Create a practical outline for this AI tools post/guide.
-Title: ${title || '(none)'}
-Existing body excerpt: ${contentPlain || '(empty)'}
-Include: intro hook, 3–5 main sections, FAQ or tips, short conclusion.
-Do not invent fake product claims.`;
-  } else {
-    // improve
-    systemInstruction += ' Keep Markdown structure if present. Improve clarity and flow only.';
-    prompt = `Improve this draft for readability without changing the core meaning.
-Title: ${title || '(none)'}
-Draft:
-${String(input.content || '').slice(0, 8000)}
-
-Rules: keep useful structure; fix awkward phrasing; do not add long marketing fluff; output the full improved Markdown body only.`;
-  }
-
   try {
-    const raw = await generateGeminiText(prompt, { systemInstruction });
-    let text = String(raw || '').trim();
-    // Strip accidental wrapping quotes / fences.
-    text = text
-      .replace(/^```(?:markdown|md)?\s*/i, '')
-      .replace(/\s*```$/i, '')
-      .trim();
+    const result = await assistCreatorContent({
+      mode,
+      title,
+      description,
+      content: input.content,
+      locale,
+    });
+    const text = String(result?.text || '').trim();
     if (!text) return { error: await tStudio('errAssistEmpty') };
 
-    if (mode === 'description') text = text.replace(/\s+/g, ' ').slice(0, 280);
-    if (mode === 'title') text = text.replace(/^["'“”]+|["'“”]+$/g, '').slice(0, 120);
-
-    return { success: true, mode, text };
+    return {
+      success: true,
+      mode,
+      text,
+      source: result.source || 'local',
+    };
   } catch (assistError) {
     logger.error('assistCreatorPost', assistError);
     return { error: await tStudio('errAssistFailed') };

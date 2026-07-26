@@ -1,4 +1,6 @@
-import { parsePositiveIntegerParam } from '../route';
+import { parsePositiveIntegerParam } from '@/lib/developerApi';
+// Still re-exported from the route for backwards compatibility.
+import { parsePositiveIntegerParam as fromRoute } from '../route';
 
 jest.mock('@/utils/supabase/admin', () => ({
   createAdminClient: jest.fn(),
@@ -9,6 +11,7 @@ describe('api/v1/tools route helpers', () => {
     expect(parsePositiveIntegerParam(null, 50)).toBe(50);
     expect(parsePositiveIntegerParam('abc', 50)).toBe(50);
     expect(parsePositiveIntegerParam('', 50)).toBe(50);
+    expect(fromRoute(null, 50)).toBe(50);
   });
 
   it('clamps pagination parameters to the allowed range', () => {
