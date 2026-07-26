@@ -37,6 +37,8 @@ Workmind iki Kâşif katmanı kullanır:
 11. Pro gate: proHint paketler için giriş + 2 ücretsiz deneme / 30 gün (`/api/kasif/pack-access`).
 12. Pack runner’lar (5): content-studio, sales-outreach, meeting-to-action,
     social-launch, pitch-deck (`/api/kasif/pack-runner`) → first_result + pack_id.
+13. Soft-landing conversion: starter/free-text sonrası `intent.fromSoftLanding` + admin
+    follow-up/convert oranları (`kasif_soft_landing_*` analytics).
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır.

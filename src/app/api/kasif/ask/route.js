@@ -48,6 +48,27 @@ function normalizeHistory(value) {
   });
 }
 
+function attachClientIntentMeta(modelResponse, body = {}) {
+  const base = modelResponse && typeof modelResponse === 'object' ? modelResponse : {};
+  const intent = { ...(base.intent || {}) };
+  let changed = false;
+
+  if (body?.fromSoftLanding === true) {
+    intent.fromSoftLanding = true;
+    const parent = String(body?.softLandingParentId || '')
+      .trim()
+      .slice(0, 80);
+    const starter = String(body?.softLandingStarter || '')
+      .trim()
+      .slice(0, 40);
+    if (parent) intent.softLandingParentId = parent;
+    if (starter) intent.softLandingStarter = starter;
+    changed = true;
+  }
+
+  return changed ? { ...base, intent } : base;
+}
+
 async function recordInteraction(question, modelResponse, groundedResponse) {
   const feedbackToken = randomUUID();
   try {
@@ -141,15 +162,16 @@ export async function POST(request) {
     const directResponse =
       answerMetaQuestion(question, locale) || answerContextlessFollowUp(question, locale, history);
     if (directResponse) {
-      const groundedDirect = groundModelResponse(directResponse, [], locale);
+      const taggedDirect = attachClientIntentMeta(directResponse, body);
+      const groundedDirect = groundModelResponse(taggedDirect, [], locale);
       const interaction = isLocalEvaluation
         ? {}
-        : await withTimeout(recordInteraction(question, directResponse, groundedDirect), 3000, {});
+        : await withTimeout(recordInteraction(question, taggedDirect, groundedDirect), 3000, {});
       return NextResponse.json({
         ...groundedDirect,
-        confidence: directResponse.confidence || 0.99,
-        intent: directResponse.intent || {},
-        softLanding: Boolean(directResponse.softLanding),
+        confidence: taggedDirect.confidence || 0.99,
+        intent: taggedDirect.intent || {},
+        softLanding: Boolean(taggedDirect.softLanding),
         ...interaction,
       });
     }
@@ -165,7 +187,10 @@ export async function POST(request) {
       });
     }
 
-    const modelResponse = answerQuestion(question, records, history, locale);
+    const modelResponse = attachClientIntentMeta(
+      answerQuestion(question, records, history, locale),
+      body
+    );
     const groundedResponse = groundModelResponse(modelResponse, records, locale);
     const interaction = isLocalEvaluation
       ? {}

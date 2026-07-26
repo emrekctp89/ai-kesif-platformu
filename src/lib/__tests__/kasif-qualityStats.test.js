@@ -78,6 +78,44 @@ describe('buildKasifQualityStats', () => {
     expect(stats.jobFunnel.withFunnel).toBe(0);
   });
 
+  it('soft-landing conversion metriklerini hesaplar', () => {
+    const withConversion = [
+      ...sample,
+      {
+        id: '6',
+        question: 'ücretsiz sunum hazırla',
+        intent: {
+          goals: ['presentation-creation'],
+          fromSoftLanding: true,
+          softLandingStarter: 'presentation',
+          softLandingParentId: '5',
+        },
+        confidence: 0.88,
+        feedback: null,
+        source_ids: ['tool:9'],
+        created_at: '2026-07-22T12:05:00Z',
+      },
+      {
+        id: '7',
+        question: 'yine belirsiz',
+        intent: {
+          fromSoftLanding: true,
+          softLandingStarter: '(free-text)',
+        },
+        confidence: 0.2,
+        feedback: null,
+        source_ids: [],
+        created_at: '2026-07-22T12:10:00Z',
+      },
+    ];
+    const stats = buildKasifQualityStats(withConversion);
+    expect(stats.softLandingConversion.shown).toBe(1);
+    expect(stats.softLandingConversion.followUps).toBe(2);
+    expect(stats.softLandingConversion.converted).toBe(1);
+    expect(stats.softLandingConversion.convertOfFollowUp).toBe(50);
+    expect(stats.softLandingConversion.starters[0].starter).toMatch(/presentation|free-text/);
+  });
+
   it('funnel kayıtlarını jobFunnel özetine yansıtır', () => {
     const withFunnel = [
       ...sample,

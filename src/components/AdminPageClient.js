@@ -2289,7 +2289,7 @@ function KasifQualityTab({ interactions = [] }) {
           <CardDescription>{t('kasifSoftLandingDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {(stats.softLanding || 0) > 0 ? (
+          {(stats.softLanding || 0) > 0 || (stats.softLandingConversion?.followUps || 0) > 0 ? (
             <div className="flex flex-wrap gap-2 text-xs">
               <Badge variant="secondary">
                 {t('kasifSoftPriceFree')}: {stats.softLandingPriceBuckets?.free || 0}
@@ -2300,11 +2300,44 @@ function KasifQualityTab({ interactions = [] }) {
               <Badge variant="outline">
                 {t('kasifSoftPriceAny')}: {stats.softLandingPriceBuckets?.any || 0}
               </Badge>
+              <Badge variant="secondary">
+                {t('kasifSoftFollowUps')}: {stats.softLandingConversion?.followUps || 0}
+                {stats.softLandingConversion?.followUpRate != null
+                  ? ` · %${stats.softLandingConversion.followUpRate}`
+                  : ''}
+              </Badge>
+              <Badge variant="secondary">
+                {t('kasifSoftConverted')}: {stats.softLandingConversion?.converted || 0}
+                {stats.softLandingConversion?.convertOfShown != null
+                  ? ` · %${stats.softLandingConversion.convertOfShown}`
+                  : ''}
+              </Badge>
+              {stats.softLandingConversion?.convertOfFollowUp != null ? (
+                <Badge variant="outline">
+                  {t('kasifSoftConvertOfFollowUp')}: %
+                  {stats.softLandingConversion.convertOfFollowUp}
+                </Badge>
+              ) : null}
               {(stats.topSoftLandingTokens || []).slice(0, 5).map((item) => (
                 <Badge key={item.token} variant="outline" className="font-mono font-normal">
                   {item.token} · {item.count}
                 </Badge>
               ))}
+            </div>
+          ) : null}
+          {(stats.softLandingConversion?.starters || []).length > 0 ? (
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground">
+                {t('kasifSoftStarterBuckets')}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {stats.softLandingConversion.starters.map((bucket) => (
+                  <Badge key={bucket.starter} variant="outline" className="font-normal">
+                    {bucket.starter} · {bucket.converted}/{bucket.total}
+                    {bucket.convertRate != null ? ` · %${bucket.convertRate}` : ''}
+                  </Badge>
+                ))}
+              </div>
             </div>
           ) : null}
           {(stats.recentSoftLanding || []).length === 0 ? (

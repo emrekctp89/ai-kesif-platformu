@@ -62,6 +62,8 @@ North Star artık yalnızca tıklama/affiliate değil:
 - **Pro gate / kota**: proHint paketler — giriş + 2 ücretsiz/30g, sonrası Pro (`packAccess`)
 - **Runner**: `POST /api/kasif/pack-runner` → 5 paket (content, sales, meeting, social, pitch) Gemini/local
 - **Admin**: pack_id conversion kovaları + runner sayacı
+- **Soft-landing conversion**: `fromSoftLanding` intent stamp + starter buckets + admin oranları
+  (`shown → follow-up → sourced rec`); analytics: `kasif_soft_landing_*`
 
 ---
 
@@ -87,9 +89,8 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 1. **Partner API runner** — seçili araç OAuth ile gerçek dış çağrı
 2. **Canlı eval regresyonu** — `npm run kasif:evaluate` CI veya periyodik koşu
-3. **Soft-landing → conversion** — soft-landing sonrası starter tıklama / başarılı öneri oranı
-4. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
-5. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
+3. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
+4. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
 
 ---
 

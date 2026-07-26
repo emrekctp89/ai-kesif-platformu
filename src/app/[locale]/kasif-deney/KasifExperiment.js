@@ -60,6 +60,7 @@ export default function KasifExperiment() {
   const feedbackRequestsRef = useRef(new Set());
   const historyRef = useRef(history);
   const loadingRef = useRef(loading);
+  const softLandingPendingRef = useRef(null);
 
   useEffect(() => {
     historyRef.current = history;
@@ -122,9 +123,21 @@ export default function KasifExperiment() {
   }, [turns, history, locale, hydrated]);
 
   const askQuestion = useCallback(
-    async (rawQuestion) => {
+    async (rawQuestion, options = {}) => {
       const submittedQuestion = String(rawQuestion || '').trim();
       if (submittedQuestion.length < 3 || loadingRef.current) return;
+
+      const pending = softLandingPendingRef.current;
+      const pendingFresh = pending && Date.now() - pending.at < 30 * 60 * 1000 ? pending : null;
+      if (pending && !pendingFresh) softLandingPendingRef.current = null;
+
+      const fromSoftLanding =
+        options.fromSoftLanding === true ||
+        Boolean(pendingFresh) ||
+        Boolean(options.softLandingParentId);
+      const softLandingParentId =
+        options.softLandingParentId || pendingFresh?.interactionId || null;
+      const softLandingStarter = options.softLandingStarter || null;
 
       const turnId = crypto.randomUUID();
       const controller = new AbortController();
@@ -144,6 +157,13 @@ export default function KasifExperiment() {
             question: submittedQuestion,
             history: historySnapshot,
             locale,
+            ...(fromSoftLanding
+              ? {
+                  fromSoftLanding: true,
+                  softLandingParentId,
+                  softLandingStarter,
+                }
+              : {}),
           }),
         });
         const data = await response.json();
@@ -159,16 +179,51 @@ export default function KasifExperiment() {
               { role: 'assistant', content: data.answer },
             ].slice(-6)
           );
+
+          const isSoftLanding =
+            data.softLanding === true ||
+            data.metaKind === 'soft-landing' ||
+            data.intent?.meta === 'soft-landing';
+          if (isSoftLanding) {
+            softLandingPendingRef.current = {
+              interactionId: data.interactionId || null,
+              at: Date.now(),
+            };
+            trackEvent('kasif_soft_landing_shown', {
+              interaction_id: data.interactionId || undefined,
+              price_preference: data.intent?.pricePreference || undefined,
+            });
+          }
+
           if (data.funnel?.stages?.job_stated || data.sources?.length > 0) {
             trackEvent('kasif_funnel_job_stated', {
               goal: data.intent?.goals?.[0] || undefined,
               source_count: Array.isArray(data.sources) ? data.sources.length : 0,
+              from_soft_landing: fromSoftLanding || undefined,
             });
           }
           if (data.funnel?.stages?.tool_recommended || data.sources?.length > 0) {
             trackEvent('kasif_funnel_tool_recommended', {
               source_count: Array.isArray(data.sources) ? data.sources.length : 0,
+              from_soft_landing: fromSoftLanding || undefined,
             });
+          }
+
+          if (fromSoftLanding) {
+            trackEvent('kasif_soft_landing_follow_up', {
+              starter: softLandingStarter || 'free-text',
+              parent_id: softLandingParentId || undefined,
+              has_sources: Array.isArray(data.sources) && data.sources.length > 0,
+            });
+            if (Array.isArray(data.sources) && data.sources.length > 0) {
+              trackEvent('kasif_soft_landing_converted', {
+                starter: softLandingStarter || 'free-text',
+                parent_id: softLandingParentId || undefined,
+                source_count: data.sources.length,
+                goal: data.intent?.goals?.[0] || undefined,
+              });
+              softLandingPendingRef.current = null;
+            }
           }
         }
       } catch (error) {
@@ -240,6 +295,7 @@ export default function KasifExperiment() {
   function resetConversation() {
     activeRequestRef.current?.abort();
     activeRequestRef.current = null;
+    softLandingPendingRef.current = null;
     setLoading(false);
     setTurns([]);
     setHistory([]);
@@ -252,9 +308,22 @@ export default function KasifExperiment() {
     }
   }
 
-  function chooseStarterQuestion(starterQuestion, { autoAsk = false } = {}) {
+  function chooseStarterQuestion(
+    starterQuestion,
+    { autoAsk = false, fromSoftLanding = false, softLandingStarter = null } = {}
+  ) {
     if (autoAsk) {
-      void askQuestion(starterQuestion);
+      if (fromSoftLanding) {
+        trackEvent('kasif_soft_landing_starter_click', {
+          starter: softLandingStarter || undefined,
+          parent_id: softLandingPendingRef.current?.interactionId || undefined,
+        });
+      }
+      void askQuestion(starterQuestion, {
+        fromSoftLanding,
+        softLandingParentId: softLandingPendingRef.current?.interactionId || null,
+        softLandingStarter,
+      });
       return;
     }
     setQuestion(starterQuestion);
@@ -287,12 +356,18 @@ export default function KasifExperiment() {
     return prompts.slice(0, 3);
   }
 
-  function StarterChips({ prefix, autoAsk = false, limit = 6 }) {
+  function StarterChips({ prefix, autoAsk = false, limit = 6, fromSoftLanding = false }) {
     return STARTER_QUESTIONS.slice(0, limit).map(({ key, icon: Icon }) => (
       <button
         key={`${prefix}-${key}`}
         type="button"
-        onClick={() => chooseStarterQuestion(t(`starters.${key}.question`), { autoAsk })}
+        onClick={() =>
+          chooseStarterQuestion(t(`starters.${key}.question`), {
+            autoAsk,
+            fromSoftLanding,
+            softLandingStarter: key,
+          })
+        }
         className={
           autoAsk
             ? 'inline-flex min-h-8 items-center gap-1.5 rounded-full border border-violet-500/20 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50'
@@ -425,7 +500,12 @@ export default function KasifExperiment() {
                               {t('softLandingHint')}
                             </p>
                             <div className="flex flex-wrap gap-1.5">
-                              <StarterChips prefix={`soft-${turn.id}`} autoAsk limit={4} />
+                              <StarterChips
+                                prefix={`soft-${turn.id}`}
+                                autoAsk
+                                limit={4}
+                                fromSoftLanding
+                              />
                             </div>
                           </div>
                         )}

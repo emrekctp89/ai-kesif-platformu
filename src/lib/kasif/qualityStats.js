@@ -171,6 +171,43 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
     .slice(0, 10)
     .map(([token, count]) => ({ token, count }));
 
+  // Soft-landing → follow-up → successful recommendation conversion.
+  const softLandingFollowUps = rows.filter((row) => row?.intent?.fromSoftLanding === true);
+  const softLandingConverted = softLandingFollowUps.filter(
+    (row) => Array.isArray(row.source_ids) && row.source_ids.length > 0
+  );
+  const softLandingStarterBuckets = new Map();
+  for (const row of softLandingFollowUps) {
+    const key = String(row.intent?.softLandingStarter || '(free-text)').slice(0, 40);
+    const bucket = softLandingStarterBuckets.get(key) || {
+      starter: key,
+      total: 0,
+      converted: 0,
+    };
+    bucket.total += 1;
+    if (Array.isArray(row.source_ids) && row.source_ids.length > 0) bucket.converted += 1;
+    softLandingStarterBuckets.set(key, bucket);
+  }
+  function pct(num, den) {
+    if (!den) return null;
+    return Number(((num / den) * 100).toFixed(1));
+  }
+  const softLandingConversion = {
+    shown: softLanding.length,
+    followUps: softLandingFollowUps.length,
+    converted: softLandingConverted.length,
+    followUpRate: pct(softLandingFollowUps.length, softLanding.length),
+    convertOfShown: pct(softLandingConverted.length, softLanding.length),
+    convertOfFollowUp: pct(softLandingConverted.length, softLandingFollowUps.length),
+    starters: [...softLandingStarterBuckets.values()]
+      .map((bucket) => ({
+        ...bucket,
+        convertRate: pct(bucket.converted, bucket.total),
+      }))
+      .sort((a, b) => b.total - a.total || b.converted - a.converted)
+      .slice(0, 10),
+  };
+
   const helpfulRate =
     withFeedback.length > 0
       ? Number(((positive.length / withFeedback.length) * 100).toFixed(1))
@@ -189,6 +226,7 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
     softLanding: softLanding.length,
     softLandingPriceBuckets,
     topSoftLandingTokens,
+    softLandingConversion,
     ungrounded: ungrounded.length,
     lowConfidence: lowConfidence.length,
     issueCount,
