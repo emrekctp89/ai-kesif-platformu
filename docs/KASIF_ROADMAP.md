@@ -182,7 +182,7 @@ Kâşif / admin akışının **yeni AI araçlarını web’den bulup** site kata
 - Ham scrape sonucu doğrudan publish edilmez: **aday → doğrulama → (opsiyonel) admin onay → insert**
 - Yalnızca **resmî ürün siteleri**; dizin/aggregator hostları `toolLinkPolicy` ile engellenir
 - Rate limit, `robots.txt` (30 dk cache), ToS saygısı, user-agent, timeout zorunlu
-- Kullanıcı URL’lerinde özel/yerel ağ ve redirect hedefi engeli; yanıt boyutu üst sınırı zorunlu
+- Kullanıcı URL’lerinde özel/yerel ağ, DNS çözüm ve redirect hedefi engeli; yanıt boyutu üst sınırı zorunlu
 - Ücretsiz API kotaları bitince self-hosted veya native `fetch` fallback
 
 ### Önerilen mimari (özet)

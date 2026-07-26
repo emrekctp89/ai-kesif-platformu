@@ -2,6 +2,9 @@
  * Scrape provider'ları: native fetch+cheerio ve Jina Reader.
  */
 
+import { lookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
+
 const DEFAULT_TIMEOUT_MS = 10000;
 const DEFAULT_MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 const MAX_REDIRECTS = 4;
@@ -23,6 +26,11 @@ function isPrivateIpv4(hostname) {
     (a === 169 && b === 254) ||
     (a === 172 && b >= 16 && b <= 31) ||
     (a === 192 && b === 168) ||
+    (a === 100 && b >= 64 && b <= 127) ||
+    (a === 192 && b === 0 && (parts[2] === 0 || parts[2] === 2)) ||
+    (a === 198 && (b === 18 || b === 19)) ||
+    (a === 198 && b === 51 && parts[2] === 100) ||
+    (a === 203 && b === 0 && parts[2] === 113) ||
     a >= 224
   );
 }
@@ -35,11 +43,41 @@ function isPrivateIpv6(hostname) {
     host.startsWith('fc') ||
     host.startsWith('fd') ||
     /^fe[89ab]/.test(host) ||
+    host.startsWith('ff') ||
+    /^2001:db8(?::|$)/.test(host) ||
     host.startsWith('::ffff:127.') ||
     host.startsWith('::ffff:10.') ||
     host.startsWith('::ffff:192.168.') ||
     /^::ffff:172\.(1[6-9]|2\d|3[01])\./.test(host)
   );
+}
+
+export function assertPublicDnsAddresses(addresses) {
+  const values = (Array.isArray(addresses) ? addresses : [addresses])
+    .map((entry) => (typeof entry === 'string' ? entry : entry?.address))
+    .filter(Boolean);
+  if (
+    values.length === 0 ||
+    values.some(
+      (address) =>
+        (isIP(address) === 4 && isPrivateIpv4(address)) ||
+        (isIP(address) === 6 && isPrivateIpv6(address)) ||
+        isIP(address) === 0
+    )
+  ) {
+    throw new Error('Hostname özel, ayrılmış veya geçersiz bir IP adresine çözümlendi.');
+  }
+  return values;
+}
+
+async function assertPublicDnsTarget(rawUrl) {
+  if (String(process.env.KASIF_SCRAPE_DNS_GUARD_ENABLED || 'true').toLowerCase() === 'false') {
+    return;
+  }
+  const { hostname } = new URL(assertSafeScrapeUrl(rawUrl));
+  if (isIP(hostname.replace(/^\[|\]$/g, ''))) return;
+  const addresses = await lookup(hostname, { all: true, verbatim: true });
+  assertPublicDnsAddresses(addresses);
 }
 
 export function assertSafeScrapeUrl(rawUrl) {
@@ -148,6 +186,7 @@ export async function scrapeWithNative(url, { timeoutMs, maxResponseBytes } = {}
   let target = assertSafeScrapeUrl(url);
   let response;
   for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects += 1) {
+    await assertPublicDnsTarget(target);
     response = await fetch(target, {
       method: 'GET',
       redirect: 'manual',
@@ -183,6 +222,7 @@ export async function scrapeWithNative(url, { timeoutMs, maxResponseBytes } = {}
 export async function scrapeWithJina(url, { timeoutMs, apiKey, maxResponseBytes } = {}) {
   const timeout = clampTimeout(timeoutMs);
   const safeUrl = assertSafeScrapeUrl(url);
+  await assertPublicDnsTarget(safeUrl);
   const target = `https://r.jina.ai/${safeUrl}`;
   const maxBytes = clampMaxResponseBytes(
     maxResponseBytes || process.env.KASIF_SCRAPE_MAX_RESPONSE_BYTES

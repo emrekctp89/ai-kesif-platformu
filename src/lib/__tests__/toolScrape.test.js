@@ -10,6 +10,7 @@ const {
   toToolCandidate,
 } = require('../toolScrape/parsePage');
 const { scrapeToolPage } = require('../toolScrape');
+const { assertPublicDnsAddresses } = require('../toolScrape/providers');
 const { parseBulkUrls, clampBulkLimit } = require('../toolScrape/bulk');
 const { mergeEnrichedCandidate } = require('../toolScrape/enrichCandidate');
 const {
@@ -82,9 +83,11 @@ describe('scrapeToolPage', () => {
   const originalFetch = global.fetch;
   const originalScrapeEnabled = process.env.KASIF_SCRAPE_ENABLED;
   const originalRobotsEnabled = process.env.KASIF_SCRAPE_ROBOTS_ENABLED;
+  const originalDnsGuardEnabled = process.env.KASIF_SCRAPE_DNS_GUARD_ENABLED;
 
   beforeEach(() => {
     process.env.KASIF_SCRAPE_ROBOTS_ENABLED = 'false';
+    process.env.KASIF_SCRAPE_DNS_GUARD_ENABLED = 'false';
   });
 
   afterEach(() => {
@@ -93,6 +96,8 @@ describe('scrapeToolPage', () => {
     else process.env.KASIF_SCRAPE_ENABLED = originalScrapeEnabled;
     if (originalRobotsEnabled === undefined) delete process.env.KASIF_SCRAPE_ROBOTS_ENABLED;
     else process.env.KASIF_SCRAPE_ROBOTS_ENABLED = originalRobotsEnabled;
+    if (originalDnsGuardEnabled === undefined) delete process.env.KASIF_SCRAPE_DNS_GUARD_ENABLED;
+    else process.env.KASIF_SCRAPE_DNS_GUARD_ENABLED = originalDnsGuardEnabled;
     clearRobotsCache();
     jest.resetAllMocks();
   });
@@ -313,6 +318,25 @@ describe('toolScrape robots', () => {
     expect(parseRobotsPermission(robots, new URL('https://example.com/bot-only/x')).allowed).toBe(
       false
     );
+  });
+});
+
+describe('toolScrape DNS guard', () => {
+  it('tamamı public DNS cevaplarını kabul eder', () => {
+    expect(
+      assertPublicDnsAddresses([{ address: '8.8.8.8' }, { address: '2606:4700:4700::1111' }])
+    ).toEqual(['8.8.8.8', '2606:4700:4700::1111']);
+  });
+
+  it.each([
+    ['loopback', ['127.0.0.1']],
+    ['cloud metadata', ['169.254.169.254']],
+    ['CGNAT', ['100.64.0.2']],
+    ['private IPv6', ['fd00:ec2::254']],
+    ['mixed public/private', ['8.8.8.8', '10.0.0.5']],
+    ['empty answer', []],
+  ])('%s DNS cevabını reddeder', (_label, addresses) => {
+    expect(() => assertPublicDnsAddresses(addresses)).toThrow(/özel|ayrılmış|geçersiz/i);
   });
 });
 
