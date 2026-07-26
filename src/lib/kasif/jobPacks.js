@@ -28,6 +28,9 @@ export const RUNNABLE_PACK_IDS = [
   'pitch-deck',
   'seo-brief',
   'support-kit',
+  'code-scaffold',
+  'legal-review',
+  'research-brief',
 ];
 
 export function isRunnablePack(packId) {
@@ -230,6 +233,90 @@ export const JOB_PACKS = [
       { tr: 'FAQ', en: 'FAQ' },
     ],
     bridgeGoals: ['customer-support', 'email-writing'],
+    proHint: false,
+  },
+  {
+    id: 'code-scaffold',
+    goals: ['coding-assistant'],
+    title: {
+      tr: 'Kod iskeleti paketi',
+      en: 'Code scaffold pack',
+    },
+    summary: {
+      tr: 'Gereksinim → dosya ağacı → iskelet kod → test planı (çok adımlı).',
+      en: 'Requirements → file tree → scaffold code → test plan (multi-step).',
+    },
+    starterQuestion: {
+      tr: 'Küçük bir özellik için kod iskeleti ve test planı çıkarmak istiyorum; araç öner.',
+      en: 'Recommend tools to scaffold a small feature and a test plan.',
+    },
+    workmindPrompt: {
+      tr: 'Kod iskeleti üret: gereksinim, dosya ağacı, starter kod, test checklist. Adım adım planla.',
+      en: 'Produce a code scaffold: requirements, file tree, starter code, test checklist. Plan steps.',
+    },
+    stepLabels: [
+      { tr: 'Gereksinim', en: 'Requirements' },
+      { tr: 'Dosya ağacı', en: 'File tree' },
+      { tr: 'İskelet kod', en: 'Scaffold code' },
+      { tr: 'Test planı', en: 'Test plan' },
+    ],
+    bridgeGoals: ['coding-assistant'],
+    proHint: true,
+  },
+  {
+    id: 'legal-review',
+    goals: ['legal-review'],
+    title: {
+      tr: 'Hukuki inceleme paketi',
+      en: 'Legal review pack',
+    },
+    summary: {
+      tr: 'Kapsam → risk listesi → soru seti → redline notları (bilgi amaçlı).',
+      en: 'Scope → risk list → question set → redline notes (informational).',
+    },
+    starterQuestion: {
+      tr: 'Sözleşme / ToS incelemesi için checklist ve risk soruları üreten araç öner.',
+      en: 'Recommend tools for contract/ToS review checklists and risk questions.',
+    },
+    workmindPrompt: {
+      tr: 'Hukuki inceleme brief’i: kapsam, riskler, soru listesi, redline notları. Planla (hukuki tavsiye değil).',
+      en: 'Legal review brief: scope, risks, questions, redline notes. Plan (not legal advice).',
+    },
+    stepLabels: [
+      { tr: 'Kapsam', en: 'Scope' },
+      { tr: 'Risk listesi', en: 'Risk list' },
+      { tr: 'Soru seti', en: 'Question set' },
+      { tr: 'Redline notları', en: 'Redline notes' },
+    ],
+    bridgeGoals: ['legal-review'],
+    proHint: true,
+  },
+  {
+    id: 'research-brief',
+    goals: ['data-analysis'],
+    title: {
+      tr: 'Araştırma brief paketi',
+      en: 'Research brief pack',
+    },
+    summary: {
+      tr: 'Soru → veri kaynakları → analiz planı → bulgu şablonu (çok adımlı).',
+      en: 'Question → data sources → analysis plan → findings template (multi-step).',
+    },
+    starterQuestion: {
+      tr: 'Pazar / veri araştırması için analiz planı ve bulgu şablonu üreten araç öner.',
+      en: 'Recommend tools for a research analysis plan and findings template.',
+    },
+    workmindPrompt: {
+      tr: 'Araştırma brief’i: ana soru, kaynaklar, analiz adımları, bulgu şablonu. Planla ve araç öner.',
+      en: 'Research brief: main question, sources, analysis steps, findings template. Plan and suggest tools.',
+    },
+    stepLabels: [
+      { tr: 'Araştırma sorusu', en: 'Research question' },
+      { tr: 'Kaynaklar', en: 'Sources' },
+      { tr: 'Analiz planı', en: 'Analysis plan' },
+      { tr: 'Bulgu şablonu', en: 'Findings template' },
+    ],
+    bridgeGoals: ['data-analysis'],
     proHint: false,
   },
 ];

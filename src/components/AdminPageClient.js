@@ -2072,6 +2072,16 @@ function KasifQualityTab({ interactions = [] }) {
               <p className="mt-1 text-2xl font-bold">{stats.softLanding || 0}</p>
               <p className="mt-1 text-xs text-muted-foreground">{t('kasifStatSoftLandingHint')}</p>
             </div>
+            <div className="rounded-xl border bg-background/60 p-4">
+              <p className="text-xs text-muted-foreground">{t('kasifStatAddTool')}</p>
+              <p className="mt-1 text-2xl font-bold">{stats.addTool?.total || 0}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('kasifStatAddToolHint', {
+                  queued: stats.addTool?.statusCounts?.queued || 0,
+                  dup: stats.addTool?.statusCounts?.duplicate || 0,
+                })}
+              </p>
+            </div>
           </div>
 
           {partnerStatus?.partner ? (
@@ -2422,6 +2432,74 @@ function KasifQualityTab({ interactions = [] }) {
                 </article>
               ))}
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="glass-panel border-border/50">
+        <CardHeader>
+          <CardTitle className="text-base">{t('kasifAddToolTitle')}</CardTitle>
+          <CardDescription>{t('kasifAddToolDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {(stats.addTool?.total || 0) === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('kasifAddToolEmpty')}</p>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="secondary">
+                  {t('kasifAddToolQueued')}: {stats.addTool.statusCounts?.queued || 0}
+                  {stats.addTool.queueRate != null ? ` · %${stats.addTool.queueRate}` : ''}
+                </Badge>
+                <Badge variant="outline">
+                  {t('kasifAddToolDuplicate')}: {stats.addTool.statusCounts?.duplicate || 0}
+                  {stats.addTool.duplicateRate != null ? ` · %${stats.addTool.duplicateRate}` : ''}
+                </Badge>
+                <Badge variant="outline">
+                  {t('kasifAddToolMissingUrl')}: {stats.addTool.statusCounts?.missing_url || 0}
+                </Badge>
+                <Badge variant="outline">
+                  {t('kasifAddToolError')}: {stats.addTool.statusCounts?.error || 0}
+                  {stats.addTool.errorRate != null ? ` · %${stats.addTool.errorRate}` : ''}
+                </Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground">{t('kasifAddToolNotifyHint')}</p>
+              {(stats.addTool.recent || []).length > 0 ? (
+                <div className="space-y-3">
+                  {stats.addTool.recent.map((row) => (
+                    <article
+                      key={row.id || row.url || row.question}
+                      className="rounded-lg border p-3 text-sm"
+                    >
+                      <p className="font-medium leading-5">{row.question}</p>
+                      <div className="mt-2 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                        <span>{formatKasifDate(row.created_at)}</span>
+                        {row.status ? (
+                          <Badge variant="outline" className="font-mono font-normal">
+                            {row.status}
+                          </Badge>
+                        ) : null}
+                        {row.name ? (
+                          <span className="font-medium text-foreground">{row.name}</span>
+                        ) : null}
+                        {row.slug ? <code className="text-[11px]">{row.slug}</code> : null}
+                        {row.url ? (
+                          <a
+                            href={row.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="truncate text-primary hover:underline"
+                          >
+                            {row.url}
+                          </a>
+                        ) : null}
+                        {row.error ? <span className="text-destructive">{row.error}</span> : null}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : null}
+            </>
           )}
         </CardContent>
       </Card>

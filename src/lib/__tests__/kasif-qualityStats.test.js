@@ -1,5 +1,7 @@
 const {
+  buildAddToolStats,
   buildKasifQualityStats,
+  isKasifAddToolInteraction,
   isKasifIssueInteraction,
   isKasifMetaInteraction,
   isKasifSoftLandingInteraction,
@@ -54,12 +56,42 @@ describe('buildKasifQualityStats', () => {
       source_ids: [],
       created_at: '2026-07-22T12:00:00Z',
     },
+    {
+      id: '6',
+      question: 'Bu aracı ekle https://acme.ai',
+      intent: {
+        meta: 'add-tool',
+        addTool: { status: 'queued', name: 'Acme', url: 'https://acme.ai', slug: 'acme' },
+      },
+      confidence: 0.93,
+      feedback: null,
+      source_ids: [],
+      created_at: '2026-07-23T10:00:00Z',
+    },
+    {
+      id: '7',
+      question: 'Kataloga araç ekle',
+      intent: { meta: 'add-tool', addTool: { status: 'missing_url' } },
+      confidence: 0.95,
+      feedback: null,
+      source_ids: [],
+      created_at: '2026-07-23T11:00:00Z',
+    },
+    {
+      id: '8',
+      question: 'Add this tool https://acme.ai',
+      intent: { meta: 'add-tool', addTool: { status: 'duplicate', name: 'Acme' } },
+      confidence: 0.9,
+      feedback: null,
+      source_ids: [],
+      created_at: '2026-07-23T12:00:00Z',
+    },
   ];
 
   it('özet metrikleri ve kural adaylarını hesaplar', () => {
     const stats = buildKasifQualityStats(sample, { windowDays: 30, sampleLimit: 5 });
 
-    expect(stats.total).toBe(5);
+    expect(stats.total).toBe(8);
     expect(stats.withFeedback).toBe(2);
     expect(stats.positive).toBe(1);
     expect(stats.negative).toBe(1);
@@ -76,6 +108,19 @@ describe('buildKasifQualityStats', () => {
     expect(stats.ruleCandidates.length).toBeGreaterThan(0);
     expect(stats.jobFunnel).toBeDefined();
     expect(stats.jobFunnel.withFunnel).toBe(0);
+    expect(stats.addTool.total).toBe(3);
+    expect(stats.addTool.statusCounts.queued).toBe(1);
+    expect(stats.addTool.statusCounts.duplicate).toBe(1);
+    expect(stats.addTool.statusCounts.missing_url).toBe(1);
+    expect(isKasifAddToolInteraction(sample[5])).toBe(true);
+    expect(isKasifMetaInteraction(sample[5])).toBe(false);
+  });
+
+  it('buildAddToolStats dedupe oranlarını hesaplar', () => {
+    const add = buildAddToolStats(sample, 10);
+    expect(add.total).toBe(3);
+    expect(add.duplicateRate).toBeCloseTo(33.3, 0);
+    expect(add.recent[0].status).toBeTruthy();
   });
 
   it('soft-landing conversion metriklerini hesaplar', () => {

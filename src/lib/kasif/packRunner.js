@@ -3,7 +3,7 @@
  * LLM chain: Partner API → Gemini → deterministic local fallback.
  *
  * Runnable: content-studio, sales-outreach, meeting-to-action, social-launch,
- * pitch-deck, seo-brief, support-kit
+ * pitch-deck, seo-brief, support-kit, code-scaffold, legal-review, research-brief
  */
 
 import { getJobPackById, isRunnablePack, RUNNABLE_PACK_IDS } from './jobPacks';
@@ -1374,6 +1374,448 @@ Respond ONLY with valid JSON:
   };
 }
 
+// --- code-scaffold (multi-step) ---
+
+export function buildLocalCodeScaffoldRun(brief, locale = 'tr') {
+  const topic = safeBrief(brief, locale, 'ücretsiz kota kontrolü API’si', 'free quota check API');
+
+  if (locale === 'en') {
+    const steps = [
+      {
+        id: 'requirements',
+        title: 'Requirements',
+        body: `Feature: ${topic}\n- Input: userId, window\n- Output: remaining quota + resetAt\n- Non-goals: billing, payment capture`,
+      },
+      {
+        id: 'tree',
+        title: 'File tree',
+        body: `src/\n  lib/quota.ts\n  app/api/quota/route.ts\n  __tests__/quota.test.ts\n  types/quota.ts`,
+      },
+      {
+        id: 'scaffold',
+        title: 'Scaffold code',
+        body: `// lib/quota.ts\nexport function remainingQuota(used: number, limit: number) {\n  return Math.max(0, limit - used);\n}\n\n// app/api/quota/route.ts\n// GET → { remaining, resetAt } for ${topic}`,
+      },
+      {
+        id: 'tests',
+        title: 'Test plan',
+        body: `1. remaining = limit - used (floor 0)\n2. Unauthorized → 401\n3. Missing userId → 400\n4. Window boundary at month start`,
+      },
+    ];
+    return {
+      packId: 'code-scaffold',
+      goal: 'coding-assistant',
+      bridge: 'runner',
+      requirements: steps[0].body,
+      fileTree: steps[1].body,
+      scaffold: steps[2].body,
+      testPlan: steps[3].body,
+      steps,
+    };
+  }
+
+  const steps = [
+    {
+      id: 'requirements',
+      title: 'Gereksinim',
+      body: `Özellik: ${topic}\n- Girdi: userId, pencere\n- Çıktı: kalan kota + resetAt\n- Kapsam dışı: ödeme alma`,
+    },
+    {
+      id: 'tree',
+      title: 'Dosya ağacı',
+      body: `src/\n  lib/quota.ts\n  app/api/quota/route.ts\n  __tests__/quota.test.ts\n  types/quota.ts`,
+    },
+    {
+      id: 'scaffold',
+      title: 'İskelet kod',
+      body: `// lib/quota.ts\nexport function remainingQuota(used: number, limit: number) {\n  return Math.max(0, limit - used);\n}\n\n// app/api/quota/route.ts\n// GET → { remaining, resetAt } — ${topic}`,
+    },
+    {
+      id: 'tests',
+      title: 'Test planı',
+      body: `1. remaining = limit - used (min 0)\n2. Yetkisiz → 401\n3. userId yok → 400\n4. Ay başı pencere sınırı`,
+    },
+  ];
+  return {
+    packId: 'code-scaffold',
+    goal: 'coding-assistant',
+    bridge: 'runner',
+    requirements: steps[0].body,
+    fileTree: steps[1].body,
+    scaffold: steps[2].body,
+    testPlan: steps[3].body,
+    steps,
+  };
+}
+
+export function formatCodeScaffoldArtifact(run) {
+  if (!run) return '';
+  if (Array.isArray(run.steps) && run.steps.length) {
+    return run.steps.map((step, i) => `## ${i + 1}. ${step.title}\n${step.body}`).join('\n\n');
+  }
+  return [run.requirements, run.fileTree, run.scaffold, run.testPlan]
+    .filter(Boolean)
+    .join('\n\n---\n\n');
+}
+
+export async function runCodeScaffoldPack(brief, locale = 'tr') {
+  if (!getJobPackById('code-scaffold', locale)) throw new Error('unknown_pack');
+  const lang = locale === 'en' ? 'English' : 'Turkish';
+  const prompt = `You are a code scaffold pack runner.
+User brief: ${String(brief || '').slice(0, 500)}
+Respond ONLY with valid JSON:
+{
+  "requirements": "short requirements in ${lang}",
+  "fileTree": "simple file tree",
+  "scaffold": "short starter code snippet",
+  "testPlan": "3-5 test cases in ${lang}",
+  "steps": [
+    { "id": "requirements", "title": "string", "body": "string" },
+    { "id": "tree", "title": "string", "body": "string" },
+    { "id": "scaffold", "title": "string", "body": "string" },
+    { "id": "tests", "title": "string", "body": "string" }
+  ]
+}`;
+  const { data: parsed, source: llmSource } = await callProviderJson(prompt);
+  if (!parsed) return { ...buildLocalCodeScaffoldRun(brief, locale), source: 'local' };
+  const requirements = String(parsed.requirements || '').trim();
+  if (requirements.length < 20) {
+    return { ...buildLocalCodeScaffoldRun(brief, locale), source: 'local-fallback' };
+  }
+  const steps = Array.isArray(parsed.steps)
+    ? parsed.steps
+        .map((step) => ({
+          id: String(step?.id || '')
+            .trim()
+            .slice(0, 40),
+          title: String(step?.title || '')
+            .trim()
+            .slice(0, 80),
+          body: String(step?.body || '')
+            .trim()
+            .slice(0, 2000),
+        }))
+        .filter((s) => s.title && s.body)
+        .slice(0, 8)
+    : [];
+  const local = buildLocalCodeScaffoldRun(brief, locale);
+  return {
+    packId: 'code-scaffold',
+    goal: 'coding-assistant',
+    bridge: 'runner',
+    requirements: requirements.slice(0, 1200),
+    fileTree: String(parsed.fileTree || local.fileTree)
+      .trim()
+      .slice(0, 1200),
+    scaffold: String(parsed.scaffold || local.scaffold)
+      .trim()
+      .slice(0, 2500),
+    testPlan: String(parsed.testPlan || local.testPlan)
+      .trim()
+      .slice(0, 1200),
+    steps: steps.length >= 3 ? steps : local.steps,
+    source: llmSource || 'provider',
+  };
+}
+
+// --- legal-review (multi-step, informational) ---
+
+export function buildLocalLegalReviewRun(brief, locale = 'tr') {
+  const topic = safeBrief(brief, locale, 'SaaS abonelik sözleşmesi', 'SaaS subscription agreement');
+  const disclaimer =
+    locale === 'en'
+      ? 'Informational only — not legal advice. Have counsel review.'
+      : 'Yalnızca bilgilendirme — hukuki tavsiye değildir. Avukat incelemesi gerekir.';
+
+  if (locale === 'en') {
+    const steps = [
+      {
+        id: 'scope',
+        title: 'Scope',
+        body: `Document: ${topic}\nFocus: termination, liability, data processing, IP.\n${disclaimer}`,
+      },
+      {
+        id: 'risks',
+        title: 'Risk list',
+        body: `1. Unlimited liability carve-outs missing\n2. Auto-renew without clear notice\n3. Data processing roles unclear (controller/processor)\n4. Broad IP assignment from customer content`,
+      },
+      {
+        id: 'questions',
+        title: 'Question set',
+        body: `Q1. Who owns outputs generated with the product?\nQ2. What is the termination notice window?\nQ3. Is there a liability cap and what is excluded?\nQ4. Where is governing law / venue?`,
+      },
+      {
+        id: 'redlines',
+        title: 'Redline notes',
+        body: `- Cap liability at 12 months fees paid\n- Clarify customer owns their content\n- Require 30-day opt-out before renewal\n- Add DPA reference if personal data is processed`,
+      },
+    ];
+    return {
+      packId: 'legal-review',
+      goal: 'legal-review',
+      bridge: 'runner',
+      scope: steps[0].body,
+      risks: steps[1].body,
+      questions: steps[2].body,
+      redlines: steps[3].body,
+      disclaimer,
+      steps,
+    };
+  }
+
+  const steps = [
+    {
+      id: 'scope',
+      title: 'Kapsam',
+      body: `Belge: ${topic}\nOdak: fesih, sorumluluk, veri işleme, IP.\n${disclaimer}`,
+    },
+    {
+      id: 'risks',
+      title: 'Risk listesi',
+      body: `1. Sınırsız sorumluluk istisnaları belirsiz\n2. Otomatik yenileme net bildirim yok\n3. Veri işleme rolleri (sorumlu/işleyen) net değil\n4. Müşteri içeriğinde geniş IP devri`,
+    },
+    {
+      id: 'questions',
+      title: 'Soru seti',
+      body: `S1. Ürünle üretilen çıktının sahibi kim?\nS2. Fesih bildirim süresi nedir?\nS3. Sorumluluk tavanı var mı, istisnalar neler?\nS4. Uygulanacak hukuk / yetkili mahkeme?`,
+    },
+    {
+      id: 'redlines',
+      title: 'Redline notları',
+      body: `- Sorumluluğu son 12 ay ücretle sınırla\n- Müşteri içeriğinin mülkiyetini netleştir\n- Yenilemeden 30 gün önce çıkış hakkı\n- Kişisel veri varsa DPA referansı ekle`,
+    },
+  ];
+  return {
+    packId: 'legal-review',
+    goal: 'legal-review',
+    bridge: 'runner',
+    scope: steps[0].body,
+    risks: steps[1].body,
+    questions: steps[2].body,
+    redlines: steps[3].body,
+    disclaimer,
+    steps,
+  };
+}
+
+export function formatLegalReviewArtifact(run) {
+  if (!run) return '';
+  if (Array.isArray(run.steps) && run.steps.length) {
+    return run.steps.map((step, i) => `## ${i + 1}. ${step.title}\n${step.body}`).join('\n\n');
+  }
+  return [run.scope, run.risks, run.questions, run.redlines].filter(Boolean).join('\n\n---\n\n');
+}
+
+export async function runLegalReviewPack(brief, locale = 'tr') {
+  if (!getJobPackById('legal-review', locale)) throw new Error('unknown_pack');
+  const lang = locale === 'en' ? 'English' : 'Turkish';
+  const prompt = `You are a legal review pack runner (informational only, not legal advice).
+User brief: ${String(brief || '').slice(0, 500)}
+Respond ONLY with valid JSON:
+{
+  "scope": "scope + disclaimer in ${lang}",
+  "risks": "bullet risk list in ${lang}",
+  "questions": "4 review questions in ${lang}",
+  "redlines": "suggested redline notes in ${lang}",
+  "steps": [
+    { "id": "scope", "title": "string", "body": "string" },
+    { "id": "risks", "title": "string", "body": "string" },
+    { "id": "questions", "title": "string", "body": "string" },
+    { "id": "redlines", "title": "string", "body": "string" }
+  ]
+}`;
+  const { data: parsed, source: llmSource } = await callProviderJson(prompt);
+  if (!parsed) return { ...buildLocalLegalReviewRun(brief, locale), source: 'local' };
+  const scope = String(parsed.scope || '').trim();
+  if (scope.length < 20) {
+    return { ...buildLocalLegalReviewRun(brief, locale), source: 'local-fallback' };
+  }
+  const steps = Array.isArray(parsed.steps)
+    ? parsed.steps
+        .map((step) => ({
+          id: String(step?.id || '')
+            .trim()
+            .slice(0, 40),
+          title: String(step?.title || '')
+            .trim()
+            .slice(0, 80),
+          body: String(step?.body || '')
+            .trim()
+            .slice(0, 2000),
+        }))
+        .filter((s) => s.title && s.body)
+        .slice(0, 8)
+    : [];
+  const local = buildLocalLegalReviewRun(brief, locale);
+  return {
+    packId: 'legal-review',
+    goal: 'legal-review',
+    bridge: 'runner',
+    scope: scope.slice(0, 1200),
+    risks: String(parsed.risks || local.risks)
+      .trim()
+      .slice(0, 1500),
+    questions: String(parsed.questions || local.questions)
+      .trim()
+      .slice(0, 1500),
+    redlines: String(parsed.redlines || local.redlines)
+      .trim()
+      .slice(0, 1500),
+    disclaimer: local.disclaimer,
+    steps: steps.length >= 3 ? steps : local.steps,
+    source: llmSource || 'provider',
+  };
+}
+
+// --- research-brief (multi-step) ---
+
+export function buildLocalResearchBriefRun(brief, locale = 'tr') {
+  const topic = safeBrief(
+    brief,
+    locale,
+    'KOBİ’lerde AI araç benimsenmesi',
+    'AI tool adoption in SMBs'
+  );
+
+  if (locale === 'en') {
+    const steps = [
+      {
+        id: 'question',
+        title: 'Research question',
+        body: `Primary: What drives ${topic}?\nSecondary: Cost, time-to-value, and team skills.`,
+      },
+      {
+        id: 'sources',
+        title: 'Sources',
+        body: `1. Public reports / surveys\n2. Product pricing pages\n3. 5 customer interviews\n4. Internal usage metrics (if available)`,
+      },
+      {
+        id: 'plan',
+        title: 'Analysis plan',
+        body: `1. Define segments\n2. Collect 3 data points per segment\n3. Compare time-to-first-value\n4. Rank barriers\n5. Draft recommendation`,
+      },
+      {
+        id: 'findings',
+        title: 'Findings template',
+        body: `Finding:\nEvidence:\nImplication:\nNext experiment:\nOwner / date:`,
+      },
+    ];
+    return {
+      packId: 'research-brief',
+      goal: 'data-analysis',
+      bridge: 'runner',
+      question: steps[0].body,
+      sources: steps[1].body,
+      analysisPlan: steps[2].body,
+      findingsTemplate: steps[3].body,
+      steps,
+    };
+  }
+
+  const steps = [
+    {
+      id: 'question',
+      title: 'Araştırma sorusu',
+      body: `Birincil: ${topic}’i ne hızlandırır?\nİkincil: maliyet, time-to-value, ekip becerisi.`,
+    },
+    {
+      id: 'sources',
+      title: 'Kaynaklar',
+      body: `1. Kamuya açık rapor / anket\n2. Ürün fiyat sayfaları\n3. 5 müşteri görüşmesi\n4. İç kullanım metrikleri (varsa)`,
+    },
+    {
+      id: 'plan',
+      title: 'Analiz planı',
+      body: `1. Segment tanımla\n2. Segment başına 3 veri noktası\n3. Time-to-first-value karşılaştır\n4. Engelleri sırala\n5. Tavsiye taslağı`,
+    },
+    {
+      id: 'findings',
+      title: 'Bulgu şablonu',
+      body: `Bulgu:\nKanıt:\nAnlamı:\nSonraki deney:\nSahip / tarih:`,
+    },
+  ];
+  return {
+    packId: 'research-brief',
+    goal: 'data-analysis',
+    bridge: 'runner',
+    question: steps[0].body,
+    sources: steps[1].body,
+    analysisPlan: steps[2].body,
+    findingsTemplate: steps[3].body,
+    steps,
+  };
+}
+
+export function formatResearchBriefArtifact(run) {
+  if (!run) return '';
+  if (Array.isArray(run.steps) && run.steps.length) {
+    return run.steps.map((step, i) => `## ${i + 1}. ${step.title}\n${step.body}`).join('\n\n');
+  }
+  return [run.question, run.sources, run.analysisPlan, run.findingsTemplate]
+    .filter(Boolean)
+    .join('\n\n---\n\n');
+}
+
+export async function runResearchBriefPack(brief, locale = 'tr') {
+  if (!getJobPackById('research-brief', locale)) throw new Error('unknown_pack');
+  const lang = locale === 'en' ? 'English' : 'Turkish';
+  const prompt = `You are a research brief pack runner.
+User brief: ${String(brief || '').slice(0, 500)}
+Respond ONLY with valid JSON:
+{
+  "question": "research questions in ${lang}",
+  "sources": "source list in ${lang}",
+  "analysisPlan": "analysis steps in ${lang}",
+  "findingsTemplate": "findings template in ${lang}",
+  "steps": [
+    { "id": "question", "title": "string", "body": "string" },
+    { "id": "sources", "title": "string", "body": "string" },
+    { "id": "plan", "title": "string", "body": "string" },
+    { "id": "findings", "title": "string", "body": "string" }
+  ]
+}`;
+  const { data: parsed, source: llmSource } = await callProviderJson(prompt);
+  if (!parsed) return { ...buildLocalResearchBriefRun(brief, locale), source: 'local' };
+  const question = String(parsed.question || '').trim();
+  if (question.length < 12) {
+    return { ...buildLocalResearchBriefRun(brief, locale), source: 'local-fallback' };
+  }
+  const steps = Array.isArray(parsed.steps)
+    ? parsed.steps
+        .map((step) => ({
+          id: String(step?.id || '')
+            .trim()
+            .slice(0, 40),
+          title: String(step?.title || '')
+            .trim()
+            .slice(0, 80),
+          body: String(step?.body || '')
+            .trim()
+            .slice(0, 1500),
+        }))
+        .filter((s) => s.title && s.body)
+        .slice(0, 8)
+    : [];
+  const local = buildLocalResearchBriefRun(brief, locale);
+  return {
+    packId: 'research-brief',
+    goal: 'data-analysis',
+    bridge: 'runner',
+    question: question.slice(0, 1200),
+    sources: String(parsed.sources || local.sources)
+      .trim()
+      .slice(0, 1200),
+    analysisPlan: String(parsed.analysisPlan || local.analysisPlan)
+      .trim()
+      .slice(0, 1500),
+    findingsTemplate: String(parsed.findingsTemplate || local.findingsTemplate)
+      .trim()
+      .slice(0, 1200),
+    steps: steps.length >= 3 ? steps : local.steps,
+    source: llmSource || 'provider',
+  };
+}
+
 // --- unified entry ---
 
 /**
@@ -1393,6 +1835,9 @@ export async function runPack(packId, brief, locale = 'tr') {
   if (id === 'pitch-deck') return runPitchDeckPack(brief, locale);
   if (id === 'seo-brief') return runSeoBriefPack(brief, locale);
   if (id === 'support-kit') return runSupportKitPack(brief, locale);
+  if (id === 'code-scaffold') return runCodeScaffoldPack(brief, locale);
+  if (id === 'legal-review') return runLegalReviewPack(brief, locale);
+  if (id === 'research-brief') return runResearchBriefPack(brief, locale);
   throw new Error('not_runnable');
 }
 
@@ -1428,6 +1873,9 @@ export function formatPackArtifact(run, locale = 'tr') {
   if (run.packId === 'pitch-deck') return formatPitchDeckArtifact(run, locale);
   if (run.packId === 'seo-brief') return formatSeoBriefArtifact(run, locale);
   if (run.packId === 'support-kit') return formatSupportKitArtifact(run, locale);
+  if (run.packId === 'code-scaffold') return formatCodeScaffoldArtifact(run);
+  if (run.packId === 'legal-review') return formatLegalReviewArtifact(run);
+  if (run.packId === 'research-brief') return formatResearchBriefArtifact(run);
   return String(run.draft || run.summary || '').trim();
 }
 
@@ -1509,6 +1957,40 @@ export function summarizeRunForClient(run) {
       toneGuide: run.toneGuide,
       escalation: run.escalation,
       faq: run.faq,
+      steps,
+    };
+  }
+  if (run.packId === 'code-scaffold') {
+    return {
+      packId: run.packId,
+      source: run.source,
+      requirements: run.requirements,
+      fileTree: run.fileTree,
+      scaffold: run.scaffold,
+      testPlan: run.testPlan,
+      steps,
+    };
+  }
+  if (run.packId === 'legal-review') {
+    return {
+      packId: run.packId,
+      source: run.source,
+      scope: run.scope,
+      risks: run.risks,
+      questions: run.questions,
+      redlines: run.redlines,
+      disclaimer: run.disclaimer,
+      steps,
+    };
+  }
+  if (run.packId === 'research-brief') {
+    return {
+      packId: run.packId,
+      source: run.source,
+      question: run.question,
+      sources: run.sources,
+      analysisPlan: run.analysisPlan,
+      findingsTemplate: run.findingsTemplate,
       steps,
     };
   }

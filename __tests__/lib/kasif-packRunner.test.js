@@ -6,6 +6,9 @@ const {
   buildLocalPitchDeckRun,
   buildLocalSeoBriefRun,
   buildLocalSupportKitRun,
+  buildLocalCodeScaffoldRun,
+  buildLocalLegalReviewRun,
+  buildLocalResearchBriefRun,
   formatContentStudioArtifact,
   formatSalesOutreachArtifact,
   formatMeetingToActionArtifact,
@@ -13,6 +16,9 @@ const {
   formatPitchDeckArtifact,
   formatSeoBriefArtifact,
   formatSupportKitArtifact,
+  formatCodeScaffoldArtifact,
+  formatLegalReviewArtifact,
+  formatResearchBriefArtifact,
   formatPackArtifact,
   extractRunSteps,
   isRunnablePack,
@@ -20,7 +26,7 @@ const {
 } = require('../../src/lib/kasif/packRunner');
 
 describe('packRunner', () => {
-  it('yedi paketi runnable sayar', () => {
+  it('on paketi runnable sayar', () => {
     expect(RUNNABLE_PACK_IDS).toEqual(
       expect.arrayContaining([
         'content-studio',
@@ -30,11 +36,15 @@ describe('packRunner', () => {
         'pitch-deck',
         'seo-brief',
         'support-kit',
+        'code-scaffold',
+        'legal-review',
+        'research-brief',
       ])
     );
-    expect(RUNNABLE_PACK_IDS).toHaveLength(7);
-    expect(isRunnablePack('seo-brief')).toBe(true);
-    expect(isRunnablePack('support-kit')).toBe(true);
+    expect(RUNNABLE_PACK_IDS).toHaveLength(10);
+    expect(isRunnablePack('code-scaffold')).toBe(true);
+    expect(isRunnablePack('legal-review')).toBe(true);
+    expect(isRunnablePack('research-brief')).toBe(true);
     expect(isRunnablePack('unknown')).toBe(false);
   });
 
@@ -89,5 +99,20 @@ describe('packRunner', () => {
     expect(run.packId).toBe('support-kit');
     expect(run.steps.length).toBeGreaterThanOrEqual(4);
     expect(formatSupportKitArtifact(run, 'en')).toMatch(/Macro|Tone|FAQ/i);
+  });
+
+  it('code-scaffold / legal-review / research-brief üretir', () => {
+    const code = buildLocalCodeScaffoldRun('quota api', 'en');
+    expect(code.packId).toBe('code-scaffold');
+    expect(formatCodeScaffoldArtifact(code)).toMatch(/File tree|Scaffold|Test/i);
+
+    const legal = buildLocalLegalReviewRun('ToS', 'tr');
+    expect(legal.packId).toBe('legal-review');
+    expect(formatLegalReviewArtifact(legal)).toMatch(/Risk|Redline|tavsiye|bilgi/i);
+
+    const research = buildLocalResearchBriefRun('adoption', 'en');
+    expect(research.packId).toBe('research-brief');
+    expect(formatResearchBriefArtifact(research)).toMatch(/Sources|Analysis|Findings/i);
+    expect(formatPackArtifact(research, 'en')).toBe(formatResearchBriefArtifact(research));
   });
 });

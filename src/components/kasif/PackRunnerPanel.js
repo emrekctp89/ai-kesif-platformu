@@ -15,6 +15,9 @@ const PLACEHOLDER_KEYS = {
   'pitch-deck': 'packs.runnerBriefPlaceholderPitch',
   'seo-brief': 'packs.runnerBriefPlaceholderSeo',
   'support-kit': 'packs.runnerBriefPlaceholderSupport',
+  'code-scaffold': 'packs.runnerBriefPlaceholderCode',
+  'legal-review': 'packs.runnerBriefPlaceholderLegal',
+  'research-brief': 'packs.runnerBriefPlaceholderResearch',
 };
 
 const TITLE_KEYS = {
@@ -25,6 +28,9 @@ const TITLE_KEYS = {
   'pitch-deck': 'packs.runnerTitlePitch',
   'seo-brief': 'packs.runnerTitleSeo',
   'support-kit': 'packs.runnerTitleSupport',
+  'code-scaffold': 'packs.runnerTitleCode',
+  'legal-review': 'packs.runnerTitleLegal',
+  'research-brief': 'packs.runnerTitleResearch',
 };
 
 const HINT_KEYS = {
@@ -35,6 +41,9 @@ const HINT_KEYS = {
   'pitch-deck': 'packs.runnerHintPitch',
   'seo-brief': 'packs.runnerHintSeo',
   'support-kit': 'packs.runnerHintSupport',
+  'code-scaffold': 'packs.runnerHintCode',
+  'legal-review': 'packs.runnerHintLegal',
+  'research-brief': 'packs.runnerHintResearch',
 };
 
 function sourceLabelKey(source) {

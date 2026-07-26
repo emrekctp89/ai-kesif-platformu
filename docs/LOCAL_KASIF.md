@@ -35,9 +35,9 @@ Workmind iki Kâşif katmanı kullanır:
    araç çıktısını yapıştır → `POST /api/kasif/result-bridge` ile `first_result`.
 10. P4 iş paketleri: `jobPacks.js` + `/kasif` strip; paket Workmind handoff (`from=pack`).
 11. Pro gate: proHint paketler için giriş + 2 ücretsiz deneme / 30 gün (`/api/kasif/pack-access`).
-12. Pack runner’lar (7): content-studio, sales-outreach, meeting-to-action,
-    social-launch, pitch-deck, seo-brief, support-kit (`/api/kasif/pack-runner`)
-    → first_result + pack_id.
+12. Pack runner’lar (10): content-studio, sales-outreach, meeting-to-action,
+    social-launch, pitch-deck, seo-brief, support-kit, code-scaffold, legal-review,
+    research-brief (`/api/kasif/pack-runner`) → first_result + pack_id.
 13. Soft-landing conversion: starter/free-text sonrası `intent.fromSoftLanding` + admin
     follow-up/convert oranları (`kasif_soft_landing_*` analytics).
 14. Partner LLM (opsiyonel): pack runner JSON üretimi için OpenAI-compatible endpoint.
@@ -48,10 +48,11 @@ Workmind iki Kâşif katmanı kullanır:
 16. Partner OAuth UX: runner panelinde provider badge; tamamlanınca araç hesabı bağlama
     adımları (`partnerConnect.js`). Admin kalite panelinde partner zincir durumu.
     Üçüncü taraf araç token’ları platformda tutulmaz.
-17. Pack runner’lar (7): content-studio, sales-outreach, meeting-to-action, social-launch,
-    pitch-deck, **seo-brief**, **support-kit** (çok adımlı `steps`).
+17. Pack runner’lar (10): content, sales, meeting, social, pitch, seo-brief, support-kit,
+    **code-scaffold**, **legal-review**, **research-brief** (çoğu multi-step `steps`).
 18. “Bu aracı ekle https://…” intent: scrape → `is_approved=false` aday kuyruğu (admin onay).
     Resmî ürün URL’si gerekir; dizin/aggregator engelli. Rate limit: 5/saat.
+    Admin: add-tool queued/dedupe metrikleri. Opsiyonel: `KASIF_ADD_TOOL_NOTIFY=true`.
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır. Saf fiyat daraltması

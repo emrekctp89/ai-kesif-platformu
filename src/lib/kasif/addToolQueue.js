@@ -159,6 +159,20 @@ export async function queueToolCandidateFromUrl(rawUrl, options = {}) {
     return { ok: false, error: 'Aday kaydedilemedi.', candidate };
   }
 
+  // Ops: structured log always; optional email when KASIF_ADD_TOOL_NOTIFY=true
+  logger.info('Kâşif add-tool queued', {
+    name: inserted?.name || candidate.name,
+    slug: inserted?.slug,
+    link: inserted?.link || candidate.link,
+    toolId: inserted?.id,
+  });
+  void notifyAdminAddToolQueued({
+    name: inserted?.name || candidate.name,
+    slug: inserted?.slug,
+    link: inserted?.link || candidate.link,
+    note,
+  });
+
   return {
     ok: true,
     status: 'queued',
@@ -166,4 +180,42 @@ export async function queueToolCandidateFromUrl(rawUrl, options = {}) {
     inserted,
     warnings: scrape.warnings || [],
   };
+}
+
+/**
+ * Optional admin email when a Kâşif scrape candidate is queued.
+ * Enabled only with KASIF_ADD_TOOL_NOTIFY=true + RESEND_API_KEY + ADMIN_EMAIL.
+ */
+async function notifyAdminAddToolQueued({ name, slug, link, note }) {
+  if (String(process.env.KASIF_ADD_TOOL_NOTIFY || '').toLowerCase() !== 'true') return;
+  const adminEmail = String(process.env.ADMIN_EMAIL || '').trim();
+  const resendKey = String(process.env.RESEND_API_KEY || '').trim();
+  if (!adminEmail || !resendKey) return;
+
+  try {
+    const { Resend } = await import('resend');
+    const resend = new Resend(resendKey);
+    const from =
+      String(process.env.RESEND_FROM_EMAIL || process.env.EMAIL_FROM || '').trim() ||
+      'aikeşif <onboarding@resend.dev>';
+    await resend.emails.send({
+      from,
+      to: adminEmail,
+      subject: `[Kâşif] Yeni araç adayı: ${String(name || 'tool').slice(0, 80)}`,
+      text: [
+        'Kâşif sohbetinden yeni katalog adayı kuyruğa alındı (is_approved=false).',
+        '',
+        `İsim: ${name || '—'}`,
+        `Slug: ${slug || '—'}`,
+        `Link: ${link || '—'}`,
+        note ? `Not: ${note}` : null,
+        '',
+        'Admin panelinden bekleyen araçlar kuyruğunu inceleyin.',
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    });
+  } catch (error) {
+    logger.warn('Kâşif add-tool notify failed:', error?.message || error);
+  }
 }

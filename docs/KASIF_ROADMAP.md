@@ -12,14 +12,15 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 `job_stated → tool_recommended → tool_selected → setup_started → setup_completed → first_result → job_done`
 
-| Faz    | Durum | Ne                                                        |
-| ------ | ----- | --------------------------------------------------------- |
-| **P0** | ✅    | Job funnel kolon + API + self-report UI + admin hunisi    |
-| **P1** | ✅    | Tüm goal sihirbazları (22 + default checklist + şablon)   |
-| **P2** | ✅    | Workmind ↔ Kâşif tek “görev oturumu”                      |
-| **P3** | ✅    | Metin nişlerinde kopyala-yapıştır first_result bridge     |
-| **P4** | ✅    | İş paketleri + Pro gate/kota + 5 pack runner + pack stats |
-| **P5** | ✅    | Partner API LLM zinciri + history follow-up kalitesi      |
+| Faz    | Durum | Ne                                                      |
+| ------ | ----- | ------------------------------------------------------- |
+| **P0** | ✅    | Job funnel kolon + API + self-report UI + admin hunisi  |
+| **P1** | ✅    | Tüm goal sihirbazları (22 + default checklist + şablon) |
+| **P2** | ✅    | Workmind ↔ Kâşif tek “görev oturumu”                    |
+| **P3** | ✅    | Metin nişlerinde kopyala-yapıştır first_result bridge   |
+| **P4** | ✅    | İş paketleri + Pro gate/kota + pack runner + pack stats |
+| **P5** | ✅    | Partner API LLM zinciri + history follow-up kalitesi    |
+| **P6** | ✅    | Add-tool ops + coding/legal/research pack runners       |
 
 ### P0 teknik yüzey
 
@@ -61,7 +62,7 @@ North Star artık yalnızca tıklama/affiliate değil:
 - `/uyelik` — iş paketleri / orkestrasyon Pro konumlandırması
 - Analytics: `kasif_pack_ask`, `kasif_pack_workmind`, `kasif_pack_matched_workmind`
 - **Pro gate / kota**: proHint paketler — giriş + 2 ücretsiz/30g, sonrası Pro (`packAccess`)
-- **Runner**: `POST /api/kasif/pack-runner` → 7 paket (content, sales, meeting, social, pitch, seo, support)
+- **Runner**: `POST /api/kasif/pack-runner` → 10 paket (+ code, legal, research)
 - **Admin**: pack_id conversion kovaları + runner sayacı
 - **Soft-landing conversion**: `fromSoftLanding` intent stamp + starter buckets + admin oranları
   (`shown → follow-up → sourced rec`); analytics: `kasif_soft_landing_*`
@@ -106,12 +107,20 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ### P5.2 Pack runner genişletme + add-tool intent
 
-- **Yeni paketler**: `seo-brief`, `support-kit` (free, multi-step `steps[]` artifact)
+- **Paketler**: seo-brief, support-kit (+ P6: code-scaffold, legal-review, research-brief)
 - **UI**: PackRunnerPanel adım adım çıktı + tam metin accordion
 - **Add-tool**: `detectAddToolIntent` + `queueToolCandidateFromUrl`
   — scrape → `tools.is_approved=false` → admin pending queue
   — rate limit `kasif-add-tool` (5/saat); dizin host engeli korunur
   — eval dry path (`evaluation=true`) insert etmez
+
+### P6 Add-tool ops + vertical packs
+
+- **Admin analytics**: `buildAddToolStats` — queued / duplicate / missing_url / error + recent list
+  (Kâşif kalite sekmesi)
+- **Ops notify**: `KASIF_ADD_TOOL_NOTIFY=true` + Resend → `ADMIN_EMAIL` (opsiyonel)
+- **Yeni pack’ler**: `code-scaffold` (Pro), `legal-review` (Pro), `research-brief` (free)
+- Toplam **10** runnable pack
 
 ---
 
@@ -120,10 +129,12 @@ North Star artık yalnızca tıklama/affiliate değil:
 Öncelik sırasıyla tutulacak:
 
 1. ~~**Partner OAuth UX**~~ ✅
-2. ~~**Pack runner genişletme**~~ ✅ — seo-brief + support-kit + multi-step UI
-3. ~~**Kâşif “bu aracı ekle”**~~ ✅ — sohbet intent → scrape aday (admin gate)
-4. **Add-tool ops** — admin bildirim / dedupe analytics
-5. **Daha fazla pack** — coding / legal / research verticals
+2. ~~**Pack runner genişletme**~~ ✅
+3. ~~**Kâşif “bu aracı ekle”**~~ ✅
+4. ~~**Add-tool ops**~~ ✅ — admin analytics + optional email notify
+5. ~~**Daha fazla pack**~~ ✅ — code / legal / research
+6. **Live eval + pack conversion dashboard** — runner source mix (partner/gemini/local)
+7. **Learn path ↔ pack deep links** — /ogren/kasif modüllerinden pack auto-open
 
 ---
 

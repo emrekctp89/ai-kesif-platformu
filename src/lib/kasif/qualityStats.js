@@ -29,14 +29,85 @@ export function isKasifSoftLandingInteraction(row) {
   );
 }
 
-/** Kimlik / yetenek / how meta (soft-landing hariç). */
+export function isKasifAddToolInteraction(row) {
+  return (
+    row?.metaKind === 'add-tool' ||
+    row?.intent?.meta === 'add-tool' ||
+    Boolean(row?.intent?.addTool) ||
+    Boolean(row?.addTool)
+  );
+}
+
+/** Kimlik / yetenek / how meta (soft-landing ve add-tool hariç “saf meta”). */
 export function isKasifMetaInteraction(row) {
   if (isKasifSoftLandingInteraction(row)) return false;
+  if (isKasifAddToolInteraction(row)) return false;
   return Boolean(row?.intent?.meta || row?.meta);
 }
 
 export function isKasifGuidedInteraction(row) {
-  return isKasifMetaInteraction(row) || isKasifSoftLandingInteraction(row);
+  return (
+    isKasifMetaInteraction(row) ||
+    isKasifSoftLandingInteraction(row) ||
+    isKasifAddToolInteraction(row)
+  );
+}
+
+/**
+ * Add-tool intent ops özeti (queued / duplicate / missing_url / error).
+ * @param {Array<object>} rows
+ * @param {number} sampleLimit
+ */
+export function buildAddToolStats(rows = [], sampleLimit = 12) {
+  const list = (Array.isArray(rows) ? rows : []).filter(isKasifAddToolInteraction);
+  const statusCounts = {
+    queued: 0,
+    duplicate: 0,
+    missing_url: 0,
+    error: 0,
+    other: 0,
+  };
+
+  for (const row of list) {
+    const status = String(row?.intent?.addTool?.status || row?.addTool?.status || '').toLowerCase();
+    if (status === 'queued') statusCounts.queued += 1;
+    else if (status === 'duplicate') statusCounts.duplicate += 1;
+    else if (status === 'missing_url') statusCounts.missing_url += 1;
+    else if (status === 'error' || status === 'failed') statusCounts.error += 1;
+    else statusCounts.other += 1;
+  }
+
+  const total = list.length;
+  const denom = total || 1;
+  const recent = list
+    .slice()
+    .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
+    .slice(0, sampleLimit)
+    .map((row) => ({
+      id: row.id,
+      question: row.question,
+      status: row?.intent?.addTool?.status || row?.addTool?.status || null,
+      name: row?.intent?.addTool?.name || null,
+      url: row?.intent?.addTool?.url || null,
+      slug: row?.intent?.addTool?.slug || null,
+      error: row?.intent?.addTool?.error || null,
+      created_at: row.created_at || null,
+    }));
+
+  function rate(n) {
+    if (!total) return null;
+    return Number(((n / denom) * 100).toFixed(1));
+  }
+
+  return {
+    total,
+    statusCounts,
+    queueRate: rate(statusCounts.queued),
+    duplicateRate: rate(statusCounts.duplicate),
+    missingUrlRate: rate(statusCounts.missing_url),
+    errorRate: rate(statusCounts.error),
+    recent,
+  };
 }
 
 export function isKasifUngroundedInteraction(row) {
@@ -214,6 +285,7 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
       : null;
 
   const jobFunnel = buildJobFunnelStats(rows);
+  const addTool = buildAddToolStats(rows, sampleLimit);
 
   return {
     windowDays,
@@ -227,6 +299,7 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
     softLandingPriceBuckets,
     topSoftLandingTokens,
     softLandingConversion,
+    addTool,
     ungrounded: ungrounded.length,
     lowConfidence: lowConfidence.length,
     issueCount,
