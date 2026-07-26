@@ -209,13 +209,28 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ---
 
+### P6.11 Shareable job receipt
+
+- `jobReceipt.js`: milestone özeti + share path/text (`/kasif/receipt?id=&t=`)
+- `JobReceiptCard` — JobFunnelPanel + PackRunnerPanel sonrası kopyala link/özet
+- `GET /api/kasif/receipt` + public page `/{locale}/kasif/receipt`
+- Analytics: `kasif_job_receipt_copy` / `kasif_job_receipt_open`
+
+### P6.12 Pro pack ROI snapshot
+
+- `buildJobFunnelStats.packRoi`: runs (runner cost proxy), fr/run, done/run, topByRoi
+- Pack rows: `frPerRun`, `donePerRun`, `roiScore` (sort by ROI)
+- Admin Kâşif kalite: ROI özeti + lider listesi (source mix ile)
+
+---
+
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.10~~ ✅
-2. **Shareable job receipt** — first_result/job_done özet kartı + kopyala link
-3. **Pro pack ROI snapshot** — admin: pack başına FR/job_done maliyeti (runner source mix ile)
+1. ~~P0–P6.12~~ ✅
+2. **Weekly ops digest** — admin e-posta: funnel + pack ROI + soft-landing pin durumu
+3. **Receipt → social proof** (opsiyonel): anonim makbuz sayacı landing’de
 
 ---
 

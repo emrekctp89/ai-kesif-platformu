@@ -10,6 +10,7 @@ import { isProPackId, buildPackPaywall } from '@/lib/kasif/packAccess';
 import { buildPartnerConnectSteps } from '@/lib/kasif/partnerConnect';
 import { getProPackOnboardingStatus } from '@/lib/kasif/packOnboarding';
 import { ProPackOnboarding } from '@/components/kasif/ProPackOnboarding';
+import { JobReceiptCard } from '@/components/kasif/JobReceiptCard';
 
 const PLACEHOLDER_KEYS = {
   'content-studio': 'packs.runnerBriefPlaceholder',
@@ -296,6 +297,22 @@ export function PackRunnerPanel({
               {error}
             </p>
           )}
+        </div>
+      ) : null}
+
+      {result?.run && result?.interactionId && result?.feedbackToken ? (
+        <div className="mt-3">
+          <JobReceiptCard
+            interactionId={result.interactionId}
+            feedbackToken={result.feedbackToken}
+            source={null}
+            goals={[]}
+            minutes={null}
+            firstResult
+            jobDone={null}
+            packId={safePackId}
+            locale={locale}
+          />
         </div>
       ) : null}
 

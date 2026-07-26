@@ -2332,6 +2332,62 @@ function KasifQualityTab({ interactions = [] }) {
                   </div>
                 </div>
               ) : null}
+              {(stats.jobFunnel?.packRoi?.packs || 0) > 0 ? (
+                <div className="space-y-2 rounded-xl border bg-background/50 p-3">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {t('kasifPackRoiTitle')}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">{t('kasifPackRoiDesc')}</p>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <Badge variant="secondary">
+                      {t('kasifPackRoiRuns')}: {stats.jobFunnel.packRoi.runs || 0}
+                    </Badge>
+                    <Badge variant="outline">
+                      {t('kasifPackRoiFr')}: {stats.jobFunnel.packRoi.firstResults || 0}
+                      {stats.jobFunnel.packRoi.frPerRun != null
+                        ? ` · ${stats.jobFunnel.packRoi.frPerRun}/run`
+                        : ''}
+                    </Badge>
+                    <Badge variant="default">
+                      {t('kasifPackRoiDone')}: {stats.jobFunnel.packRoi.jobDones || 0}
+                      {stats.jobFunnel.packRoi.donePerRun != null
+                        ? ` · ${stats.jobFunnel.packRoi.donePerRun}/run`
+                        : ''}
+                    </Badge>
+                    {stats.jobFunnel.packRoi.doneOfFirstResult != null ? (
+                      <Badge variant="outline">
+                        {t('kasifPackRoiDoneOfFr')}: %{stats.jobFunnel.packRoi.doneOfFirstResult}
+                      </Badge>
+                    ) : null}
+                  </div>
+                  {(stats.jobFunnel.packRoi.topByRoi || []).length > 0 ? (
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] font-medium text-muted-foreground">
+                        {t('kasifPackRoiTop')}
+                      </p>
+                      {stats.jobFunnel.packRoi.topByRoi.map((pack) => (
+                        <div
+                          key={`roi-${pack.packId}`}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs"
+                        >
+                          <code className="font-semibold">{pack.packId}</code>
+                          <span className="text-muted-foreground">
+                            ROI {pack.roiScore}
+                            {pack.donePerRun != null ? ` · done/run ${pack.donePerRun}` : ''}
+                            {pack.frPerRun != null ? ` · fr/run ${pack.frPerRun}` : ''}
+                            {pack.runner ? ` · runs ${pack.runner}` : ''}
+                            {pack.sources && Object.keys(pack.sources).length
+                              ? ` · ${Object.entries(pack.sources)
+                                  .map(([src, n]) => `${src}:${n}`)
+                                  .join(' ')}`
+                              : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </>
           )}
         </CardContent>

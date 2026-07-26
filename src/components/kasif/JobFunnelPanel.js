@@ -8,6 +8,7 @@ import { trackEvent } from '@/utils/analytics';
 import { resolveJobWizard } from '@/lib/kasif/jobWizards';
 import { formatKasifGoalLabel } from '@/lib/kasif/goalLabels';
 import { ResultBridgePanel } from '@/components/kasif/ResultBridgePanel';
+import { JobReceiptCard } from '@/components/kasif/JobReceiptCard';
 import { resolveBridgeGoal } from '@/lib/kasif/resultBridge';
 
 const MINUTE_OPTIONS = [5, 15, 30, 60];
@@ -450,6 +451,19 @@ export function JobFunnelPanel({
             <p className="text-xs font-medium text-emerald-800 dark:text-emerald-200">
               {t('job.thanks')}
             </p>
+          )}
+
+          {(firstResult === true || jobDone === true || bridgeDone) && (
+            <JobReceiptCard
+              interactionId={interactionId}
+              feedbackToken={feedbackToken}
+              source={source}
+              goals={goals}
+              minutes={minutes}
+              firstResult={firstResult === true || bridgeDone}
+              jobDone={jobDone}
+              locale={locale}
+            />
           )}
         </>
       )}

@@ -117,6 +117,13 @@ describe('Kâşif i18n EN/TR parity', () => {
       'kasifSoftPinSaved',
       'kasifSoftPinCleared',
       'kasifSoftPinFailed',
+      'kasifPackRoiTitle',
+      'kasifPackRoiDesc',
+      'kasifPackRoiRuns',
+      'kasifPackRoiFr',
+      'kasifPackRoiDone',
+      'kasifPackRoiDoneOfFr',
+      'kasifPackRoiTop',
       'alertsOpenApprovalQueue',
     ];
     for (const key of keys) {

@@ -353,15 +353,70 @@ export function buildJobFunnelStats(interactions = []) {
     }
   }
 
+  function ratio(numerator, denominator) {
+    if (!denominator) return null;
+    return Number((numerator / denominator).toFixed(2));
+  }
+
   const packStats = [...packBuckets.values()]
-    .map((bucket) => ({
-      ...bucket,
-      firstResultRate: rate(bucket.firstResult, bucket.total),
-      jobDoneRate: rate(bucket.jobDone, bucket.total),
-      runnerRate: rate(bucket.runner, bucket.total),
-    }))
-    .sort((a, b) => b.total - a.total)
+    .map((bucket) => {
+      const firstResultRate = rate(bucket.firstResult, bucket.total);
+      const jobDoneRate = rate(bucket.jobDone, bucket.total);
+      const runnerRate = rate(bucket.runner, bucket.total);
+      // Cost proxy: each pack-runner first_result counts as 1 run.
+      const frPerRun = ratio(bucket.firstResult, bucket.runner);
+      const donePerRun = ratio(bucket.jobDone, bucket.runner);
+      const doneOfFirstResult = rate(bucket.jobDone, bucket.firstResult);
+      // ROI score: job completions per runner run (null if no runner cost).
+      const roiScore = donePerRun;
+      return {
+        ...bucket,
+        firstResultRate,
+        jobDoneRate,
+        runnerRate,
+        frPerRun,
+        donePerRun,
+        doneOfFirstResult,
+        roiScore,
+      };
+    })
+    .sort((a, b) => {
+      const aScore = a.roiScore == null ? -1 : a.roiScore;
+      const bScore = b.roiScore == null ? -1 : b.roiScore;
+      if (bScore !== aScore) return bScore - aScore;
+      return b.total - a.total;
+    })
     .slice(0, 12);
+
+  const packRoiTotals = packStats.reduce(
+    (acc, pack) => {
+      acc.packs += 1;
+      acc.runs += pack.runner || 0;
+      acc.firstResults += pack.firstResult || 0;
+      acc.jobDones += pack.jobDone || 0;
+      return acc;
+    },
+    { packs: 0, runs: 0, firstResults: 0, jobDones: 0 }
+  );
+  const packRoi = {
+    ...packRoiTotals,
+    frPerRun: ratio(packRoiTotals.firstResults, packRoiTotals.runs),
+    donePerRun: ratio(packRoiTotals.jobDones, packRoiTotals.runs),
+    doneOfFirstResult: rate(packRoiTotals.jobDones, packRoiTotals.firstResults),
+    topByRoi: packStats
+      .filter((p) => p.runner > 0 && p.roiScore != null)
+      .slice(0, 5)
+      .map((p) => ({
+        packId: p.packId,
+        roiScore: p.roiScore,
+        donePerRun: p.donePerRun,
+        frPerRun: p.frPerRun,
+        runner: p.runner,
+        jobDone: p.jobDone,
+        firstResult: p.firstResult,
+        sources: p.sources,
+      })),
+  };
 
   const runnerSourceMix = Object.entries(runnerSourceCounts)
     .filter(([, count]) => count > 0)
@@ -442,5 +497,6 @@ export function buildJobFunnelStats(interactions = []) {
       .sort((a, b) => b.count - a.count)
       .slice(0, 8),
     packStats,
+    packRoi,
   };
 }

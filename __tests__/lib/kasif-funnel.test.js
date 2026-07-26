@@ -154,6 +154,68 @@ describe('kasif funnel', () => {
       expect.arrayContaining(['partner', 'local'])
     );
     expect(stats.packStats.find((p) => p.packId === 'content-studio')?.sources?.partner).toBe(1);
+    expect(stats.packRoi).toBeDefined();
+    expect(stats.packRoi.runs).toBe(2);
+    expect(stats.packRoi.firstResults).toBeGreaterThanOrEqual(2);
+    expect(stats.packStats[0].frPerRun != null || stats.packStats[0].runner === 0).toBe(true);
+  });
+
+  it('pack ROI skorunu runner başına job_done ile hesaplar', () => {
+    const stats = buildJobFunnelStats([
+      {
+        intent: { packId: 'seo-brief' },
+        funnel: {
+          stages: {
+            job_stated: '2026-07-26T10:00:00.000Z',
+            first_result: '2026-07-26T10:02:00.000Z',
+            job_done: '2026-07-26T10:05:00.000Z',
+          },
+          result_artifact: {
+            bridge: 'runner',
+            packId: 'seo-brief',
+            runner_source: 'gemini',
+          },
+          events: [],
+        },
+      },
+      {
+        intent: { packId: 'seo-brief' },
+        funnel: {
+          stages: {
+            job_stated: '2026-07-26T11:00:00.000Z',
+            first_result: '2026-07-26T11:02:00.000Z',
+          },
+          result_artifact: {
+            bridge: 'runner',
+            packId: 'seo-brief',
+            runner_source: 'local',
+          },
+          events: [],
+        },
+      },
+      {
+        intent: { packId: 'content-studio' },
+        funnel: {
+          stages: {
+            job_stated: '2026-07-26T12:00:00.000Z',
+            first_result: '2026-07-26T12:01:00.000Z',
+          },
+          result_artifact: {
+            bridge: 'runner',
+            packId: 'content-studio',
+            runner_source: 'partner',
+          },
+          events: [],
+        },
+      },
+    ]);
+    const seo = stats.packStats.find((p) => p.packId === 'seo-brief');
+    expect(seo.runner).toBe(2);
+    expect(seo.jobDone).toBe(1);
+    expect(seo.donePerRun).toBe(0.5);
+    expect(seo.roiScore).toBe(0.5);
+    expect(stats.packRoi.topByRoi[0].packId).toBe('seo-brief');
+    expect(stats.packRoi.donePerRun).toBeCloseTo(1 / 3, 2);
   });
 
   it('pro onboarding → first_result metriklerini hesaplar', () => {

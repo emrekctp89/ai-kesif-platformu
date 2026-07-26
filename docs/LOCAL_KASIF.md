@@ -51,22 +51,24 @@ Workmind iki Kâşif katmanı kullanır:
 17. Soft-landing ops pin (P6.9): admin “kazananı pinle” → `app_settings` (env yazmadan);
     client `GET /api/kasif/soft-landing-config`. Öncelik: FORCE env → ops pin → DEFAULT → ab.
 18. Add-tool durum (P6.10): sohbette “durumumu sor” / URL-slug ile kuyruk onay durumu.
-19. Pack runner’lar (10): content, sales, meeting, social, pitch, seo-brief, support-kit,
+19. Job receipt (P6.11): first_result/job_done sonrası paylaşılabilir makbuz + `/kasif/receipt`.
+20. Pack ROI (P6.12): admin kalite panelinde runner başına done/FR özeti.
+21. Pack runner’lar (10): content, sales, meeting, social, pitch, seo-brief, support-kit,
     **code-scaffold**, **legal-review**, **research-brief** (çoğu multi-step `steps`).
-20. “Bu aracı ekle https://…” intent: scrape → `is_approved=false` aday kuyruğu (admin onay).
+22. “Bu aracı ekle https://…” intent: scrape → `is_approved=false` aday kuyruğu (admin onay).
     Resmî ürün URL’si gerekir; dizin/aggregator engelli. Rate limit: 5/saat.
     Admin: add-tool queued/dedupe metrikleri. Opsiyonel: `KASIF_ADD_TOOL_NOTIFY=true`.
-21. Pack deep link: `/kasif?pack=seo-brief&runner=1` runner panelini açar (öğren yolu CTAları).
-22. Admin hunisi: runner source mix (partner / gemini / local) + pack conversion sources.
-23. Soft-landing A/B: `softLandingVariant` (A|B) sticky; chip listesi sunucudan (`starters`).
-24. Offline eval: pack runner + add-tool suite (`kasif-pack-addtool-eval`); shared cases add-tool/soft-landing-en.
-25. Soft-landing A/B admin kovaları (shown/follow-up/convert). Pack smoke: `npm run kasif:pack-smoke`.
-26. Pro paywall: login/kota kopyası + ücretsiz runner alternatifi. Add-tool: UI badge + admin `?tab=approval_queue`.
-27. Pro onboarding turu (ilk Pro runner). Add-tool her kuyrukta `admin_alerts` (`kasif_add_tool`).
-28. Pro onboarding metrikleri admin hunisinde (complete→first_result). i18n parity testleri.
-29. Soft-landing A/B win-rate (min 20 follow-up/side). Learn + LearnKasif full key parity.
-30. Soft-landing pin: `NEXT_PUBLIC_KASIF_SOFT_LANDING_DEFAULT_VARIANT=A|B|ab` (+ FORCE).
-31. Add-tool SLA kopyası: genelde 1–3 iş günü (hedef).
+23. Pack deep link: `/kasif?pack=seo-brief&runner=1` runner panelini açar (öğren yolu CTAları).
+24. Admin hunisi: runner source mix (partner / gemini / local) + pack conversion sources.
+25. Soft-landing A/B: `softLandingVariant` (A|B) sticky; chip listesi sunucudan (`starters`).
+26. Offline eval: pack runner + add-tool suite (`kasif-pack-addtool-eval`); shared cases add-tool/soft-landing-en.
+27. Soft-landing A/B admin kovaları (shown/follow-up/convert). Pack smoke: `npm run kasif:pack-smoke`.
+28. Pro paywall: login/kota kopyası + ücretsiz runner alternatifi. Add-tool: UI badge + admin `?tab=approval_queue`.
+29. Pro onboarding turu (ilk Pro runner). Add-tool her kuyrukta `admin_alerts` (`kasif_add_tool`).
+30. Pro onboarding metrikleri admin hunisinde (complete→first_result). i18n parity testleri.
+31. Soft-landing A/B win-rate (min 20 follow-up/side). Learn + LearnKasif full key parity.
+32. Soft-landing pin: `NEXT_PUBLIC_KASIF_SOFT_LANDING_DEFAULT_VARIANT=A|B|ab` (+ FORCE).
+33. Add-tool SLA kopyası: genelde 1–3 iş günü (hedef).
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır. Saf fiyat daraltması
