@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { Copy, ExternalLink, LoaderCircle, Lock, Sparkles, Wand2 } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
 import { isRunnablePack } from '@/lib/kasif/jobPacks';
-import { buildPackPaywall } from '@/lib/kasif/packAccess';
+import { isProPackId, buildPackPaywall } from '@/lib/kasif/packAccess';
 import { buildPartnerConnectSteps } from '@/lib/kasif/partnerConnect';
+import { ProPackOnboarding } from '@/components/kasif/ProPackOnboarding';
 
 const PLACEHOLDER_KEYS = {
   'content-studio': 'packs.runnerBriefPlaceholder',
@@ -188,8 +189,11 @@ export function PackRunnerPanel({
   const sourceKey = sourceLabelKey(result?.run?.source);
   const sourceText = t(sourceKey);
 
+  const isProPack = isProPackId(safePackId);
+
   return (
     <div className="mt-4 rounded-2xl border border-violet-500/25 bg-violet-500/5 p-4">
+      {isProPack ? <ProPackOnboarding locale={locale} packId={safePackId} enabled /> : null}
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-900 dark:text-violet-100">

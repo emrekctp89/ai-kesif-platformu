@@ -160,13 +160,21 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ---
 
+### P6.5 Pro onboarding + add-tool admin inbox
+
+- **ProPackOnboarding**: ilk Pro runner açılışında 4 adımlık tur (localStorage)
+- **admin_alerts**: her Kâşif add-tool queue → `alert_type=kasif_add_tool` (+ opsiyonel e-posta)
+- **Admin Uyarılar**: kasif_add_tool satırında slug/link + onay kuyruğu deep link
+
+---
+
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.4~~ ✅
-2. **Pro onboarding** — ilk Pro paket denemesinde short tour
-3. **Add-tool admin notify inbox** — admin alerts tablosuna yaz
+1. ~~P0–P6.5~~ ✅
+2. **i18n polish** — Pro tour + paywall EN/TR parity check
+3. **Metrics: pro onboarding complete → first_result** funnel in admin
 
 ---
 

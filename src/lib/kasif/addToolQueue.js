@@ -159,7 +159,7 @@ export async function queueToolCandidateFromUrl(rawUrl, options = {}) {
     return { ok: false, error: 'Aday kaydedilemedi.', candidate };
   }
 
-  // Ops: structured log always; optional email when KASIF_ADD_TOOL_NOTIFY=true
+  // Ops: always inbox alert; optional email when KASIF_ADD_TOOL_NOTIFY=true
   logger.info('Kâşif add-tool queued', {
     name: inserted?.name || candidate.name,
     slug: inserted?.slug,
@@ -170,6 +170,7 @@ export async function queueToolCandidateFromUrl(rawUrl, options = {}) {
     name: inserted?.name || candidate.name,
     slug: inserted?.slug,
     link: inserted?.link || candidate.link,
+    toolId: inserted?.id,
     note,
   });
 
@@ -183,10 +184,44 @@ export async function queueToolCandidateFromUrl(rawUrl, options = {}) {
 }
 
 /**
- * Optional admin email when a Kâşif scrape candidate is queued.
- * Enabled only with KASIF_ADD_TOOL_NOTIFY=true + RESEND_API_KEY + ADMIN_EMAIL.
+ * Always create admin_alerts row; optional Resend email.
+ * @param {{ name?: string, slug?: string, link?: string, toolId?: string|number, note?: string }} payload
  */
-async function notifyAdminAddToolQueued({ name, slug, link, note }) {
+export async function notifyAdminAddToolQueued(payload = {}) {
+  const name = String(payload.name || 'tool').slice(0, 120);
+  const slug = String(payload.slug || '').slice(0, 120);
+  const link = String(payload.link || '').slice(0, 500);
+  const toolId = payload.toolId || null;
+  const note = String(payload.note || '').slice(0, 400);
+  const description = `Kâşif sohbet adayı: ${name}${slug ? ` (${slug})` : ''}${
+    link ? ` — ${link}` : ''
+  }`;
+  const adminLink = '/admin?tab=approval_queue';
+  const metadata = {
+    source: 'kasif_add_tool',
+    tool_id: toolId,
+    tool_name: name,
+    tool_slug: slug || null,
+    tool_link: link || null,
+    note: note || null,
+  };
+
+  try {
+    const admin = createAdminClient();
+    const { error: alertError } = await admin.from('admin_alerts').insert({
+      alert_type: 'kasif_add_tool',
+      description,
+      status: 'Açık',
+      link: adminLink,
+      metadata,
+    });
+    if (alertError) {
+      logger.warn('Kâşif add-tool admin_alerts insert failed:', alertError.message || alertError);
+    }
+  } catch (error) {
+    logger.warn('Kâşif add-tool admin_alerts error:', error?.message || error);
+  }
+
   if (String(process.env.KASIF_ADD_TOOL_NOTIFY || '').toLowerCase() !== 'true') return;
   const adminEmail = String(process.env.ADMIN_EMAIL || '').trim();
   const resendKey = String(process.env.RESEND_API_KEY || '').trim();
@@ -201,7 +236,7 @@ async function notifyAdminAddToolQueued({ name, slug, link, note }) {
     await resend.emails.send({
       from,
       to: adminEmail,
-      subject: `[Kâşif] Yeni araç adayı: ${String(name || 'tool').slice(0, 80)}`,
+      subject: `[Kâşif] Yeni araç adayı: ${name}`,
       text: [
         'Kâşif sohbetinden yeni katalog adayı kuyruğa alındı (is_approved=false).',
         '',
@@ -210,7 +245,7 @@ async function notifyAdminAddToolQueued({ name, slug, link, note }) {
         `Link: ${link || '—'}`,
         note ? `Not: ${note}` : null,
         '',
-        'Admin panelinden bekleyen araçlar kuyruğunu inceleyin.',
+        'Admin: /admin?tab=approval_queue veya Uyarılar (kasif_add_tool).',
       ]
         .filter(Boolean)
         .join('\n'),

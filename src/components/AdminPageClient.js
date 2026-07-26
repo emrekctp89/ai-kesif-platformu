@@ -1867,6 +1867,31 @@ function AdminAlertsTab({ alerts }) {
                     Yorum ID: {alert.metadata.comment_id}
                   </p>
                 )}
+                {alert.alert_type === 'kasif_add_tool' && (
+                  <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                    {alert.metadata?.tool_slug ? (
+                      <p>
+                        Slug: <code className="font-mono">{alert.metadata.tool_slug}</code>
+                      </p>
+                    ) : null}
+                    {alert.metadata?.tool_link ? (
+                      <a
+                        href={alert.metadata.tool_link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary hover:underline break-all"
+                      >
+                        {alert.metadata.tool_link}
+                      </a>
+                    ) : null}
+                    <Link
+                      href="/admin?tab=approval_queue"
+                      className="inline-flex font-semibold text-primary hover:underline"
+                    >
+                      {t('alertsOpenApprovalQueue')}
+                    </Link>
+                  </div>
+                )}
                 {statusFilter === 'Açık' || statusFilter === 'İnceleniyor' ? (
                   <div className="flex gap-2 mt-2">
                     {alert.alert_type === 'reported_comment' && alert.metadata?.comment_id && (
