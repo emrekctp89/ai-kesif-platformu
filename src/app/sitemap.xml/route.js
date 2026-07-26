@@ -26,6 +26,7 @@ export async function GET() {
     { url: withBase('/'), lastModified: generatedAt },
     { url: withBase('/kategori'), lastModified: generatedAt },
     { url: withBase('/ogren'), lastModified: generatedAt },
+    { url: withBase('/ogren/kasif'), lastModified: generatedAt },
     { url: withBase('/workmind'), lastModified: generatedAt },
     { url: withBase('/blog'), lastModified: generatedAt },
     { url: withBase('/arastirma'), lastModified: generatedAt },

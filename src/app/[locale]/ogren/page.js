@@ -271,21 +271,21 @@ export default async function LearningHubPage({ params }) {
 
   const quickStarts = [
     {
-      href: '/tavsiye',
-      label: t('ctaRecommend'),
+      href: '/ogren/kasif',
+      label: t('ctaKasif'),
       icon: Sparkles,
       className: 'ai-tavsiye-gradient text-white border-0',
+    },
+    {
+      href: '/kasif',
+      label: t('ctaRecommend'),
+      icon: Bot,
+      className: 'glass-button',
     },
     {
       href: '/kategori',
       label: t('ctaCategories'),
       icon: Compass,
-      className: 'glass-button',
-    },
-    {
-      href: '/blog',
-      label: t('ctaBlog'),
-      icon: BookOpen,
       className: 'glass-button',
     },
     {
@@ -354,9 +354,9 @@ export default async function LearningHubPage({ params }) {
                 size="lg"
                 className="ai-tavsiye-gradient min-h-12 rounded-2xl px-6 shadow-xl"
               >
-                <Link href="/tavsiye" prefetch={false} className="font-semibold">
+                <Link href="/ogren/kasif" prefetch={false} className="font-semibold">
                   <Sparkles className="mr-2 h-5 w-5" aria-hidden="true" />
-                  {t('ctaRecommend')}
+                  {t('featuredKasifCta')}
                   <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
                 </Link>
               </Button>
@@ -366,9 +366,9 @@ export default async function LearningHubPage({ params }) {
                 size="lg"
                 className="glass-button min-h-12 rounded-2xl px-6"
               >
-                <Link href="/kategori" prefetch={false} className="font-semibold">
-                  <Compass className="mr-2 h-5 w-5" aria-hidden="true" />
-                  {t('ctaCategories')}
+                <Link href="/kasif" prefetch={false} className="font-semibold">
+                  <Bot className="mr-2 h-5 w-5" aria-hidden="true" />
+                  {t('ctaRecommend')}
                 </Link>
               </Button>
             </div>
@@ -386,6 +386,59 @@ export default async function LearningHubPage({ params }) {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Featured: Kâşif job-completion path */}
+        <section aria-labelledby="learn-featured-heading">
+          <div className="mb-4 sm:mb-5">
+            <h2
+              id="learn-featured-heading"
+              className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+            >
+              {t('featuredPathHeading')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t('featuredPathSubheading')}</p>
+          </div>
+          <Card className="group relative overflow-hidden border-violet-500/30 bg-gradient-to-br from-violet-500/10 via-background to-cyan-500/10 shadow-lg transition-all hover:border-violet-500/50 hover:shadow-xl">
+            <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-violet-500/20 blur-2xl" />
+            <CardHeader className="relative z-10 space-y-3 sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="rounded-xl border bg-background/80 p-2 shadow-sm">
+                    <Sparkles
+                      className="h-5 w-5 text-violet-600 dark:text-violet-300"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <Badge variant="secondary" className="font-semibold">
+                    {t('featuredKasifMeta')}
+                  </Badge>
+                  <Badge variant="outline">Kâşif</Badge>
+                </div>
+                <CardTitle className="text-xl sm:text-2xl">{t('featuredKasifTitle')}</CardTitle>
+                <CardDescription className="max-w-2xl text-sm leading-relaxed sm:text-base">
+                  {t('featuredKasifBody')}
+                </CardDescription>
+              </div>
+              <Button
+                asChild
+                size="lg"
+                className="ai-tavsiye-gradient min-h-11 shrink-0 rounded-2xl px-5 font-semibold shadow-md"
+              >
+                <Link href="/ogren/kasif" prefetch={false}>
+                  {t('featuredKasifCta')}
+                  <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="relative z-10 flex flex-wrap gap-2 pt-0">
+              {['job_stated', 'first_result', 'job_done', 'pack runner', 'Workmind'].map((tag) => (
+                <Badge key={tag} variant="outline" className="font-mono text-[11px] font-normal">
+                  {tag}
+                </Badge>
+              ))}
+            </CardContent>
+          </Card>
         </section>
 
         {/* How to learn on the platform */}
@@ -720,9 +773,9 @@ export default async function LearningHubPage({ params }) {
                 asChild
                 className="ai-tavsiye-gradient min-h-11 rounded-xl border-0 font-semibold"
               >
-                <Link href="/tavsiye" prefetch={false}>
+                <Link href="/ogren/kasif" prefetch={false}>
                   <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
-                  {t('ctaRecommend')}
+                  {t('featuredKasifCta')}
                 </Link>
               </Button>
               <Button
@@ -730,8 +783,8 @@ export default async function LearningHubPage({ params }) {
                 variant="outline"
                 className="glass-button min-h-11 rounded-xl font-semibold"
               >
-                <Link href="/" prefetch={false}>
-                  {t('browseTools')}
+                <Link href="/kasif" prefetch={false}>
+                  {t('ctaRecommend')}
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Link>
               </Button>
