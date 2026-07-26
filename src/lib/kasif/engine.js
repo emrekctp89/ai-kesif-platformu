@@ -150,36 +150,135 @@ export function prioritizeGoals(goals = []) {
   return result;
 }
 
+/**
+ * Fiyat / plan daraltması mı? (hedef/konu değişmeden “bu kez ücretli” gibi)
+ * Bunlar topic switch sayılmaz — geçmiş goal korunur.
+ */
+export function isPriceOnlyRefinement(question) {
+  const normalized = normalizeText(question);
+  if (!normalized) return false;
+  const intent = understandQuestion(question);
+  if (intent.goals.length > 0 || intent.concepts.length > 0) return false;
+  if (!(intent.wantsFree || intent.wantsPaid)) return false;
+  // Açık domain/pivot dili varsa fiyat-only değil
+  if (
+    /\b(konu|topic|gorsel|video|kod|sunum|muzik|ses|logo|seo|email|eposta|ceviri|hukuk|3d|image|code|music|legal)\b/.test(
+      normalized
+    )
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/** Explicit topic reset / switch cues in the current utterance. */
+export function isTopicSwitchUtterance(question) {
+  const normalized = normalizeText(question);
+  if (!normalized) return false;
+  // "Bu kez ücretli göster" fiyat daraltmasıdır; konu değişimi değil.
+  if (isPriceOnlyRefinement(question)) return false;
+  return (
+    /^(hayir|no|instead)\b/.test(normalized) ||
+    /\b(bu kez|bu sefer|konu degis|baska bir sey|baska konu|degil .* istiyorum|not that|something else|different topic)\b/.test(
+      normalized
+    ) ||
+    /\b(instead i want|switch to|degistir.*konu)\b/.test(normalized)
+  );
+}
+
+/** Pure ranking / “which is best” follow-ups without a new domain. */
+export function isRankingFollowUp(question) {
+  const normalized = normalizeText(question);
+  if (!normalized) return false;
+  if (isTopicSwitchUtterance(question)) return false;
+  if (isPriceOnlyRefinement(question)) {
+    // Fiyat + hangisi: ranking değil, filter refinement (wantsComparison ayrı yönetilir)
+    return false;
+  }
+  return (
+    /\b(en iyi|hangisi|hangileri|karsilastir|compare|which (one|is)|best (one|option)|en guclu|one cikan)\b/.test(
+      normalized
+    ) && normalized.split(/\s+/).filter(Boolean).length <= 12
+  );
+}
+
 export function understandConversation(question, history = []) {
   const currentIntent = understandQuestion(question);
   const contextualIntent = understandQuestion(buildRetrievalQuery(question, history));
   const currentHasPricePreference = currentIntent.wantsFree || currentIntent.wantsPaid;
   const currentHasTopic = currentIntent.concepts.length > 0;
   const currentHasGoal = currentIntent.goals.length > 0;
-  const goals = currentHasGoal
-    ? currentIntent.goals
-    : currentHasTopic
-      ? []
-      : contextualIntent.goals;
+  const priceOnly = isPriceOnlyRefinement(question);
+  const topicSwitch = isTopicSwitchUtterance(question);
+  const rankingFollowUp = isRankingFollowUp(question);
+  const hasUserHistory = (history || []).some((message) => message?.role === 'user');
+
+  // Topic switch: never keep old goals/concepts when user clearly pivots.
+  // Ranking / price-only follow-up without new topic: keep history goals.
+  let goals;
+  if (currentHasGoal) {
+    goals = currentIntent.goals;
+  } else if (topicSwitch) {
+    goals = [];
+  } else if (currentHasTopic && !priceOnly && !rankingFollowUp) {
+    goals = [];
+  } else if (rankingFollowUp || priceOnly || !currentHasTopic) {
+    goals = contextualIntent.goals;
+  } else {
+    goals = [];
+  }
+
   const carriedFromHistory =
     !currentHasGoal &&
-    !currentHasTopic &&
+    !topicSwitch &&
+    (!currentHasTopic || priceOnly || rankingFollowUp) &&
     goals.length > 0 &&
-    (history || []).some((message) => message?.role === 'user');
+    hasUserHistory;
+
+  const concepts =
+    topicSwitch || (currentHasTopic && !priceOnly && !rankingFollowUp)
+      ? currentIntent.concepts
+      : rankingFollowUp || priceOnly
+        ? contextualIntent.concepts
+        : currentHasTopic
+          ? currentIntent.concepts
+          : contextualIntent.concepts;
+
+  const tokens =
+    topicSwitch || (currentHasTopic && !priceOnly && !rankingFollowUp)
+      ? currentIntent.tokens
+      : rankingFollowUp || priceOnly
+        ? contextualIntent.tokens
+        : currentHasTopic
+          ? currentIntent.tokens
+          : contextualIntent.tokens;
+
+  const signals =
+    topicSwitch || (currentHasTopic && !priceOnly && !rankingFollowUp)
+      ? currentIntent.signals
+      : rankingFollowUp || priceOnly
+        ? contextualIntent.signals
+        : currentHasTopic
+          ? currentIntent.signals
+          : contextualIntent.signals;
 
   return {
     ...contextualIntent,
-    tokens: currentHasTopic ? currentIntent.tokens : contextualIntent.tokens,
-    concepts: currentHasTopic ? currentIntent.concepts : contextualIntent.concepts,
-    signals: currentHasTopic ? currentIntent.signals : contextualIntent.signals,
+    tokens,
+    concepts,
+    signals,
     goals,
     wantsFree: currentHasPricePreference ? currentIntent.wantsFree : contextualIntent.wantsFree,
     wantsPaid: currentHasPricePreference ? currentIntent.wantsPaid : contextualIntent.wantsPaid,
     // Follow-up "hangileri" çoğu zaman fiyat daraltmasıdır; katı karşılaştırma formatına zorlama.
+    // Ranking follow-ups ("en iyisi hangisi") with history keep comparison mode when requested.
     wantsComparison: carriedFromHistory
-      ? currentIntent.wantsComparison && !currentHasPricePreference
-      : currentIntent.wantsComparison,
+      ? (currentIntent.wantsComparison || rankingFollowUp) && !currentHasPricePreference
+      : currentIntent.wantsComparison || (rankingFollowUp && hasUserHistory && goals.length > 0),
     carriedFromHistory,
+    topicSwitch,
+    rankingFollowUp,
+    priceOnly,
   };
 }
 

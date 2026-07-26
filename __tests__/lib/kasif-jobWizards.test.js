@@ -4,13 +4,25 @@ const {
   listJobWizardGoalIds,
   resolveJobWizard,
 } = require('../../src/lib/kasif/jobWizards');
+const { GOAL_LABELS } = require('../../src/lib/kasif/goalLabels');
 
 describe('jobWizards', () => {
-  it('en az 10 niş sihirbaz tanımlar', () => {
-    expect(listJobWizardGoalIds().length).toBeGreaterThanOrEqual(10);
-    expect(JOB_WIZARDS['presentation-creation']).toBeDefined();
-    expect(JOB_WIZARDS['image-generation']).toBeDefined();
-    expect(JOB_WIZARDS['workflow-automation']).toBeDefined();
+  it('tüm goal label anahtarları için sihirbaz tanımlar', () => {
+    const wizardIds = listJobWizardGoalIds();
+    const goalIds = Object.keys(GOAL_LABELS.tr);
+    expect(wizardIds.length).toBeGreaterThanOrEqual(22);
+    for (const goal of goalIds) {
+      expect(JOB_WIZARDS[goal]).toBeDefined();
+      expect(JOB_WIZARDS[goal].steps.length).toBeGreaterThanOrEqual(3);
+      expect(JOB_WIZARDS[goal].prompts?.length).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('niş sihirbazlar (video, music, legal, 3d) lokalize edilir', () => {
+    expect(resolveJobWizard(['video-generation'], 'tr').title).toMatch(/video/i);
+    expect(resolveJobWizard(['music-generation'], 'en').title).toMatch(/music/i);
+    expect(resolveJobWizard(['legal-review'], 'tr').title).toMatch(/hukuk/i);
+    expect(resolveJobWizard(['three-d-generation'], 'en').title).toMatch(/3d/i);
   });
 
   it('goal sırasına göre doğru sihirbazı seçer', () => {

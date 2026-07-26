@@ -2,7 +2,7 @@
 
 Bu dosya Kâşif’in **öneri motoru** ile **kataloga araç çekme** yönünü ayırır ve sıradaki işleri tutar.
 
-Son güncelleme: 2026-07-25
+Son güncelleme: 2026-07-26
 
 ---
 
@@ -12,13 +12,14 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 `job_stated → tool_recommended → tool_selected → setup_started → setup_completed → first_result → job_done`
 
-| Faz    | Durum | Ne                                                                |
-| ------ | ----- | ----------------------------------------------------------------- |
-| **P0** | ✅    | Job funnel kolon + API + self-report UI + admin hunisi            |
-| **P1** | ✅    | Top job sihirbazları (goal checklist + kopyalanabilir şablon)     |
-| **P2** | ✅    | Workmind ↔ Kâşif tek “görev oturumu”                              |
-| **P3** | ✅    | Metin nişlerinde kopyala-yapıştır first_result bridge             |
-| **P4** | ✅    | İş paketleri + Pro gate/kota + content-studio runner + pack stats |
+| Faz    | Durum | Ne                                                        |
+| ------ | ----- | --------------------------------------------------------- |
+| **P0** | ✅    | Job funnel kolon + API + self-report UI + admin hunisi    |
+| **P1** | ✅    | Tüm goal sihirbazları (22 + default checklist + şablon)   |
+| **P2** | ✅    | Workmind ↔ Kâşif tek “görev oturumu”                      |
+| **P3** | ✅    | Metin nişlerinde kopyala-yapıştır first_result bridge     |
+| **P4** | ✅    | İş paketleri + Pro gate/kota + 5 pack runner + pack stats |
+| **P5** | ✅    | Partner API LLM zinciri + history follow-up kalitesi      |
 
 ### P0 teknik yüzey
 
@@ -31,7 +32,7 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ### P1 teknik yüzey
 
-- `src/lib/kasif/jobWizards.js` — 10 goal + default sihirbaz (adımlar, prompt şablonları, first-result tanımı)
+- `src/lib/kasif/jobWizards.js` — 22 goal + default sihirbaz (video, music, legal, 3d, …)
 - `JobFunnelPanel` — intent.goals → goal-specific checklist + kopyala
 - Funnel meta: `goal`, `wizard_id`; analytics: `kasif_wizard_prompt_copy`
 
@@ -60,12 +61,22 @@ North Star artık yalnızca tıklama/affiliate değil:
 - `/uyelik` — iş paketleri / orkestrasyon Pro konumlandırması
 - Analytics: `kasif_pack_ask`, `kasif_pack_workmind`, `kasif_pack_matched_workmind`
 - **Pro gate / kota**: proHint paketler — giriş + 2 ücretsiz/30g, sonrası Pro (`packAccess`)
-- **Runner**: `POST /api/kasif/pack-runner` → 5 paket (content, sales, meeting, social, pitch) Gemini/local
+- **Runner**: `POST /api/kasif/pack-runner` → 5 paket (content, sales, meeting, social, pitch)
 - **Admin**: pack_id conversion kovaları + runner sayacı
 - **Soft-landing conversion**: `fromSoftLanding` intent stamp + starter buckets + admin oranları
   (`shown → follow-up → sourced rec`); analytics: `kasif_soft_landing_*`
 - **Eval CI**: `scripts/kasif-eval-cases.cjs` + offline Jest (`kasif:evaluate:offline` in CI);
   live `kasif:evaluate` via scheduled workflow when `KASIF_EVAL_URL` secret set
+
+### P5 teknik yüzey
+
+- **Partner LLM zinciri**: `src/lib/kasif/partnerRunner.js` — OpenAI-compatible chat
+  (`KASIF_PARTNER_API_URL` + `KASIF_PARTNER_API_KEY` + opsiyonel model) → Gemini → local
+- Pack runner’lar `callLlmJson` kullanır; `source`: `partner` | `gemini` | `local`
+- Status (key sızdırmaz): `GET /api/kasif/partner/status`
+- **Wizard**: tüm `GOAL_LABELS` anahtarları için checklist + prompt
+- **History follow-up**: `isPriceOnlyRefinement` / `isTopicSwitchUtterance` / `isRankingFollowUp`
+  — “bu kez ücretli” goal korur; “hayır, görsel…” topic switch; “en iyisi hangisi?” ranking
 
 ---
 
@@ -75,7 +86,7 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 - Katalog içi ranking, follow-up, meta, soft-landing, admin kalite paneli
 - Job completion funnel (seed + self-report)
-- Dış LLM ile serbest sohbet yok; cevaplar platform kayıtlarından üretilir
+- Öneri cevapları platform kayıtlarından; pack runner’da opsiyonel Partner/Gemini JSON
 
 ### Katalog keşfi (`src/lib/toolDiscoveryCron.js`)
 
@@ -89,9 +100,9 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 Öncelik sırasıyla tutulacak:
 
-1. **Partner API runner** — seçili araç OAuth ile gerçek dış çağrı
-2. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
-3. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
+1. **Partner OAuth UX** — seçili araç hesabı bağlama + kullanıcıya görünür runner durumu
+2. **Pack runner genişletme** — yeni paketler / multi-step artifact
+3. **Kâşif “bu aracı ekle”** — sohbet intent → scrape aday kuyruğu (admin gate)
 
 ---
 

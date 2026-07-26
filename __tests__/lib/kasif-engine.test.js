@@ -7,6 +7,9 @@ import {
   answerQuestion,
   detectMetaIntent,
   isContextlessFollowUp,
+  isPriceOnlyRefinement,
+  isRankingFollowUp,
+  isTopicSwitchUtterance,
   prioritizeGoals,
   rankTools,
   understandConversation,
@@ -177,6 +180,9 @@ describe('Kâşif engine', () => {
     expect(intent.goals).toContain('coding-assistant');
     expect(intent.wantsFree).toBe(false);
     expect(intent.wantsPaid).toBe(true);
+    expect(intent.topicSwitch).toBe(false);
+    expect(intent.priceOnly).toBe(true);
+    expect(intent.carriedFromHistory).toBe(true);
   });
 
   it('açık konu değişikliğinde geçmiş hedefi yeni hedefe sızdırmaz', () => {
@@ -190,6 +196,7 @@ describe('Kâşif engine', () => {
     expect(intent.tokens).toEqual(expect.arrayContaining(['gorsel', 'olusturmak']));
     expect(intent.tokens).not.toContain('sunum');
     expect(intent.wantsFree).toBe(true);
+    expect(intent.topicSwitch).toBe(true);
   });
 
   it('yeni konu açık ama hedef belirsizse geçmiş hedefi taşımayı bırakır', () => {
@@ -201,6 +208,54 @@ describe('Kâşif engine', () => {
     expect(intent.goals).toEqual([]);
     expect(intent.tokens).toContain('kod');
     expect(intent.tokens).not.toContain('sunum');
+  });
+
+  it('fiyat-only refinement topic switch sayılmaz', () => {
+    expect(isPriceOnlyRefinement('Bu kez ücretli seçenekleri göster')).toBe(true);
+    expect(isTopicSwitchUtterance('Bu kez ücretli seçenekleri göster')).toBe(false);
+    expect(isPriceOnlyRefinement('Hayır, görsel oluşturmak istiyorum')).toBe(false);
+    expect(isTopicSwitchUtterance('Hayır, görsel oluşturmak istiyorum')).toBe(true);
+  });
+
+  it('ranking follow-up geçmiş hedefi korur ve comparison açar', () => {
+    expect(isRankingFollowUp('En iyisi hangisi?')).toBe(true);
+    const intent = understandConversation('En iyisi hangisi?', [
+      { role: 'user', content: 'Sunum hazırlamak için araç öner' },
+      { role: 'assistant', content: 'Birkaç sunum aracı önerdim.' },
+    ]);
+    expect(intent.goals).toContain('presentation-creation');
+    expect(intent.rankingFollowUp).toBe(true);
+    expect(intent.carriedFromHistory).toBe(true);
+    expect(intent.wantsComparison).toBe(true);
+  });
+
+  it('İngilizce ranking follow-up geçmişi taşır', () => {
+    const intent = understandConversation('Which one is best?', [
+      { role: 'user', content: 'Recommend a coding assistant' },
+    ]);
+    expect(intent.goals).toContain('coding-assistant');
+    expect(intent.rankingFollowUp).toBe(true);
+  });
+
+  it('fiyat + hangileri ranking değil, filter refinement', () => {
+    expect(isRankingFollowUp('Peki bunlardan ücretsiz olanlar hangileri?')).toBe(false);
+    expect(isPriceOnlyRefinement('Peki bunlardan ücretsiz olanlar hangileri?')).toBe(true);
+    const intent = understandConversation('Peki bunlardan ücretsiz olanlar hangileri?', [
+      { role: 'user', content: 'Logo tasarım aracı öner' },
+    ]);
+    expect(intent.goals).toContain('logo-design');
+    expect(intent.wantsFree).toBe(true);
+    expect(intent.wantsComparison).toBe(false);
+    expect(intent.carriedFromHistory).toBe(true);
+  });
+
+  it('something else ile konu sıfırlanır', () => {
+    const intent = understandConversation('Something else, different topic', [
+      { role: 'user', content: 'Video generation tools' },
+    ]);
+    expect(intent.topicSwitch).toBe(true);
+    expect(intent.goals).toEqual([]);
+    expect(intent.carriedFromHistory).toBe(false);
   });
 
   it('takip sorusuna geçmiş bağlamla daha yüksek güvenli yanıt üretir', () => {

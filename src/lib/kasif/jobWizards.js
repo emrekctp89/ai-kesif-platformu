@@ -731,6 +731,732 @@ Avoid: clichés, excessive detail, unreadable type`,
       en: 'First result: a downloaded logo file.',
     },
   },
+
+  'video-generation': {
+    id: 'video-generation',
+    title: { tr: 'Video üretim sihirbazı', en: 'Video generation wizard' },
+    hint: {
+      tr: 'Amaç: en az 1 kısa klip veya sahne taslağı.',
+      en: 'Goal: at least one short clip or scene draft.',
+    },
+    steps: [
+      {
+        id: 'open',
+        label: {
+          tr: 'Aracı aç ve metinden video / animasyon modunu seç',
+          en: 'Open the tool and pick text-to-video / animation mode',
+        },
+      },
+      {
+        id: 'script',
+        label: {
+          tr: 'Senaryo, süre ve en-boy oranını yaz',
+          en: 'Write script, duration, and aspect ratio',
+        },
+      },
+      {
+        id: 'generate',
+        label: {
+          tr: 'İlk klip / sahneyi üret',
+          en: 'Generate the first clip / scene',
+        },
+      },
+      {
+        id: 'export',
+        label: {
+          tr: 'En iyiyi seçip indir veya paylaş',
+          en: 'Pick the best and download or share',
+        },
+      },
+    ],
+    prompts: [
+      {
+        id: 'video-brief',
+        title: { tr: 'Video brief', en: 'Video brief' },
+        body: {
+          tr: `Konu: [...]
+Süre: [10–30 sn]
+En-boy: 16:9 veya 9:16
+Stil: [sinematik / animasyon / ürün demo]
+Ses: [yok / müzik / seslendirme]
+CTA: [...]`,
+          en: `Topic: [...]
+Duration: [10–30s]
+Aspect: 16:9 or 9:16
+Style: [cinematic / animation / product demo]
+Audio: [none / music / voiceover]
+CTA: [...]`,
+        },
+      },
+    ],
+    firstResultHint: {
+      tr: 'İlk sonuç: indirdiğin veya paylaştığın kısa video.',
+      en: 'First result: a downloaded or shared short video.',
+    },
+  },
+
+  'voice-generation': {
+    id: 'voice-generation',
+    title: { tr: 'Seslendirme sihirbazı', en: 'Voice generation wizard' },
+    hint: {
+      tr: 'Amaç: net bir TTS / dublaj dosyası.',
+      en: 'Goal: a clean TTS / dubbing file.',
+    },
+    steps: [
+      {
+        id: 'open',
+        label: {
+          tr: 'Aracı aç ve ses / dil seç',
+          en: 'Open the tool and pick voice / language',
+        },
+      },
+      {
+        id: 'script',
+        label: {
+          tr: 'Seslendirilecek metni yapıştır',
+          en: 'Paste the script to voice',
+        },
+      },
+      {
+        id: 'generate',
+        label: {
+          tr: 'İlk ses dosyasını üret ve dinle',
+          en: 'Generate and preview the first audio file',
+        },
+      },
+      {
+        id: 'export',
+        label: {
+          tr: 'MP3/WAV indir',
+          en: 'Download MP3/WAV',
+        },
+      },
+    ],
+    prompts: [
+      {
+        id: 'voice-script',
+        title: { tr: 'Ses metni', en: 'Voice script' },
+        body: {
+          tr: `Ton: [samimi / kurumsal]
+Tempo: [normal]
+Dil: Türkçe
+Metin:
+[2–3 paragraf]`,
+          en: `Tone: [friendly / corporate]
+Pace: [normal]
+Language: English
+Script:
+[2–3 paragraphs]`,
+        },
+      },
+    ],
+    firstResultHint: {
+      tr: 'İlk sonuç: dinleyip indirdiğin ses dosyası.',
+      en: 'First result: an audio file you previewed and downloaded.',
+    },
+  },
+
+  'music-generation': {
+    id: 'music-generation',
+    title: { tr: 'Müzik üretim sihirbazı', en: 'Music generation wizard' },
+    hint: {
+      tr: 'Amaç: 1 kullanılabilir parça / loop.',
+      en: 'Goal: one usable track / loop.',
+    },
+    steps: [
+      {
+        id: 'open',
+        label: {
+          tr: 'Aracı aç ve tür / enstrüman seç',
+          en: 'Open the tool and pick genre / instruments',
+        },
+      },
+      {
+        id: 'prompt',
+        label: {
+          tr: 'Ruh hali, tempo ve kullanım alanını yaz',
+          en: 'Write mood, tempo, and use case',
+        },
+      },
+      {
+        id: 'generate',
+        label: {
+          tr: '2–3 varyasyon üret, en iyiyi seç',
+          en: 'Generate 2–3 variations and pick the best',
+        },
+      },
+      {
+        id: 'export',
+        label: {
+          tr: 'Lisansı kontrol edip indir',
+          en: 'Check license and download',
+        },
+      },
+    ],
+    prompts: [
+      {
+        id: 'music-prompt',
+        title: { tr: 'Müzik promptu', en: 'Music prompt' },
+        body: {
+          tr: `Tür: [lofi / cinematic / upbeat]
+Tempo: [bpm]
+Kullanım: [reels / podcast intro]
+Süre: [30–60 sn]
+Vokal: [yok / soft]`,
+          en: `Genre: [lofi / cinematic / upbeat]
+Tempo: [bpm]
+Use: [reels / podcast intro]
+Length: [30–60s]
+Vocals: [none / soft]`,
+        },
+      },
+    ],
+    firstResultHint: {
+      tr: 'İlk sonuç: indirdiğin müzik dosyası.',
+      en: 'First result: a downloaded music file.',
+    },
+  },
+
+  'data-analysis': {
+    id: 'data-analysis',
+    title: { tr: 'Veri analizi sihirbazı', en: 'Data analysis wizard' },
+    hint: {
+      tr: 'Amaç: en az 1 grafik veya bulgu özeti.',
+      en: 'Goal: at least one chart or insight summary.',
+    },
+    steps: [
+      {
+        id: 'open',
+        label: {
+          tr: 'Aracı aç ve veri kaynağını bağla / yükle',
+          en: 'Open the tool and connect / upload a data source',
+        },
+      },
+      {
+        id: 'question',
+        label: {
+          tr: 'Analiz sorusunu tek cümlede yaz',
+          en: 'State the analysis question in one sentence',
+        },
+      },
+      {
+        id: 'analyze',
+        label: {
+          tr: 'İlk grafik veya özeti üret',
+          en: 'Generate the first chart or summary',
+        },
+      },
+      {
+        id: 'export',
+        label: {
+          tr: 'Bulguyu kaydet / paylaş',
+          en: 'Save / share the insight',
+        },
+      },
+    ],
+    prompts: [
+      {
+        id: 'analysis-q',
+        title: { tr: 'Analiz sorusu', en: 'Analysis question' },
+        body: {
+          tr: `Veri: [CSV / tablo]
+Soru: [ör. hangi kanal daha iyi dönüşüyor?]
+Çıktı: [grafik + 3 madde özet]
+Kısıt: [tarih aralığı]`,
+          en: `Data: [CSV / table]
+Question: [e.g. which channel converts better?]
+Output: [chart + 3 bullet insights]
+Constraint: [date range]`,
+        },
+      },
+    ],
+    firstResultHint: {
+      tr: 'İlk sonuç: kaydettiğin grafik veya özet.',
+      en: 'First result: a saved chart or summary.',
+    },
+  },
+
+  translation: {
+    id: 'translation',
+    title: { tr: 'Çeviri sihirbazı', en: 'Translation wizard' },
+    hint: {
+      tr: 'Amaç: kaliteli bir hedef dil taslağı.',
+      en: 'Goal: a solid target-language draft.',
+    },
+    steps: [
+      {
+        id: 'open',
+        label: {
+          tr: 'Aracı aç ve dil çiftini seç',
+          en: 'Open the tool and pick the language pair',
+        },
+      },
+      {
+        id: 'source',
+        label: {
+          tr: 'Kaynak metni yapıştır',
+          en: 'Paste the source text',
+        },
+      },
+      {
+        id: 'translate',
+        label: {
+          tr: 'Çeviriyi üret ve gözden geçir',
+          en: 'Generate and review the translation',
+        },
+      },
+      {
+        id: 'export',
+        label: {
+          tr: 'Son metni kopyala / indir',
+          en: 'Copy / download the final text',
+        },
+      },
+    ],
+    prompts: [
+      {
+        id: 'translate-brief',
+        title: { tr: 'Çeviri brief', en: 'Translation brief' },
+        body: {
+          tr: `Kaynak dil: [...]
+Hedef dil: [...]
+Ton: [resmi / samimi]
+Alan: [pazarlama / teknik]
+Metin:
+[...]`,
+          en: `Source language: [...]
+Target language: [...]
+Tone: [formal / friendly]
+Domain: [marketing / technical]
+Text:
+[...]`,
+        },
+      },
+    ],
+    firstResultHint: {
+      tr: 'İlk sonuç: kopyalanmış hedef dil metni.',
+      en: 'First result: copied target-language text.',
+    },
+  },
+
+  'ui-design': {
+    id: 'ui-design',
+    title: { tr: 'UI/UX tasarım sihirbazı', en: 'UI/UX design wizard' },
+    hint: {
+      tr: 'Amaç: en az 1 ekran / wireframe çıktısı.',
+      en: 'Goal: at least one screen / wireframe output.',
+    },
+    steps: [
+      {
+        id: 'open',
+        label: {
+          tr: 'Aracı aç ve UI / wireframe şablonu seç',
+          en: 'Open the tool and pick a UI / wireframe template',
+        },
+      },
+      {
+        id: 'brief',
+        label: {
+          tr: 'Ekran, kullanıcı ve akışı tanımla',
+          en: 'Define screen, user, and flow',
+        },
+      },
+      {
+        id: 'design',
+        label: {
+          tr: 'İlk ekran varyasyonunu üret',
+          en: 'Generate the first screen variation',
+        },
+      },
+      {
+        id: 'export',
+        label: {
+          tr: 'PNG/Figma bağlantısı al',
+          en: 'Export PNG / Figma link',
+        },
+      },
+    ],
+    prompts: [
+      {
+        id: 'ui-brief',
+        title: { tr: 'UI brief', en: 'UI brief' },
+        body: {
+          tr: `Ürün: [...]
+Ekran: [login / dashboard / checkout]
+Kullanıcı: [...]
+Stil: [minimal / glass / material]
+Cihaz: [mobile / desktop]
+Bileşenler: [buton, kart, nav]`,
+          en: `Product: [...]
+Screen: [login / dashboard / checkout]
+User: [...]
+Style: [minimal / glass / material]
+Device: [mobile / desktop]
+Components: [button, card, nav]`,
+        },
+      },
+    ],
+    firstResultHint: {
+      tr: 'İlk sonuç: dışa aktardığın ekran görseli.',
+      en: 'First result: an exported screen image.',
+    },
+  },
+
+  'customer-support': {
+    id: 'customer-support',
+    title: { tr: 'Müşteri destek sihirbazı', en: 'Customer support wizard' },
+    hint: {
+      tr: 'Amaç: ilk bot yanıtı veya makale taslağı.',
+      en: 'Goal: a first bot reply or help-article draft.',
+    },
+    steps: [
+      {
+        id: 'open',
+        label: {
+          tr: 'Aracı aç ve destek / bot şablonu seç',
+          en: 'Open the tool and pick support / bot template',
+        },
+      },
+      {
+        id: 'kb',
+        label: {
+          tr: 'SSS veya bilgi tabanı maddelerini ekle',
+          en: 'Add FAQ or knowledge-base items',
+        },
+      },
+      {
+        id: 'reply',
+        label: {
+          tr: 'Örnek ticket yanıtı üret',
+          en: 'Generate a sample ticket reply',
+        },
+      },
+      {
+        id: 'test',
+        label: {
+          tr: 'Test sorusu sor ve cevabı kaydet',
+          en: 'Ask a test question and save the answer',
+        },
+      },
+    ],
+    prompts: [
+      {
+        id: 'support-reply',
+        title: { tr: 'Destek yanıtı', en: 'Support reply' },
+        body: {
+          tr: `Müşteri sorunu: [...]
+Ton: [empatik / net]
+Adımlar: 1) ... 2) ...
+Kapanış: [ek yardım teklifi]`,
+          en: `Customer issue: [...]
+Tone: [empathetic / clear]
+Steps: 1) ... 2) ...
+Close: [offer more help]`,
+        },
+      },
+    ],
+    firstResultHint: {
+      tr: 'İlk sonuç: kaydettiğin örnek bot/ticket yanıtı.',
+      en: 'First result: a saved sample bot/ticket reply.',
+    },
+  },
+
+  'ecommerce-copy': {
+    id: 'ecommerce-copy',
+    title: { tr: 'E-ticaret metin sihirbazı', en: 'Ecommerce copy wizard' },
+    hint: {
+      tr: 'Amaç: 1 ürün açıklaması + başlık.',
+      en: 'Goal: one product description + title.',
+    },
+    steps: [
+      {
+        id: 'open',
+        label: {
+          tr: 'Aracı aç ve ürün açıklaması şablonunu seç',
+          en: 'Open the tool and pick a product-description template',
+        },
+      },
+      {
+        id: 'product',
+        label: {
+          tr: 'Ürün adı, özellikler ve kitleyi gir',
+          en: 'Enter product name, features, and audience',
+        },
+      },
+      {
+        id: 'copy',
+        label: {
+          tr: 'Başlık + açıklama taslağını üret',
+          en: 'Generate title + description draft',
+        },
+      },
+      {
+        id: 'export',
+        label: {
+          tr: 'Metni mağaza alanına yapıştır',
+          en: 'Paste the copy into the storefront field',
+        },
+      },
+    ],
+    prompts: [
+      {
+        id: 'pdp-copy',
+        title: { tr: 'Ürün metni', en: 'Product copy' },
+        body: {
+          tr: `Ürün: [...]
+Faydalar: 1) 2) 3)
+Kitle: [...]
+Ton: [satış / bilgilendirici]
+Uzunluk: [kısa / orta]`,
+          en: `Product: [...]
+Benefits: 1) 2) 3)
+Audience: [...]
+Tone: [salesy / informative]
+Length: [short / medium]`,
+        },
+      },
+    ],
+    firstResultHint: {
+      tr: 'İlk sonuç: kopyalanmış ürün başlığı + açıklama.',
+      en: 'First result: copied product title + description.',
+    },
+  },
+
+  'sales-crm': {
+    id: 'sales-crm',
+    title: { tr: 'Satış / CRM sihirbazı', en: 'Sales / CRM wizard' },
+    hint: {
+      tr: 'Amaç: pipeline iskeleti + 1 outreach taslağı.',
+      en: 'Goal: pipeline skeleton + one outreach draft.',
+    },
+    steps: [
+      {
+        id: 'open',
+        label: {
+          tr: 'Aracı aç ve pipeline / CRM şablonu kur',
+          en: 'Open the tool and set up pipeline / CRM template',
+        },
+      },
+      {
+        id: 'stages',
+        label: {
+          tr: 'Aşamaları tanımla (lead → won)',
+          en: 'Define stages (lead → won)',
+        },
+      },
+      {
+        id: 'outreach',
+        label: {
+          tr: 'İlk outreach mesajını yazdır',
+          en: 'Generate the first outreach message',
+        },
+      },
+      {
+        id: 'task',
+        label: {
+          tr: 'Takip görevini oluştur',
+          en: 'Create a follow-up task',
+        },
+      },
+    ],
+    prompts: [
+      {
+        id: 'crm-setup',
+        title: { tr: 'CRM iskeleti', en: 'CRM skeleton' },
+        body: {
+          tr: `Aşamalar: Yeni → İletişim → Demo → Teklif → Kapandı
+Alanlar: şirket, rol, bütçe, son tarih
+İlk outreach: [kısa e-posta]`,
+          en: `Stages: New → Contacted → Demo → Proposal → Closed
+Fields: company, role, budget, due date
+First outreach: [short email]`,
+        },
+      },
+    ],
+    firstResultHint: {
+      tr: 'İlk sonuç: kaydettiğin aşama listesi veya outreach taslağı.',
+      en: 'First result: a saved stage list or outreach draft.',
+    },
+  },
+
+  'learning-tutor': {
+    id: 'learning-tutor',
+    title: { tr: 'Öğrenme asistanı sihirbazı', en: 'Learning tutor wizard' },
+    hint: {
+      tr: 'Amaç: 1 ders planı veya alıştırmalı oturum.',
+      en: 'Goal: one lesson plan or practice session.',
+    },
+    steps: [
+      {
+        id: 'open',
+        label: {
+          tr: 'Aracı aç ve öğrenme / tutor modunu seç',
+          en: 'Open the tool and pick learning / tutor mode',
+        },
+      },
+      {
+        id: 'goal',
+        label: {
+          tr: 'Konu, seviye ve süreyi yaz',
+          en: 'Write topic, level, and time budget',
+        },
+      },
+      {
+        id: 'plan',
+        label: {
+          tr: 'Ders planı veya ilk alıştırmayı üret',
+          en: 'Generate a lesson plan or first exercise',
+        },
+      },
+      {
+        id: 'practice',
+        label: {
+          tr: 'Bir soruyu çöz / cevabı kaydet',
+          en: 'Solve one question / save the answer',
+        },
+      },
+    ],
+    prompts: [
+      {
+        id: 'lesson',
+        title: { tr: 'Ders planı', en: 'Lesson plan' },
+        body: {
+          tr: `Konu: [...]
+Seviye: [başlangıç / orta]
+Süre: [30 dk]
+Çıktı: plan + 3 alıştırma + mini test`,
+          en: `Topic: [...]
+Level: [beginner / intermediate]
+Time: [30 min]
+Output: plan + 3 exercises + mini quiz`,
+        },
+      },
+    ],
+    firstResultHint: {
+      tr: 'İlk sonuç: kaydettiğin plan veya çözülmüş alıştırma.',
+      en: 'First result: a saved plan or completed exercise.',
+    },
+  },
+
+  'legal-review': {
+    id: 'legal-review',
+    title: { tr: 'Hukuki inceleme sihirbazı', en: 'Legal review wizard' },
+    hint: {
+      tr: 'Amaç: risk maddeleri listesi (uzman onayı şart).',
+      en: 'Goal: a risk-clause list (expert review still required).',
+    },
+    steps: [
+      {
+        id: 'open',
+        label: {
+          tr: 'Aracı aç ve sözleşme / belge yükle',
+          en: 'Open the tool and upload contract / document',
+        },
+      },
+      {
+        id: 'scope',
+        label: {
+          tr: 'İnceleme kapsamını yaz (taraflar, dil)',
+          en: 'State review scope (parties, language)',
+        },
+      },
+      {
+        id: 'risks',
+        label: {
+          tr: 'Risk / dikkat maddelerini çıkar',
+          en: 'Extract risk / watch-out clauses',
+        },
+      },
+      {
+        id: 'summary',
+        label: {
+          tr: 'Özeti kaydet; avukat onayı için işaretle',
+          en: 'Save the summary; flag for attorney review',
+        },
+      },
+    ],
+    prompts: [
+      {
+        id: 'legal-scope',
+        title: { tr: 'İnceleme kapsamı', en: 'Review scope' },
+        body: {
+          tr: `Belge tipi: [SaaS sözleşmesi / NDA]
+Taraflar: [...]
+Odak: [fesih, sorumluluk, veri]
+Uyarı: AI hukuki tavsiye değildir; uzman onayı gerekir.`,
+          en: `Document type: [SaaS agreement / NDA]
+Parties: [...]
+Focus: [termination, liability, data]
+Warning: AI is not legal advice; expert review required.`,
+        },
+      },
+    ],
+    firstResultHint: {
+      tr: 'İlk sonuç: kaydettiğin risk maddesi listesi.',
+      en: 'First result: a saved list of risk clauses.',
+    },
+  },
+
+  'three-d-generation': {
+    id: 'three-d-generation',
+    title: { tr: '3D üretim sihirbazı', en: '3D generation wizard' },
+    hint: {
+      tr: 'Amaç: 1 model veya avatar taslağı.',
+      en: 'Goal: one model or avatar draft.',
+    },
+    steps: [
+      {
+        id: 'open',
+        label: {
+          tr: 'Aracı aç ve text-to-3D / avatar modunu seç',
+          en: 'Open the tool and pick text-to-3D / avatar mode',
+        },
+      },
+      {
+        id: 'brief',
+        label: {
+          tr: 'Nesne, stil ve kullanım alanını yaz',
+          en: 'Describe object, style, and use case',
+        },
+      },
+      {
+        id: 'generate',
+        label: {
+          tr: 'İlk modeli üret ve önizle',
+          en: 'Generate and preview the first model',
+        },
+      },
+      {
+        id: 'export',
+        label: {
+          tr: 'GLB/OBJ veya render indir',
+          en: 'Download GLB/OBJ or a render',
+        },
+      },
+    ],
+    prompts: [
+      {
+        id: '3d-brief',
+        title: { tr: '3D brief', en: '3D brief' },
+        body: {
+          tr: `Nesne: [...]
+Stil: [low poly / realistic]
+Kullanım: [oyun / ürün görseli]
+Arka plan: [şeffaf / stüdyo]
+Format: [glb]`,
+          en: `Object: [...]
+Style: [low poly / realistic]
+Use: [game / product shot]
+Background: [transparent / studio]
+Format: [glb]`,
+        },
+      },
+    ],
+    firstResultHint: {
+      tr: 'İlk sonuç: indirdiğin model veya render.',
+      en: 'First result: a downloaded model or render.',
+    },
+  },
 };
 
 /**

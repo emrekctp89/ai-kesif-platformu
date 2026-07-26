@@ -1,11 +1,12 @@
 /**
  * Pack runners — platform-generated first outputs.
- * Gemini when available; deterministic local fallback otherwise.
+ * LLM chain: Partner API → Gemini → deterministic local fallback.
  *
  * Runnable: content-studio, sales-outreach, meeting-to-action, social-launch, pitch-deck
  */
 
 import { getJobPackById, isRunnablePack, RUNNABLE_PACK_IDS } from './jobPacks';
+import { callLlmJson } from './partnerRunner';
 
 export { isRunnablePack, RUNNABLE_PACK_IDS };
 
@@ -16,46 +17,9 @@ function safeBrief(brief, locale, fallbackTr, fallbackEn) {
   return topic || (locale === 'en' ? fallbackEn : fallbackTr);
 }
 
-function extractJsonObject(text) {
-  const raw = String(text || '').trim();
-  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fenced?.[1] || raw;
-  const first = candidate.indexOf('{');
-  const last = candidate.lastIndexOf('}');
-  if (first === -1 || last <= first) throw new Error('no_json');
-  return JSON.parse(candidate.slice(first, last + 1));
-}
-
-async function callGeminiJson(prompt) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
-
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 20000);
-  try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.5,
-          maxOutputTokens: 2048,
-          responseMimeType: 'application/json',
-        },
-      }),
-      signal: controller.signal,
-    });
-    if (!response.ok) return null;
-    const result = await response.json();
-    const text = result?.candidates?.[0]?.content?.parts?.map((p) => p?.text || '').join('') || '';
-    return extractJsonObject(text);
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
+/** Partner API first, then Gemini. Returns { data, source }. */
+async function callProviderJson(prompt) {
+  return callLlmJson(prompt);
 }
 
 // --- content-studio ---
@@ -179,7 +143,7 @@ Respond ONLY with valid JSON:
   }
 }`;
 
-  const parsed = await callGeminiJson(prompt);
+  const { data: parsed, source: llmSource } = await callProviderJson(prompt);
   if (!parsed) {
     return { ...buildLocalContentStudioRun(brief, locale), source: 'local' };
   }
@@ -208,7 +172,7 @@ Respond ONLY with valid JSON:
         ? parsed.seo.keywords.map((k) => String(k).slice(0, 40)).slice(0, 8)
         : [],
     },
-    source: 'gemini',
+    source: llmSource || 'provider',
   };
 }
 
@@ -407,7 +371,7 @@ Respond ONLY with valid JSON in ${lang} for user-facing strings:
   "followUpRules": ["rule1","rule2","rule3"]
 }`;
 
-  const parsed = await callGeminiJson(prompt);
+  const { data: parsed, source: llmSource } = await callProviderJson(prompt);
   if (!parsed || !Array.isArray(parsed.sequence) || parsed.sequence.length < 2) {
     return { ...buildLocalSalesOutreachRun(brief, locale), source: 'local' };
   }
@@ -430,7 +394,7 @@ Respond ONLY with valid JSON in ${lang} for user-facing strings:
     followUpRules: Array.isArray(parsed.followUpRules)
       ? parsed.followUpRules.map((s) => String(s).slice(0, 160)).slice(0, 6)
       : [],
-    source: 'gemini',
+    source: llmSource || 'provider',
   };
 }
 
@@ -599,7 +563,7 @@ Respond ONLY with valid JSON; user-facing strings in ${lang}:
   }
 }`;
 
-  const parsed = await callGeminiJson(prompt);
+  const { data: parsed, source: llmSource } = await callProviderJson(prompt);
   if (!parsed || !String(parsed.summary || '').trim()) {
     return { ...buildLocalMeetingToActionRun(brief, locale), source: 'local' };
   }
@@ -623,7 +587,7 @@ Respond ONLY with valid JSON; user-facing strings in ${lang}:
         : [],
       successCriteria: String(parsed.automationMap?.successCriteria || '').slice(0, 240),
     },
-    source: 'gemini',
+    source: llmSource || 'provider',
   };
 }
 
@@ -795,7 +759,7 @@ Respond ONLY with valid JSON; user-facing strings in ${lang}:
   "schedulePlan": ["Mon 10:00 ..."]
 }`;
 
-  const parsed = await callGeminiJson(prompt);
+  const { data: parsed, source: llmSource } = await callProviderJson(prompt);
   if (!parsed || !Array.isArray(parsed.posts) || parsed.posts.length < 2) {
     return { ...buildLocalSocialLaunchRun(brief, locale), source: 'local' };
   }
@@ -821,7 +785,7 @@ Respond ONLY with valid JSON; user-facing strings in ${lang}:
     schedulePlan: Array.isArray(parsed.schedulePlan)
       ? parsed.schedulePlan.map((s) => String(s).slice(0, 120)).slice(0, 8)
       : [],
-    source: 'gemini',
+    source: llmSource || 'provider',
   };
 }
 
@@ -1048,7 +1012,7 @@ Respond ONLY with valid JSON; user-facing strings in ${lang}:
 }
 Aim for 7-10 slides.`;
 
-  const parsed = await callGeminiJson(prompt);
+  const { data: parsed, source: llmSource } = await callProviderJson(prompt);
   if (!parsed || !Array.isArray(parsed.slides) || parsed.slides.length < 5) {
     return { ...buildLocalPitchDeckRun(brief, locale), source: 'local' };
   }
@@ -1070,7 +1034,7 @@ Aim for 7-10 slides.`;
     speakerNotes: Array.isArray(parsed.speakerNotes)
       ? parsed.speakerNotes.map((n) => String(n).slice(0, 200)).slice(0, 8)
       : [],
-    source: 'gemini',
+    source: llmSource || 'provider',
   };
 }
 

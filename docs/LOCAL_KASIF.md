@@ -39,9 +39,16 @@ Workmind iki Kâşif katmanı kullanır:
     social-launch, pitch-deck (`/api/kasif/pack-runner`) → first_result + pack_id.
 13. Soft-landing conversion: starter/free-text sonrası `intent.fromSoftLanding` + admin
     follow-up/convert oranları (`kasif_soft_landing_*` analytics).
+14. Partner LLM (opsiyonel): pack runner JSON üretimi için OpenAI-compatible endpoint.
+    Sıra: Partner → Gemini → local. Env: `KASIF_PARTNER_API_URL`, `KASIF_PARTNER_API_KEY`,
+    `KASIF_PARTNER_MODEL` (varsayılan `gpt-4o-mini`). Durum: `GET /api/kasif/partner/status`.
+15. Tüm goal sihirbazları (`jobWizards.js`, 22 hedef) + history follow-up edge case’leri
+    (fiyat daraltması / ranking / konu değişimi).
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
-fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır.
+fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır. Saf fiyat daraltması
+(“bu kez ücretli…”) topic switch sayılmaz; “hayır, görsel…” gibi pivot’lar geçmiş goal’ü temizler.
+“En iyisi hangisi?” ranking follow-up’u geçmiş hedefi korur.
 
 ## Değerlendirme
 
