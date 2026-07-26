@@ -76,14 +76,58 @@ export const SOFT_LANDING_STARTERS = [
 export const SOFT_LANDING_VARIANTS = ['A', 'B'];
 
 /**
- * Deterministic variant from a seed string (interaction id, session, etc.).
+ * Env-driven soft-landing default (feature flag).
+ *
+ * - KASIF_SOFT_LANDING_FORCE_VARIANT / NEXT_PUBLIC_… = A|B → always use for new assign
+ * - KASIF_SOFT_LANDING_DEFAULT_VARIANT / NEXT_PUBLIC_… = A|B|ab
+ *   - A or B: pin new users to that variant (after admin declares a winner)
+ *   - ab (default): 50/50 hash split
+ *
+ * @param {{ force?: string, defaultVariant?: string }|null} [envOverride] test injection
+ * @returns {{ force: 'A'|'B'|null, defaultVariant: 'A'|'B'|'ab', mode: string }}
+ */
+export function getSoftLandingVariantConfig(envOverride = null) {
+  const read = (key) => {
+    if (envOverride && Object.prototype.hasOwnProperty.call(envOverride, key)) {
+      return envOverride[key];
+    }
+    if (typeof process === 'undefined' || !process.env) return '';
+    return process.env[key] || process.env[`NEXT_PUBLIC_${key}`] || '';
+  };
+
+  const forceRaw = String(envOverride?.force ?? read('KASIF_SOFT_LANDING_FORCE_VARIANT'))
+    .trim()
+    .toUpperCase();
+  const force = forceRaw === 'A' || forceRaw === 'B' ? forceRaw : null;
+
+  const defRaw = String(envOverride?.defaultVariant ?? read('KASIF_SOFT_LANDING_DEFAULT_VARIANT'))
+    .trim()
+    .toUpperCase();
+  const defaultVariant =
+    defRaw === 'A' || defRaw === 'B' ? defRaw : defRaw === 'AB' || defRaw === '' ? 'ab' : 'ab';
+
+  return {
+    force,
+    defaultVariant: force || defaultVariant,
+    mode: force ? `force_${force}` : defaultVariant === 'ab' ? 'ab_split' : `pin_${defaultVariant}`,
+  };
+}
+
+/**
+ * Assign variant for a new user/session.
  * @param {string} [seed]
+ * @param {{ force?: string, defaultVariant?: string }|null} [envOverride]
  * @returns {'A'|'B'}
  */
-export function pickSoftLandingVariant(seed) {
+export function pickSoftLandingVariant(seed, envOverride = null) {
+  const config = getSoftLandingVariantConfig(envOverride);
+  if (config.force === 'A' || config.force === 'B') return config.force;
+  if (config.defaultVariant === 'A' || config.defaultVariant === 'B') {
+    return config.defaultVariant;
+  }
+
   const raw = String(seed || '');
   if (!raw) {
-    // fallback: alternate by minute for anonymous
     return Date.now() % 2 === 0 ? 'A' : 'B';
   }
   let hash = 0;
@@ -91,6 +135,26 @@ export function pickSoftLandingVariant(seed) {
     hash = (hash * 31 + raw.charCodeAt(i)) >>> 0;
   }
   return hash % 2 === 0 ? 'A' : 'B';
+}
+
+/**
+ * Resolve variant for this request: explicit client value wins, else env/default/seed.
+ * @param {string|null|undefined} clientVariant
+ * @param {string} [seed]
+ * @param {{ force?: string, defaultVariant?: string }|null} [envOverride]
+ * @returns {'A'|'B'}
+ */
+export function resolveSoftLandingVariant(clientVariant, seed, envOverride = null) {
+  const config = getSoftLandingVariantConfig(envOverride);
+  // Force always wins (ops kill-switch / post-experiment pin).
+  if (config.force === 'A' || config.force === 'B') return config.force;
+
+  const client = String(clientVariant || '')
+    .trim()
+    .toUpperCase();
+  if (client === 'A' || client === 'B') return client;
+
+  return pickSoftLandingVariant(seed, envOverride);
 }
 
 /**

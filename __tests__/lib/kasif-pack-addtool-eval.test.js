@@ -19,6 +19,8 @@ const {
 const { answerContextlessFollowUp, isContextlessFollowUp } = require('../../src/lib/kasif/engine');
 const {
   pickSoftLandingVariant,
+  resolveSoftLandingVariant,
+  getSoftLandingVariantConfig,
   listSoftLandingStarters,
   buildSoftLandingAnswer,
   SOFT_LANDING_STARTERS,
@@ -74,30 +76,51 @@ describe('offline add-tool eval', () => {
   });
 
   it('queued / duplicate formatları net', () => {
-    expect(
-      formatAddToolResultAnswer(
-        {
-          ok: true,
-          status: 'queued',
-          candidate: { name: 'Acme', link: 'https://acme.ai' },
-          inserted: { slug: 'acme' },
-        },
-        'en'
-      )
-    ).toMatch(/Queued|admin/i);
+    const queuedEn = formatAddToolResultAnswer(
+      {
+        ok: true,
+        status: 'queued',
+        candidate: { name: 'Acme', link: 'https://acme.ai' },
+        inserted: { slug: 'acme' },
+      },
+      'en'
+    );
+    expect(queuedEn).toMatch(/Queued|admin/i);
+    expect(queuedEn).toMatch(/1–3 business days|SLA/i);
     expect(
       formatAddToolResultAnswer(
         { ok: true, status: 'duplicate', candidate: { name: 'Acme', link: 'https://acme.ai' } },
         'tr'
       )
     ).toMatch(/katalog|zaten/i);
+    const queuedTr = formatAddToolResultAnswer(
+      {
+        ok: true,
+        status: 'queued',
+        candidate: { name: 'Acme', link: 'https://acme.ai' },
+        inserted: { slug: 'acme' },
+      },
+      'tr'
+    );
+    expect(queuedTr).toMatch(/1–3 iş günü|SLA/i);
   });
 });
 
 describe('soft-landing A/B eval', () => {
   it('varyant seçimi deterministik seed ile', () => {
-    expect(pickSoftLandingVariant('seed-aaa')).toBe(pickSoftLandingVariant('seed-aaa'));
-    expect(['A', 'B']).toContain(pickSoftLandingVariant('seed-1'));
+    expect(pickSoftLandingVariant('seed-aaa', { defaultVariant: 'ab' })).toBe(
+      pickSoftLandingVariant('seed-aaa', { defaultVariant: 'ab' })
+    );
+    expect(['A', 'B']).toContain(pickSoftLandingVariant('seed-1', { defaultVariant: 'ab' }));
+  });
+
+  it('env pin / force default winner', () => {
+    expect(getSoftLandingVariantConfig({ defaultVariant: 'B' }).mode).toBe('pin_B');
+    expect(pickSoftLandingVariant('anything', { defaultVariant: 'B' })).toBe('B');
+    expect(pickSoftLandingVariant('anything', { force: 'A', defaultVariant: 'B' })).toBe('A');
+    expect(resolveSoftLandingVariant('B', 'seed', { force: 'A' })).toBe('A');
+    expect(resolveSoftLandingVariant('B', 'seed', { defaultVariant: 'A' })).toBe('B');
+    expect(resolveSoftLandingVariant(null, 'seed', { defaultVariant: 'B' })).toBe('B');
   });
 
   it('starter kataloğu ve liste dolu', () => {

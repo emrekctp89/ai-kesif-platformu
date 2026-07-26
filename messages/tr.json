@@ -1743,6 +1743,7 @@
     "addToolBadgeError": "Aday eklenemedi",
     "addToolAdminCta": "Admin: bekleyen araçlar",
     "addToolAdminHint": "Onay kuyruğu (giriş + admin yetkisi gerekir).",
+    "addToolSla": "İnceleme SLA: genelde 1–3 iş günü (hedef; garanti değil).",
     "addToolTryAgain": "Resmî ürün URL’si ile tekrar dene",
     "lowConfidenceHint": "Bu eşleşme düşük güvenli. Görevi, fiyatı veya platformu daha net yazarak soruyu daraltmayı dene.",
     "ungroundedHint": "Platform kayıtlarında net bir eşleşme bulunamadı. Örnek görevlerden birini dene veya ihtiyacını daha somut yaz.",

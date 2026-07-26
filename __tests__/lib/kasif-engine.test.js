@@ -708,10 +708,16 @@ describe('Kâşif engine', () => {
 
   it('geçmişsiz follow-up sorusunda soft-landing üretir', () => {
     expect(isContextlessFollowUp('Peki bunlardan ücretsiz olanlar hangileri?', [])).toBe(true);
-    const result = answerContextlessFollowUp('Peki bunlardan ücretsiz olanlar hangileri?', 'tr');
+    const result = answerContextlessFollowUp(
+      'Peki bunlardan ücretsiz olanlar hangileri?',
+      'tr',
+      [],
+      { variant: 'A' }
+    );
     expect(result.softLanding).toBe(true);
-    expect(result.answer).toMatch(/önceki öneri listesi yok/i);
+    expect(result.answer).toMatch(/önceki öneri listesi yok|önceki liste bu mesajda yok/i);
     expect(result.intent.pricePreference).toBe('free');
+    expect(result.softLandingVariant).toBe('A');
   });
 
   it('geçmiş varken follow-up soft-landing devreye girmez', () => {

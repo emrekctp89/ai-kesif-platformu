@@ -111,6 +111,8 @@ export function formatAddToolResultAnswer(result, locale = 'tr') {
         slug ? `\nDraft slug: \`${slug}\`` : ''
       }
 
+**Review SLA:** typically **1–3 business days** (best effort, not a guarantee).
+
 What happens next:
 1. Admin opens the pending tools queue
 2. Reviews description / link / category
@@ -121,10 +123,19 @@ I never auto-publish scraped tools.`
         slug ? `\nTaslak slug: \`${slug}\`` : ''
       }
 
+**İnceleme SLA:** genelde **1–3 iş günü** (hedef; garanti değil).
+
 Sonraki adımlar:
 1. Admin bekleyen araçlar kuyruğunu açar
 2. Açıklama / link / kategoriyi inceler
 3. Onaylarsa Kâşif önermeye başlar
 
 Scrape edilen araçlar asla otomatik yayınlanmaz.`;
+}
+
+/** Short SLA line for UI chips (not full answer). */
+export function addToolSlaCopy(locale = 'tr') {
+  return locale === 'en'
+    ? 'Review SLA: typically 1–3 business days (best effort).'
+    : 'İnceleme SLA: genelde 1–3 iş günü (hedef; garanti değil).';
 }

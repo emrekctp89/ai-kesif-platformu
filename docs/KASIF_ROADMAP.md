@@ -184,13 +184,21 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ---
 
+### P6.8 Soft-landing pin flag + add-tool SLA
+
+- Env: `KASIF_SOFT_LANDING_DEFAULT_VARIANT=A|B|ab` + optional `FORCE_VARIANT` (NEXT_PUBLIC_*)
+- Yeni kullanıcı ataması pin’lenebilir; sticky client + server resolve
+- Add-tool queued cevabı / UI: **1–3 iş günü** inceleme SLA (garanti değil)
+
+---
+
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.7~~ ✅
-2. **Default soft-landing to winner** — yeterli örnek sonrası B’yi default yap (feature flag)
-3. **Katalog scrape P4 sohbet** — “bu aracı ekle” sonrası kullanıcıya bekleme SLA kopyası
+1. ~~P0–P6.8~~ ✅
+2. **Auto-pin soft-landing winner** — admin “kazananı pinle” butonu (env yazmadan ops not)
+3. **Kullanıcı bekleme durumu** — add-tool queued sonrası “durumumu sor” follow-up
 
 ---
 

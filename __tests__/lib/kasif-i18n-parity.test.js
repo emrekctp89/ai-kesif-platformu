@@ -84,6 +84,7 @@ describe('Kâşif i18n EN/TR parity', () => {
       'addToolBadgeError',
       'addToolAdminCta',
       'addToolAdminHint',
+      'addToolSla',
       'addToolTryAgain',
     ];
     for (const key of subset) {

@@ -62,6 +62,8 @@ Workmind iki Kâşif katmanı kullanır:
 25. Pro onboarding turu (ilk Pro runner). Add-tool her kuyrukta `admin_alerts` (`kasif_add_tool`).
 26. Pro onboarding metrikleri admin hunisinde (complete→first_result). i18n parity testleri.
 27. Soft-landing A/B win-rate (min 20 follow-up/side). Learn + LearnKasif full key parity.
+28. Soft-landing pin: `NEXT_PUBLIC_KASIF_SOFT_LANDING_DEFAULT_VARIANT=A|B|ab` (+ FORCE).
+29. Add-tool SLA kopyası: genelde 1–3 iş günü (hedef).
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır. Saf fiyat daraltması

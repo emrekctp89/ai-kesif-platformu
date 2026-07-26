@@ -172,7 +172,7 @@ export async function POST(request) {
     const isLocalEvaluation = body?.evaluation === true && isLocalEvaluationRequest;
 
     // Meta / soft-landing yanıtları katalog aramadan döner.
-    // Soft-landing A/B: client may pass softLandingVariant ('A'|'B').
+    // Soft-landing A/B: client sticky variant + server force/default env flags.
     const softLandingVariant =
       body?.softLandingVariant === 'B' || body?.softLandingVariant === 'A'
         ? body.softLandingVariant
@@ -181,6 +181,7 @@ export async function POST(request) {
       answerMetaQuestion(question, locale) ||
       answerContextlessFollowUp(question, locale, history, {
         variant: softLandingVariant || undefined,
+        seed: question,
       });
     if (directResponse) {
       const taggedDirect = attachClientIntentMeta(directResponse, body);

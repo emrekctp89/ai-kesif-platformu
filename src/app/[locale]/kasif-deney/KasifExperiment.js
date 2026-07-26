@@ -26,10 +26,13 @@ import {
   ThumbsUp,
   User,
 } from 'lucide-react';
-import { formatKasifGoalLabel } from '@/lib/kasif/goalLabels';
-import { matchJobPack } from '@/lib/kasif/jobPacks';
-import { buildWorkmindHandoffUrl } from '@/lib/kasif/jobSession';
-import { SOFT_LANDING_STORAGE_KEY, pickSoftLandingVariant } from '@/lib/kasif/softLanding';
+import {
+  buildWorkmindHandoffUrl,
+  formatKasifGoalLabel,
+  matchJobPack,
+  pickSoftLandingVariant,
+  SOFT_LANDING_STORAGE_KEY,
+} from '@/lib/kasif';
 import { JobFunnelPanel } from '@/components/kasif/JobFunnelPanel';
 import { JobPacksStrip, JobPackSuggestion } from '@/components/kasif/JobPacksStrip';
 import { trackEvent } from '@/utils/analytics';
@@ -60,8 +63,19 @@ function storageKeyFor(locale) {
 
 function getOrCreateSoftLandingVariant() {
   try {
+    // Force flag always re-pins (ops after A/B winner decision).
+    const force = String(process.env.NEXT_PUBLIC_KASIF_SOFT_LANDING_FORCE_VARIANT || '')
+      .trim()
+      .toUpperCase();
+    if (force === 'A' || force === 'B') {
+      localStorage.setItem(SOFT_LANDING_STORAGE_KEY, force);
+      return force;
+    }
+
     const existing = localStorage.getItem(SOFT_LANDING_STORAGE_KEY);
     if (existing === 'A' || existing === 'B') return existing;
+
+    // Pin new users to configured default (A|B) or hash-split (ab).
     const next = pickSoftLandingVariant(`${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
     localStorage.setItem(SOFT_LANDING_STORAGE_KEY, next);
     return next;
@@ -599,6 +613,11 @@ export default function KasifExperiment() {
                                   ) : null}
                                   {status === 'queued' || status === 'duplicate' ? (
                                     <div className="space-y-1">
+                                      {status === 'queued' ? (
+                                        <p className="text-[11px] font-medium text-sky-950 dark:text-sky-100">
+                                          {t('addToolSla')}
+                                        </p>
+                                      ) : null}
                                       <Link
                                         href={
                                           locale === 'en'

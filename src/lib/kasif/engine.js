@@ -6,7 +6,11 @@ import {
   normalizeText,
 } from './retrieval';
 import { FREE_WORDS, KASIF_CONCEPTS, KASIF_GOALS, PAID_WORDS } from './lexicon';
-import { buildSoftLandingAnswer, listSoftLandingStarters } from './softLanding';
+import {
+  buildSoftLandingAnswer,
+  listSoftLandingStarters,
+  resolveSoftLandingVariant,
+} from './softLanding';
 
 function pricingOf(record) {
   return normalizeText(record.pricing_type || record.pricing_model || '');
@@ -517,8 +521,10 @@ export function answerContextlessFollowUp(question, locale = 'tr', history = [],
   if (!isContextlessFollowUp(question, history)) return null;
 
   const intent = understandQuestion(question);
-  const variantRaw = String(options.variant || options.softLandingVariant || 'A').toUpperCase();
-  const variant = variantRaw === 'B' ? 'B' : 'A';
+  const variant = resolveSoftLandingVariant(
+    options.variant || options.softLandingVariant,
+    options.seed || question
+  );
 
   const answer = buildSoftLandingAnswer(intent, locale, variant);
   const starters = listSoftLandingStarters(locale, {
