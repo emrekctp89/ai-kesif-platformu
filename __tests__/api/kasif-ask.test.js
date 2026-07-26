@@ -29,6 +29,11 @@ jest.mock('@/lib/kasif/engine', () => ({
   answerMetaQuestion: (...args) => answerMetaQuestion(...args),
   answerContextlessFollowUp: (...args) => answerContextlessFollowUp(...args),
 }));
+jest.mock('@/lib/kasif/addToolIntent', () => ({
+  detectAddToolIntent: () => ({ isAddTool: false, url: null, reason: null }),
+  answerAddToolPrompt: () => '',
+  formatAddToolResultAnswer: () => '',
+}));
 jest.mock('@/lib/kasif/grounding', () => ({
   noInformationAnswer: (locale) =>
     locale === 'en'

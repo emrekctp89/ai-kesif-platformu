@@ -26,6 +26,8 @@ export const RUNNABLE_PACK_IDS = [
   'meeting-to-action',
   'social-launch',
   'pitch-deck',
+  'seo-brief',
+  'support-kit',
 ];
 
 export function isRunnablePack(packId) {
@@ -172,6 +174,62 @@ export const JOB_PACKS = [
       { tr: 'Prova & export', en: 'Rehearse & export' },
     ],
     bridgeGoals: ['presentation-creation', 'image-generation'],
+    proHint: false,
+  },
+  {
+    id: 'seo-brief',
+    goals: ['seo-optimization', 'content-writing'],
+    title: {
+      tr: 'SEO brief paketi',
+      en: 'SEO brief pack',
+    },
+    summary: {
+      tr: 'Anahtar kelime → iskelet → meta → içerik brief’i (çok adımlı).',
+      en: 'Keywords → outline → meta → content brief (multi-step).',
+    },
+    starterQuestion: {
+      tr: 'SEO odaklı blog için anahtar kelime, başlık ve meta üretmek istiyorum; araç seti öner.',
+      en: 'Recommend tools to produce SEO keywords, titles, and meta for a blog.',
+    },
+    workmindPrompt: {
+      tr: 'SEO brief üret: anahtar kelimeler, H2 iskeleti, title/meta, içerik brief’i. Adım adım planla ve araç öner.',
+      en: 'Produce an SEO brief: keywords, H2 outline, title/meta, content brief. Plan steps and suggest tools.',
+    },
+    stepLabels: [
+      { tr: 'Anahtar kelime', en: 'Keywords' },
+      { tr: 'İskelet (H2)', en: 'Outline (H2)' },
+      { tr: 'Title & meta', en: 'Title & meta' },
+      { tr: 'İçerik brief', en: 'Content brief' },
+    ],
+    bridgeGoals: ['seo-optimization', 'content-writing'],
+    proHint: false,
+  },
+  {
+    id: 'support-kit',
+    goals: ['customer-support', 'email-writing'],
+    title: {
+      tr: 'Destek yanıt kiti',
+      en: 'Support reply kit',
+    },
+    summary: {
+      tr: 'Makro + ton rehberi + escalation + FAQ (çok adımlı).',
+      en: 'Macro + tone guide + escalation + FAQ (multi-step).',
+    },
+    starterQuestion: {
+      tr: 'Müşteri destek e-postası ve makro şablonları için araç öner.',
+      en: 'Recommend tools for customer support email macros and templates.',
+    },
+    workmindPrompt: {
+      tr: 'Destek yanıt kiti: makrolar, ton, escalation, kısa FAQ. Planla ve araç öner.',
+      en: 'Support reply kit: macros, tone, escalation, short FAQ. Plan and suggest tools.',
+    },
+    stepLabels: [
+      { tr: 'Makro taslakları', en: 'Macro drafts' },
+      { tr: 'Ton rehberi', en: 'Tone guide' },
+      { tr: 'Escalation', en: 'Escalation' },
+      { tr: 'FAQ', en: 'FAQ' },
+    ],
+    bridgeGoals: ['customer-support', 'email-writing'],
     proHint: false,
   },
 ];

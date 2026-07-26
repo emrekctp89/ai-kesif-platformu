@@ -61,7 +61,7 @@ North Star artık yalnızca tıklama/affiliate değil:
 - `/uyelik` — iş paketleri / orkestrasyon Pro konumlandırması
 - Analytics: `kasif_pack_ask`, `kasif_pack_workmind`, `kasif_pack_matched_workmind`
 - **Pro gate / kota**: proHint paketler — giriş + 2 ücretsiz/30g, sonrası Pro (`packAccess`)
-- **Runner**: `POST /api/kasif/pack-runner` → 5 paket (content, sales, meeting, social, pitch)
+- **Runner**: `POST /api/kasif/pack-runner` → 7 paket (content, sales, meeting, social, pitch, seo, support)
 - **Admin**: pack_id conversion kovaları + runner sayacı
 - **Soft-landing conversion**: `fromSoftLanding` intent stamp + starter buckets + admin oranları
   (`shown → follow-up → sourced rec`); analytics: `kasif_soft_landing_*`
@@ -104,13 +104,26 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ---
 
+### P5.2 Pack runner genişletme + add-tool intent
+
+- **Yeni paketler**: `seo-brief`, `support-kit` (free, multi-step `steps[]` artifact)
+- **UI**: PackRunnerPanel adım adım çıktı + tam metin accordion
+- **Add-tool**: `detectAddToolIntent` + `queueToolCandidateFromUrl`
+  — scrape → `tools.is_approved=false` → admin pending queue
+  — rate limit `kasif-add-tool` (5/saat); dizin host engeli korunur
+  — eval dry path (`evaluation=true`) insert etmez
+
+---
+
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~**Partner OAuth UX**~~ ✅ — runner badge + connect steps + admin partner card
-2. **Pack runner genişletme** — yeni paketler / multi-step artifact
-3. **Kâşif “bu aracı ekle”** — sohbet intent → scrape aday kuyruğu (admin gate)
+1. ~~**Partner OAuth UX**~~ ✅
+2. ~~**Pack runner genişletme**~~ ✅ — seo-brief + support-kit + multi-step UI
+3. ~~**Kâşif “bu aracı ekle”**~~ ✅ — sohbet intent → scrape aday (admin gate)
+4. **Add-tool ops** — admin bildirim / dedupe analytics
+5. **Daha fazla pack** — coding / legal / research verticals
 
 ---
 

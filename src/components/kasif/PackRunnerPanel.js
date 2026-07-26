@@ -13,6 +13,8 @@ const PLACEHOLDER_KEYS = {
   'meeting-to-action': 'packs.runnerBriefPlaceholderMeeting',
   'social-launch': 'packs.runnerBriefPlaceholderSocial',
   'pitch-deck': 'packs.runnerBriefPlaceholderPitch',
+  'seo-brief': 'packs.runnerBriefPlaceholderSeo',
+  'support-kit': 'packs.runnerBriefPlaceholderSupport',
 };
 
 const TITLE_KEYS = {
@@ -21,6 +23,8 @@ const TITLE_KEYS = {
   'meeting-to-action': 'packs.runnerTitleMeeting',
   'social-launch': 'packs.runnerTitleSocial',
   'pitch-deck': 'packs.runnerTitlePitch',
+  'seo-brief': 'packs.runnerTitleSeo',
+  'support-kit': 'packs.runnerTitleSupport',
 };
 
 const HINT_KEYS = {
@@ -29,6 +33,8 @@ const HINT_KEYS = {
   'meeting-to-action': 'packs.runnerHintMeeting',
   'social-launch': 'packs.runnerHintSocial',
   'pitch-deck': 'packs.runnerHintPitch',
+  'seo-brief': 'packs.runnerHintSeo',
+  'support-kit': 'packs.runnerHintSupport',
 };
 
 function sourceLabelKey(source) {
@@ -248,9 +254,41 @@ export function PackRunnerPanel({
               {copied ? t('job.copied') : t('packs.runnerCopy')}
             </button>
           </div>
-          <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded-lg bg-muted/40 p-2 text-[11px] leading-4 text-muted-foreground">
-            {result.artifactText}
-          </pre>
+
+          {Array.isArray(result.run.steps) && result.run.steps.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {t('packs.runnerSteps')}
+              </p>
+              <ol className="space-y-2">
+                {result.run.steps.map((step, index) => (
+                  <li
+                    key={step.id || `step-${index}`}
+                    className="rounded-lg border bg-muted/30 px-2.5 py-2"
+                  >
+                    <p className="text-[11px] font-semibold text-foreground">
+                      {index + 1}. {step.title}
+                    </p>
+                    <pre className="mt-1 max-h-28 overflow-auto whitespace-pre-wrap text-[11px] leading-4 text-muted-foreground">
+                      {step.body}
+                    </pre>
+                  </li>
+                ))}
+              </ol>
+              <details className="rounded-lg border bg-muted/20 p-2">
+                <summary className="cursor-pointer text-[11px] font-medium text-muted-foreground">
+                  {t('packs.runnerFullArtifact')}
+                </summary>
+                <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap text-[11px] leading-4 text-muted-foreground">
+                  {result.artifactText}
+                </pre>
+              </details>
+            </div>
+          ) : (
+            <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded-lg bg-muted/40 p-2 text-[11px] leading-4 text-muted-foreground">
+              {result.artifactText}
+            </pre>
+          )}
         </div>
       ) : null}
 

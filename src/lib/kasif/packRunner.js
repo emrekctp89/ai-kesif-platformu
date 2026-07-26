@@ -2,7 +2,8 @@
  * Pack runners — platform-generated first outputs.
  * LLM chain: Partner API → Gemini → deterministic local fallback.
  *
- * Runnable: content-studio, sales-outreach, meeting-to-action, social-launch, pitch-deck
+ * Runnable: content-studio, sales-outreach, meeting-to-action, social-launch,
+ * pitch-deck, seo-brief, support-kit
  */
 
 import { getJobPackById, isRunnablePack, RUNNABLE_PACK_IDS } from './jobPacks';
@@ -1038,6 +1039,341 @@ Aim for 7-10 slides.`;
   };
 }
 
+// --- seo-brief (multi-step) ---
+
+export function buildLocalSeoBriefRun(brief, locale = 'tr') {
+  const topic = safeBrief(
+    brief,
+    locale,
+    'küçük ekipler için AI araçları',
+    'AI tools for small teams'
+  );
+  const primary = locale === 'en' ? `best ${topic}` : `en iyi ${topic}`;
+  const secondary =
+    locale === 'en'
+      ? [`${topic} comparison`, `${topic} free tools`, `how to choose ${topic}`]
+      : [`${topic} karşılaştırma`, `ücretsiz ${topic}`, `${topic} nasıl seçilir`];
+
+  if (locale === 'en') {
+    const steps = [
+      {
+        id: 'keywords',
+        title: 'Keywords',
+        body: `Primary: ${primary}\nSecondary:\n- ${secondary.join('\n- ')}`,
+      },
+      {
+        id: 'outline',
+        title: 'H2 outline',
+        body: `1. Why ${topic} matters now\n2. Evaluation criteria\n3. Top options overview\n4. Free vs paid trade-offs\n5. Implementation checklist\n6. FAQ`,
+      },
+      {
+        id: 'meta',
+        title: 'Title & meta',
+        body: `Title: ${primary} (2026 guide)\nMeta: Practical guide to ${topic}: criteria, comparisons, and a short checklist for small teams.`,
+      },
+      {
+        id: 'content-brief',
+        title: 'Content brief',
+        body: `Audience: operators choosing tools without a big research team.\nAngle: decision framework first, tool names second.\nCTA: try a guided pack / catalog shortlist.\nLength: 900–1200 words.`,
+      },
+    ];
+    return {
+      packId: 'seo-brief',
+      goal: 'seo-optimization',
+      bridge: 'runner',
+      keywords: { primary, secondary },
+      outline: steps[1].body.split('\n'),
+      meta: {
+        title: `${primary} (2026 guide)`,
+        description: steps[2].body.split('\n')[1]?.replace(/^Meta:\s*/, '') || '',
+      },
+      contentBrief: steps[3].body,
+      steps,
+    };
+  }
+
+  const steps = [
+    {
+      id: 'keywords',
+      title: 'Anahtar kelimeler',
+      body: `Birincil: ${primary}\nİkincil:\n- ${secondary.join('\n- ')}`,
+    },
+    {
+      id: 'outline',
+      title: 'H2 iskeleti',
+      body: `1. ${topic} neden önemli?\n2. Değerlendirme kriterleri\n3. Öne çıkan seçenekler\n4. Ücretsiz vs ücretli\n5. Uygulama kontrol listesi\n6. SSS`,
+    },
+    {
+      id: 'meta',
+      title: 'Title & meta',
+      body: `Title: ${primary} (2026 rehberi)\nMeta: ${topic} için pratik rehber: kriterler, karşılaştırma ve küçük ekipler için kısa kontrol listesi.`,
+    },
+    {
+      id: 'content-brief',
+      title: 'İçerik brief',
+      body: `Kitle: araştırma ekibi olmadan araç seçen operasyon ekipleri.\nAçı: önce karar çerçevesi, sonra araç isimleri.\nCTA: paket / katalog kısa listesi dene.\nUzunluk: 900–1200 kelime.`,
+    },
+  ];
+  return {
+    packId: 'seo-brief',
+    goal: 'seo-optimization',
+    bridge: 'runner',
+    keywords: { primary, secondary },
+    outline: steps[1].body.split('\n'),
+    meta: {
+      title: `${primary} (2026 rehberi)`,
+      description: steps[2].body.split('\n')[1]?.replace(/^Meta:\s*/, '') || '',
+    },
+    contentBrief: steps[3].body,
+    steps,
+  };
+}
+
+export function formatSeoBriefArtifact(run, locale = 'tr') {
+  if (!run) return '';
+  if (Array.isArray(run.steps) && run.steps.length) {
+    return run.steps.map((step, i) => `## ${i + 1}. ${step.title}\n${step.body}`).join('\n\n');
+  }
+  const kw = [run.keywords?.primary, ...(run.keywords?.secondary || [])].filter(Boolean).join(', ');
+  return locale === 'en'
+    ? `Keywords: ${kw}\n\nOutline:\n${(run.outline || []).join('\n')}\n\nTitle: ${run.meta?.title || ''}\nMeta: ${run.meta?.description || ''}\n\nBrief:\n${run.contentBrief || ''}`
+    : `Anahtar kelimeler: ${kw}\n\nİskelet:\n${(run.outline || []).join('\n')}\n\nTitle: ${run.meta?.title || ''}\nMeta: ${run.meta?.description || ''}\n\nBrief:\n${run.contentBrief || ''}`;
+}
+
+export async function runSeoBriefPack(brief, locale = 'tr') {
+  if (!getJobPackById('seo-brief', locale)) throw new Error('unknown_pack');
+  const lang = locale === 'en' ? 'English' : 'Turkish';
+  const prompt = `You are an SEO brief pack runner.
+User brief: ${String(brief || '').slice(0, 500)}
+Respond ONLY with valid JSON:
+{
+  "keywords": { "primary": "string", "secondary": ["s1","s2","s3"] },
+  "outline": ["H2 1","H2 2","H2 3","H2 4"],
+  "meta": { "title": "SEO title", "description": "meta description" },
+  "contentBrief": "1 short paragraph content brief in ${lang}",
+  "steps": [
+    { "id": "keywords", "title": "string", "body": "string" },
+    { "id": "outline", "title": "string", "body": "string" },
+    { "id": "meta", "title": "string", "body": "string" },
+    { "id": "content-brief", "title": "string", "body": "string" }
+  ]
+}`;
+
+  const { data: parsed, source: llmSource } = await callProviderJson(prompt);
+  if (!parsed) {
+    return { ...buildLocalSeoBriefRun(brief, locale), source: 'local' };
+  }
+
+  const primary = String(parsed.keywords?.primary || '').trim();
+  if (!primary || primary.length < 3) {
+    return { ...buildLocalSeoBriefRun(brief, locale), source: 'local-fallback' };
+  }
+
+  const secondary = Array.isArray(parsed.keywords?.secondary)
+    ? parsed.keywords.secondary
+        .map((s) => String(s || '').trim())
+        .filter(Boolean)
+        .slice(0, 6)
+    : [];
+  const outline = Array.isArray(parsed.outline)
+    ? parsed.outline
+        .map((s) => String(s || '').trim())
+        .filter(Boolean)
+        .slice(0, 10)
+    : [];
+  const steps = Array.isArray(parsed.steps)
+    ? parsed.steps
+        .map((step) => ({
+          id: String(step?.id || '')
+            .trim()
+            .slice(0, 40),
+          title: String(step?.title || '')
+            .trim()
+            .slice(0, 80),
+          body: String(step?.body || '')
+            .trim()
+            .slice(0, 1200),
+        }))
+        .filter((s) => s.title && s.body)
+        .slice(0, 8)
+    : [];
+
+  const local = buildLocalSeoBriefRun(brief, locale);
+  return {
+    packId: 'seo-brief',
+    goal: 'seo-optimization',
+    bridge: 'runner',
+    keywords: { primary: primary.slice(0, 120), secondary },
+    outline: outline.length ? outline : local.outline,
+    meta: {
+      title: String(parsed.meta?.title || local.meta.title)
+        .trim()
+        .slice(0, 120),
+      description: String(parsed.meta?.description || local.meta.description)
+        .trim()
+        .slice(0, 220),
+    },
+    contentBrief: String(parsed.contentBrief || local.contentBrief)
+      .trim()
+      .slice(0, 1200),
+    steps: steps.length >= 3 ? steps : local.steps,
+    source: llmSource || 'provider',
+  };
+}
+
+// --- support-kit (multi-step) ---
+
+export function buildLocalSupportKitRun(brief, locale = 'tr') {
+  const topic = safeBrief(
+    brief,
+    locale,
+    'abonelik iptali ve iade',
+    'subscription cancel and refund'
+  );
+
+  if (locale === 'en') {
+    const steps = [
+      {
+        id: 'macros',
+        title: 'Macro drafts',
+        body: `Macro A — Acknowledge\nHi {{name}}, thanks for writing about ${topic}. I’m on it.\n\nMacro B — Resolve\nHere’s what I did: {{action}}. You should see {{result}} within {{time}}.\n\nMacro C — Close\nAnything else I can help with on ${topic}?`,
+      },
+      {
+        id: 'tone',
+        title: 'Tone guide',
+        body: 'Warm, plain language, no blame. Prefer short sentences. Confirm next step and timeline.',
+      },
+      {
+        id: 'escalation',
+        title: 'Escalation',
+        body: `Escalate when: legal risk, payment dispute > $X, repeated failure on ${topic}, or VIP account.\nOwner: L2 support · SLA: 4 business hours · Include ticket id + timeline tried.`,
+      },
+      {
+        id: 'faq',
+        title: 'FAQ',
+        body: `Q: How long does ${topic} take?\nA: Usually within 1–2 business days after confirmation.\n\nQ: Will I lose access immediately?\nA: Access continues until the end of the current billing period unless noted.`,
+      },
+    ];
+    return {
+      packId: 'support-kit',
+      goal: 'customer-support',
+      bridge: 'runner',
+      macros: steps[0].body,
+      toneGuide: steps[1].body,
+      escalation: steps[2].body,
+      faq: steps[3].body,
+      steps,
+    };
+  }
+
+  const steps = [
+    {
+      id: 'macros',
+      title: 'Makro taslakları',
+      body: `Makro A — Karşılama\nMerhaba {{name}}, ${topic} hakkında yazdığın için teşekkürler; bakıyorum.\n\nMakro B — Çözüm\nYaptığım: {{action}}. {{result}} durumunu {{time}} içinde görmelisin.\n\nMakro C — Kapanış\n${topic} ile ilgili başka yardımcı olabileceğim bir şey var mı?`,
+    },
+    {
+      id: 'tone',
+      title: 'Ton rehberi',
+      body: 'Sıcak, sade dil, suçlayıcı olma. Kısa cümleler. Sonraki adımı ve süreyi net yaz.',
+    },
+    {
+      id: 'escalation',
+      title: 'Escalation',
+      body: `Yükselt: yasal risk, yüksek tutarlı ödeme itirazı, ${topic} tekrarlayan hata, VIP hesap.\nSahip: L2 destek · SLA: 4 iş saati · Ticket id + denenen adımları ekle.`,
+    },
+    {
+      id: 'faq',
+      title: 'FAQ',
+      body: `S: ${topic} ne kadar sürer?\nC: Onay sonrası genelde 1–2 iş günü.\n\nS: Erişim hemen kesilir mi?\nC: Aksi belirtilmedikçe mevcut dönem sonuna kadar erişim devam eder.`,
+    },
+  ];
+  return {
+    packId: 'support-kit',
+    goal: 'customer-support',
+    bridge: 'runner',
+    macros: steps[0].body,
+    toneGuide: steps[1].body,
+    escalation: steps[2].body,
+    faq: steps[3].body,
+    steps,
+  };
+}
+
+export function formatSupportKitArtifact(run, locale = 'tr') {
+  if (!run) return '';
+  if (Array.isArray(run.steps) && run.steps.length) {
+    return run.steps.map((step, i) => `## ${i + 1}. ${step.title}\n${step.body}`).join('\n\n');
+  }
+  return [run.macros, run.toneGuide, run.escalation, run.faq].filter(Boolean).join('\n\n---\n\n');
+}
+
+export async function runSupportKitPack(brief, locale = 'tr') {
+  if (!getJobPackById('support-kit', locale)) throw new Error('unknown_pack');
+  const lang = locale === 'en' ? 'English' : 'Turkish';
+  const prompt = `You are a customer support pack runner.
+User brief: ${String(brief || '').slice(0, 500)}
+Respond ONLY with valid JSON:
+{
+  "macros": "3 short reply macros in ${lang}",
+  "toneGuide": "short tone rules in ${lang}",
+  "escalation": "when/how to escalate in ${lang}",
+  "faq": "2 Q&A pairs in ${lang}",
+  "steps": [
+    { "id": "macros", "title": "string", "body": "string" },
+    { "id": "tone", "title": "string", "body": "string" },
+    { "id": "escalation", "title": "string", "body": "string" },
+    { "id": "faq", "title": "string", "body": "string" }
+  ]
+}`;
+
+  const { data: parsed, source: llmSource } = await callProviderJson(prompt);
+  if (!parsed) {
+    return { ...buildLocalSupportKitRun(brief, locale), source: 'local' };
+  }
+
+  const macros = String(parsed.macros || '').trim();
+  if (macros.length < 40) {
+    return { ...buildLocalSupportKitRun(brief, locale), source: 'local-fallback' };
+  }
+
+  const steps = Array.isArray(parsed.steps)
+    ? parsed.steps
+        .map((step) => ({
+          id: String(step?.id || '')
+            .trim()
+            .slice(0, 40),
+          title: String(step?.title || '')
+            .trim()
+            .slice(0, 80),
+          body: String(step?.body || '')
+            .trim()
+            .slice(0, 1500),
+        }))
+        .filter((s) => s.title && s.body)
+        .slice(0, 8)
+    : [];
+
+  const local = buildLocalSupportKitRun(brief, locale);
+  return {
+    packId: 'support-kit',
+    goal: 'customer-support',
+    bridge: 'runner',
+    macros: macros.slice(0, 2000),
+    toneGuide: String(parsed.toneGuide || local.toneGuide)
+      .trim()
+      .slice(0, 800),
+    escalation: String(parsed.escalation || local.escalation)
+      .trim()
+      .slice(0, 800),
+    faq: String(parsed.faq || local.faq)
+      .trim()
+      .slice(0, 1200),
+    steps: steps.length >= 3 ? steps : local.steps,
+    source: llmSource || 'provider',
+  };
+}
+
 // --- unified entry ---
 
 /**
@@ -1055,7 +1391,28 @@ export async function runPack(packId, brief, locale = 'tr') {
   if (id === 'meeting-to-action') return runMeetingToActionPack(brief, locale);
   if (id === 'social-launch') return runSocialLaunchPack(brief, locale);
   if (id === 'pitch-deck') return runPitchDeckPack(brief, locale);
+  if (id === 'seo-brief') return runSeoBriefPack(brief, locale);
+  if (id === 'support-kit') return runSupportKitPack(brief, locale);
   throw new Error('not_runnable');
+}
+
+/**
+ * Normalize multi-step sections for UI.
+ * @param {object} run
+ * @returns {{ id: string, title: string, body: string }[]}
+ */
+export function extractRunSteps(run) {
+  if (!run) return [];
+  if (Array.isArray(run.steps) && run.steps.length) {
+    return run.steps
+      .map((step, index) => ({
+        id: String(step?.id || `step-${index + 1}`),
+        title: String(step?.title || '').trim(),
+        body: String(step?.body || '').trim(),
+      }))
+      .filter((s) => s.title && s.body);
+  }
+  return [];
 }
 
 /**
@@ -1069,6 +1426,8 @@ export function formatPackArtifact(run, locale = 'tr') {
   if (run.packId === 'meeting-to-action') return formatMeetingToActionArtifact(run, locale);
   if (run.packId === 'social-launch') return formatSocialLaunchArtifact(run, locale);
   if (run.packId === 'pitch-deck') return formatPitchDeckArtifact(run, locale);
+  if (run.packId === 'seo-brief') return formatSeoBriefArtifact(run, locale);
+  if (run.packId === 'support-kit') return formatSupportKitArtifact(run, locale);
   return String(run.draft || run.summary || '').trim();
 }
 
@@ -1077,6 +1436,7 @@ export function formatPackArtifact(run, locale = 'tr') {
  */
 export function summarizeRunForClient(run) {
   if (!run) return null;
+  const steps = extractRunSteps(run);
   if (run.packId === 'content-studio') {
     return {
       packId: run.packId,
@@ -1084,6 +1444,7 @@ export function summarizeRunForClient(run) {
       draft: run.draft,
       imagePrompt: run.imagePrompt,
       seo: run.seo,
+      steps,
     };
   }
   if (run.packId === 'sales-outreach') {
@@ -1094,6 +1455,7 @@ export function summarizeRunForClient(run) {
       sequence: run.sequence,
       crmStages: run.crmStages,
       followUpRules: run.followUpRules,
+      steps,
     };
   }
   if (run.packId === 'meeting-to-action') {
@@ -1103,6 +1465,7 @@ export function summarizeRunForClient(run) {
       summary: run.summary,
       actions: run.actions,
       automationMap: run.automationMap,
+      steps,
     };
   }
   if (run.packId === 'social-launch') {
@@ -1113,6 +1476,7 @@ export function summarizeRunForClient(run) {
       posts: run.posts,
       imagePrompts: run.imagePrompts,
       schedulePlan: run.schedulePlan,
+      steps,
     };
   }
   if (run.packId === 'pitch-deck') {
@@ -1123,7 +1487,30 @@ export function summarizeRunForClient(run) {
       slides: run.slides,
       visualPrompts: run.visualPrompts,
       speakerNotes: run.speakerNotes,
+      steps,
     };
   }
-  return { packId: run.packId, source: run.source };
+  if (run.packId === 'seo-brief') {
+    return {
+      packId: run.packId,
+      source: run.source,
+      keywords: run.keywords,
+      outline: run.outline,
+      meta: run.meta,
+      contentBrief: run.contentBrief,
+      steps,
+    };
+  }
+  if (run.packId === 'support-kit') {
+    return {
+      packId: run.packId,
+      source: run.source,
+      macros: run.macros,
+      toneGuide: run.toneGuide,
+      escalation: run.escalation,
+      faq: run.faq,
+      steps,
+    };
+  }
+  return { packId: run.packId, source: run.source, steps };
 }

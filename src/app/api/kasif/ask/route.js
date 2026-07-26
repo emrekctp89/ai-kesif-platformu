@@ -4,6 +4,11 @@ import { NextResponse } from 'next/server';
 import { enforceRateLimit } from '@/utils/antiAbuse';
 import { assertKasifEnabled } from '@/lib/kasif/config';
 import { answerContextlessFollowUp, answerMetaQuestion, answerQuestion } from '@/lib/kasif/engine';
+import {
+  answerAddToolPrompt,
+  detectAddToolIntent,
+  formatAddToolResultAnswer,
+} from '@/lib/kasif/addToolIntent';
 import { retrievePlatformContext } from '@/lib/kasif/retrieval';
 import { groundModelResponse, noInformationAnswer } from '@/lib/kasif/grounding';
 import { seedFunnelFromResponse } from '@/lib/kasif/funnel';
@@ -172,6 +177,126 @@ export async function POST(request) {
         confidence: taggedDirect.confidence || 0.99,
         intent: taggedDirect.intent || {},
         softLanding: Boolean(taggedDirect.softLanding),
+        ...interaction,
+      });
+    }
+
+    // “Bu aracı ekle” → scrape aday kuyruğu (is_approved=false, admin gate).
+    const addTool = detectAddToolIntent(question);
+    if (addTool.isAddTool) {
+      if (!addTool.url) {
+        const promptResponse = {
+          answer: answerAddToolPrompt(locale, addTool),
+          sourceIds: [],
+          insufficientContext: false,
+          confidence: 0.95,
+          meta: true,
+          metaKind: 'add-tool',
+          intent: {
+            concepts: [],
+            goals: [],
+            pricePreference: 'any',
+            comparison: false,
+            meta: 'add-tool',
+            addTool: { status: 'missing_url' },
+          },
+        };
+        const tagged = attachClientIntentMeta(promptResponse, body);
+        const grounded = groundModelResponse(tagged, [], locale);
+        const interaction = isLocalEvaluation
+          ? {}
+          : await withTimeout(recordInteraction(question, tagged, grounded), 3000, {});
+        return NextResponse.json({
+          ...grounded,
+          confidence: tagged.confidence,
+          intent: tagged.intent,
+          addTool: { status: 'missing_url' },
+          ...interaction,
+        });
+      }
+
+      if (isLocalEvaluation) {
+        const dry = {
+          answer: formatAddToolResultAnswer(
+            {
+              ok: true,
+              status: 'queued',
+              candidate: { name: 'Eval Tool', link: addTool.url },
+              inserted: { slug: 'eval-tool', link: addTool.url },
+            },
+            locale
+          ),
+          sourceIds: [],
+          insufficientContext: false,
+          confidence: 0.9,
+          meta: true,
+          metaKind: 'add-tool',
+          intent: {
+            concepts: [],
+            goals: [],
+            meta: 'add-tool',
+            addTool: { status: 'queued', url: addTool.url, evaluation: true },
+          },
+        };
+        return NextResponse.json({
+          ...groundModelResponse(dry, [], locale),
+          confidence: dry.confidence,
+          intent: dry.intent,
+          addTool: dry.intent.addTool,
+        });
+      }
+
+      const addRate = await enforceRateLimit('kasif-add-tool', {
+        limit: 5,
+        windowMs: 60 * 60 * 1000,
+      });
+      if (!addRate.allowed) return fail(messages.rateLimit, 429);
+
+      const { queueToolCandidateFromUrl } = await import('@/lib/kasif/addToolQueue');
+      const queueResult = await withTimeout(
+        queueToolCandidateFromUrl(addTool.url, {
+          suggesterNote: question.slice(0, 200),
+          locale,
+        }),
+        25000,
+        { ok: false, error: locale === 'en' ? 'Queue timed out.' : 'Kuyruk zaman aşımı.' }
+      );
+
+      const answer = formatAddToolResultAnswer(queueResult, locale);
+      const modelResponse = {
+        answer,
+        sourceIds: [],
+        insufficientContext: false,
+        confidence: queueResult.ok ? 0.93 : 0.7,
+        meta: true,
+        metaKind: 'add-tool',
+        intent: {
+          concepts: [],
+          goals: [],
+          pricePreference: 'any',
+          comparison: false,
+          meta: 'add-tool',
+          addTool: {
+            status: queueResult.status || (queueResult.ok ? 'queued' : 'error'),
+            url: addTool.url,
+            name: queueResult.candidate?.name || queueResult.inserted?.name || null,
+            slug: queueResult.inserted?.slug || null,
+            error: queueResult.error || null,
+          },
+        },
+      };
+      const tagged = attachClientIntentMeta(modelResponse, body);
+      const grounded = groundModelResponse(tagged, [], locale);
+      const interaction = await withTimeout(
+        recordInteraction(question, tagged, grounded),
+        3000,
+        {}
+      );
+      return NextResponse.json({
+        ...grounded,
+        confidence: tagged.confidence,
+        intent: tagged.intent,
+        addTool: tagged.intent.addTool,
         ...interaction,
       });
     }

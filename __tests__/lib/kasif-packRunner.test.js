@@ -4,18 +4,23 @@ const {
   buildLocalMeetingToActionRun,
   buildLocalSocialLaunchRun,
   buildLocalPitchDeckRun,
+  buildLocalSeoBriefRun,
+  buildLocalSupportKitRun,
   formatContentStudioArtifact,
   formatSalesOutreachArtifact,
   formatMeetingToActionArtifact,
   formatSocialLaunchArtifact,
   formatPitchDeckArtifact,
+  formatSeoBriefArtifact,
+  formatSupportKitArtifact,
   formatPackArtifact,
+  extractRunSteps,
   isRunnablePack,
   RUNNABLE_PACK_IDS,
 } = require('../../src/lib/kasif/packRunner');
 
 describe('packRunner', () => {
-  it('beş paketi runnable sayar', () => {
+  it('yedi paketi runnable sayar', () => {
     expect(RUNNABLE_PACK_IDS).toEqual(
       expect.arrayContaining([
         'content-studio',
@@ -23,10 +28,13 @@ describe('packRunner', () => {
         'meeting-to-action',
         'social-launch',
         'pitch-deck',
+        'seo-brief',
+        'support-kit',
       ])
     );
-    expect(isRunnablePack('social-launch')).toBe(true);
-    expect(isRunnablePack('pitch-deck')).toBe(true);
+    expect(RUNNABLE_PACK_IDS).toHaveLength(7);
+    expect(isRunnablePack('seo-brief')).toBe(true);
+    expect(isRunnablePack('support-kit')).toBe(true);
     expect(isRunnablePack('unknown')).toBe(false);
   });
 
@@ -65,5 +73,21 @@ describe('packRunner', () => {
     expect(run.slides[0].bullets.length).toBeGreaterThan(0);
     expect(formatPitchDeckArtifact(run, 'en')).toMatch(/Slides/i);
     expect(formatPackArtifact(run, 'en')).toBe(formatPitchDeckArtifact(run, 'en'));
+  });
+
+  it('seo-brief çok adımlı artifact üretir', () => {
+    const run = buildLocalSeoBriefRun('AI araç seçimi', 'tr');
+    expect(run.packId).toBe('seo-brief');
+    expect(run.steps.length).toBeGreaterThanOrEqual(4);
+    expect(extractRunSteps(run).length).toBe(run.steps.length);
+    expect(formatSeoBriefArtifact(run, 'tr')).toMatch(/Anahtar|Title|Brief/i);
+    expect(formatPackArtifact(run, 'tr')).toBe(formatSeoBriefArtifact(run, 'tr'));
+  });
+
+  it('support-kit çok adımlı artifact üretir', () => {
+    const run = buildLocalSupportKitRun('refund request', 'en');
+    expect(run.packId).toBe('support-kit');
+    expect(run.steps.length).toBeGreaterThanOrEqual(4);
+    expect(formatSupportKitArtifact(run, 'en')).toMatch(/Macro|Tone|FAQ/i);
   });
 });
