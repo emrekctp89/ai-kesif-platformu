@@ -141,9 +141,21 @@ async function callGeminiJson(prompt) {
   }
 }
 
+/**
+ * Non-secret runner provider status for UI / ops.
+ * preferredSource: which LLM tier will be tried first for pack JSON.
+ * chain: ordered fallbacks after preferred (always ends with local).
+ */
 export function partnerRunnerStatus() {
   const configured = isPartnerRunnerConfigured();
   const config = configured ? getPartnerRunnerConfig() : null;
+  const hasGeminiFallback = Boolean(process.env.GEMINI_API_KEY);
+  const preferredSource = configured ? 'partner' : hasGeminiFallback ? 'gemini' : 'local';
+  const chain = [];
+  if (configured) chain.push('partner');
+  if (hasGeminiFallback) chain.push('gemini');
+  chain.push('local');
+
   return {
     configured,
     model: config?.model || null,
@@ -157,6 +169,30 @@ export function partnerRunnerStatus() {
           }
         })()
       : null,
-    hasGeminiFallback: Boolean(process.env.GEMINI_API_KEY),
+    hasGeminiFallback,
+    preferredSource,
+    chain,
+    qualityMode: preferredSource === 'local' ? 'local' : 'cloud',
   };
+}
+
+/** Friendly source label for UI (tr/en). */
+export function formatRunnerSourceLabel(source, locale = 'tr') {
+  const key = String(source || 'local')
+    .toLowerCase()
+    .replace(/-fallback$/, '');
+  const en = {
+    partner: 'Partner AI',
+    gemini: 'Gemini',
+    local: 'Local draft',
+    provider: 'Cloud AI',
+  };
+  const tr = {
+    partner: 'Partner AI',
+    gemini: 'Gemini',
+    local: 'Yerel taslak',
+    provider: 'Bulut AI',
+  };
+  const pack = locale === 'en' ? en : tr;
+  return pack[key] || pack.local;
 }

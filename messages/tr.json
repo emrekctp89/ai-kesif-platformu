@@ -1348,6 +1348,15 @@
     "kasifFunnelBridgePaste": "Yapıştırma bridge",
     "kasifFunnelRunner": "Pack runner",
     "kasifFunnelPackStats": "Paket conversion (pack_id)",
+    "kasifPartnerTitle": "Pack runner / Partner LLM",
+    "kasifPartnerUnknown": "Durum alınamadı",
+    "kasifPartnerHint": "Partner → Gemini → yerel zinciri.",
+    "kasifPartnerConfigured": "Partner bağlı",
+    "kasifPartnerNotConfigured": "Partner yok",
+    "kasifPartnerGeminiOn": "Gemini açık",
+    "kasifPartnerGeminiOff": "Gemini kapalı",
+    "kasifPartnerPreferred": "Öncelik",
+    "kasifPartnerEnvHint": "Env: KASIF_PARTNER_API_URL + KASIF_PARTNER_API_KEY (+ opsiyonel MODEL). Anahtarlar UI’da gösterilmez.",
     "kasifGoalsTitle": "Hedef kovaları",
     "kasifGoalsDesc": "En sık görülen intent/goal dağılımı.",
     "kasifGoalNone": "Hedef yok",
@@ -1749,7 +1758,13 @@
       "runnerRunning": "Üretiliyor…",
       "runnerFailed": "Runner çalışmadı. Tekrar dene.",
       "runnerDone": "İlk sonuç hazır ({source})",
-      "runnerCopy": "Tümünü kopyala"
+      "runnerCopy": "Tümünü kopyala",
+      "sourcePartner": "Partner AI",
+      "sourceGemini": "Gemini",
+      "sourceLocal": "Yerel taslak",
+      "sourceProvider": "Bulut AI",
+      "connectTitle": "Sonraki adım: araç hesabını bağla",
+      "connectHint": "Platformdaki taslağı al; asıl üretimi katalog aracında hesabınla bitir. aikeşif üçüncü taraf OAuth token’ı saklamaz."
     }
   },
   "ContentStudio": {

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import KasifExperiment from '../kasif-deney/KasifExperiment';
 import { getTranslations } from 'next-intl/server';
 
@@ -8,5 +9,9 @@ export async function generateMetadata({ params }) {
 }
 
 export default function KasifPage() {
-  return <KasifExperiment />;
+  return (
+    <Suspense fallback={null}>
+      <KasifExperiment />
+    </Suspense>
+  );
 }

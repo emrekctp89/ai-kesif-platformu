@@ -23,6 +23,7 @@ describe('partnerRunner', () => {
   it('yapılandırılmamışken configured=false döner', () => {
     delete process.env.KASIF_PARTNER_API_URL;
     delete process.env.KASIF_PARTNER_API_KEY;
+    delete process.env.GEMINI_API_KEY;
     const { isPartnerRunnerConfigured, partnerRunnerStatus, getPartnerRunnerConfig } =
       loadPartner();
     expect(isPartnerRunnerConfigured()).toBe(false);
@@ -31,6 +32,9 @@ describe('partnerRunner', () => {
       configured: false,
       model: null,
       baseUrlHost: null,
+      preferredSource: 'local',
+      chain: ['local'],
+      qualityMode: 'local',
     });
   });
 

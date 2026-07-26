@@ -1934,12 +1934,32 @@ function KasifQualityTab({ interactions = [] }) {
   const router = useRouter();
   const locale = useLocale();
   const kasifHref = locale === 'en' ? '/en/kasif' : '/kasif';
+  const [partnerStatus, setPartnerStatus] = React.useState(null);
   const stats = React.useMemo(
     () => buildKasifQualityStats(interactions, { windowDays: 30, sampleLimit: 12 }),
     [interactions]
   );
   const feedbackCoverage =
     stats.total > 0 ? Math.round((stats.withFeedback / stats.total) * 100) : null;
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch(
+          `/api/kasif/partner/status?locale=${locale === 'en' ? 'en' : 'tr'}`
+        );
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!cancelled) setPartnerStatus(data);
+      } catch {
+        /* optional */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
 
   function exportQualityJson() {
     const payload = {
@@ -2053,6 +2073,46 @@ function KasifQualityTab({ interactions = [] }) {
               <p className="mt-1 text-xs text-muted-foreground">{t('kasifStatSoftLandingHint')}</p>
             </div>
           </div>
+
+          {partnerStatus?.partner ? (
+            <div className="rounded-xl border border-dashed bg-background/40 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t('kasifPartnerTitle')}
+                  </p>
+                  <p className="mt-1 text-sm font-medium">
+                    {partnerStatus.provider?.label || t('kasifPartnerUnknown')}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {partnerStatus.provider?.hint || t('kasifPartnerHint')}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <Badge variant={partnerStatus.partner.configured ? 'default' : 'secondary'}>
+                    {partnerStatus.partner.configured
+                      ? t('kasifPartnerConfigured')
+                      : t('kasifPartnerNotConfigured')}
+                  </Badge>
+                  {partnerStatus.partner.model ? (
+                    <Badge variant="outline">{partnerStatus.partner.model}</Badge>
+                  ) : null}
+                  {partnerStatus.partner.baseUrlHost ? (
+                    <Badge variant="outline">{partnerStatus.partner.baseUrlHost}</Badge>
+                  ) : null}
+                  <Badge variant="outline">
+                    {partnerStatus.partner.hasGeminiFallback
+                      ? t('kasifPartnerGeminiOn')
+                      : t('kasifPartnerGeminiOff')}
+                  </Badge>
+                  <Badge variant="outline">
+                    {t('kasifPartnerPreferred')}: {partnerStatus.partner.preferredSource}
+                  </Badge>
+                </div>
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">{t('kasifPartnerEnvHint')}</p>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 

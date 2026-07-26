@@ -1,5 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
+jest.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 jest.mock('next-intl', () => ({
   useLocale: () => 'tr',
   useTranslations: (namespace) => {

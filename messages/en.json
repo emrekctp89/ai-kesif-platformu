@@ -1348,6 +1348,15 @@
     "kasifFunnelBridgePaste": "Paste bridge",
     "kasifFunnelRunner": "Pack runner",
     "kasifFunnelPackStats": "Pack conversion (pack_id)",
+    "kasifPartnerTitle": "Pack runner / Partner LLM",
+    "kasifPartnerUnknown": "Status unavailable",
+    "kasifPartnerHint": "Partner → Gemini → local chain.",
+    "kasifPartnerConfigured": "Partner connected",
+    "kasifPartnerNotConfigured": "No partner",
+    "kasifPartnerGeminiOn": "Gemini on",
+    "kasifPartnerGeminiOff": "Gemini off",
+    "kasifPartnerPreferred": "Preferred",
+    "kasifPartnerEnvHint": "Env: KASIF_PARTNER_API_URL + KASIF_PARTNER_API_KEY (+ optional MODEL). Keys are never shown in the UI.",
     "kasifGoalsTitle": "Goal buckets",
     "kasifGoalsDesc": "Most common intent/goal distribution.",
     "kasifGoalNone": "No goal",
@@ -1749,7 +1758,13 @@
       "runnerRunning": "Generating…",
       "runnerFailed": "Runner failed. Try again.",
       "runnerDone": "First result ready ({source})",
-      "runnerCopy": "Copy all"
+      "runnerCopy": "Copy all",
+      "sourcePartner": "Partner AI",
+      "sourceGemini": "Gemini",
+      "sourceLocal": "Local draft",
+      "sourceProvider": "Cloud AI",
+      "connectTitle": "Next: connect a tool account",
+      "connectHint": "Use this platform draft, then finish production on a catalog tool with your account. aikeşif does not store third-party OAuth tokens."
     }
   },
   "ContentStudio": {

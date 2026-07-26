@@ -73,10 +73,18 @@ North Star artık yalnızca tıklama/affiliate değil:
 - **Partner LLM zinciri**: `src/lib/kasif/partnerRunner.js` — OpenAI-compatible chat
   (`KASIF_PARTNER_API_URL` + `KASIF_PARTNER_API_KEY` + opsiyonel model) → Gemini → local
 - Pack runner’lar `callLlmJson` kullanır; `source`: `partner` | `gemini` | `local`
-- Status (key sızdırmaz): `GET /api/kasif/partner/status`
+- Status (key sızdırmaz): `GET /api/kasif/partner/status` (+ `preferredSource`, `chain`, provider label)
 - **Wizard**: tüm `GOAL_LABELS` anahtarları için checklist + prompt
 - **History follow-up**: `isPriceOnlyRefinement` / `isTopicSwitchUtterance` / `isRankingFollowUp`
   — “bu kez ücretli” goal korur; “hayır, görsel…” topic switch; “en iyisi hangisi?” ranking
+
+### P5.1 Partner OAuth UX (platform-first)
+
+- **Görünür runner durumu**: `PackRunnerPanel` partner/Gemini/local badge + dostça source etiketi
+- **Araç hesabı bağlama rehberi**: `partnerConnect.js` — runner sonrası 3 adım
+  (Kâşif’ten araç seç → araç sitesinde OAuth/kayıt → Workmind / paste bridge)
+- **Not**: aikeşif üçüncü taraf araç OAuth token’ı saklamaz; hesap bağlama araç sitesinde kalır
+- **Admin**: Kâşif kalite sekmesinde Partner LLM durumu (host/model/zincir, key yok)
 
 ---
 
@@ -100,7 +108,7 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 Öncelik sırasıyla tutulacak:
 
-1. **Partner OAuth UX** — seçili araç hesabı bağlama + kullanıcıya görünür runner durumu
+1. ~~**Partner OAuth UX**~~ ✅ — runner badge + connect steps + admin partner card
 2. **Pack runner genişletme** — yeni paketler / multi-step artifact
 3. **Kâşif “bu aracı ekle”** — sohbet intent → scrape aday kuyruğu (admin gate)
 

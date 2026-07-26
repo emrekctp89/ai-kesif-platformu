@@ -44,6 +44,9 @@ Workmind iki Kâşif katmanı kullanır:
     `KASIF_PARTNER_MODEL` (varsayılan `gpt-4o-mini`). Durum: `GET /api/kasif/partner/status`.
 15. Tüm goal sihirbazları (`jobWizards.js`, 22 hedef) + history follow-up edge case’leri
     (fiyat daraltması / ranking / konu değişimi).
+16. Partner OAuth UX: runner panelinde provider badge; tamamlanınca araç hesabı bağlama
+    adımları (`partnerConnect.js`). Admin kalite panelinde partner zincir durumu.
+    Üçüncü taraf araç token’ları platformda tutulmaz.
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır. Saf fiyat daraltması

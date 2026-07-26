@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Copy, LoaderCircle, Sparkles, Wand2 } from 'lucide-react';
+import { Copy, ExternalLink, LoaderCircle, Sparkles, Wand2 } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
 import { isRunnablePack } from '@/lib/kasif/jobPacks';
+import { buildPartnerConnectSteps } from '@/lib/kasif/partnerConnect';
 
 const PLACEHOLDER_KEYS = {
   'content-studio': 'packs.runnerBriefPlaceholder',
@@ -30,8 +31,29 @@ const HINT_KEYS = {
   'pitch-deck': 'packs.runnerHintPitch',
 };
 
+function sourceLabelKey(source) {
+  const key = String(source || 'local')
+    .toLowerCase()
+    .replace(/-fallback$/, '');
+  if (key === 'partner') return 'packs.sourcePartner';
+  if (key === 'gemini') return 'packs.sourceGemini';
+  if (key === 'provider') return 'packs.sourceProvider';
+  return 'packs.sourceLocal';
+}
+
+function providerBadgeClass(level) {
+  if (level === 'partner') {
+    return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100';
+  }
+  if (level === 'gemini') {
+    return 'border-sky-500/30 bg-sky-500/10 text-sky-900 dark:text-sky-100';
+  }
+  return 'border-border bg-muted/60 text-muted-foreground';
+}
+
 /**
  * Multi-pack runner — generates first deliverable on-platform.
+ * Shows partner/Gemini/local readiness + post-run tool-account connect steps.
  */
 export function PackRunnerPanel({
   locale = 'tr',
@@ -46,6 +68,7 @@ export function PackRunnerPanel({
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [provider, setProvider] = useState(null);
 
   useEffect(() => {
     setBrief(defaultBrief || '');
@@ -53,6 +76,33 @@ export function PackRunnerPanel({
     setError(null);
     setStatus('idle');
   }, [safePackId, defaultBrief]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch(
+          `/api/kasif/partner/status?locale=${locale === 'en' ? 'en' : 'tr'}`
+        );
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!cancelled) setProvider(data.provider || null);
+      } catch {
+        /* status is optional UX */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
+
+  const connectSteps = useMemo(() => {
+    if (!result?.run) return [];
+    return buildPartnerConnectSteps(safePackId, locale, {
+      interactionId: result.interactionId,
+      feedbackToken: result.feedbackToken,
+    });
+  }, [result, safePackId, locale]);
 
   async function run(event) {
     event.preventDefault();
@@ -110,15 +160,34 @@ export function PackRunnerPanel({
     }
   }
 
+  const sourceKey = sourceLabelKey(result?.run?.source);
+  const sourceText = t(sourceKey);
+
   return (
     <div className="mt-4 rounded-2xl border border-violet-500/25 bg-violet-500/5 p-4">
-      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-900 dark:text-violet-100">
-        <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
-        {t(TITLE_KEYS[safePackId] || TITLE_KEYS['content-studio'])}
-      </p>
-      <p className="mt-1 text-xs text-muted-foreground">
-        {t(HINT_KEYS[safePackId] || HINT_KEYS['content-studio'])}
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-900 dark:text-violet-100">
+            <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
+            {t(TITLE_KEYS[safePackId] || TITLE_KEYS['content-studio'])}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t(HINT_KEYS[safePackId] || HINT_KEYS['content-studio'])}
+          </p>
+        </div>
+        {provider ? (
+          <div
+            className={`max-w-[14rem] rounded-full border px-2.5 py-1 text-[10px] font-semibold leading-tight ${providerBadgeClass(provider.level)}`}
+            title={provider.hint}
+          >
+            {provider.label}
+          </div>
+        ) : null}
+      </div>
+
+      {provider?.hint ? (
+        <p className="mt-2 text-[11px] leading-4 text-muted-foreground">{provider.hint}</p>
+      ) : null}
 
       <form onSubmit={run} className="mt-3 space-y-2">
         <label htmlFor={`pack-runner-brief-${safePackId}`} className="sr-only">
@@ -168,7 +237,7 @@ export function PackRunnerPanel({
         <div className="mt-3 space-y-2 rounded-xl border bg-background/80 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-200">
-              {t('packs.runnerDone', { source: result.run.source || 'local' })}
+              {t('packs.runnerDone', { source: sourceText })}
             </p>
             <button
               type="button"
@@ -182,6 +251,41 @@ export function PackRunnerPanel({
           <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded-lg bg-muted/40 p-2 text-[11px] leading-4 text-muted-foreground">
             {result.artifactText}
           </pre>
+        </div>
+      ) : null}
+
+      {connectSteps.length > 0 ? (
+        <div className="mt-3 space-y-2 rounded-xl border border-dashed border-violet-500/30 bg-background/50 p-3">
+          <p className="text-xs font-semibold text-violet-900 dark:text-violet-100">
+            {t('packs.connectTitle')}
+          </p>
+          <p className="text-[11px] leading-4 text-muted-foreground">{t('packs.connectHint')}</p>
+          <ol className="space-y-2">
+            {connectSteps.map((step) => (
+              <li
+                key={step.id}
+                className="rounded-lg border bg-background/80 px-2.5 py-2 text-[11px] leading-4"
+              >
+                <p className="font-semibold text-foreground">{step.title}</p>
+                <p className="mt-0.5 text-muted-foreground">{step.description}</p>
+                {step.href ? (
+                  <a
+                    href={step.href}
+                    className="mt-1.5 inline-flex items-center gap-1 font-semibold text-violet-700 hover:underline dark:text-violet-300"
+                    onClick={() =>
+                      trackEvent('kasif_pack_connect_step', {
+                        pack_id: safePackId,
+                        step_id: step.id,
+                      })
+                    }
+                  >
+                    {step.cta}
+                    <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                  </a>
+                ) : null}
+              </li>
+            ))}
+          </ol>
         </div>
       ) : null}
     </div>

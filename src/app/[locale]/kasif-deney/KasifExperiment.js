@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import {
   ArrowRight,
@@ -48,6 +49,7 @@ function storageKeyFor(locale) {
 export default function KasifExperiment() {
   const t = useTranslations('Kasif');
   const locale = useLocale();
+  const searchParams = useSearchParams();
   const [question, setQuestion] = useState('');
   const [turns, setTurns] = useState([]);
   const [history, setHistory] = useState([]);
@@ -61,6 +63,7 @@ export default function KasifExperiment() {
   const historyRef = useRef(history);
   const loadingRef = useRef(loading);
   const softLandingPendingRef = useRef(null);
+  const deepLinkHandledRef = useRef(false);
 
   useEffect(() => {
     historyRef.current = history;
@@ -242,6 +245,22 @@ export default function KasifExperiment() {
     },
     [locale, t]
   );
+
+  // Deep link: /kasif?q=... (+ optional auto=1) from pack connect steps.
+  useEffect(() => {
+    if (!hydrated || deepLinkHandledRef.current) return;
+    const raw = searchParams?.get('q') || searchParams?.get('question') || '';
+    const prefill = String(raw).trim().slice(0, 800);
+    if (!prefill) return;
+    deepLinkHandledRef.current = true;
+    const auto = searchParams?.get('auto') === '1' || searchParams?.get('auto') === 'true';
+    if (auto) {
+      void askQuestion(prefill);
+    } else {
+      setQuestion(prefill);
+      requestAnimationFrame(() => questionRef.current?.focus());
+    }
+  }, [hydrated, searchParams, askQuestion]);
 
   async function submit(event) {
     event.preventDefault();
