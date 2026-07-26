@@ -6,6 +6,7 @@ const {
   isKasifMetaInteraction,
   isKasifSoftLandingInteraction,
   isKasifUngroundedInteraction,
+  pickSoftLandingWinner,
 } = require('../kasif/qualityStats');
 
 describe('buildKasifQualityStats', () => {
@@ -198,6 +199,39 @@ describe('buildKasifQualityStats', () => {
     expect(b.followUps).toBe(2);
     expect(b.converted).toBe(1);
     expect(b.convertOfFollowUp).toBe(50);
+    expect(stats.softLandingConversion.winner).toBeDefined();
+    expect(stats.softLandingConversion.winner.reason).toBe('insufficient_sample');
+  });
+
+  it('pickSoftLandingWinner yeterli örnekte kazanan seçer', () => {
+    const pending = pickSoftLandingWinner(
+      [
+        { variant: 'A', shown: 10, followUps: 5, converted: 2, convertOfFollowUp: 40 },
+        { variant: 'B', shown: 10, followUps: 5, converted: 3, convertOfFollowUp: 60 },
+      ],
+      { minFollowUps: 20 }
+    );
+    expect(pending.winner).toBeNull();
+    expect(pending.reason).toBe('insufficient_sample');
+
+    const lead = pickSoftLandingWinner(
+      [
+        { variant: 'A', shown: 40, followUps: 30, converted: 9, convertOfFollowUp: 30 },
+        { variant: 'B', shown: 40, followUps: 30, converted: 15, convertOfFollowUp: 50 },
+      ],
+      { minFollowUps: 20 }
+    );
+    expect(lead.winner).toBe('B');
+    expect(lead.deltaConvertOfFollowUp).toBe(20);
+
+    const tie = pickSoftLandingWinner(
+      [
+        { variant: 'A', shown: 40, followUps: 30, converted: 12, convertOfFollowUp: 40 },
+        { variant: 'B', shown: 40, followUps: 30, converted: 12, convertOfFollowUp: 40 },
+      ],
+      { minFollowUps: 20 }
+    );
+    expect(tie.winner).toBe('tie');
   });
 
   it('funnel kayıtlarını jobFunnel özetine yansıtır', () => {

@@ -2486,15 +2486,49 @@ function KasifQualityTab({ interactions = [] }) {
               <p className="text-xs font-medium text-muted-foreground">
                 {t('kasifSoftVariantBuckets')}
               </p>
+              {stats.softLandingConversion?.winner ? (
+                <div className="rounded-xl border border-dashed bg-muted/30 px-3 py-2 text-xs">
+                  {stats.softLandingConversion.winner.winner === 'A' ||
+                  stats.softLandingConversion.winner.winner === 'B' ? (
+                    <p className="font-semibold text-foreground">
+                      {t('kasifSoftWinnerLead', {
+                        v: stats.softLandingConversion.winner.winner,
+                        delta: Math.abs(
+                          stats.softLandingConversion.winner.deltaConvertOfFollowUp || 0
+                        ),
+                      })}
+                    </p>
+                  ) : stats.softLandingConversion.winner.winner === 'tie' ? (
+                    <p className="font-semibold text-foreground">{t('kasifSoftWinnerTie')}</p>
+                  ) : stats.softLandingConversion.winner.reason === 'insufficient_sample' ? (
+                    <p className="text-muted-foreground">
+                      {t('kasifSoftWinnerNeedSample', {
+                        min: stats.softLandingConversion.winner.minFollowUps || 20,
+                        a: stats.softLandingConversion.winner.a?.followUps || 0,
+                        b: stats.softLandingConversion.winner.b?.followUps || 0,
+                      })}
+                    </p>
+                  ) : (
+                    <p className="text-muted-foreground">{t('kasifSoftWinnerPending')}</p>
+                  )}
+                </div>
+              ) : null}
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {stats.softLandingConversion.variants.map((bucket) => (
                   <div
                     key={bucket.variant}
-                    className="rounded-xl border bg-background/60 px-3 py-2.5 text-xs"
+                    className={`rounded-xl border bg-background/60 px-3 py-2.5 text-xs ${
+                      stats.softLandingConversion?.winner?.winner === bucket.variant
+                        ? 'border-emerald-500/40 ring-1 ring-emerald-500/20'
+                        : ''
+                    }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-semibold">
                         {t('kasifSoftVariantLabel', { v: bucket.variant })}
+                        {stats.softLandingConversion?.winner?.winner === bucket.variant
+                          ? ` · ${t('kasifSoftWinnerBadge')}`
+                          : ''}
                       </span>
                       <Badge variant={bucket.variant === 'B' ? 'default' : 'secondary'}>
                         {bucket.convertOfFollowUp != null ? `%${bucket.convertOfFollowUp}` : '—'}

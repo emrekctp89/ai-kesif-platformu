@@ -24,6 +24,81 @@ function emptyVariantBucket(variant) {
   return { variant, shown: 0, followUps: 0, converted: 0 };
 }
 
+/**
+ * Soft-landing A/B winner from variant buckets.
+ * Requires min follow-ups per side (default 20) for a confident pick.
+ * @param {Array<{ variant: string, shown?: number, followUps?: number, converted?: number, convertOfFollowUp?: number|null, convertOfShown?: number|null }>} variants
+ * @param {{ minFollowUps?: number, minShown?: number }} [options]
+ */
+export function pickSoftLandingWinner(variants = [], options = {}) {
+  const minFollowUps = Math.max(1, Number(options.minFollowUps) || 20);
+  const minShown = Math.max(0, Number(options.minShown) || 0);
+  const list = Array.isArray(variants) ? variants : [];
+  const a = list.find((v) => v?.variant === 'A') || null;
+  const b = list.find((v) => v?.variant === 'B') || null;
+
+  if (!a || !b) {
+    return {
+      winner: null,
+      reason: 'missing_variant',
+      minFollowUps,
+      a: a || null,
+      b: b || null,
+      deltaConvertOfFollowUp: null,
+    };
+  }
+
+  const aFu = Number(a.followUps) || 0;
+  const bFu = Number(b.followUps) || 0;
+  const aShown = Number(a.shown) || 0;
+  const bShown = Number(b.shown) || 0;
+
+  if (aFu < minFollowUps || bFu < minFollowUps || aShown < minShown || bShown < minShown) {
+    return {
+      winner: null,
+      reason: 'insufficient_sample',
+      minFollowUps,
+      a,
+      b,
+      deltaConvertOfFollowUp: null,
+    };
+  }
+
+  const aRate =
+    a.convertOfFollowUp != null
+      ? Number(a.convertOfFollowUp)
+      : aFu
+        ? Number(((Number(a.converted) || 0) / aFu) * 100)
+        : 0;
+  const bRate =
+    b.convertOfFollowUp != null
+      ? Number(b.convertOfFollowUp)
+      : bFu
+        ? Number(((Number(b.converted) || 0) / bFu) * 100)
+        : 0;
+  const delta = Number((bRate - aRate).toFixed(1));
+
+  if (Math.abs(delta) < 0.1) {
+    return {
+      winner: 'tie',
+      reason: 'tie',
+      minFollowUps,
+      a: { ...a, convertOfFollowUp: aRate },
+      b: { ...b, convertOfFollowUp: bRate },
+      deltaConvertOfFollowUp: delta,
+    };
+  }
+
+  return {
+    winner: delta > 0 ? 'B' : 'A',
+    reason: 'rate_lead',
+    minFollowUps,
+    a: { ...a, convertOfFollowUp: aRate },
+    b: { ...b, convertOfFollowUp: bRate },
+    deltaConvertOfFollowUp: delta,
+  };
+}
+
 function tokenizeQuestion(question) {
   return String(question || '')
     .toLocaleLowerCase('tr-TR')
@@ -305,6 +380,10 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
     }))
     .filter((bucket) => bucket.shown > 0 || bucket.followUps > 0);
 
+  const softLandingWinner = pickSoftLandingWinner(softLandingVariants, {
+    minFollowUps: 20,
+  });
+
   const softLandingConversion = {
     shown: softLanding.length,
     followUps: softLandingFollowUps.length,
@@ -320,6 +399,7 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
       .sort((a, b) => b.total - a.total || b.converted - a.converted)
       .slice(0, 10),
     variants: softLandingVariants,
+    winner: softLandingWinner,
   };
 
   const helpfulRate =

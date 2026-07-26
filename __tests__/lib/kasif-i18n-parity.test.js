@@ -25,6 +25,19 @@ function diffKeys(a, b) {
 }
 
 describe('Kâşif i18n EN/TR parity', () => {
+  it.each([
+    ['Kasif', () => tr.Kasif, () => en.Kasif],
+    ['Learn', () => tr.Learn, () => en.Learn],
+    ['LearnKasif', () => tr.LearnKasif, () => en.LearnKasif],
+    ['AdminClient', () => tr.AdminClient, () => en.AdminClient],
+  ])('%s namespace keys match EN↔TR', (_name, trFn, enFn) => {
+    const trKeys = flattenKeys(trFn() || {});
+    const enKeys = flattenKeys(enFn() || {});
+    expect(diffKeys(trKeys, enKeys)).toEqual([]);
+    expect(diffKeys(enKeys, trKeys)).toEqual([]);
+    expect(trKeys.length).toBeGreaterThan(10);
+  });
+
   it('Kasif.packs keys match', () => {
     const trKeys = flattenKeys(tr.Kasif?.packs || {});
     const enKeys = flattenKeys(en.Kasif?.packs || {});
@@ -89,11 +102,32 @@ describe('Kâşif i18n EN/TR parity', () => {
       'kasifProOnboardingFrOfComplete',
       'kasifProOnboardingCompleteShareFr',
       'kasifSoftVariantBuckets',
+      'kasifSoftWinnerBadge',
+      'kasifSoftWinnerLead',
+      'kasifSoftWinnerTie',
+      'kasifSoftWinnerNeedSample',
+      'kasifSoftWinnerPending',
       'alertsOpenApprovalQueue',
     ];
     for (const key of keys) {
       expect(tr.AdminClient[key]).toBeTruthy();
       expect(en.AdminClient[key]).toBeTruthy();
+    }
+  });
+
+  it('LearnKasif core keys are non-empty', () => {
+    const required = [
+      'metaTitle',
+      'title',
+      'subtitle',
+      'modulesHeading',
+      'outcomesHeading',
+      'ctaLiveKasif',
+      'completeTitle',
+    ];
+    for (const key of required) {
+      expect(String(tr.LearnKasif[key] || '').length).toBeGreaterThan(3);
+      expect(String(en.LearnKasif[key] || '').length).toBeGreaterThan(3);
     }
   });
 });

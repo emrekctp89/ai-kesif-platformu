@@ -176,13 +176,21 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ---
 
+### P6.7 Soft-landing win-rate + Learn i18n parity
+
+- `pickSoftLandingWinner`: min 20 follow-up/side → A/B/tie veya insufficient_sample
+- Admin soft-landing kartında kazanan özeti + önde rozet
+- i18n: full `Learn` / `LearnKasif` / `Kasif` / `AdminClient` key parity tests
+
+---
+
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.6~~ ✅
-2. **LearnKasif i18n** — full LearnKasif key parity test (if any drift)
-3. **Product polish backlog** — user research on soft-landing B win rate
+1. ~~P0–P6.7~~ ✅
+2. **Default soft-landing to winner** — yeterli örnek sonrası B’yi default yap (feature flag)
+3. **Katalog scrape P4 sohbet** — “bu aracı ekle” sonrası kullanıcıya bekleme SLA kopyası
 
 ---
 
