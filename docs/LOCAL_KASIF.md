@@ -50,6 +50,15 @@ toplantı notları, SEO, e-posta, chatbot, logo, hukuk, 3D, doğal dil varyantla
 sorularını doğrular. Yerel değerlendirme çağrıları `kasif_interactions` tablosuna analitik kaydı
 eklemez.
 
+CI / sunucusuz regresyon:
+
+```bash
+npm run kasif:evaluate:offline
+```
+
+Case listesi: `scripts/kasif-eval-cases.cjs` (live ve offline paylaşır).
+Canlı prod/staging eval için GitHub secret `KASIF_EVAL_URL` + workflow `kasif-eval-live.yml`.
+
 Geri bildirim özeti için (service role gerekir):
 
 ```bash

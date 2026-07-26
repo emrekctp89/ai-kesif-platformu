@@ -64,6 +64,8 @@ North Star artık yalnızca tıklama/affiliate değil:
 - **Admin**: pack_id conversion kovaları + runner sayacı
 - **Soft-landing conversion**: `fromSoftLanding` intent stamp + starter buckets + admin oranları
   (`shown → follow-up → sourced rec`); analytics: `kasif_soft_landing_*`
+- **Eval CI**: `scripts/kasif-eval-cases.cjs` + offline Jest (`kasif:evaluate:offline` in CI);
+  live `kasif:evaluate` via scheduled workflow when `KASIF_EVAL_URL` secret set
 
 ---
 
@@ -88,9 +90,8 @@ North Star artık yalnızca tıklama/affiliate değil:
 Öncelik sırasıyla tutulacak:
 
 1. **Partner API runner** — seçili araç OAuth ile gerçek dış çağrı
-2. **Canlı eval regresyonu** — `npm run kasif:evaluate` CI veya periyodik koşu
-3. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
-4. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
+2. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
+3. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
 
 ---
 
