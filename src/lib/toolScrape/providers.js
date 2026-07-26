@@ -52,6 +52,9 @@ export function assertSafeScrapeUrl(rawUrl) {
   if (!['http:', 'https:'].includes(parsed.protocol)) {
     throw new Error('Yalnızca http/https scrape edilebilir.');
   }
+  if (parsed.username || parsed.password) {
+    throw new Error('Kimlik bilgisi içeren URL scrape edilemez.');
+  }
   const hostname = parsed.hostname.toLowerCase().replace(/\.$/, '');
   if (
     !hostname ||
@@ -67,6 +70,26 @@ export function assertSafeScrapeUrl(rawUrl) {
   return parsed.toString();
 }
 
+function assertSupportedContentType(response) {
+  const contentType = String(response.headers.get('content-type') || '')
+    .split(';')[0]
+    .trim()
+    .toLowerCase();
+  if (
+    contentType &&
+    ![
+      'text/html',
+      'application/xhtml+xml',
+      'application/xml',
+      'text/xml',
+      'text/plain',
+      'text/markdown',
+    ].includes(contentType)
+  ) {
+    throw new Error(`Desteklenmeyen scrape içeriği: ${contentType}.`);
+  }
+}
+
 function clampMaxResponseBytes(value) {
   const parsed = Number.parseInt(String(value || ''), 10);
   if (!Number.isInteger(parsed)) return DEFAULT_MAX_RESPONSE_BYTES;
@@ -74,6 +97,7 @@ function clampMaxResponseBytes(value) {
 }
 
 async function readBoundedText(response, maxBytes) {
+  assertSupportedContentType(response);
   const declared = Number.parseInt(response.headers.get('content-length') || '', 10);
   if (Number.isFinite(declared) && declared > maxBytes) {
     throw new Error(`Scrape yanıtı çok büyük (${declared} bayt).`);

@@ -53,6 +53,14 @@ function resolveProvider(requested) {
   return 'auto';
 }
 
+function isScrapeEnabled() {
+  return (
+    String(process.env.KASIF_SCRAPE_ENABLED || 'true')
+      .trim()
+      .toLowerCase() !== 'false'
+  );
+}
+
 async function runProvider(provider, url, timeoutMs) {
   if (provider === 'jina') {
     return scrapeWithJina(url, { timeoutMs });
@@ -76,6 +84,9 @@ function parseProviderResult(result, sourceUrl) {
  * @param {{ provider?: 'auto'|'native'|'jina', timeoutMs?: number }} [options]
  */
 export async function scrapeToolPage(rawUrl, options = {}) {
+  if (!isScrapeEnabled()) {
+    return { ok: false, error: 'Araç scraping geçici olarak devre dışı.' };
+  }
   const normalized = normalizeInputUrl(rawUrl);
   if (normalized.error) {
     return { ok: false, error: normalized.error };

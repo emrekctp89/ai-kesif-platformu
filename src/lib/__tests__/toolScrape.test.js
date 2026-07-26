@@ -79,10 +79,22 @@ It supports drafts, action items, and translation for teams.
 
 describe('scrapeToolPage', () => {
   const originalFetch = global.fetch;
+  const originalScrapeEnabled = process.env.KASIF_SCRAPE_ENABLED;
 
   afterEach(() => {
     global.fetch = originalFetch;
+    if (originalScrapeEnabled === undefined) delete process.env.KASIF_SCRAPE_ENABLED;
+    else process.env.KASIF_SCRAPE_ENABLED = originalScrapeEnabled;
     jest.resetAllMocks();
+  });
+
+  it('operasyon kill switch kapalıysa dış çağrı yapmaz', async () => {
+    process.env.KASIF_SCRAPE_ENABLED = 'false';
+    global.fetch = jest.fn();
+    const result = await scrapeToolPage('https://example-product.com');
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/devre dışı/i);
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it('engelli hostu reddeder', async () => {
@@ -105,6 +117,13 @@ describe('scrapeToolPage', () => {
   ])('özel ağ URL adresini reddeder: %s', async (url) => {
     global.fetch = jest.fn();
     const result = await scrapeToolPage(url, { provider: 'native' });
+    expect(result.ok).toBe(false);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('kimlik bilgisi içeren URL adresini reddeder', async () => {
+    global.fetch = jest.fn();
+    const result = await scrapeToolPage('https://admin:secret@example-product.com/private');
     expect(result.ok).toBe(false);
     expect(global.fetch).not.toHaveBeenCalled();
   });
@@ -195,6 +214,24 @@ describe('scrapeToolPage', () => {
     const result = await scrapeToolPage('https://example-product.com', { provider: 'native' });
     expect(result.ok).toBe(false);
     expect(result.error).toMatch(/çok büyük/i);
+  });
+
+  it('binary native içeriği parse etmeyi reddeder', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      url: 'https://example-product.com/file.zip',
+      headers: {
+        get: (name) => (name === 'content-type' ? 'application/zip' : null),
+      },
+      text: async () => 'PK...',
+    });
+
+    const result = await scrapeToolPage('https://example-product.com/file.zip', {
+      provider: 'native',
+    });
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/desteklenmeyen/i);
   });
 });
 
