@@ -6,6 +6,7 @@ import {
   normalizeText,
 } from './retrieval';
 import { FREE_WORDS, KASIF_CONCEPTS, KASIF_GOALS, PAID_WORDS } from './lexicon';
+import { buildSoftLandingAnswer, listSoftLandingStarters } from './softLanding';
 
 function pricingOf(record) {
   return normalizeText(record.pricing_type || record.pricing_model || '');
@@ -512,41 +513,22 @@ export function isContextlessFollowUp(question, history = []) {
   return false;
 }
 
-export function answerContextlessFollowUp(question, locale = 'tr', history = []) {
+export function answerContextlessFollowUp(question, locale = 'tr', history = [], options = {}) {
   if (!isContextlessFollowUp(question, history)) return null;
 
   const intent = understandQuestion(question);
-  const priceNote =
-    locale === 'en'
-      ? intent.wantsFree
-        ? ' I can still prefer free/freemium options once the task is clear.'
-        : intent.wantsPaid
-          ? ' I can still prefer paid options once the task is clear.'
-          : ''
-      : intent.wantsFree
-        ? ' Görevi netleştirince ücretsiz/freemium tercihine göre sıralayabilirim.'
-        : intent.wantsPaid
-          ? ' Görevi netleştirince ücretli tercihine göre sıralayabilirim.'
-          : '';
+  const variantRaw = String(options.variant || options.softLandingVariant || 'A').toUpperCase();
+  const variant = variantRaw === 'B' ? 'B' : 'A';
 
-  const answer =
-    locale === 'en'
-      ? `I don’t have the previous recommendation list in this message, so I can’t filter “those” tools yet.${priceNote}
-
-Please restate the task in one sentence, for example:
-• Free presentation tools
-• SEO analysis tools
-• Cold email writing assistants
-
-Then I can rank verified platform tools for you.`
-      : `Bu mesajda önceki öneri listesi yok; bu yüzden “bunlardan hangileri?” sorusunu güvenle daraltamıyorum.${priceNote}
-
-Görevi tek cümlede yeniden yazman yeterli. Örnek:
-• Ücretsiz sunum aracı öner
-• SEO analizi araçları
-• Soğuk e-posta yazma asistanı
-
-Böylece platformdaki onaylı araçları senin için sıralayabilirim.`;
+  const answer = buildSoftLandingAnswer(intent, locale, variant);
+  const starters = listSoftLandingStarters(locale, {
+    limit: 6,
+    preferIds: intent.wantsFree
+      ? ['presentation', 'code', 'seo', 'image']
+      : intent.wantsPaid
+        ? ['seo', 'email', 'meeting', 'support']
+        : ['presentation', 'seo', 'email', 'meeting'],
+  });
 
   return {
     answer,
@@ -556,12 +538,15 @@ Böylece platformdaki onaylı araçları senin için sıralayabilirim.`;
     meta: true,
     metaKind: 'soft-landing',
     softLanding: true,
+    softLandingVariant: variant,
+    starters,
     intent: {
       concepts: [],
       goals: [],
       pricePreference: intent.wantsFree ? 'free' : intent.wantsPaid ? 'paid' : 'any',
       comparison: intent.wantsComparison,
       meta: 'soft-landing',
+      softLandingVariant: variant,
     },
   };
 }

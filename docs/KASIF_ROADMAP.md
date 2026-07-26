@@ -134,19 +134,23 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ---
 
+### P6.2 Eval genişletme + soft-landing A/B
+
+- **Offline pack eval**: `__tests__/lib/kasif-pack-addtool-eval.test.js` — 10 pack `runPack` + artifact
+- **Add-tool cases**: shared `kasif-eval-cases` + offline/live skor (`expectAddTool*`)
+- **Soft-landing A/B**: `softLanding.js` varyant A/B, sticky localStorage, API `softLandingVariant`
+- **Starters**: sunucu `starters[]` chip listesi (seo/meeting/support dahil); analytics `kasif_soft_landing_shown`
+
+---
+
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~**Partner OAuth UX**~~ ✅
-2. ~~**Pack runner genişletme**~~ ✅
-3. ~~**Kâşif “bu aracı ekle”**~~ ✅
-4. ~~**Add-tool ops**~~ ✅
-5. ~~**Daha fazla pack**~~ ✅
-6. ~~**Pack conversion + runner source mix**~~ ✅
-7. ~~**Learn path ↔ pack deep links**~~ ✅
-8. **Live eval suite genişletme** — pack runner offline cases + add-tool dry eval
-9. **A/B soft-landing copy** — starter chip conversion iyileştirme
+1. ~~**Partner OAuth UX**~~ ✅ … ~~**Learn deep links**~~ ✅
+2. ~~**Eval + soft-landing A/B**~~ ✅
+3. **Soft-landing variant conversion** — admin’de A vs B convertRate kartı
+4. **Pack runner live smoke** — optional workflow when Partner/Gemini secrets present
 
 ---
 

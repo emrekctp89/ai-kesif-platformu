@@ -11,6 +11,11 @@ const {
 } = require('../../src/lib/kasif/engine');
 const { groundModelResponse } = require('../../src/lib/kasif/grounding');
 const { KASIF_GOALS } = require('../../src/lib/kasif/lexicon');
+const {
+  detectAddToolIntent,
+  answerAddToolPrompt,
+  formatAddToolResultAnswer,
+} = require('../../src/lib/kasif/addToolIntent');
 
 function slugify(name) {
   return String(name || '')
@@ -73,14 +78,68 @@ function runCaseOffline(evaluation, catalog) {
   const history = evaluation.history || [];
   const question = evaluation.question;
 
+  // Add-tool path (mirrors ask route intent; offline never scrapes).
+  if (evaluation.expectAddTool) {
+    const detection = detectAddToolIntent(question);
+    if (!detection.isAddTool) {
+      return {
+        answer: '',
+        sources: [],
+        grounded: false,
+        confidence: 0,
+        intent: {},
+        addTool: { status: 'not_detected' },
+      };
+    }
+    if (detection.reason === 'missing_url' || evaluation.expectAddToolStatus === 'missing_url') {
+      const answer = answerAddToolPrompt(locale, { reason: 'missing_url' });
+      return {
+        answer,
+        sources: [],
+        grounded: true,
+        meta: true,
+        metaKind: 'add-tool',
+        confidence: 0.95,
+        intent: { meta: 'add-tool', addTool: { status: 'missing_url' } },
+        addTool: { status: 'missing_url' },
+      };
+    }
+    // Dry "queued" for offline/eval with URL present
+    const answer = formatAddToolResultAnswer(
+      {
+        ok: true,
+        status: 'queued',
+        candidate: { name: 'Eval Tool', link: detection.url },
+        inserted: { slug: 'eval-tool', link: detection.url },
+      },
+      locale
+    );
+    return {
+      answer,
+      sources: [],
+      grounded: true,
+      meta: true,
+      metaKind: 'add-tool',
+      confidence: 0.9,
+      intent: {
+        meta: 'add-tool',
+        addTool: { status: 'queued', url: detection.url, evaluation: true },
+      },
+      addTool: { status: 'queued', url: detection.url },
+    };
+  }
+
   const direct =
-    answerMetaQuestion(question, locale) || answerContextlessFollowUp(question, locale, history);
+    answerMetaQuestion(question, locale) ||
+    answerContextlessFollowUp(question, locale, history, { variant: 'A' });
   if (direct) {
     return {
       ...groundModelResponse(direct, [], locale),
       confidence: direct.confidence || 0.99,
       intent: direct.intent || {},
       softLanding: Boolean(direct.softLanding),
+      softLandingVariant: direct.softLandingVariant || null,
+      starters: direct.starters || [],
       metaKind: direct.metaKind || direct.intent?.meta || null,
     };
   }
@@ -124,6 +183,11 @@ function scoreCase(evaluation, payload) {
     !evaluation.expectSoftLanding ||
     payload.softLanding === true ||
     payload.metaKind === 'soft-landing';
+  const addToolStatus = payload.addTool?.status || payload.intent?.addTool?.status || null;
+  const addToolMatched =
+    !evaluation.expectAddTool ||
+    ((payload.metaKind === 'add-tool' || payload.intent?.meta === 'add-tool') &&
+      (!evaluation.expectAddToolStatus || addToolStatus === evaluation.expectAddToolStatus));
   const forbiddenConcepts = evaluation.forbiddenConcepts || [];
   const conceptsClean = forbiddenConcepts.every((concept) => !concepts.includes(concept));
   const requiredConcepts = evaluation.requiredConcepts || [];
@@ -140,6 +204,7 @@ function scoreCase(evaluation, payload) {
       confidenceMatched &&
       metaMatched &&
       softLandingMatched &&
+      addToolMatched &&
       conceptsClean &&
       conceptsRequired,
     titles,

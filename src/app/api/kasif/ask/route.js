@@ -164,8 +164,16 @@ export async function POST(request) {
     const isLocalEvaluation = body?.evaluation === true && isLocalEvaluationRequest;
 
     // Meta / soft-landing yanıtları katalog aramadan döner.
+    // Soft-landing A/B: client may pass softLandingVariant ('A'|'B').
+    const softLandingVariant =
+      body?.softLandingVariant === 'B' || body?.softLandingVariant === 'A'
+        ? body.softLandingVariant
+        : null;
     const directResponse =
-      answerMetaQuestion(question, locale) || answerContextlessFollowUp(question, locale, history);
+      answerMetaQuestion(question, locale) ||
+      answerContextlessFollowUp(question, locale, history, {
+        variant: softLandingVariant || undefined,
+      });
     if (directResponse) {
       const taggedDirect = attachClientIntentMeta(directResponse, body);
       const groundedDirect = groundModelResponse(taggedDirect, [], locale);
@@ -177,6 +185,11 @@ export async function POST(request) {
         confidence: taggedDirect.confidence || 0.99,
         intent: taggedDirect.intent || {},
         softLanding: Boolean(taggedDirect.softLanding),
+        softLandingVariant:
+          taggedDirect.softLandingVariant || taggedDirect.intent?.softLandingVariant || null,
+        starters: Array.isArray(taggedDirect.starters)
+          ? taggedDirect.starters
+          : groundedDirect.starters,
         ...interaction,
       });
     }

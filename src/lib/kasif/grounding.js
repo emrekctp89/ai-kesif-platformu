@@ -46,6 +46,10 @@ export function groundModelResponse(modelResponse, records, locale = 'tr') {
       meta: true,
       metaKind: modelResponse.metaKind || modelResponse.intent?.meta || null,
       softLanding: Boolean(modelResponse.softLanding),
+      ...(modelResponse.softLandingVariant
+        ? { softLandingVariant: modelResponse.softLandingVariant }
+        : {}),
+      ...(Array.isArray(modelResponse.starters) ? { starters: modelResponse.starters } : {}),
     };
   }
 

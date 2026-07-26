@@ -483,6 +483,32 @@ module.exports = { KASIF_EVAL_CASES: [
     skipSources: true,
   },
   {
+    name: 'soft-landing-en',
+    question: 'Which of these are free?',
+    locale: 'en',
+    expectSoftLanding: true,
+    expectedPrice: 'free',
+    minConfidence: 0.85,
+    skipSources: true,
+  },
+  {
+    name: 'add-tool-missing-url',
+    question: 'Kataloga bu aracı ekle',
+    expectAddTool: true,
+    expectAddToolStatus: 'missing_url',
+    minConfidence: 0.9,
+    skipSources: true,
+  },
+  {
+    name: 'add-tool-with-url',
+    question: 'Bu aracı ekle https://example-product.com',
+    expectAddTool: true,
+    // live eval uses dry evaluation path; offline checks intent detection
+    expectAddToolStatus: 'queued',
+    minConfidence: 0.85,
+    skipSources: true,
+  },
+  {
     name: 'concept-noise-image-not-data',
     question: 'Bir resim çizmek ve görsel üretmek istiyorum',
     expectedAny: [

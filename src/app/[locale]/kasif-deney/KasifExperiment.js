@@ -29,6 +29,7 @@ import {
 import { formatKasifGoalLabel } from '@/lib/kasif/goalLabels';
 import { matchJobPack } from '@/lib/kasif/jobPacks';
 import { buildWorkmindHandoffUrl } from '@/lib/kasif/jobSession';
+import { SOFT_LANDING_STORAGE_KEY, pickSoftLandingVariant } from '@/lib/kasif/softLanding';
 import { JobFunnelPanel } from '@/components/kasif/JobFunnelPanel';
 import { JobPacksStrip, JobPackSuggestion } from '@/components/kasif/JobPacksStrip';
 import { trackEvent } from '@/utils/analytics';
@@ -42,8 +43,31 @@ const STARTER_QUESTIONS = [
   { key: 'chatbot', icon: MessageSquare },
 ];
 
+const STARTER_ICON_BY_ID = {
+  presentation: Presentation,
+  image: ImageIcon,
+  code: Code2,
+  seo: Search,
+  email: Mail,
+  chatbot: MessageSquare,
+  meeting: MessageSquare,
+  support: Mail,
+};
+
 function storageKeyFor(locale) {
   return `kasif-conversation-v1:${locale || 'tr'}`;
+}
+
+function getOrCreateSoftLandingVariant() {
+  try {
+    const existing = localStorage.getItem(SOFT_LANDING_STORAGE_KEY);
+    if (existing === 'A' || existing === 'B') return existing;
+    const next = pickSoftLandingVariant(`${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+    localStorage.setItem(SOFT_LANDING_STORAGE_KEY, next);
+    return next;
+  } catch {
+    return pickSoftLandingVariant('anon');
+  }
 }
 
 export default function KasifExperiment() {
@@ -64,6 +88,7 @@ export default function KasifExperiment() {
   const loadingRef = useRef(loading);
   const softLandingPendingRef = useRef(null);
   const deepLinkHandledRef = useRef(false);
+  const softLandingVariantRef = useRef('A');
 
   useEffect(() => {
     historyRef.current = history;
@@ -95,6 +120,7 @@ export default function KasifExperiment() {
       setTurns([]);
       setHistory([]);
     } finally {
+      softLandingVariantRef.current = getOrCreateSoftLandingVariant();
       setHydrated(true);
     }
   }, [locale]);
@@ -160,6 +186,7 @@ export default function KasifExperiment() {
             question: submittedQuestion,
             history: historySnapshot,
             locale,
+            softLandingVariant: softLandingVariantRef.current,
             ...(fromSoftLanding
               ? {
                   fromSoftLanding: true,
@@ -175,6 +202,15 @@ export default function KasifExperiment() {
           current.map((turn) => (turn.id === turnId ? { ...turn, result } : turn))
         );
         if (response.ok) {
+          if (data.softLanding || data.metaKind === 'soft-landing') {
+            trackEvent('kasif_soft_landing_shown', {
+              variant:
+                data.softLandingVariant ||
+                data.intent?.softLandingVariant ||
+                softLandingVariantRef.current,
+              starter_count: Array.isArray(data.starters) ? data.starters.length : 0,
+            });
+          }
           setHistory((current) =>
             [
               ...current,
@@ -375,13 +411,34 @@ export default function KasifExperiment() {
     return prompts.slice(0, 3);
   }
 
-  function StarterChips({ prefix, autoAsk = false, limit = 6, fromSoftLanding = false }) {
-    return STARTER_QUESTIONS.slice(0, limit).map(({ key, icon: Icon }) => (
+  function StarterChips({
+    prefix,
+    autoAsk = false,
+    limit = 6,
+    fromSoftLanding = false,
+    serverStarters = null,
+  }) {
+    const chips =
+      Array.isArray(serverStarters) && serverStarters.length
+        ? serverStarters.slice(0, limit).map((item) => ({
+            key: item.id || item.key,
+            label: item.label,
+            question: item.question,
+            Icon: STARTER_ICON_BY_ID[item.id] || Sparkles,
+          }))
+        : STARTER_QUESTIONS.slice(0, limit).map(({ key, icon: Icon }) => ({
+            key,
+            label: t(`starters.${key}.label`),
+            question: t(`starters.${key}.question`),
+            Icon,
+          }));
+
+    return chips.map(({ key, label, question, Icon }) => (
       <button
         key={`${prefix}-${key}`}
         type="button"
         onClick={() =>
-          chooseStarterQuestion(t(`starters.${key}.question`), {
+          chooseStarterQuestion(question, {
             autoAsk,
             fromSoftLanding,
             softLandingStarter: key,
@@ -398,7 +455,7 @@ export default function KasifExperiment() {
           className={autoAsk ? 'h-3.5 w-3.5 text-primary' : 'h-4 w-4 shrink-0 text-primary'}
           aria-hidden="true"
         />
-        {t(`starters.${key}.label`)}
+        {label}
       </button>
     ));
   }
@@ -521,15 +578,34 @@ export default function KasifExperiment() {
                         )}
                         {(turn.result.softLanding || turn.result.metaKind === 'soft-landing') && (
                           <div className="mt-3 space-y-2 rounded-md border border-violet-500/30 bg-violet-500/10 px-3 py-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="text-xs font-semibold text-violet-900 dark:text-violet-100">
+                                {t('softLandingCtaTitle')}
+                              </p>
+                              {(turn.result.softLandingVariant ||
+                                turn.result.intent?.softLandingVariant) && (
+                                <span className="rounded-full border border-violet-500/20 px-1.5 py-0.5 text-[10px] font-mono text-violet-800/80 dark:text-violet-200/80">
+                                  {t('softLandingVariant', {
+                                    v:
+                                      turn.result.softLandingVariant ||
+                                      turn.result.intent?.softLandingVariant,
+                                  })}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs text-violet-900 dark:text-violet-100">
-                              {t('softLandingHint')}
+                              {turn.result.softLandingVariant === 'B' ||
+                              turn.result.intent?.softLandingVariant === 'B'
+                                ? t('softLandingHintB')
+                                : t('softLandingHint')}
                             </p>
                             <div className="flex flex-wrap gap-1.5">
                               <StarterChips
                                 prefix={`soft-${turn.id}`}
                                 autoAsk
-                                limit={4}
+                                limit={6}
                                 fromSoftLanding
+                                serverStarters={turn.result.starters}
                               />
                             </div>
                           </div>

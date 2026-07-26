@@ -1,0 +1,176 @@
+/**
+ * Soft-landing copy variants + starter chip catalog for conversion experiments.
+ * Variant is sticky per client via localStorage; stamped on intent for analytics.
+ */
+
+/** @typedef {{ id: string, label: { tr: string, en: string }, question: { tr: string, en: string } }} SoftLandingStarter */
+
+/** @type {SoftLandingStarter[]} */
+export const SOFT_LANDING_STARTERS = [
+  {
+    id: 'presentation',
+    label: { tr: 'Ücretsiz sunum', en: 'Free presentation' },
+    question: {
+      tr: 'Ücretsiz bir sunum hazırlamak için hangi araçları kullanabilirim?',
+      en: 'Which free tools can I use to make a presentation?',
+    },
+  },
+  {
+    id: 'image',
+    label: { tr: 'Görsel üret', en: 'Generate image' },
+    question: {
+      tr: 'Sosyal medya için gerçekçi görseller üreten araçları karşılaştır.',
+      en: 'Compare tools that generate realistic social media images.',
+    },
+  },
+  {
+    id: 'seo',
+    label: { tr: 'SEO brief', en: 'SEO brief' },
+    question: {
+      tr: 'SEO odaklı blog için anahtar kelime ve meta üreten araç öner.',
+      en: 'Recommend tools for SEO keywords and meta for a blog post.',
+    },
+  },
+  {
+    id: 'email',
+    label: { tr: 'Soğuk e-posta', en: 'Cold email' },
+    question: {
+      tr: 'Soğuk e-posta kampanyası yazmak için araç öner.',
+      en: 'Recommend tools for writing a cold email campaign.',
+    },
+  },
+  {
+    id: 'code',
+    label: { tr: 'Kod asistanı', en: 'Coding help' },
+    question: {
+      tr: 'Kodlama öğrenirken bana yardımcı olacak ücretsiz AI araçları öner.',
+      en: 'Recommend free AI coding assistants for learning to code.',
+    },
+  },
+  {
+    id: 'meeting',
+    label: { tr: 'Toplantı özeti', en: 'Meeting notes' },
+    question: {
+      tr: 'Toplantı kaydından özet ve aksiyon maddeleri çıkaran araç öner.',
+      en: 'Recommend tools to turn meeting recordings into summaries and action items.',
+    },
+  },
+  {
+    id: 'support',
+    label: { tr: 'Destek yanıtı', en: 'Support reply' },
+    question: {
+      tr: 'Müşteri destek e-postası makro şablonları için araç öner.',
+      en: 'Recommend tools for customer support email macros.',
+    },
+  },
+  {
+    id: 'chatbot',
+    label: { tr: 'Sohbet asistanı', en: 'Chat assistant' },
+    question: {
+      tr: 'Gündelik sorular için sohbet asistanı öner.',
+      en: 'Recommend a chat assistant for everyday questions.',
+    },
+  },
+];
+
+export const SOFT_LANDING_VARIANTS = ['A', 'B'];
+
+/**
+ * Deterministic variant from a seed string (interaction id, session, etc.).
+ * @param {string} [seed]
+ * @returns {'A'|'B'}
+ */
+export function pickSoftLandingVariant(seed) {
+  const raw = String(seed || '');
+  if (!raw) {
+    // fallback: alternate by minute for anonymous
+    return Date.now() % 2 === 0 ? 'A' : 'B';
+  }
+  let hash = 0;
+  for (let i = 0; i < raw.length; i += 1) {
+    hash = (hash * 31 + raw.charCodeAt(i)) >>> 0;
+  }
+  return hash % 2 === 0 ? 'A' : 'B';
+}
+
+/**
+ * @param {string} [locale]
+ * @param {{ limit?: number, preferIds?: string[] }} [options]
+ */
+export function listSoftLandingStarters(locale = 'tr', options = {}) {
+  const lang = locale === 'en' ? 'en' : 'tr';
+  const limit = Math.min(Math.max(Number(options.limit) || 6, 2), SOFT_LANDING_STARTERS.length);
+  const prefer = Array.isArray(options.preferIds) ? options.preferIds : [];
+  const ordered = [
+    ...SOFT_LANDING_STARTERS.filter((s) => prefer.includes(s.id)),
+    ...SOFT_LANDING_STARTERS.filter((s) => !prefer.includes(s.id)),
+  ];
+  return ordered.slice(0, limit).map((s) => ({
+    id: s.id,
+    label: s.label[lang] || s.label.tr,
+    question: s.question[lang] || s.question.tr,
+  }));
+}
+
+/**
+ * Price-aware soft-landing body copy (A/B).
+ * @param {{ wantsFree?: boolean, wantsPaid?: boolean }} intent
+ * @param {string} [locale]
+ * @param {'A'|'B'} [variant]
+ */
+export function buildSoftLandingAnswer(intent = {}, locale = 'tr', variant = 'A') {
+  const lang = locale === 'en' ? 'en' : 'tr';
+  const priceNote =
+    lang === 'en'
+      ? intent.wantsFree
+        ? ' Once the job is clear, I can prefer free/freemium tools.'
+        : intent.wantsPaid
+          ? ' Once the job is clear, I can prefer paid tools.'
+          : ''
+      : intent.wantsFree
+        ? ' Görevi netleştirince ücretsiz/freemium tercihine göre sıralayabilirim.'
+        : intent.wantsPaid
+          ? ' Görevi netleştirince ücretli tercihine göre sıralayabilirim.'
+          : '';
+
+  if (lang === 'en') {
+    if (variant === 'B') {
+      return `I can’t filter “those” tools — this message has no prior list.${priceNote}
+
+**Do this next (15 seconds):**
+1. Tap a starter chip below, or
+2. Write one concrete job: “I need [outcome] with [constraint]”
+
+Examples: free pitch deck · SEO keywords for a blog · cold email sequence`;
+    }
+    return `I don’t have the previous recommendation list in this message, so I can’t filter “those” tools yet.${priceNote}
+
+Please restate the task in one sentence, for example:
+• Free presentation tools
+• SEO analysis tools
+• Cold email writing assistants
+
+Then I can rank verified platform tools for you.`;
+  }
+
+  if (variant === 'B') {
+    return `“Bunlardan hangileri?” için önceki liste bu mesajda yok.${priceNote}
+
+**15 saniyede netleştir:**
+1. Aşağıdaki örnek görevlerden birine dokun, veya
+2. Tek cümle yaz: “[sonuç] istiyorum, [kısıt]”
+
+Örnek: ücretsiz sunum · SEO blog brief · soğuk e-posta serisi`;
+  }
+
+  return `Bu mesajda önceki öneri listesi yok; bu yüzden “bunlardan hangileri?” sorusunu güvenle daraltamıyorum.${priceNote}
+
+Görevi tek cümlede yeniden yazman yeterli. Örnek:
+• Ücretsiz sunum aracı öner
+• SEO analizi araçları
+• Soğuk e-posta yazma asistanı
+
+Böylece platformdaki onaylı araçları senin için sıralayabilirim.`;
+}
+
+export const SOFT_LANDING_STORAGE_KEY = 'kasif-soft-landing-variant-v1';

@@ -55,6 +55,8 @@ Workmind iki Kâşif katmanı kullanır:
     Admin: add-tool queued/dedupe metrikleri. Opsiyonel: `KASIF_ADD_TOOL_NOTIFY=true`.
 19. Pack deep link: `/kasif?pack=seo-brief&runner=1` runner panelini açar (öğren yolu CTAları).
 20. Admin hunisi: runner source mix (partner / gemini / local) + pack conversion sources.
+21. Soft-landing A/B: `softLandingVariant` (A|B) sticky; chip listesi sunucudan (`starters`).
+22. Offline eval: pack runner + add-tool suite (`kasif-pack-addtool-eval`); shared cases add-tool/soft-landing-en.
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır. Saf fiyat daraltması

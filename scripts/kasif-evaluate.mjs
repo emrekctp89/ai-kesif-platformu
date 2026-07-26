@@ -49,6 +49,13 @@ for (const evaluation of cases) {
       !evaluation.expectSoftLanding ||
       payload.softLanding === true ||
       payload.metaKind === 'soft-landing';
+    const addToolStatus = payload.addTool?.status || payload.intent?.addTool?.status || null;
+    const addToolMatched =
+      !evaluation.expectAddTool ||
+      ((payload.metaKind === 'add-tool' ||
+        payload.intent?.meta === 'add-tool' ||
+        Boolean(payload.addTool)) &&
+        (!evaluation.expectAddToolStatus || addToolStatus === evaluation.expectAddToolStatus));
     const forbiddenConcepts = evaluation.forbiddenConcepts || [];
     const conceptsClean = forbiddenConcepts.every((concept) => !concepts.includes(concept));
     const requiredConcepts = evaluation.requiredConcepts || [];
@@ -63,6 +70,7 @@ for (const evaluation of cases) {
       confidenceMatched &&
       metaMatched &&
       softLandingMatched &&
+      addToolMatched &&
       conceptsClean &&
       conceptsRequired &&
       latencyMs <= maxLatencyMs;
