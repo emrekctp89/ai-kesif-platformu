@@ -174,7 +174,7 @@ Kâşif / admin akışının **yeni AI araçlarını web’den bulup** site kata
 - **Öneri motoru** ile **keşif/scrape** ayrı katmanlar kalır (mevcut `toolDiscoveryCron` genişletilir)
 - Ham scrape sonucu doğrudan publish edilmez: **aday → doğrulama → (opsiyonel) admin onay → insert**
 - Yalnızca **resmî ürün siteleri**; dizin/aggregator hostları `toolLinkPolicy` ile engellenir
-- Rate limit, robots/ToS saygısı, user-agent, timeout zorunlu
+- Rate limit, `robots.txt` (30 dk cache), ToS saygısı, user-agent, timeout zorunlu
 - Kullanıcı URL’lerinde özel/yerel ağ ve redirect hedefi engeli; yanıt boyutu üst sınırı zorunlu
 - Ücretsiz API kotaları bitince self-hosted veya native `fetch` fallback
 

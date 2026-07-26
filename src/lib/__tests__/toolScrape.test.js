@@ -21,6 +21,7 @@ const {
 } = require('../toolScrape/dedupe');
 const { getSeedEntries, listSeedCategorySlugs } = require('../toolScrape/seedUrls');
 const { buildScrapeQueue, clampQueueLimit } = require('../toolScrape/queue');
+const { parseRobotsPermission, clearRobotsCache } = require('../toolScrape/robots');
 
 describe('toolScrape parsePage', () => {
   it('HTML og etiketlerinden aday alanları çıkarır', () => {
@@ -80,11 +81,19 @@ It supports drafts, action items, and translation for teams.
 describe('scrapeToolPage', () => {
   const originalFetch = global.fetch;
   const originalScrapeEnabled = process.env.KASIF_SCRAPE_ENABLED;
+  const originalRobotsEnabled = process.env.KASIF_SCRAPE_ROBOTS_ENABLED;
+
+  beforeEach(() => {
+    process.env.KASIF_SCRAPE_ROBOTS_ENABLED = 'false';
+  });
 
   afterEach(() => {
     global.fetch = originalFetch;
     if (originalScrapeEnabled === undefined) delete process.env.KASIF_SCRAPE_ENABLED;
     else process.env.KASIF_SCRAPE_ENABLED = originalScrapeEnabled;
+    if (originalRobotsEnabled === undefined) delete process.env.KASIF_SCRAPE_ROBOTS_ENABLED;
+    else process.env.KASIF_SCRAPE_ROBOTS_ENABLED = originalRobotsEnabled;
+    clearRobotsCache();
     jest.resetAllMocks();
   });
 
@@ -95,6 +104,22 @@ describe('scrapeToolPage', () => {
     expect(result.ok).toBe(false);
     expect(result.error).toMatch(/devre dışı/i);
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('robots.txt açıkça yasaklıyorsa sayfayı çekmez', async () => {
+    process.env.KASIF_SCRAPE_ROBOTS_ENABLED = 'true';
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: { get: () => 'text/plain' },
+      text: async () => 'User-agent: *\nDisallow: /private\nAllow: /private/public',
+    });
+    const result = await scrapeToolPage('https://example-product.com/private/settings', {
+      provider: 'native',
+    });
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/robots\.txt/i);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
   it('engelli hostu reddeder', async () => {
@@ -269,6 +294,25 @@ describe('scrapeToolPage', () => {
     });
     expect(result.ok).toBe(false);
     expect(result.error).toMatch(/desteklenmeyen/i);
+  });
+});
+
+describe('toolScrape robots', () => {
+  it('en uzun allow/disallow eşleşmesini ve özel bot grubunu uygular', () => {
+    const robots = `
+      User-agent: *
+      Disallow: /private
+      Allow: /private/public
+
+      User-agent: AIKesifToolScrape
+      Disallow: /bot-only
+    `;
+    expect(
+      parseRobotsPermission(robots, new URL('https://example.com/private/secret')).allowed
+    ).toBe(true);
+    expect(parseRobotsPermission(robots, new URL('https://example.com/bot-only/x')).allowed).toBe(
+      false
+    );
   });
 });
 

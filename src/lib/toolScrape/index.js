@@ -21,6 +21,7 @@ import {
   scrapeWithJina,
   scrapeWithNative,
 } from '@/lib/toolScrape/providers';
+import { checkRobotsPermission } from '@/lib/toolScrape/robots';
 
 function normalizeInputUrl(raw) {
   const value = String(raw || '').trim();
@@ -95,6 +96,18 @@ export async function scrapeToolPage(rawUrl, options = {}) {
   const url = normalized.url;
   if (getBlockedToolHost(url)) {
     return { ok: false, error: 'Dizin/aggregator bağlantısı scrape edilemez.' };
+  }
+  if (String(process.env.KASIF_SCRAPE_ROBOTS_ENABLED || 'true').toLowerCase() !== 'false') {
+    const robots = await checkRobotsPermission(url, {
+      timeoutMs: Math.min(3000, clampTimeout(options.timeoutMs)),
+    });
+    if (!robots.allowed) {
+      return {
+        ok: false,
+        error: 'Site robots.txt kuralı bu sayfanın scrape edilmesine izin vermiyor.',
+        robots,
+      };
+    }
   }
 
   const providerMode = resolveProvider(options.provider);
