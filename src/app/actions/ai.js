@@ -455,104 +455,50 @@ export async function getAdminCoPilotResponse(userPrompt, history) {
     return { error: 'Bu özelliği kullanmak için yetkiniz yok.' };
   }
 
+  const normalized = String(userPrompt || '').trim();
+  if (normalized.length < 2) {
+    return { error: 'Lütfen bir soru yazın.' };
+  }
+  if (normalized.length > 1500) {
+    return { error: 'Soru çok uzun (max 1500 karakter).' };
+  }
+
   try {
     const supabaseAdmin = createAdminClient();
     const { data: snapshotData } = await supabaseAdmin.rpc('get_platform_snapshot');
     if (!snapshotData) throw new Error('Platform verileri alınamadı.');
 
     const platformContext = `
-        PLATFORM TEKNOLOJİLERİ:
-        - Framework: Next.js (App Router)
-        - Dil: JavaScript, React
-        - Veritabanı: Supabase (PostgreSQL)
-        - Stil: Tailwind CSS
-        - UI Kütüphanesi: shadcn/ui
-        - Sunucu Mantığı: Server Actions (src/app/actions.js içinde)
-        - Veri Çekme: Sunucu bileşenleri veya Server Action'lar içinden Supabase istemcisi ile.
+PLATFORM TEKNOLOJİLERİ:
+- Framework: Next.js (App Router)
+- Dil: JavaScript, React
+- Veritabanı: Supabase (PostgreSQL)
+- Stil: Tailwind CSS + shadcn/ui
+- Sunucu: Server Actions + /api routes
+- AI: Kâşif motoru (partner → Gemini → local)
 
-        PLATFORMUN ANLIK DURUMU:
-        - Toplam Kullanıcı: ${snapshotData.totals.total_users}, Toplam Araç: ${snapshotData.totals.total_tools}
-    `;
+PLATFORMUN ANLIK DURUMU:
+- Toplam Kullanıcı: ${snapshotData.totals.total_users}, Toplam Araç: ${snapshotData.totals.total_tools}
+`;
 
-    const chatHistory = history.map((msg) => {
-      let contentText = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content);
-      return {
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: contentText }],
-      };
+    const { generateCoPilotWithKasif } = await import('@/lib/kasif/adminJsonAssist');
+    const { data, source } = await generateCoPilotWithKasif({
+      userPrompt: normalized,
+      history: Array.isArray(history) ? history : [],
+      platformContext,
+      totals: snapshotData.totals,
     });
 
-    const finalSystemPrompt = `
-      Sen, 'AI Keşif Platformu' adlı projenin baş ürün yöneticisi ve baş geliştiricisisin. Sana platformun teknik yapısını, anlık verilerini ve önceki konuşmalarımızı sunuyorum. Görevin, tüm bu bağlamı kullanarak, adminin sorduğu son soruya yönelik en akıllı ve uygulanabilir cevabı vermektir. Eğer admin senden bir özellik için kod yazmanı isterse, bu teknolojilere uygun, tam ve çalıştırılabilir bir kod bloğu oluşturmalısın. Cevabını SADECE aşağıdaki JSON formatında ver.
-    `;
-
-    const finalUserMessage = {
-      role: 'user',
-      parts: [
-        {
-          text: `${finalSystemPrompt}\n\n${platformContext}\n\nADMİNİN YENİ SORUSU: "${userPrompt}"`,
-        },
-      ],
-    };
-
-    const payload = {
-      contents: [...chatHistory, finalUserMessage],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: 'OBJECT',
-          properties: {
-            response_title: { type: 'STRING', description: 'Cevabına yaratıcı bir başlık bul.' },
-            response_text: {
-              type: 'STRING',
-              description: 'Analizini veya açıklamanı metin olarak yaz.',
-            },
-            code_suggestion: {
-              type: 'OBJECT',
-              description: 'Eğer istendiyse, kod önerisi.',
-              properties: {
-                language: {
-                  type: 'STRING',
-                  description: 'Kodun dili (örn: javascript, jsx, sql).',
-                },
-                code: { type: 'STRING', description: 'Oluşturduğun tam kod.' },
-                explanation: {
-                  type: 'STRING',
-                  description: 'Bu kodun ne işe yaradığını ve nasıl kullanılacağını kısaca açıkla.',
-                },
-              },
-            },
-          },
-          required: ['response_title', 'response_text'],
-        },
-      },
-    };
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return { error: 'Gemini API anahtarı bulunamadı.' };
-
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.json();
-      return { error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}` };
-    }
-
-    const result = await response.json();
-    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-      return { success: true, data: JSON.parse(result.candidates[0].content.parts[0].text) };
-    } else {
+    if (!data?.response_title || !data?.response_text) {
       return { error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.' };
     }
+
+    return { success: true, data, source: source || 'local' };
   } catch (e) {
-    logger.error('AI Co-Pilot fonksiyonunda genel hata:', e.message);
-    return { error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e.message}` };
+    logger.error('AI Co-Pilot (Kâşif) hatası:', e?.message || e);
+    return {
+      error: `Analiz oluşturulurken beklenmedik bir hata oluştu: ${e?.message || 'unknown'}`,
+    };
   }
 }
 

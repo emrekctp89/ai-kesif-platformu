@@ -110,54 +110,20 @@ export async function createChallengeManually(formData) {
 
 export async function generateChallengeIdeasWithAi(topic) {
   'use server';
-  if (!topic) return { error: 'Lütfen bir konu girin.' };
+  const safeTopic = String(topic || '').trim();
+  if (!safeTopic) return { error: 'Lütfen bir konu girin.' };
+  if (safeTopic.length > 200) return { error: 'Konu çok uzun (max 200 karakter).' };
 
   try {
-    const prompt = `
-      Sen, yapay zeka ile içerik üreten bir topluluk için YARIŞMA TEMALARI üreten bir yaratıcılık asistanısın. Sana verilen konuya dayanarak, kullanıcıları heyecanlandıracak ve katılıma teşvik edecek, 1 adet dikkat çekici başlık (title) ve 1 adet ilham verici kısa açıklama (description) üret.
-
-      ANA KONU: "${topic}"
-
-      Cevabını SADECE aşağıdaki JSON formatında ver.
-    `;
-
-    const chatHistory = [{ role: 'user', parts: [{ text: prompt }] }];
-    const payload = {
-      contents: chatHistory,
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: 'OBJECT',
-          properties: {
-            title: { type: 'STRING' },
-            description: { type: 'STRING' },
-          },
-          required: ['title', 'description'],
-        },
-      },
-    };
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return { error: 'Gemini API anahtarı bulunamadı.' };
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) return { error: `Yapay zeka modelinden hata alındı.` };
-
-    const result = await response.json();
-    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-      return { success: true, data: JSON.parse(result.candidates[0].content.parts[0].text) };
-    } else {
+    const { generateChallengeIdeaWithKasif } = await import('@/lib/kasif/adminJsonAssist');
+    const { data, source } = await generateChallengeIdeaWithKasif(safeTopic);
+    if (!data?.title || !data?.description) {
       return { error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.' };
     }
+    return { success: true, data, source: source || 'local' };
   } catch (e) {
-    logger.error('Yarışma fikri üretme hatası:', e.message);
-    return { error: `Bir hata oluştu.` };
+    logger.error('Yarışma fikri üretme hatası (Kâşif):', e?.message || e);
+    return { error: 'Bir hata oluştu.' };
   }
 }
 

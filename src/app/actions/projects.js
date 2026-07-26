@@ -157,77 +157,20 @@ export async function getAiProjectStrategy(projectId) {
       ${projectData.prompts?.map((p) => `- ${p.title}: "${p.prompt_text}"`).join('\n') || 'Yok'}
     `;
 
-    const prompt = `
-      Sen bir proje yönetimi ve yapay zeka stratejistisin. Sana bir kullanıcının projesine eklediği araçların, eserlerin ve prompt'ların bir listesini vereceğim. 
-      
-      PROJE VERİLERİ:
-      ${formattedData}
-
-      GÖREVİN: Bu verilere dayanarak, kullanıcının projesini daha da ileriye taşıması için stratejik tavsiyeler sunmaktır. Cevabını SADECE aşağıdaki JSON formatında ver. Başka hiçbir metin veya açıklama ekleme.
-    `;
-
-    const chatHistory = [{ role: 'user', parts: [{ text: prompt }] }];
-    const payload = {
-      contents: chatHistory,
-      generationConfig: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: 'OBJECT',
-          properties: {
-            project_summary: {
-              type: 'STRING',
-              description: 'Projenin genel amacını ve durumunu 2 cümleyle özetle.',
-            },
-            strategic_suggestions: {
-              type: 'ARRAY',
-              items: { type: 'STRING' },
-              description:
-                'Projenin hedefine ulaşması için 3 adet somut ve yaratıcı stratejik öneri sun.',
-            },
-            potential_tools: {
-              type: 'ARRAY',
-              items: { type: 'STRING' },
-              description:
-                'Bu projeye fayda sağlayabilecek, listede olmayan 2 farklı araç türü öner.',
-            },
-          },
-          required: ['project_summary', 'strategic_suggestions', 'potential_tools'],
-        },
-      },
-    };
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return { error: 'Gemini API anahtarı bulunamadı.' };
-
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+    const { generateProjectStrategyWithKasif } = await import('@/lib/kasif/adminJsonAssist');
+    const { data, source } = await generateProjectStrategyWithKasif({
+      formattedData,
+      title: projectData.title,
+      toolNames: (projectData.tools || []).map((t) => t.name).filter(Boolean),
     });
 
-    if (!response.ok) {
-      const errorBody = await response.json();
-      return {
-        error: `Yapay zeka modelinden hata alındı: ${errorBody.error?.message}`,
-      };
+    if (!data?.project_summary || !Array.isArray(data?.strategic_suggestions)) {
+      return { error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.' };
     }
 
-    const result = await response.json();
-
-    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-      return {
-        success: true,
-        data: JSON.parse(result.candidates[0].content.parts[0].text),
-      };
-    } else {
-      return {
-        error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.',
-      };
-    }
+    return { success: true, data, source: source || 'local' };
   } catch (e) {
-    logger.error('AI Stratejist fonksiyonunda genel hata:', e);
+    logger.error('AI Stratejist (Kâşif) hatası:', e);
     return { error: 'Analiz oluşturulurken beklenmedik bir hata oluştu.' };
   }
 }

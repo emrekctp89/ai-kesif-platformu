@@ -1586,8 +1586,8 @@
     "errorsTitle": "Hatalı kayıtlar ({count}):"
   },
   "CoPilot": {
-    "welcome": "Merhaba! Ben Admin Co-Pilot. Sitenizi geliştirmek için benden kod veya strateji isteyebilirsiniz.",
-    "analysisFallback": "Yapay zeka analizi",
+    "welcome": "Merhaba! Ben Kâşif Admin Co-Pilot. Sitenizi geliştirmek için kod veya strateji isteyebilirsiniz (partner → Gemini → yerel).",
+    "analysisFallback": "Kâşif analizi",
     "noData": "Analiz verisi alınamadı.",
     "codeSuggestion": "Kod önerisi:",
     "copied": "Kod panoya kopyalandı!",
@@ -1731,8 +1731,8 @@
     "projectDescPlaceholder": "Bu proje ne hakkında?",
     "saveChanges": "Değişiklikleri kaydet",
     "projectUpdated": "Proje başarıyla güncellendi.",
-    "aiStrategistTitle": "AI Proje Stratejisti",
-    "aiStrategistDesc": "Projenizin verilerini yapay zekaya analiz ettirerek stratejik öneriler ve yeni fikirler alın.",
+    "aiStrategistTitle": "Kâşif Proje Stratejisti",
+    "aiStrategistDesc": "Proje envanterini Kâşif zinciriyle analiz ederek stratejik öneriler ve araç tipi fikirleri alın.",
     "generateStrategy": "Strateji oluştur",
     "analyzing": "Analiz ediliyor…",
     "analysisComplete": "Analiz tamamlandı!",

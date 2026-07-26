@@ -69,12 +69,12 @@ function CreateChallengeDialog() {
         <DialogHeader>
           <DialogTitle>Yeni Yarışma Oluştur</DialogTitle>
           <DialogDescription>
-            Yeni bir haftalık yarışma oluşturun veya yapay zekadan fikir alın.
+            Yeni bir haftalık yarışma oluşturun veya Kâşif’ten fikir alın.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
-            <Label htmlFor="ai-topic">AI Fikir Asistanı</Label>
+            <Label htmlFor="ai-topic">Kâşif fikir asistanı</Label>
             <div className="flex gap-2">
               <Input
                 id="ai-topic"

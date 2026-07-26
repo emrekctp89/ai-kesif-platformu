@@ -1586,8 +1586,8 @@
     "errorsTitle": "Failed rows ({count}):"
   },
   "CoPilot": {
-    "welcome": "Hi! I’m Admin Co-Pilot. Ask me for code or strategy to improve the site.",
-    "analysisFallback": "AI analysis",
+    "welcome": "Hi! I’m Kasif Admin Co-Pilot. Ask for code or strategy (partner → Gemini → local).",
+    "analysisFallback": "Kasif analysis",
     "noData": "Could not load analysis data.",
     "codeSuggestion": "Code suggestion:",
     "copied": "Code copied to clipboard!",
@@ -1731,8 +1731,8 @@
     "projectDescPlaceholder": "What is this project about?",
     "saveChanges": "Save changes",
     "projectUpdated": "Project updated successfully.",
-    "aiStrategistTitle": "AI Project Strategist",
-    "aiStrategistDesc": "Have AI analyze your project data for strategic suggestions and fresh ideas.",
+    "aiStrategistTitle": "Kasif Project Strategist",
+    "aiStrategistDesc": "Analyze project inventory with the Kasif chain for strategic suggestions and tool-type ideas.",
     "generateStrategy": "Generate strategy",
     "analyzing": "Analyzing…",
     "analysisComplete": "Analysis complete!",
