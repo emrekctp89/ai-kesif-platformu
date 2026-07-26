@@ -216,6 +216,43 @@ describe('scrapeToolPage', () => {
     expect(result.error).toMatch(/çok büyük/i);
   });
 
+  it('Content-Length olmadan büyüyen stream yanıtını erken keser', async () => {
+    const encoder = new TextEncoder();
+    let readCount = 0;
+    let cancelled = false;
+    const chunks = [
+      encoder.encode('a'.repeat(1024 * 1024)),
+      encoder.encode('b'.repeat(1024 * 1024)),
+      encoder.encode('c'),
+      encoder.encode('okunmamalı'),
+    ];
+    const body = new ReadableStream({
+      pull(controller) {
+        controller.enqueue(chunks[readCount]);
+        readCount += 1;
+        if (readCount === chunks.length) controller.close();
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      url: 'https://example-product.com/',
+      headers: { get: (name) => (name === 'content-type' ? 'text/html' : null) },
+      body,
+      text: async () => {
+        throw new Error('stream varken text() kullanılmamalı');
+      },
+    });
+
+    const result = await scrapeToolPage('https://example-product.com', { provider: 'native' });
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/bayt sınırını/i);
+    expect(cancelled).toBe(true);
+  });
+
   it('binary native içeriği parse etmeyi reddeder', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,

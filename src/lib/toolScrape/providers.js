@@ -102,6 +102,31 @@ async function readBoundedText(response, maxBytes) {
   if (Number.isFinite(declared) && declared > maxBytes) {
     throw new Error(`Scrape yanıtı çok büyük (${declared} bayt).`);
   }
+
+  if (response.body?.getReader) {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    const chunks = [];
+    let receivedBytes = 0;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        receivedBytes += value?.byteLength || 0;
+        if (receivedBytes > maxBytes) {
+          await reader.cancel('Scrape response size limit exceeded');
+          throw new Error(`Scrape yanıtı ${maxBytes} bayt sınırını aşıyor.`);
+        }
+        chunks.push(decoder.decode(value, { stream: true }));
+      }
+      chunks.push(decoder.decode());
+      return chunks.join('');
+    } finally {
+      reader.releaseLock?.();
+    }
+  }
+
+  // Test doubles and older fetch implementations may not expose a ReadableStream.
   const text = await response.text();
   if (Buffer.byteLength(text, 'utf8') > maxBytes) {
     throw new Error(`Scrape yanıtı ${maxBytes} bayt sınırını aşıyor.`);
