@@ -62,10 +62,10 @@ function TextGeneratorTab({ onSaveHistory }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Metin Üretici (Gemini)</CardTitle>
+        <CardTitle>Metin Üretici (Kâşif)</CardTitle>
         <CardDescription>
-          Bir fikir verin, yapay zeka sizin için blog yazısı, sosyal medya gönderisi veya bir şiir
-          yazsın.
+          Bir fikir verin; Kâşif zinciri (partner / Gemini / yerel taslak) blog yazısı, sosyal medya
+          gönderisi veya yaratıcı metin üretsin.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

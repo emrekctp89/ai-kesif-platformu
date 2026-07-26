@@ -114,6 +114,8 @@ export function DeveloperPortalClient() {
     [apiBase, lang]
   );
 
+  const openApiUrl = useMemo(() => `${apiBase}/api/v1/openapi`, [apiBase]);
+
   useEffect(() => {
     setSandboxKey(readStoredSandboxKey());
     fetchKeys();
@@ -306,6 +308,30 @@ export function DeveloperPortalClient() {
             <pre className="overflow-x-auto rounded border bg-card p-3 text-sm">
               <code>Authorization: Bearer aik_…</code>
             </pre>
+          </div>
+
+          <div className="rounded-md bg-muted p-4">
+            <p className="mb-1 text-sm font-semibold">{t('openApiTitle')}</p>
+            <p className="mb-2 text-xs text-muted-foreground">{t('openApiNote')}</p>
+            <pre className="overflow-x-auto rounded border bg-card p-3 text-sm">
+              <code>{`curl -X GET "${openApiUrl}"`}</code>
+            </pre>
+            <div className="mt-2 flex flex-wrap justify-end gap-2">
+              <Button type="button" variant="ghost" size="sm" asChild>
+                <a href={openApiUrl} target="_blank" rel="noopener noreferrer">
+                  {t('openApiOpen')}
+                </a>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleCopy(`curl -X GET "${openApiUrl}"`)}
+              >
+                <Copy className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                {t('copied')}
+              </Button>
+            </div>
           </div>
 
           <div className="rounded-md bg-muted p-4">

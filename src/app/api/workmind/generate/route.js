@@ -4,23 +4,14 @@ import { NextResponse } from 'next/server';
 import { PRIMARY_CATEGORIES } from '@/lib/categoryTaxonomy';
 import { understandQuestion } from '@/lib/kasif/engine';
 import { normalizeWorkmindWorkflow, planWorkmindWorkflow } from '@/lib/kasif/workmindPlanner';
+import { callLlmJson } from '@/lib/kasif/partnerRunner';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const GEMINI_MODELS = [
-  process.env.GEMINI_TEXT_MODEL,
-  'gemini-flash-latest',
-  'gemini-2.5-flash-lite',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-].filter(Boolean);
-
-const GEMINI_TIMEOUT_MS = 18_000;
-
 function buildSystemInstruction() {
   const categoryList = PRIMARY_CATEGORIES.map((c) => `${c.slug} (${c.name})`).join(', ');
-  return `Sen bir AI iş akışı mimarısın (Workmind BETA).
+  return `Sen bir AI iş akışı mimarısın (Workmind BETA / Kâşif).
 Kullanıcının hedefini 3-6 adımlık pratik bir iş akışına böl.
 Her adım için platformdaki bir kategori slug'ı seç.
 
@@ -50,73 +41,26 @@ Kurallar:
 - En fazla 6 node`;
 }
 
-function parseJsonObject(text) {
-  const raw = String(text || '').trim();
-  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fenced?.[1] || raw;
-  const firstBrace = candidate.indexOf('{');
-  const lastBrace = candidate.lastIndexOf('}');
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-    throw new Error('Model geçerli JSON döndürmedi.');
-  }
-  return JSON.parse(candidate.slice(firstBrace, lastBrace + 1));
-}
-
-async function generateWithGemini(prompt, apiKey) {
-  const systemInstruction = buildSystemInstruction();
-  const userPrompt = `${systemInstruction}\n\nKullanıcı hedefi: ${prompt}`;
-  const payload = {
-    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-    generationConfig: {
-      temperature: 0.4,
-      maxOutputTokens: 2048,
-      responseMimeType: 'application/json',
-    },
-  };
-
-  let lastError = null;
-
-  for (const modelName of GEMINI_MODELS) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
-    try {
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const errBody = await response.json().catch(() => ({}));
-        lastError = new Error(
-          `Gemini ${modelName} HTTP ${response.status}: ${errBody?.error?.message || response.statusText}`
-        );
-        continue;
-      }
-
-      const result = await response.json();
-      const text =
-        result?.candidates?.[0]?.content?.parts?.map((p) => p?.text || '').join('') || '';
-      if (!text) {
-        lastError = new Error(`Gemini ${modelName} boş yanıt`);
-        continue;
-      }
-
-      const workflow = normalizeWorkmindWorkflow(parseJsonObject(text));
-      if (workflow.nodes.length > 0) {
-        return { workflow, modelName };
-      }
-      lastError = new Error(`Gemini ${modelName} boş node listesi`);
-    } catch (err) {
-      lastError = err?.name === 'AbortError' ? new Error(`Gemini ${modelName} zaman aşımı`) : err;
-    } finally {
-      clearTimeout(timer);
+/**
+ * Cloud path: Partner → Gemini via shared Kâşif LLM chain.
+ * @param {string} prompt
+ * @returns {Promise<{ workflow: object|null, source: string|null, error?: Error }>}
+ */
+async function generateWithKasifCloud(prompt) {
+  const userPrompt = `${buildSystemInstruction()}\n\nKullanıcı hedefi: ${prompt}`;
+  try {
+    const { data, source } = await callLlmJson(userPrompt);
+    if (!data || typeof data !== 'object') {
+      return { workflow: null, source: null };
     }
+    const workflow = normalizeWorkmindWorkflow(data);
+    if (workflow.nodes.length > 0) {
+      return { workflow, source: source || 'gemini' };
+    }
+    return { workflow: null, source: null, error: new Error('empty_nodes') };
+  } catch (err) {
+    return { workflow: null, source: null, error: err instanceof Error ? err : new Error(String(err)) };
   }
-
-  return { workflow: null, lastError };
 }
 
 export async function POST(req) {
@@ -135,28 +79,23 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Prompt çok uzun (max 800 karakter).' }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
     let workflowData = null;
     let source = 'kasif';
     let modelName = null;
-    let geminiError = null;
+    let cloudError = null;
     let plannerMeta = null;
 
-    if (apiKey) {
-      const geminiResult = await generateWithGemini(prompt, apiKey);
-      if (geminiResult.workflow?.nodes?.length) {
-        workflowData = geminiResult.workflow;
-        source = 'gemini';
-        modelName = geminiResult.modelName;
-      } else {
-        geminiError = geminiResult.lastError;
-        logger.warn(
-          'Workmind Gemini unavailable, using Kâşif planner:',
-          geminiError?.message || geminiError
-        );
-      }
-    } else {
-      logger.warn('Workmind: GEMINI_API_KEY yok; Kâşif yerel planlayıcı kullanılıyor.');
+    const cloud = await generateWithKasifCloud(prompt);
+    if (cloud.workflow?.nodes?.length) {
+      workflowData = cloud.workflow;
+      source = cloud.source === 'partner' ? 'partner' : 'gemini';
+      modelName = source;
+    } else if (cloud.error) {
+      cloudError = cloud.error;
+      logger.warn(
+        'Workmind cloud chain unavailable, using Kâşif planner:',
+        cloudError?.message || cloudError
+      );
     }
 
     if (!workflowData?.nodes?.length) {
@@ -167,7 +106,7 @@ export async function POST(req) {
     }
 
     if (!workflowData?.nodes?.length) {
-      logger.error('Workmind generate failed completely:', geminiError);
+      logger.error('Workmind generate failed completely:', cloudError);
       return NextResponse.json(
         {
           error:
@@ -188,19 +127,19 @@ export async function POST(req) {
       meta: {
         beta: true,
         source,
+        engine: 'kasif',
         model: modelName || undefined,
         planner: plannerMeta?.planner,
         goals,
         concepts: plannerMeta?.concepts || intent.concepts || [],
         disclaimer: 'Öneriler otomatik üretilir; sonuçlar hatalı veya eksik olabilir.',
-        fallbackFromGemini: Boolean(geminiError),
+        fallbackFromCloud: Boolean(cloudError),
+        // backward-compatible flag for older clients
+        fallbackFromGemini: Boolean(cloudError),
       },
     });
   } catch (error) {
     logger.error('Workmind generate error:', error);
-    return NextResponse.json(
-      { error: 'İş akışı üretilemedi. Lütfen tekrar dene.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Beklenmeyen bir hata oluştu.' }, { status: 500 });
   }
 }

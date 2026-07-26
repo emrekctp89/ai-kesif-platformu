@@ -13,6 +13,7 @@ import {
   getKasifAssistantAnswer,
   getKasifRecommendations,
 } from '@/lib/kasif/integrations';
+import { generateStudioText } from '@/lib/kasif/studioText';
 
 function isKasifDisabled(error) {
   return error instanceof Error && error.message === 'KASIF_DISABLED';
@@ -357,46 +358,43 @@ export async function getLegacyAiComparison(tools) {
   }
 }
 
+/**
+ * Studio free-text generation via Kâşif chain (Partner → Gemini → local).
+ * Export name kept for backward compatibility with StudioClient.
+ */
 export async function generateTextWithGemini(userPrompt) {
   'use server';
 
-  if (!userPrompt) {
+  const normalized = String(userPrompt || '').trim();
+  if (!normalized) {
     return { error: 'Lütfen bir istek girin.' };
+  }
+  if (normalized.length > 2000) {
+    return { error: 'İstek çok uzun (max 2000 karakter).' };
+  }
+
+  const rateLimit = await enforceRateLimit('studio-text', {
+    limit: 20,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return {
+      error: `Çok sık metin istediniz. ${rateLimit.retryAfterSeconds} saniye sonra tekrar deneyin.`,
+    };
   }
 
   try {
-    const prompt = `Kullanıcının isteği: "${userPrompt}". Bu isteğe uygun, yaratıcı ve ilgi çekici bir metin oluştur.`;
-    const chatHistory = [{ role: 'user', parts: [{ text: prompt }] }];
-    const payload = { contents: chatHistory };
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    if (!apiKey) return { error: 'Gemini API anahtarı bulunamadı.' };
-
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      return { error: 'Yapay zeka modelinden hata alındı.' };
+    const { text, source } = await generateStudioText(normalized);
+    if (!text) {
+      return { error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.' };
     }
-    const result = await response.json();
-
-    if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-      return {
-        success: true,
-        text: result.candidates[0].content.parts[0].text,
-      };
-    } else {
-      return {
-        error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.',
-      };
-    }
+    return {
+      success: true,
+      text,
+      source: source || 'local',
+    };
   } catch (e) {
-    logger.error('Metin üretme hatası:', e);
+    logger.error('Metin üretme hatası (Kâşif stüdyo):', e);
     return { error: 'Metin üretilirken beklenmedik bir hata oluştu.' };
   }
 }
