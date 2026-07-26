@@ -151,15 +151,22 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ---
 
+### P6.4 Paywall UX + add-tool success
+
+- **Paywall**: `buildPackPaywall` — login vs kota mesajları, free runner alternatifi, `/login?next=`
+- **JobPacksStrip / PackRunnerPanel**: kilit kartı + kota bitince banner
+- **Add-tool UI**: badge (queued/duplicate/missing_url) + `/admin?tab=approval_queue`
+- **Admin**: `?tab=` deep link (controlled Tabs)
+
+---
+
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.2~~ ✅ (funnel → packs → partner → learn → eval A/B)
-2. ~~**Soft-landing A/B admin**~~ ✅
-3. ~~**Pack runner smoke script**~~ ✅
-4. **Pro pack paywall UX copy** — kota bitince net upgrade path
-5. **Scrape P4 sohbet intent polish** — add-tool success UX + pending deep link
+1. ~~P0–P6.4~~ ✅
+2. **Pro onboarding** — ilk Pro paket denemesinde short tour
+3. **Add-tool admin notify inbox** — admin alerts tablosuna yaz
 
 ---
 

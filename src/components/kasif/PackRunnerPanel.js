@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Copy, ExternalLink, LoaderCircle, Sparkles, Wand2 } from 'lucide-react';
+import Link from 'next/link';
+import { Copy, ExternalLink, LoaderCircle, Lock, Sparkles, Wand2 } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
 import { isRunnablePack } from '@/lib/kasif/jobPacks';
+import { buildPackPaywall } from '@/lib/kasif/packAccess';
 import { buildPartnerConnectSteps } from '@/lib/kasif/partnerConnect';
 
 const PLACEHOLDER_KEYS = {
@@ -139,13 +141,12 @@ export function PackRunnerPanel({
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        if (data.upgradePath) {
-          throw Object.assign(new Error(data.error || t('packs.runnerFailed')), {
-            upgradePath: data.upgradePath,
-            reason: data.reason,
-          });
-        }
-        throw new Error(data.error || t('packs.runnerFailed'));
+        throw Object.assign(new Error(data.error || t('packs.runnerFailed')), {
+          upgradePath: data.upgradePath,
+          reason: data.reason,
+          paywall: data.paywall || null,
+          freeRunsLeft: data.freeRunsLeft,
+        });
       }
       setResult(data);
       setStatus('done');
@@ -158,8 +159,17 @@ export function PackRunnerPanel({
     } catch (err) {
       setStatus('error');
       setError(err?.message || t('packs.runnerFailed'));
-      if (err?.upgradePath) {
-        setResult({ upgradePath: err.upgradePath, reason: err.reason });
+      if (err?.upgradePath || err?.paywall || err?.reason) {
+        setResult({
+          upgradePath: err.upgradePath,
+          reason: err.reason,
+          paywall: err.paywall || null,
+          freeRunsLeft: err.freeRunsLeft,
+        });
+        trackEvent('kasif_pack_runner_paywall', {
+          pack_id: safePackId,
+          reason: err.reason,
+        });
       }
     }
   }
@@ -233,18 +243,51 @@ export function PackRunnerPanel({
       </form>
 
       {error ? (
-        <div className="mt-2 space-y-1">
-          <p role="alert" className="text-xs text-destructive">
-            {error}
-          </p>
-          {result?.upgradePath ? (
-            <a
-              href={result.upgradePath}
-              className="text-xs font-semibold text-primary hover:underline"
-            >
-              {t('packs.upgradeCta')}
-            </a>
-          ) : null}
+        <div className="mt-3 space-y-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+          {result?.reason === 'login_required' || result?.reason === 'pro_required' ? (
+            <>
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-950 dark:text-amber-100">
+                <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                {t(
+                  result.reason === 'login_required'
+                    ? 'packs.paywallLoginTitle'
+                    : 'packs.paywallQuotaTitle'
+                )}
+              </p>
+              <p
+                role="alert"
+                className="text-xs leading-4 text-amber-950/90 dark:text-amber-100/90"
+              >
+                {error}
+              </p>
+              <p className="text-[11px] text-muted-foreground">{t('packs.paywallBenefits')}</p>
+              {(() => {
+                const paywall =
+                  result.paywall || buildPackPaywall(locale, result.reason, { packId: safePackId });
+                return (
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={paywall.ctaHref || result.upgradePath || '/uyelik'}
+                      className="inline-flex min-h-8 items-center rounded-lg bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground"
+                    >
+                      {t(paywall.ctaKey || 'packs.upgradeCta')}
+                    </Link>
+                    <Link
+                      href={paywall.secondaryHref || '/kasif?pack=seo-brief&runner=1'}
+                      className="inline-flex min-h-8 items-center rounded-lg border px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
+                    >
+                      {t(paywall.secondaryKey || 'packs.paywallTryFreeRunner')}
+                      <ExternalLink className="ml-1 h-3 w-3" aria-hidden="true" />
+                    </Link>
+                  </div>
+                );
+              })()}
+            </>
+          ) : (
+            <p role="alert" className="text-xs text-destructive">
+              {error}
+            </p>
+          )}
         </div>
       ) : null}
 

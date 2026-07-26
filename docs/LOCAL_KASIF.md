@@ -58,6 +58,7 @@ Workmind iki Kâşif katmanı kullanır:
 21. Soft-landing A/B: `softLandingVariant` (A|B) sticky; chip listesi sunucudan (`starters`).
 22. Offline eval: pack runner + add-tool suite (`kasif-pack-addtool-eval`); shared cases add-tool/soft-landing-en.
 23. Soft-landing A/B admin kovaları (shown/follow-up/convert). Pack smoke: `npm run kasif:pack-smoke`.
+24. Pro paywall: login/kota kopyası + ücretsiz runner alternatifi. Add-tool: UI badge + admin `?tab=approval_queue`.
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır. Saf fiyat daraltması

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { ArrowRight, Layers3, Lock, Sparkles } from 'lucide-react';
 import { listJobPacks, buildPackWorkmindUrl, isRunnablePack } from '@/lib/kasif/jobPacks';
+import { buildPackPaywall } from '@/lib/kasif/packAccess';
 import { trackEvent } from '@/utils/analytics';
 import { PackRunnerPanel } from '@/components/kasif/PackRunnerPanel';
 
@@ -55,7 +56,6 @@ export function JobPacksStrip({
     if (initialOpenRunner) {
       setRunnerPackId(safeInitial);
       trackEvent('kasif_pack_runner_deep_link', { pack_id: safeInitial });
-      // Wait for runner panel mount, then scroll into view
       window.setTimeout(() => {
         document.getElementById('kasif-pack-runner')?.scrollIntoView({
           behavior: 'smooth',
@@ -82,6 +82,13 @@ export function JobPacksStrip({
     return access?.packs?.[packId]?.reason || null;
   }
 
+  const quotaEmpty =
+    access &&
+    !access.isPro &&
+    access.isAuthenticated &&
+    access.freeRunsLeft != null &&
+    access.freeRunsLeft <= 0;
+
   return (
     <section
       aria-labelledby="kasif-packs-heading"
@@ -101,13 +108,39 @@ export function JobPacksStrip({
             {t('packs.title')}
           </h2>
           <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{t('packs.description')}</p>
-          {access && !access.isPro && access.freeRunsLeft != null ? (
+          {access && !access.isPro && access.freeRunsLeft != null && access.freeRunsLeft > 0 ? (
             <p className="mt-1.5 text-[11px] text-muted-foreground">
               {t('packs.quotaHint', {
                 left: access.freeRunsLeft,
                 total: access.freeProPackQuota ?? 2,
               })}
             </p>
+          ) : null}
+          {quotaEmpty ? (
+            <div className="mt-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] leading-4 text-amber-950 dark:text-amber-100">
+              <p className="font-semibold">{t('packs.paywallQuotaTitle')}</p>
+              <p className="mt-0.5 opacity-90">{t('packs.quotaEmptyHint')}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Link
+                  href={locale === 'en' ? '/en/uyelik' : '/uyelik'}
+                  className="font-semibold text-primary hover:underline"
+                  onClick={() => trackEvent('kasif_pack_quota_upgrade_click')}
+                >
+                  {t('packs.upgradeCta')}
+                </Link>
+                <Link
+                  href={
+                    locale === 'en'
+                      ? '/en/kasif?pack=seo-brief&runner=1'
+                      : '/kasif?pack=seo-brief&runner=1'
+                  }
+                  className="font-semibold text-primary hover:underline"
+                  onClick={() => trackEvent('kasif_pack_quota_free_runner_click')}
+                >
+                  {t('packs.paywallTryFreeRunner')}
+                </Link>
+              </div>
+            </div>
           ) : null}
         </div>
         <span className="inline-flex items-center gap-1 rounded-full border bg-background/80 px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
@@ -120,13 +153,16 @@ export function JobPacksStrip({
         {packs.map((pack) => {
           const locked = packLocked(pack.id);
           const reason = lockReason(pack.id);
+          const paywall = locked
+            ? buildPackPaywall(locale, reason || 'pro_required', { packId: pack.id })
+            : null;
           return (
             <li
               key={pack.id}
               id={`kasif-pack-${pack.id}`}
               className={`flex flex-col rounded-2xl border bg-background/90 p-3 shadow-sm transition-colors hover:border-amber-500/40 ${
                 highlightPackId === pack.id ? 'border-violet-500/50 ring-2 ring-violet-500/25' : ''
-              }`}
+              } ${locked ? 'opacity-95' : ''}`}
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
@@ -139,6 +175,13 @@ export function JobPacksStrip({
                   ) : null}
                 </div>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{pack.summary}</p>
+                {locked ? (
+                  <p className="mt-1.5 text-[11px] font-medium text-amber-800 dark:text-amber-200">
+                    {reason === 'login_required'
+                      ? t('packs.lockedHintLogin')
+                      : t('packs.lockedHintQuota')}
+                  </p>
+                ) : null}
                 <ol className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
                   {pack.stepLabels.slice(0, 3).map((label, index) => (
                     <li key={`${pack.id}-${index}`}>
@@ -148,20 +191,35 @@ export function JobPacksStrip({
                 </ol>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                {locked ? (
-                  <Link
-                    href={locale === 'en' ? '/en/uyelik' : '/uyelik'}
-                    onClick={() =>
-                      trackEvent('kasif_pack_locked_click', {
-                        pack_id: pack.id,
-                        reason,
-                      })
-                    }
-                    className="inline-flex min-h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-xs font-semibold text-amber-900 dark:text-amber-100"
-                  >
-                    <Lock className="h-3 w-3" aria-hidden="true" />
-                    {reason === 'login_required' ? t('packs.loginCta') : t('packs.upgradeCta')}
-                  </Link>
+                {locked && paywall ? (
+                  <>
+                    <Link
+                      href={paywall.ctaHref}
+                      onClick={() =>
+                        trackEvent('kasif_pack_locked_click', {
+                          pack_id: pack.id,
+                          reason,
+                        })
+                      }
+                      className="inline-flex min-h-8 flex-1 items-center justify-center gap-1 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-xs font-semibold text-amber-900 dark:text-amber-100"
+                    >
+                      <Lock className="h-3 w-3" aria-hidden="true" />
+                      {t(paywall.ctaKey)}
+                    </Link>
+                    <Link
+                      href={paywall.secondaryHref}
+                      onClick={() =>
+                        trackEvent('kasif_pack_locked_free_alt', {
+                          pack_id: pack.id,
+                          reason,
+                        })
+                      }
+                      className="inline-flex min-h-8 w-full items-center justify-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
+                    >
+                      {t(paywall.secondaryKey)}
+                      <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                    </Link>
+                  </>
                 ) : (
                   <>
                     <button

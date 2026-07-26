@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { enforceRateLimit } from '@/utils/antiAbuse';
 import { assertKasifEnabled } from '@/lib/kasif/config';
 import { assertPackAllowed } from '@/lib/kasif/packAccessServer';
+import { buildPackPaywall } from '@/lib/kasif/packAccess';
 import {
   isRunnablePack,
   formatPackArtifact,
@@ -22,8 +23,10 @@ const MESSAGES = {
     rateLimit: 'Çok fazla istek.',
     invalid: 'Geçersiz istek.',
     notRunnable: 'Bu paket henüz runner desteklemiyor.',
-    login_required: 'Pro paketler için giriş yap.',
-    pro_required: 'Ücretsiz Pro paket kotan doldu. Pro’ya yükselt.',
+    login_required:
+      'Bu Pro paket runner’ı için giriş gerekli. Girişten sonra 30 günde 2 ücretsiz Pro denemen olur.',
+    pro_required:
+      'Ücretsiz Pro paket kotan doldu (2/30 gün). Pro’ya geç veya ücretsiz paket runner’larını dene (SEO, destek, pitch…).',
     unknown_pack: 'Paket bulunamadı.',
     failed: 'Paket runner çalıştırılamadı.',
   },
@@ -32,8 +35,10 @@ const MESSAGES = {
     rateLimit: 'Too many requests.',
     invalid: 'Invalid request.',
     notRunnable: 'This pack does not support the runner yet.',
-    login_required: 'Sign in to use Pro packs.',
-    pro_required: 'Free Pro pack quota used. Upgrade to Pro.',
+    login_required:
+      'Sign in to use this Pro pack runner. After sign-in you get 2 free Pro pack runs per 30 days.',
+    pro_required:
+      'Your free Pro pack quota is used (2 / 30 days). Upgrade to Pro, or try free pack runners (SEO, support, pitch…).',
     unknown_pack: 'Pack not found.',
     failed: 'Pack runner failed.',
   },
@@ -84,12 +89,19 @@ export async function POST(request) {
   const access = await assertPackAllowed(packId);
   if (!access.allowed) {
     const status = access.reason === 'login_required' ? 401 : 402;
+    const paywall = buildPackPaywall(locale, access.reason, { packId });
     return NextResponse.json(
       {
         error: messages[access.reason] || messages.failed,
         reason: access.reason,
         freeRunsLeft: access.freeRunsLeft,
-        upgradePath: locale === 'en' ? '/en/uyelik' : '/uyelik',
+        upgradePath: paywall.upgradePath || paywall.ctaHref,
+        paywall: {
+          reason: paywall.reason,
+          ctaHref: paywall.ctaHref,
+          secondaryHref: paywall.secondaryHref,
+          freePackIds: paywall.freePackIds,
+        },
       },
       { status }
     );

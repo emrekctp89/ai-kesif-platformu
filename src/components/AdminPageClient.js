@@ -2574,9 +2574,32 @@ function KasifQualityTab({ interactions = [] }) {
   );
 }
 
+const ADMIN_TAB_VALUES = new Set([
+  'approval_queue',
+  'tool_management',
+  'reported_links',
+  'kasif_quality',
+  'admin_alerts',
+  'content_management',
+  'platform_settings',
+]);
+
 // Ana Admin Paneli Bileşeni
 export function AdminPageClient({ data }) {
   const t = useTranslations('AdminClient');
+  const [adminTab, setAdminTab] = React.useState(() => {
+    if (typeof window === 'undefined') return 'approval_queue';
+    const tab = new URLSearchParams(window.location.search).get('tab');
+    return ADMIN_TAB_VALUES.has(tab) ? tab : 'approval_queue';
+  });
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const tab = new URLSearchParams(window.location.search).get('tab');
+    if (ADMIN_TAB_VALUES.has(tab) && tab !== adminTab) setAdminTab(tab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const {
     unapprovedTools,
     unapprovedShowcaseItems,
@@ -2602,8 +2625,19 @@ export function AdminPageClient({ data }) {
     isKasifIssueInteraction(row)
   ).length;
 
+  function onAdminTabChange(next) {
+    setAdminTab(next);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', next);
+      window.history.replaceState({}, '', url.toString());
+    } catch {
+      /* ignore */
+    }
+  }
+
   return (
-    <Tabs defaultValue="approval_queue" className="w-full">
+    <Tabs value={adminTab} onValueChange={onAdminTabChange} className="w-full">
       <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-2xl p-1">
         <TabsTrigger value="approval_queue" className="shrink-0 text-xs sm:text-sm">
           {t('tabApproval')}{' '}

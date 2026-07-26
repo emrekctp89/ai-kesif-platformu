@@ -2,13 +2,65 @@
  * Pack Pro gate + free quota rules (pure, testable).
  */
 
-import { JOB_PACKS, getJobPackById } from './jobPacks';
+import { JOB_PACKS, getJobPackById, isRunnablePack, RUNNABLE_PACK_IDS } from './jobPacks';
 
 /** Free users may start this many proHint packs per rolling window. */
 export const FREE_PRO_PACK_QUOTA = 2;
 
 /** Rolling window days for free pro-pack quota. */
 export const FREE_PRO_PACK_WINDOW_DAYS = 30;
+
+/** Runnable packs that do not require Pro / free-quota. */
+export function listFreeRunnablePackIds() {
+  return RUNNABLE_PACK_IDS.filter((id) => {
+    const pack = JOB_PACKS.find((item) => item.id === id);
+    return pack && !pack.proHint && isRunnablePack(id);
+  });
+}
+
+/**
+ * Paths + copy keys for locked Pro pack / runner paywall.
+ * @param {string} [locale]
+ * @param {string} [reason] login_required | pro_required
+ * @param {{ packId?: string }} [options]
+ */
+export function buildPackPaywall(locale = 'tr', reason = 'pro_required', options = {}) {
+  const lang = locale === 'en' ? 'en' : 'tr';
+  const prefix = lang === 'en' ? '/en' : '';
+  const freeAlts = listFreeRunnablePackIds().slice(0, 3);
+  const freePackHref = freeAlts[0]
+    ? `${prefix}/kasif?pack=${encodeURIComponent(freeAlts[0])}&runner=1`
+    : `${prefix}/kasif`;
+
+  if (reason === 'login_required') {
+    const next = encodeURIComponent(`${prefix}/kasif`);
+    return {
+      reason: 'login_required',
+      titleKey: 'packs.paywallLoginTitle',
+      bodyKey: 'packs.paywallLoginBody',
+      ctaKey: 'packs.loginCta',
+      ctaHref: `${prefix}/login?next=${next}`,
+      secondaryKey: 'packs.paywallSeeFree',
+      secondaryHref: freePackHref,
+      freePackIds: freeAlts,
+      upgradePath: `${prefix}/login?next=${next}`,
+    };
+  }
+
+  return {
+    reason: 'pro_required',
+    titleKey: 'packs.paywallQuotaTitle',
+    bodyKey: 'packs.paywallQuotaBody',
+    ctaKey: 'packs.upgradeCta',
+    ctaHref: `${prefix}/uyelik`,
+    secondaryKey: 'packs.paywallTryFreeRunner',
+    secondaryHref: freePackHref,
+    freePackIds: freeAlts,
+    upgradePath: `${prefix}/uyelik`,
+    freeRunsLeft: 0,
+    packId: options.packId || null,
+  };
+}
 
 export function isProPackId(packId) {
   const pack = JOB_PACKS.find((item) => item.id === String(packId || '').trim());

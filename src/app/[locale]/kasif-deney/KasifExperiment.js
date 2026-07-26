@@ -566,6 +566,70 @@ export default function KasifExperiment() {
                         <p className="whitespace-pre-wrap text-sm leading-6">
                           {turn.result.answer}
                         </p>
+                        {(turn.result.addTool ||
+                          turn.result.intent?.addTool ||
+                          turn.result.metaKind === 'add-tool') && (
+                          <div className="mt-3 space-y-2 rounded-xl border border-sky-500/30 bg-sky-500/10 px-3 py-2.5">
+                            {(() => {
+                              const add = turn.result.addTool ||
+                                turn.result.intent?.addTool || { status: 'error' };
+                              const status = String(add.status || 'error');
+                              const badgeKey =
+                                status === 'queued'
+                                  ? 'addToolBadgeQueued'
+                                  : status === 'duplicate'
+                                    ? 'addToolBadgeDuplicate'
+                                    : status === 'missing_url'
+                                      ? 'addToolBadgeMissingUrl'
+                                      : 'addToolBadgeError';
+                              return (
+                                <>
+                                  <span className="inline-flex rounded-full border border-sky-500/30 bg-background/70 px-2 py-0.5 text-[11px] font-semibold text-sky-900 dark:text-sky-100">
+                                    {t(badgeKey)}
+                                  </span>
+                                  {add.name ? (
+                                    <p className="text-xs font-medium text-foreground">
+                                      {add.name}
+                                    </p>
+                                  ) : null}
+                                  {add.slug ? (
+                                    <p className="font-mono text-[11px] text-muted-foreground">
+                                      {add.slug}
+                                    </p>
+                                  ) : null}
+                                  {status === 'queued' || status === 'duplicate' ? (
+                                    <div className="space-y-1">
+                                      <Link
+                                        href={
+                                          locale === 'en'
+                                            ? '/en/admin?tab=approval_queue'
+                                            : '/admin?tab=approval_queue'
+                                        }
+                                        className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                                        onClick={() =>
+                                          trackEvent('kasif_add_tool_admin_link', {
+                                            status,
+                                          })
+                                        }
+                                      >
+                                        {t('addToolAdminCta')}
+                                        <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                                      </Link>
+                                      <p className="text-[11px] text-muted-foreground">
+                                        {t('addToolAdminHint')}
+                                      </p>
+                                    </div>
+                                  ) : null}
+                                  {status === 'missing_url' ? (
+                                    <p className="text-[11px] text-muted-foreground">
+                                      {t('addToolTryAgain')}
+                                    </p>
+                                  ) : null}
+                                </>
+                              );
+                            })()}
+                          </div>
+                        )}
                         {turn.result.grounded === false && !turn.result.meta && (
                           <div className="mt-3 space-y-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2">
                             <p className="text-xs text-amber-900 dark:text-amber-100">
