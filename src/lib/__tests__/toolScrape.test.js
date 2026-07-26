@@ -3,6 +3,11 @@
  */
 
 jest.mock('server-only', () => ({}));
+jest.mock('node:dns/promises', () => ({
+  lookup: jest.fn(),
+}));
+
+const { lookup: mockDnsLookup } = require('node:dns/promises');
 
 const {
   parseHtmlDocument,
@@ -125,6 +130,20 @@ describe('scrapeToolPage', () => {
     expect(result.ok).toBe(false);
     expect(result.error).toMatch(/robots\.txt/i);
     expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('özel DNS çözümünde robots isteği dahil hiçbir fetch yapmaz', async () => {
+    process.env.KASIF_SCRAPE_DNS_GUARD_ENABLED = 'true';
+    process.env.KASIF_SCRAPE_ROBOTS_ENABLED = 'true';
+    mockDnsLookup.mockResolvedValue([{ address: '10.0.0.9', family: 4 }]);
+    global.fetch = jest.fn();
+
+    const result = await scrapeToolPage('https://private-resolver.example/tool', {
+      provider: 'native',
+    });
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/özel|ayrılmış/i);
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it('engelli hostu reddeder', async () => {

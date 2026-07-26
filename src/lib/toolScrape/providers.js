@@ -70,7 +70,7 @@ export function assertPublicDnsAddresses(addresses) {
   return values;
 }
 
-async function assertPublicDnsTarget(rawUrl) {
+export async function assertPublicDnsTarget(rawUrl) {
   if (String(process.env.KASIF_SCRAPE_DNS_GUARD_ENABLED || 'true').toLowerCase() === 'false') {
     return;
   }

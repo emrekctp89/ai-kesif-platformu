@@ -16,6 +16,7 @@ import {
 } from '@/lib/toolScrape/parsePage';
 import {
   assertSafeScrapeUrl,
+  assertPublicDnsTarget,
   clampTimeout,
   isThinContent,
   scrapeWithJina,
@@ -96,6 +97,15 @@ export async function scrapeToolPage(rawUrl, options = {}) {
   const url = normalized.url;
   if (getBlockedToolHost(url)) {
     return { ok: false, error: 'Dizin/aggregator bağlantısı scrape edilemez.' };
+  }
+  try {
+    // robots.txt de bir dış ağ isteğidir; onu da yapmadan önce DNS kapısından geç.
+    await assertPublicDnsTarget(url);
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'Hostname güvenli biçimde çözümlenemedi.',
+    };
   }
   if (String(process.env.KASIF_SCRAPE_ROBOTS_ENABLED || 'true').toLowerCase() !== 'false') {
     const robots = await checkRobotsPermission(url, {
