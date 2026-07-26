@@ -2420,6 +2420,43 @@ function KasifQualityTab({ interactions = [] }) {
               ))}
             </div>
           ) : null}
+          {(stats.softLandingConversion?.variants || []).length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">
+                {t('kasifSoftVariantBuckets')}
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {stats.softLandingConversion.variants.map((bucket) => (
+                  <div
+                    key={bucket.variant}
+                    className="rounded-xl border bg-background/60 px-3 py-2.5 text-xs"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold">
+                        {t('kasifSoftVariantLabel', { v: bucket.variant })}
+                      </span>
+                      <Badge variant={bucket.variant === 'B' ? 'default' : 'secondary'}>
+                        {bucket.convertOfFollowUp != null ? `%${bucket.convertOfFollowUp}` : '—'}
+                      </Badge>
+                    </div>
+                    <p className="mt-1.5 text-muted-foreground">
+                      {t('kasifSoftVariantStats', {
+                        shown: bucket.shown,
+                        followUps: bucket.followUps,
+                        converted: bucket.converted,
+                      })}
+                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {t('kasifSoftVariantRates', {
+                        followUp: bucket.followUpRate != null ? `%${bucket.followUpRate}` : '—',
+                        ofShown: bucket.convertOfShown != null ? `%${bucket.convertOfShown}` : '—',
+                      })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
           {(stats.softLandingConversion?.starters || []).length > 0 ? (
             <div className="space-y-1.5">
               <p className="text-xs font-medium text-muted-foreground">
@@ -2448,6 +2485,11 @@ function KasifQualityTab({ interactions = [] }) {
                     <span>
                       {t('kasifConfidence')}: %{Math.round((row.confidence || 0) * 100)}
                     </span>
+                    {row.softLandingVariant ? (
+                      <Badge variant="outline" className="font-mono font-normal">
+                        {t('kasifSoftVariantLabel', { v: row.softLandingVariant })}
+                      </Badge>
+                    ) : null}
                     {row.pricePreference && row.pricePreference !== 'any' && (
                       <Badge variant="outline" className="font-normal">
                         {row.pricePreference}

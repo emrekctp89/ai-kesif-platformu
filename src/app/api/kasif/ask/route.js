@@ -71,6 +71,14 @@ function attachClientIntentMeta(modelResponse, body = {}) {
     changed = true;
   }
 
+  // Sticky A/B variant from client — stamp on follow-ups and any tagged response.
+  if (body?.softLandingVariant === 'A' || body?.softLandingVariant === 'B') {
+    if (!intent.softLandingVariant) {
+      intent.softLandingVariant = body.softLandingVariant;
+      changed = true;
+    }
+  }
+
   return changed ? { ...base, intent } : base;
 }
 

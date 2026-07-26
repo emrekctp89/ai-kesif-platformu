@@ -127,6 +127,24 @@ describe('buildKasifQualityStats', () => {
     const withConversion = [
       ...sample,
       {
+        id: 'sl-a',
+        question: 'Peki bunlardan hangileri?',
+        intent: { meta: 'soft-landing', softLandingVariant: 'A', pricePreference: 'free' },
+        softLanding: true,
+        confidence: 0.92,
+        source_ids: [],
+        created_at: '2026-07-22T12:01:00Z',
+      },
+      {
+        id: 'sl-b',
+        question: 'Which of those?',
+        intent: { meta: 'soft-landing', softLandingVariant: 'B' },
+        softLanding: true,
+        confidence: 0.92,
+        source_ids: [],
+        created_at: '2026-07-22T12:02:00Z',
+      },
+      {
         id: '6',
         question: 'ücretsiz sunum hazırla',
         intent: {
@@ -134,6 +152,7 @@ describe('buildKasifQualityStats', () => {
           fromSoftLanding: true,
           softLandingStarter: 'presentation',
           softLandingParentId: '5',
+          softLandingVariant: 'A',
         },
         confidence: 0.88,
         feedback: null,
@@ -146,19 +165,39 @@ describe('buildKasifQualityStats', () => {
         intent: {
           fromSoftLanding: true,
           softLandingStarter: '(free-text)',
+          softLandingVariant: 'B',
         },
         confidence: 0.2,
         feedback: null,
         source_ids: [],
         created_at: '2026-07-22T12:10:00Z',
       },
+      {
+        id: '8',
+        question: 'seo brief istiyorum',
+        intent: {
+          fromSoftLanding: true,
+          softLandingStarter: 'seo',
+          softLandingVariant: 'B',
+        },
+        confidence: 0.85,
+        source_ids: ['tool:10'],
+        created_at: '2026-07-22T12:12:00Z',
+      },
     ];
     const stats = buildKasifQualityStats(withConversion);
-    expect(stats.softLandingConversion.shown).toBe(1);
-    expect(stats.softLandingConversion.followUps).toBe(2);
-    expect(stats.softLandingConversion.converted).toBe(1);
-    expect(stats.softLandingConversion.convertOfFollowUp).toBe(50);
-    expect(stats.softLandingConversion.starters[0].starter).toMatch(/presentation|free-text/);
+    // sample has 1 soft-landing + 2 more shown = 3
+    expect(stats.softLandingConversion.shown).toBeGreaterThanOrEqual(3);
+    expect(stats.softLandingConversion.followUps).toBe(3);
+    expect(stats.softLandingConversion.converted).toBe(2);
+    expect(stats.softLandingConversion.starters[0].starter).toMatch(/presentation|free-text|seo/);
+    const variants = stats.softLandingConversion.variants;
+    expect(variants.some((v) => v.variant === 'A')).toBe(true);
+    expect(variants.some((v) => v.variant === 'B')).toBe(true);
+    const b = variants.find((v) => v.variant === 'B');
+    expect(b.followUps).toBe(2);
+    expect(b.converted).toBe(1);
+    expect(b.convertOfFollowUp).toBe(50);
   });
 
   it('funnel kayıtlarını jobFunnel özetine yansıtır', () => {

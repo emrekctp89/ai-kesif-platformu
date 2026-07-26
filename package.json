@@ -20,6 +20,8 @@
     "catalog:platforms:dry-run": "node ./scripts/update-platforms.mjs --dry-run",
     "kasif:evaluate": "node ./scripts/kasif-evaluate.mjs",
     "kasif:evaluate:offline": "jest __tests__/lib/kasif-eval-regression.test.js --ci --coverage=false",
+    "kasif:pack-smoke": "node ./scripts/kasif-pack-smoke.mjs",
+    "kasif:evaluate:pack": "jest __tests__/lib/kasif-pack-addtool-eval.test.js --ci --coverage=false",
     "kasif:feedback-report": "node ./scripts/kasif-feedback-report.mjs",
     "kasif:reprocess-intents": "node ./scripts/kasif-reprocess-intents.mjs",
     "tools:audit-links": "node ./scripts/tool-link-audit.mjs",

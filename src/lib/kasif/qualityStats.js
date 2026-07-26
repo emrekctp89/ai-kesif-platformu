@@ -10,6 +10,20 @@ function asNumber(value) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function normalizeSoftLandingVariant(row) {
+  const raw = String(
+    row?.intent?.softLandingVariant || row?.softLandingVariant || row?.intent?.variant || ''
+  )
+    .trim()
+    .toUpperCase();
+  if (raw === 'A' || raw === 'B') return raw;
+  return 'unknown';
+}
+
+function emptyVariantBucket(variant) {
+  return { variant, shown: 0, followUps: 0, converted: 0 };
+}
+
 function tokenizeQuestion(question) {
   return String(question || '')
     .toLocaleLowerCase('tr-TR')
@@ -220,6 +234,7 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
       question: row.question,
       confidence: asNumber(row.confidence),
       pricePreference: row.intent?.pricePreference || 'any',
+      softLandingVariant: normalizeSoftLandingVariant(row),
       created_at: row.created_at || null,
     }));
 
@@ -263,6 +278,33 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
     if (!den) return null;
     return Number(((num / den) * 100).toFixed(1));
   }
+
+  // A/B variant buckets: shown (soft-landing meta) + follow-ups/converted (fromSoftLanding).
+  const softLandingVariantBuckets = {
+    A: emptyVariantBucket('A'),
+    B: emptyVariantBucket('B'),
+    unknown: emptyVariantBucket('unknown'),
+  };
+  for (const row of softLanding) {
+    const key = normalizeSoftLandingVariant(row);
+    softLandingVariantBuckets[key].shown += 1;
+  }
+  for (const row of softLandingFollowUps) {
+    const key = normalizeSoftLandingVariant(row);
+    softLandingVariantBuckets[key].followUps += 1;
+    if (Array.isArray(row.source_ids) && row.source_ids.length > 0) {
+      softLandingVariantBuckets[key].converted += 1;
+    }
+  }
+  const softLandingVariants = Object.values(softLandingVariantBuckets)
+    .map((bucket) => ({
+      ...bucket,
+      followUpRate: pct(bucket.followUps, bucket.shown),
+      convertOfShown: pct(bucket.converted, bucket.shown),
+      convertOfFollowUp: pct(bucket.converted, bucket.followUps),
+    }))
+    .filter((bucket) => bucket.shown > 0 || bucket.followUps > 0);
+
   const softLandingConversion = {
     shown: softLanding.length,
     followUps: softLandingFollowUps.length,
@@ -277,6 +319,7 @@ export function buildKasifQualityStats(interactions = [], options = {}) {
       }))
       .sort((a, b) => b.total - a.total || b.converted - a.converted)
       .slice(0, 10),
+    variants: softLandingVariants,
   };
 
   const helpfulRate =

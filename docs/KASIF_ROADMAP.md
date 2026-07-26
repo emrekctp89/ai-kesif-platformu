@@ -143,14 +143,23 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ---
 
+### P6.3 Soft-landing A/B admin + pack smoke
+
+- **Admin**: soft-landing varyant kovaları (A/B/unknown) — shown / follow-up / convertRate
+- **Intent stamp**: follow-up’larda `softLandingVariant` (sticky client → API)
+- **Pack smoke**: `npm run kasif:pack-smoke` / `kasif:evaluate:pack` (10 pack offline)
+
+---
+
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~**Partner OAuth UX**~~ ✅ … ~~**Learn deep links**~~ ✅
-2. ~~**Eval + soft-landing A/B**~~ ✅
-3. **Soft-landing variant conversion** — admin’de A vs B convertRate kartı
-4. **Pack runner live smoke** — optional workflow when Partner/Gemini secrets present
+1. ~~P0–P6.2~~ ✅ (funnel → packs → partner → learn → eval A/B)
+2. ~~**Soft-landing A/B admin**~~ ✅
+3. ~~**Pack runner smoke script**~~ ✅
+4. **Pro pack paywall UX copy** — kota bitince net upgrade path
+5. **Scrape P4 sohbet intent polish** — add-tool success UX + pending deep link
 
 ---
 
