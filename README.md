@@ -229,6 +229,9 @@ npm run lint
 npm run build
 
 # Link doğrulama dry-run (DB'ye yazmaz)
+# Haftalık otomatik kontrol: Vercel Cron → /api/cron/link-audit (Pazartesi)
+# Günlük yeni/problemli kuyruk: /api/cron/link-audit-pending
+# Manuel CLI:
 npm run tools:audit-links:dry-run
 
 # Link doğrulama + metadata yazımı

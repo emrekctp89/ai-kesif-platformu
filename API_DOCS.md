@@ -8,9 +8,17 @@ Standart API yolları yalnızca üçüncü parti hizmetlerle entegrasyon veya ha
 
 ### `GET /api/cron/link-audit`
 
-- **Amaç:** Veritabanındaki yapay zeka araçlarının linklerini kontrol edip çalışmayanları işaretler.
-- **Tetikleyici:** Vercel Cron (haftalık) veya harici bir monitoring aracı.
-- **Güvenlik:** Cron secret anahtarı ile korunmalıdır.
+- **Amaç:** Onaylı araç linklerini tarar; `link_check_status`, `link_checked_at`, HTTP/hata alanlarını günceller. Kırık/inceleme gerekenlerde admin uyarısı + e-posta gönderir.
+- **Tetikleyici:** Vercel Cron — **haftalık** (`0 4 * * 1`, Pazartesi 04:00 UTC).
+- **Öncelik:** (1) hiç kontrol edilmemiş, (2) `invalid`/`review`, (3) 7 günden eski kontroller.
+- **Parametreler (opsiyonel):** `batchSize`, `maxTools`, `timeoutMs`, `concurrency`, `staleDays`, `maxRuntimeMs`, `priority=all|pending`.
+- **Güvenlik:** `Authorization: Bearer <CRON_SECRET>` veya `?secret=` (route `allowQuerySecret` açık).
+
+### `GET /api/cron/link-audit-pending`
+
+- **Amaç:** Yalnızca **yeni** (`link_checked_at` boş) ve problemli (`invalid`/`review`) araçları tarar.
+- **Tetikleyici:** Vercel Cron — **günlük** (`0 3 * * *`, 03:00 UTC) — detay sayfasında “Kontrol bekliyor” birikimini önler.
+- **Güvenlik:** Aynı `CRON_SECRET`.
 
 ### `POST /api/stripe-webhook`
 
