@@ -1,25 +1,72 @@
 /**
- * Pack runner — platform-generated first outputs (content-studio).
+ * Pack runners — platform-generated first outputs.
  * Gemini when available; deterministic local fallback otherwise.
+ *
+ * Runnable: content-studio, sales-outreach, meeting-to-action
  */
 
-import { getJobPackById } from './jobPacks';
+import { getJobPackById, isRunnablePack, RUNNABLE_PACK_IDS } from './jobPacks';
 
-export const RUNNABLE_PACK_IDS = ['content-studio'];
+export { isRunnablePack, RUNNABLE_PACK_IDS };
 
-export function isRunnablePack(packId) {
-  return RUNNABLE_PACK_IDS.includes(String(packId || '').trim());
-}
-
-/**
- * Local deterministic first-run scaffold (no external API).
- */
-export function buildLocalContentStudioRun(brief, locale = 'tr') {
+function safeBrief(brief, locale, fallbackTr, fallbackEn) {
   const topic = String(brief || '')
     .trim()
     .slice(0, 280);
-  const safeTopic =
-    topic || (locale === 'en' ? 'AI tools for small teams' : 'Küçük ekipler için AI araçları');
+  return topic || (locale === 'en' ? fallbackEn : fallbackTr);
+}
+
+function extractJsonObject(text) {
+  const raw = String(text || '').trim();
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fenced?.[1] || raw;
+  const first = candidate.indexOf('{');
+  const last = candidate.lastIndexOf('}');
+  if (first === -1 || last <= first) throw new Error('no_json');
+  return JSON.parse(candidate.slice(first, last + 1));
+}
+
+async function callGeminiJson(prompt) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.5,
+          maxOutputTokens: 2048,
+          responseMimeType: 'application/json',
+        },
+      }),
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
+    const result = await response.json();
+    const text = result?.candidates?.[0]?.content?.parts?.map((p) => p?.text || '').join('') || '';
+    return extractJsonObject(text);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// --- content-studio ---
+
+export function buildLocalContentStudioRun(brief, locale = 'tr') {
+  const safeTopic = safeBrief(
+    brief,
+    locale,
+    'Küçük ekipler için AI araçları',
+    'AI tools for small teams'
+  );
 
   if (locale === 'en') {
     return {
@@ -88,9 +135,6 @@ aikeşif içerik stüdyosu paketi runner çıktısı (yerel yedek).`,
   };
 }
 
-/**
- * Format runner result as pasteable first_result text.
- */
 export function formatContentStudioArtifact(run, locale = 'tr') {
   if (!run) return '';
   const kw = Array.isArray(run.seo?.keywords) ? run.seo.keywords.join(', ') : '';
@@ -118,30 +162,8 @@ Meta: ${run.seo?.meta || ''}
 Anahtar kelimeler: ${kw}`;
 }
 
-function extractJsonObject(text) {
-  const raw = String(text || '').trim();
-  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fenced?.[1] || raw;
-  const first = candidate.indexOf('{');
-  const last = candidate.lastIndexOf('}');
-  if (first === -1 || last <= first) throw new Error('no_json');
-  return JSON.parse(candidate.slice(first, last + 1));
-}
-
-/**
- * Try Gemini; fall back to local scaffold.
- */
 export async function runContentStudioPack(brief, locale = 'tr') {
-  const pack = getJobPackById('content-studio', locale);
-  if (!pack) throw new Error('unknown_pack');
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return {
-      ...buildLocalContentStudioRun(brief, locale),
-      source: 'local',
-    };
-  }
+  if (!getJobPackById('content-studio', locale)) throw new Error('unknown_pack');
 
   const lang = locale === 'en' ? 'English' : 'Turkish';
   const prompt = `You are a content studio pack runner for an AI tools platform.
@@ -157,59 +179,516 @@ Respond ONLY with valid JSON:
   }
 }`;
 
-  try {
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 20000);
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.5,
-          maxOutputTokens: 2048,
-          responseMimeType: 'application/json',
-        },
-      }),
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
+  const parsed = await callGeminiJson(prompt);
+  if (!parsed) {
+    return { ...buildLocalContentStudioRun(brief, locale), source: 'local' };
+  }
 
-    if (!response.ok) {
-      return { ...buildLocalContentStudioRun(brief, locale), source: 'local-fallback' };
-    }
-
-    const result = await response.json();
-    const text = result?.candidates?.[0]?.content?.parts?.map((p) => p?.text || '').join('') || '';
-    const parsed = extractJsonObject(text);
-    const draft = String(parsed.draft || '').trim();
-    if (draft.length < 200) {
-      return { ...buildLocalContentStudioRun(brief, locale), source: 'local-fallback' };
-    }
-
-    return {
-      packId: 'content-studio',
-      goal: 'content-writing',
-      bridge: 'runner',
-      draft,
-      imagePrompt: String(parsed.imagePrompt || '')
-        .trim()
-        .slice(0, 800),
-      seo: {
-        title: String(parsed.seo?.title || '')
-          .trim()
-          .slice(0, 120),
-        meta: String(parsed.seo?.meta || '')
-          .trim()
-          .slice(0, 220),
-        keywords: Array.isArray(parsed.seo?.keywords)
-          ? parsed.seo.keywords.map((k) => String(k).slice(0, 40)).slice(0, 8)
-          : [],
-      },
-      source: 'gemini',
-    };
-  } catch {
+  const draft = String(parsed.draft || '').trim();
+  if (draft.length < 200) {
     return { ...buildLocalContentStudioRun(brief, locale), source: 'local-fallback' };
   }
+
+  return {
+    packId: 'content-studio',
+    goal: 'content-writing',
+    bridge: 'runner',
+    draft,
+    imagePrompt: String(parsed.imagePrompt || '')
+      .trim()
+      .slice(0, 800),
+    seo: {
+      title: String(parsed.seo?.title || '')
+        .trim()
+        .slice(0, 120),
+      meta: String(parsed.seo?.meta || '')
+        .trim()
+        .slice(0, 220),
+      keywords: Array.isArray(parsed.seo?.keywords)
+        ? parsed.seo.keywords.map((k) => String(k).slice(0, 40)).slice(0, 8)
+        : [],
+    },
+    source: 'gemini',
+  };
+}
+
+// --- sales-outreach ---
+
+export function buildLocalSalesOutreachRun(brief, locale = 'tr') {
+  const offer = safeBrief(
+    brief,
+    locale,
+    'B2B AI keşif platformu demo',
+    'B2B AI discovery platform demo'
+  );
+
+  if (locale === 'en') {
+    return {
+      packId: 'sales-outreach',
+      goal: 'email-writing',
+      bridge: 'runner',
+      subjects: [
+        `Quick idea for ${offer}`,
+        `15 minutes on ${offer}?`,
+        `Saw your team might need ${offer}`,
+      ],
+      sequence: [
+        {
+          day: 0,
+          label: 'Email 1 — opener',
+          body: `Subject: Quick idea for ${offer}
+
+Hi {{first_name}},
+
+I help teams cut the time they spend evaluating AI tools. We put together a short workflow around ${offer} that usually surfaces a first usable output in under 30 minutes.
+
+Would a 15-minute walkthrough next week be useful?
+
+Best,
+{{sender}}`,
+        },
+        {
+          day: 3,
+          label: 'Email 2 — value',
+          body: `Subject: Re: ${offer}
+
+Hi {{first_name}},
+
+Quick follow-up: teams using this flow usually replace 3–4 tool trials with one guided pack (write → visual → next step).
+
+Happy to send a one-pager if email is easier than a call.
+
+Best,
+{{sender}}`,
+        },
+        {
+          day: 7,
+          label: 'Email 3 — close',
+          body: `Subject: Close the loop on ${offer}
+
+Hi {{first_name}},
+
+I'll close the loop here. If exploring ${offer} is on your list later this quarter, just reply "later" and I'll send a short checklist.
+
+Thanks,
+{{sender}}`,
+        },
+      ],
+      crmStages: ['New lead', 'Contacted', 'Demo booked', 'Won / Lost'],
+      followUpRules: [
+        'If no reply in 3 days → Email 2',
+        'If no reply in 7 days → Email 3 then pause',
+        'If positive reply → move to Demo booked same day',
+      ],
+    };
+  }
+
+  return {
+    packId: 'sales-outreach',
+    goal: 'email-writing',
+    bridge: 'runner',
+    subjects: [
+      `${offer} için kısa bir fikir`,
+      `${offer} — 15 dk uygun mu?`,
+      `Ekibiniz ${offer} tarafında mı?`,
+    ],
+    sequence: [
+      {
+        day: 0,
+        label: 'E-posta 1 — açılış',
+        body: `Konu: ${offer} için kısa bir fikir
+
+Merhaba {{first_name}},
+
+AI araçlarını denemek için harcanan süreyi kısaltan ekiplerle çalışıyorum. ${offer} etrafında genelde 30 dakikada ilk somut çıktıyı veren bir akış kuruyoruz.
+
+Gelecek hafta 15 dakikalık bir bakış faydalı olur mu?
+
+Saygılarımla,
+{{sender}}`,
+      },
+      {
+        day: 3,
+        label: 'E-posta 2 — değer',
+        body: `Konu: Re: ${offer}
+
+Merhaba {{first_name}},
+
+Kısa takip: Bu akışı kullanan ekipler genelde 3–4 araç denemesini tek rehberli paketle değiştiriyor (yaz → görsel → sonraki adım).
+
+Görüşme yerine tek sayfalık özet de gönderebilirim.
+
+Saygılarımla,
+{{sender}}`,
+      },
+      {
+        day: 7,
+        label: 'E-posta 3 — kapanış',
+        body: `Konu: ${offer} — döngüyü kapatayım
+
+Merhaba {{first_name}},
+
+Bu turda döngüyü kapatıyorum. ${offer} bu çeyrekte gündeme gelirse "sonra" yazman yeterli; kısa bir kontrol listesi yollarım.
+
+Teşekkürler,
+{{sender}}`,
+      },
+    ],
+    crmStages: ['Yeni lead', 'İletişime geçildi', 'Demo planlandı', 'Kazanıldı / Kaybedildi'],
+    followUpRules: [
+      '3 günde yanıt yok → E-posta 2',
+      '7 günde yanıt yok → E-posta 3 sonra dur',
+      'Olumlu yanıt → aynı gün Demo planlandı',
+    ],
+  };
+}
+
+export function formatSalesOutreachArtifact(run, locale = 'tr') {
+  if (!run) return '';
+  const subjects = (run.subjects || []).map((s, i) => `${i + 1}. ${s}`).join('\n');
+  const sequence = (run.sequence || [])
+    .map((step) => `### ${step.label} (D+${step.day})\n\n${step.body}`)
+    .join('\n\n');
+  const stages = (run.crmStages || []).map((s, i) => `${i + 1}. ${s}`).join('\n');
+  const rules = (run.followUpRules || []).map((r) => `- ${r}`).join('\n');
+
+  if (locale === 'en') {
+    return `# Sales outreach pack
+
+## Subject lines
+${subjects}
+
+## Sequence
+${sequence}
+
+## CRM stages
+${stages}
+
+## Follow-up rules
+${rules}
+
+---
+Generated by aikeşif sales-outreach pack runner.`;
+  }
+
+  return `# Satış outreach paketi
+
+## Konu satırları
+${subjects}
+
+## Seri
+${sequence}
+
+## CRM aşamaları
+${stages}
+
+## Takip kuralları
+${rules}
+
+---
+aikeşif sales-outreach pack runner çıktısı.`;
+}
+
+export async function runSalesOutreachPack(brief, locale = 'tr') {
+  if (!getJobPackById('sales-outreach', locale)) throw new Error('unknown_pack');
+
+  const lang = locale === 'en' ? 'English' : 'Turkish';
+  const prompt = `You are a B2B sales outreach pack runner.
+User brief: ${String(brief || '').slice(0, 500)}
+Respond ONLY with valid JSON in ${lang} for user-facing strings:
+{
+  "subjects": ["subject1","subject2","subject3"],
+  "sequence": [
+    { "day": 0, "label": "Email 1", "body": "full email with Subject: line" },
+    { "day": 3, "label": "Email 2", "body": "..." },
+    { "day": 7, "label": "Email 3", "body": "..." }
+  ],
+  "crmStages": ["stage1","stage2","stage3","stage4"],
+  "followUpRules": ["rule1","rule2","rule3"]
+}`;
+
+  const parsed = await callGeminiJson(prompt);
+  if (!parsed || !Array.isArray(parsed.sequence) || parsed.sequence.length < 2) {
+    return { ...buildLocalSalesOutreachRun(brief, locale), source: 'local' };
+  }
+
+  return {
+    packId: 'sales-outreach',
+    goal: 'email-writing',
+    bridge: 'runner',
+    subjects: Array.isArray(parsed.subjects)
+      ? parsed.subjects.map((s) => String(s).slice(0, 120)).slice(0, 5)
+      : [],
+    sequence: parsed.sequence.slice(0, 5).map((step, index) => ({
+      day: Number.isFinite(Number(step.day)) ? Number(step.day) : index * 3,
+      label: String(step.label || `Email ${index + 1}`).slice(0, 80),
+      body: String(step.body || '').slice(0, 2000),
+    })),
+    crmStages: Array.isArray(parsed.crmStages)
+      ? parsed.crmStages.map((s) => String(s).slice(0, 60)).slice(0, 6)
+      : [],
+    followUpRules: Array.isArray(parsed.followUpRules)
+      ? parsed.followUpRules.map((s) => String(s).slice(0, 160)).slice(0, 6)
+      : [],
+    source: 'gemini',
+  };
+}
+
+// --- meeting-to-action ---
+
+export function buildLocalMeetingToActionRun(brief, locale = 'tr') {
+  const topic = safeBrief(brief, locale, 'Haftalık ürün senkronu', 'Weekly product sync');
+
+  if (locale === 'en') {
+    return {
+      packId: 'meeting-to-action',
+      goal: 'meeting-notes',
+      bridge: 'runner',
+      summary: `Meeting: ${topic}
+Attendees: {{names}}
+Duration: {{minutes}} min
+
+### Summary
+- Aligned on the main goal for ${topic}.
+- Risks: unclear owner for the next deliverable; tool sprawl.
+- Decision: ship one guided workflow this week instead of evaluating more tools.
+
+### Decisions
+1. Use a single pack/workflow for the next deliverable.
+2. Capture first_result before adding another SaaS seat.`,
+      actions: [
+        {
+          owner: '{{owner_1}}',
+          task: `Draft the first deliverable for ${topic}`,
+          due: 'D+2',
+        },
+        {
+          owner: '{{owner_2}}',
+          task: 'Connect meeting summary → task tracker automation and run a test',
+          due: 'D+3',
+        },
+        {
+          owner: '{{owner_1}}',
+          task: 'Share first_result link/screenshot with stakeholders',
+          due: 'D+4',
+        },
+      ],
+      automationMap: {
+        trigger: 'Meeting recording uploaded / transcript ready',
+        steps: [
+          'Transcribe + summarize with AI notes tool',
+          'Extract action items to structured list',
+          'Create tasks in tracker (Asana/Jira/Linear/Notion)',
+          'Post summary to Slack/Teams channel',
+        ],
+        successCriteria: 'Test run moves 1 real action item into the tracker with owner + due date',
+      },
+    };
+  }
+
+  return {
+    packId: 'meeting-to-action',
+    goal: 'meeting-notes',
+    bridge: 'runner',
+    summary: `Toplantı: ${topic}
+Katılımcılar: {{names}}
+Süre: {{minutes}} dk
+
+### Özet
+- ${topic} için ana hedef netleştirildi.
+- Riskler: sonraki teslimatta sahip belirsiz; araç dağınıklığı.
+- Karar: bu hafta yeni araç denemek yerine tek rehberli akış çıkarılacak.
+
+### Kararlar
+1. Sonraki teslimat için tek paket/iş akışı kullanılacak.
+2. Yeni SaaS koltuğu eklemeden önce first_result alınacak.`,
+    actions: [
+      {
+        owner: '{{owner_1}}',
+        task: `${topic} için ilk teslimat taslağını çıkar`,
+        due: 'D+2',
+      },
+      {
+        owner: '{{owner_2}}',
+        task: 'Toplantı özeti → görev aracı otomasyonunu bağla ve test et',
+        due: 'D+3',
+      },
+      {
+        owner: '{{owner_1}}',
+        task: 'first_result link/ekran görüntüsünü paydaşlara ilet',
+        due: 'D+4',
+      },
+    ],
+    automationMap: {
+      trigger: 'Toplantı kaydı yüklendi / transkript hazır',
+      steps: [
+        'AI not aracı ile transkript + özet',
+        'Aksiyon maddelerini yapılandırılmış listeye çıkar',
+        'Görev aracında kart oluştur (Asana/Jira/Linear/Notion)',
+        'Özeti Slack/Teams kanalına gönder',
+      ],
+      successCriteria: 'Test çalıştırması 1 gerçek aksiyonu sahip + son tarih ile tracker’a taşır',
+    },
+  };
+}
+
+export function formatMeetingToActionArtifact(run, locale = 'tr') {
+  if (!run) return '';
+  const actions = (run.actions || [])
+    .map((a, i) => `${i + 1}. [${a.due || 'TBD'}] ${a.owner || '—'} — ${a.task || ''}`)
+    .join('\n');
+  const steps = (run.automationMap?.steps || []).map((s, i) => `${i + 1}. ${s}`).join('\n');
+
+  if (locale === 'en') {
+    return `# Meeting to action pack
+
+## Summary
+${run.summary || ''}
+
+## Action items
+${actions}
+
+## Automation map
+Trigger: ${run.automationMap?.trigger || ''}
+
+Steps:
+${steps}
+
+Success: ${run.automationMap?.successCriteria || ''}
+
+---
+Generated by aikeşif meeting-to-action pack runner.`;
+  }
+
+  return `# Toplantıdan aksiyona paketi
+
+## Özet
+${run.summary || ''}
+
+## Aksiyon maddeleri
+${actions}
+
+## Otomasyon haritası
+Tetikleyici: ${run.automationMap?.trigger || ''}
+
+Adımlar:
+${steps}
+
+Başarı: ${run.automationMap?.successCriteria || ''}
+
+---
+aikeşif meeting-to-action pack runner çıktısı.`;
+}
+
+export async function runMeetingToActionPack(brief, locale = 'tr') {
+  if (!getJobPackById('meeting-to-action', locale)) throw new Error('unknown_pack');
+
+  const lang = locale === 'en' ? 'English' : 'Turkish';
+  const prompt = `You are a meeting-to-action pack runner.
+User brief: ${String(brief || '').slice(0, 500)}
+Respond ONLY with valid JSON; user-facing strings in ${lang}:
+{
+  "summary": "meeting summary with decisions",
+  "actions": [
+    { "owner": "role or name", "task": "task", "due": "D+2" }
+  ],
+  "automationMap": {
+    "trigger": "when this starts",
+    "steps": ["step1","step2","step3"],
+    "successCriteria": "what success looks like"
+  }
+}`;
+
+  const parsed = await callGeminiJson(prompt);
+  if (!parsed || !String(parsed.summary || '').trim()) {
+    return { ...buildLocalMeetingToActionRun(brief, locale), source: 'local' };
+  }
+
+  return {
+    packId: 'meeting-to-action',
+    goal: 'meeting-notes',
+    bridge: 'runner',
+    summary: String(parsed.summary || '').slice(0, 3000),
+    actions: Array.isArray(parsed.actions)
+      ? parsed.actions.slice(0, 8).map((a) => ({
+          owner: String(a.owner || '').slice(0, 60),
+          task: String(a.task || '').slice(0, 200),
+          due: String(a.due || '').slice(0, 20),
+        }))
+      : [],
+    automationMap: {
+      trigger: String(parsed.automationMap?.trigger || '').slice(0, 200),
+      steps: Array.isArray(parsed.automationMap?.steps)
+        ? parsed.automationMap.steps.map((s) => String(s).slice(0, 160)).slice(0, 8)
+        : [],
+      successCriteria: String(parsed.automationMap?.successCriteria || '').slice(0, 240),
+    },
+    source: 'gemini',
+  };
+}
+
+// --- unified entry ---
+
+/**
+ * @param {string} packId
+ * @param {string} brief
+ * @param {string} [locale]
+ */
+export async function runPack(packId, brief, locale = 'tr') {
+  const id = String(packId || '').trim();
+  if (!isRunnablePack(id)) {
+    throw new Error('not_runnable');
+  }
+  if (id === 'content-studio') return runContentStudioPack(brief, locale);
+  if (id === 'sales-outreach') return runSalesOutreachPack(brief, locale);
+  if (id === 'meeting-to-action') return runMeetingToActionPack(brief, locale);
+  throw new Error('not_runnable');
+}
+
+/**
+ * @param {object} run
+ * @param {string} [locale]
+ */
+export function formatPackArtifact(run, locale = 'tr') {
+  if (!run) return '';
+  if (run.packId === 'content-studio') return formatContentStudioArtifact(run, locale);
+  if (run.packId === 'sales-outreach') return formatSalesOutreachArtifact(run, locale);
+  if (run.packId === 'meeting-to-action') return formatMeetingToActionArtifact(run, locale);
+  return String(run.draft || run.summary || '').trim();
+}
+
+/**
+ * UI-facing public summary of run payload (no huge internal dumps).
+ */
+export function summarizeRunForClient(run) {
+  if (!run) return null;
+  if (run.packId === 'content-studio') {
+    return {
+      packId: run.packId,
+      source: run.source,
+      draft: run.draft,
+      imagePrompt: run.imagePrompt,
+      seo: run.seo,
+    };
+  }
+  if (run.packId === 'sales-outreach') {
+    return {
+      packId: run.packId,
+      source: run.source,
+      subjects: run.subjects,
+      sequence: run.sequence,
+      crmStages: run.crmStages,
+      followUpRules: run.followUpRules,
+    };
+  }
+  if (run.packId === 'meeting-to-action') {
+    return {
+      packId: run.packId,
+      source: run.source,
+      summary: run.summary,
+      actions: run.actions,
+      automationMap: run.automationMap,
+    };
+  }
+  return { packId: run.packId, source: run.source };
 }

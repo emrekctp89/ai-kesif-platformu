@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { ArrowRight, Layers3, Lock, Sparkles } from 'lucide-react';
-import { listJobPacks, buildPackWorkmindUrl } from '@/lib/kasif/jobPacks';
+import { listJobPacks, buildPackWorkmindUrl, isRunnablePack } from '@/lib/kasif/jobPacks';
 import { trackEvent } from '@/utils/analytics';
 import { PackRunnerPanel } from '@/components/kasif/PackRunnerPanel';
 
@@ -15,7 +15,7 @@ export function JobPacksStrip({ locale = 'tr', onAskPack, compact = false }) {
   const t = useTranslations('Kasif');
   const packs = listJobPacks(locale);
   const [access, setAccess] = useState(null);
-  const [showRunner, setShowRunner] = useState(false);
+  const [runnerPackId, setRunnerPackId] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -143,11 +143,11 @@ export function JobPacksStrip({ locale = 'tr', onAskPack, compact = false }) {
                       {t('packs.openWorkmind')}
                       <ArrowRight className="h-3 w-3" aria-hidden="true" />
                     </Link>
-                    {pack.id === 'content-studio' ? (
+                    {isRunnablePack(pack.id) ? (
                       <button
                         type="button"
                         onClick={() => {
-                          setShowRunner((v) => !v);
+                          setRunnerPackId((current) => (current === pack.id ? null : pack.id));
                           trackEvent('kasif_pack_runner_open', { pack_id: pack.id });
                         }}
                         className="inline-flex min-h-8 w-full items-center justify-center gap-1 rounded-lg border border-violet-500/30 bg-violet-500/10 px-2.5 py-1.5 text-xs font-semibold text-violet-900 dark:text-violet-100"
@@ -163,7 +163,9 @@ export function JobPacksStrip({ locale = 'tr', onAskPack, compact = false }) {
         })}
       </ul>
 
-      {showRunner && !packLocked('content-studio') ? <PackRunnerPanel locale={locale} /> : null}
+      {runnerPackId && isRunnablePack(runnerPackId) && !packLocked(runnerPackId) ? (
+        <PackRunnerPanel locale={locale} packId={runnerPackId} />
+      ) : null}
     </section>
   );
 }

@@ -5,8 +5,9 @@ import { assertKasifEnabled } from '@/lib/kasif/config';
 import { assertPackAllowed } from '@/lib/kasif/packAccessServer';
 import {
   isRunnablePack,
-  formatContentStudioArtifact,
-  runContentStudioPack,
+  formatPackArtifact,
+  runPack,
+  summarizeRunForClient,
 } from '@/lib/kasif/packRunner';
 import { applyFunnelStage, normalizeFunnel, seedFunnelFromResponse } from '@/lib/kasif/funnel';
 import { getJobPackById } from '@/lib/kasif/jobPacks';
@@ -95,13 +96,13 @@ export async function POST(request) {
   }
 
   try {
-    const run = await runContentStudioPack(brief, locale);
-    const artifactText = formatContentStudioArtifact(run, locale);
+    const run = await runPack(packId, brief, locale);
+    const artifactText = formatPackArtifact(run, locale);
     const pack = getJobPackById(packId, locale);
 
     const feedbackToken = randomUUID();
     const intent = {
-      goals: pack?.goals || ['content-writing'],
+      goals: pack?.goals || [run.goal].filter(Boolean),
       packId,
       source: 'pack-runner',
       ...(access.userId ? { userId: access.userId } : {}),
@@ -169,12 +170,7 @@ export async function POST(request) {
       packId,
       interactionId: data.id,
       feedbackToken,
-      run: {
-        draft: run.draft,
-        imagePrompt: run.imagePrompt,
-        seo: run.seo,
-        source: run.source,
-      },
+      run: summarizeRunForClient(run),
       artifactText,
       funnel: normalizeFunnel(funnel),
       access: {

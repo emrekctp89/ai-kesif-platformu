@@ -1,20 +1,52 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Copy, LoaderCircle, Sparkles, Wand2 } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
+import { isRunnablePack } from '@/lib/kasif/jobPacks';
+
+const PLACEHOLDER_KEYS = {
+  'content-studio': 'packs.runnerBriefPlaceholder',
+  'sales-outreach': 'packs.runnerBriefPlaceholderSales',
+  'meeting-to-action': 'packs.runnerBriefPlaceholderMeeting',
+};
+
+const TITLE_KEYS = {
+  'content-studio': 'packs.runnerTitle',
+  'sales-outreach': 'packs.runnerTitleSales',
+  'meeting-to-action': 'packs.runnerTitleMeeting',
+};
+
+const HINT_KEYS = {
+  'content-studio': 'packs.runnerHint',
+  'sales-outreach': 'packs.runnerHintSales',
+  'meeting-to-action': 'packs.runnerHintMeeting',
+};
 
 /**
- * Content-studio pack runner — generates first deliverable on-platform.
+ * Multi-pack runner — generates first deliverable on-platform.
  */
-export function PackRunnerPanel({ locale = 'tr', defaultBrief = '', onComplete }) {
+export function PackRunnerPanel({
+  locale = 'tr',
+  packId = 'content-studio',
+  defaultBrief = '',
+  onComplete,
+}) {
   const t = useTranslations('Kasif');
+  const safePackId = isRunnablePack(packId) ? packId : 'content-studio';
   const [brief, setBrief] = useState(defaultBrief);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setBrief(defaultBrief || '');
+    setResult(null);
+    setError(null);
+    setStatus('idle');
+  }, [safePackId, defaultBrief]);
 
   async function run(event) {
     event.preventDefault();
@@ -29,7 +61,7 @@ export function PackRunnerPanel({ locale = 'tr', defaultBrief = '', onComplete }
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          packId: 'content-studio',
+          packId: safePackId,
           brief: brief.trim(),
           locale,
         }),
@@ -47,7 +79,7 @@ export function PackRunnerPanel({ locale = 'tr', defaultBrief = '', onComplete }
       setResult(data);
       setStatus('done');
       trackEvent('kasif_pack_runner_done', {
-        pack_id: 'content-studio',
+        pack_id: safePackId,
         source: data.run?.source,
         char_count: data.artifactText?.length,
       });
@@ -76,21 +108,23 @@ export function PackRunnerPanel({ locale = 'tr', defaultBrief = '', onComplete }
     <div className="mt-4 rounded-2xl border border-violet-500/25 bg-violet-500/5 p-4">
       <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-violet-900 dark:text-violet-100">
         <Wand2 className="h-3.5 w-3.5" aria-hidden="true" />
-        {t('packs.runnerTitle')}
+        {t(TITLE_KEYS[safePackId] || TITLE_KEYS['content-studio'])}
       </p>
-      <p className="mt-1 text-xs text-muted-foreground">{t('packs.runnerHint')}</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {t(HINT_KEYS[safePackId] || HINT_KEYS['content-studio'])}
+      </p>
 
       <form onSubmit={run} className="mt-3 space-y-2">
-        <label htmlFor="pack-runner-brief" className="sr-only">
+        <label htmlFor={`pack-runner-brief-${safePackId}`} className="sr-only">
           {t('packs.runnerBriefLabel')}
         </label>
         <textarea
-          id="pack-runner-brief"
+          id={`pack-runner-brief-${safePackId}`}
           value={brief}
           onChange={(e) => setBrief(e.target.value)}
           rows={3}
           maxLength={800}
-          placeholder={t('packs.runnerBriefPlaceholder')}
+          placeholder={t(PLACEHOLDER_KEYS[safePackId] || PLACEHOLDER_KEYS['content-studio'])}
           className="w-full resize-y rounded-lg border bg-background p-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40"
           disabled={status === 'running'}
         />

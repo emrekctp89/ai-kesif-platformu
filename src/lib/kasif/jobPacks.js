@@ -19,6 +19,13 @@
  * }} JobPackDef
  */
 
+/** Packs that support on-platform first_result runner. */
+export const RUNNABLE_PACK_IDS = ['content-studio', 'sales-outreach', 'meeting-to-action'];
+
+export function isRunnablePack(packId) {
+  return RUNNABLE_PACK_IDS.includes(String(packId || '').trim());
+}
+
 /** @type {JobPackDef[]} */
 export const JOB_PACKS = [
   {
