@@ -1403,6 +1403,7 @@
     "kasifFunnelTopTools": "Most selected tools",
     "kasifFunnelBridgePaste": "Paste bridge",
     "kasifFunnelRunner": "Pack runner",
+    "kasifFunnelRunnerSources": "Runner source mix (partner / gemini / local)",
     "kasifFunnelPackStats": "Pack conversion (pack_id)",
     "kasifPartnerTitle": "Pack runner / Partner LLM",
     "kasifPartnerUnknown": "Status unavailable",

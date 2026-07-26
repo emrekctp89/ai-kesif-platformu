@@ -446,6 +446,12 @@ export default function KasifExperiment() {
         <>
           <JobPacksStrip
             locale={locale}
+            initialPackId={searchParams?.get('pack') || null}
+            initialOpenRunner={
+              searchParams?.get('runner') === '1' ||
+              searchParams?.get('runner') === 'true' ||
+              searchParams?.get('openRunner') === '1'
+            }
             onAskPack={(pack) => {
               void askQuestion(pack.starterQuestion);
             }}

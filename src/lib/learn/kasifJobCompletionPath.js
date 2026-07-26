@@ -187,17 +187,17 @@ export const KASIF_LEARN_MODULES = [
       en: '5. Job packs and on-platform runners',
     },
     summary: {
-      tr: '7 iş paketi: brief yaz → platformda ilk çıktı üret (runner) → first_result kaydı. Bazı paketler Pro kota ile.',
-      en: '7 job packs: write a brief → generate a first output on-platform (runner) → first_result is recorded. Some packs use Pro quota.',
+      tr: '10 iş paketi: brief yaz → platformda ilk çıktı üret (runner) → first_result kaydı. Bazı paketler Pro kota ile.',
+      en: '10 job packs: write a brief → generate a first output on-platform (runner) → first_result is recorded. Some packs use Pro quota.',
     },
     learn: [
       {
-        tr: 'Paketler: içerik, satış, toplantı, sosyal, pitch, SEO brief, destek kiti.',
-        en: 'Packs: content, sales, meeting, social, pitch, SEO brief, support kit.',
+        tr: 'Paketler: içerik, satış, toplantı, sosyal, pitch, SEO, destek, kod, hukuk, araştırma.',
+        en: 'Packs: content, sales, meeting, social, pitch, SEO, support, code, legal, research.',
       },
       {
-        tr: 'SEO brief ve destek kiti çok adımlı (steps) çıktı üretir.',
-        en: 'SEO brief and support kit produce multi-step (steps) artifacts.',
+        tr: 'SEO / destek / kod / hukuk / araştırma paketleri çok adımlı (steps) çıktı üretir.',
+        en: 'SEO, support, code, legal, and research packs produce multi-step (steps) artifacts.',
       },
       {
         tr: 'LLM zinciri: Partner API → Gemini → yerel şablon.',
@@ -211,11 +211,13 @@ export const KASIF_LEARN_MODULES = [
     practice: {
       label: { tr: 'Pratik', en: 'Practice' },
       body: {
-        tr: 'Kâşif’te “SEO brief” veya “Destek kiti” paketini aç, kısa brief yaz, runner’ı çalıştır. Adımları oku ve kopyala.',
-        en: 'On Kâşif, open the SEO brief or Support kit pack, write a short brief, run it. Read and copy the steps.',
+        tr: 'SEO brief runner’ını deep link ile aç, kısa brief yaz, çalıştır. Adımları oku ve kopyala.',
+        en: 'Open the SEO brief runner via deep link, write a short brief, run it. Read and copy the steps.',
       },
-      cta: { tr: 'Paketlere git', en: 'Go to packs' },
+      cta: { tr: 'SEO brief runner’ı aç', en: 'Open SEO brief runner' },
       href: '/kasif',
+      pack: 'seo-brief',
+      runner: true,
     },
     tip: {
       tr: 'Pro paketlerde ücretsiz deneme kotası vardır; giriş gerekebilir.',
@@ -329,8 +331,10 @@ export const KASIF_LEARN_MODULES = [
         tr: 'Üç senaryodan birini seç ve 15 dakikada first_result’a ulaş. Bu sayfadaki tüm adımları tamamlandı işaretle.',
         en: 'Pick one scenario and reach first_result in ~15 minutes. Mark every module complete on this page.',
       },
-      cta: { tr: 'Kâşif ile bitir', en: 'Finish with Kâşif' },
+      cta: { tr: 'Araştırma brief runner ile bitir', en: 'Finish with research brief runner' },
       href: '/kasif',
+      pack: 'research-brief',
+      runner: true,
       query: 'Küçük ekip için AI araç seçimi blog yazısı ve SEO brief istiyorum',
     },
   },
@@ -361,13 +365,38 @@ export function pickLocale(value, locale = 'tr') {
   return locale === 'en' ? value.en || value.tr : value.tr || value.en;
 }
 
-export function buildLearnHref(href, locale, query) {
+/**
+ * @param {string} href
+ * @param {string} [locale]
+ * @param {string|{ q?: string, pack?: string, runner?: boolean|string, [key: string]: unknown }} [queryOrParams]
+ */
+export function buildLearnHref(href, locale, queryOrParams) {
   const prefix = locale === 'en' ? '/en' : '';
   const base = `${prefix}${href.startsWith('/') ? href : `/${href}`}`;
-  if (!query) return base;
+  if (queryOrParams == null || queryOrParams === '') return base;
+
   const params = new URLSearchParams();
-  params.set('q', String(query).slice(0, 800));
-  return `${base}?${params.toString()}`;
+  if (typeof queryOrParams === 'string') {
+    params.set('q', String(queryOrParams).slice(0, 800));
+  } else if (typeof queryOrParams === 'object') {
+    if (queryOrParams.q) params.set('q', String(queryOrParams.q).slice(0, 800));
+    if (queryOrParams.pack) params.set('pack', String(queryOrParams.pack).trim());
+    if (
+      queryOrParams.runner === true ||
+      queryOrParams.runner === '1' ||
+      queryOrParams.runner === 1
+    ) {
+      params.set('runner', '1');
+    }
+    for (const [key, value] of Object.entries(queryOrParams)) {
+      if (['q', 'pack', 'runner'].includes(key)) continue;
+      if (value == null || value === '') continue;
+      params.set(key, String(value));
+    }
+  }
+
+  const qs = params.toString();
+  return qs ? `${base}?${qs}` : base;
 }
 
 export function getKasifLearnModuleIds() {

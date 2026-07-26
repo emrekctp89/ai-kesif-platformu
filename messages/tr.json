@@ -1403,6 +1403,7 @@
     "kasifFunnelTopTools": "En çok seçilen araçlar",
     "kasifFunnelBridgePaste": "Yapıştırma bridge",
     "kasifFunnelRunner": "Pack runner",
+    "kasifFunnelRunnerSources": "Runner kaynak karışımı (partner / gemini / local)",
     "kasifFunnelPackStats": "Paket conversion (pack_id)",
     "kasifPartnerTitle": "Pack runner / Partner LLM",
     "kasifPartnerUnknown": "Durum alınamadı",

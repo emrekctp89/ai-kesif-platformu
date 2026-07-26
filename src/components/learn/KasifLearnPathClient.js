@@ -104,11 +104,11 @@ export default function KasifLearnPathClient() {
     if (prev) setActiveId(prev.id);
   }, [activeIndex]);
 
-  const practiceHref = buildLearnHref(
-    activeModule.practice.href,
-    lang,
-    activeModule.practice.query
-  );
+  const practiceHref = buildLearnHref(activeModule.practice.href, lang, {
+    q: activeModule.practice.query,
+    pack: activeModule.practice.pack,
+    runner: activeModule.practice.runner,
+  });
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 pb-10 sm:space-y-10 sm:pb-14">

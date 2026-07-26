@@ -95,6 +95,9 @@ export function normalizeFunnel(value) {
           pattern_hit: Boolean(raw.result_artifact.pattern_hit),
           preview: cleanText(raw.result_artifact.preview, 240) || null,
           bridge: cleanText(raw.result_artifact.bridge, 40) || null,
+          packId: cleanText(raw.result_artifact.packId, 80) || null,
+          runner_source:
+            cleanText(raw.result_artifact.runner_source || raw.result_artifact.source, 40) || null,
           at: raw.result_artifact.at ? asIso(raw.result_artifact.at) : null,
         }
       : null;
@@ -280,6 +283,34 @@ export function buildJobFunnelStats(interactions = []) {
   let runnerCount = 0;
   const bridgeGoals = new Map();
   const packBuckets = new Map();
+  /** @type {Record<string, number>} */
+  const runnerSourceCounts = {
+    partner: 0,
+    gemini: 0,
+    local: 0,
+    'local-fallback': 0,
+    provider: 0,
+    other: 0,
+  };
+
+  function normalizeRunnerSource(raw) {
+    const key = String(raw || '')
+      .toLowerCase()
+      .trim();
+    if (!key) return null;
+    if (key === 'local-fallback' || key === 'local_fallback') return 'local-fallback';
+    if (key === 'partner' || key === 'gemini' || key === 'local' || key === 'provider') return key;
+    return 'other';
+  }
+
+  function extractRunnerSource(funnel) {
+    const fromArtifact = funnel.result_artifact?.runner_source || funnel.result_artifact?.source;
+    if (fromArtifact) return normalizeRunnerSource(fromArtifact);
+    const event = (funnel.events || []).find(
+      (e) => e?.stage === 'first_result' && (e?.meta?.runner_source || e?.meta?.source)
+    );
+    return normalizeRunnerSource(event?.meta?.runner_source || event?.meta?.source);
+  }
 
   for (const row of rows) {
     const funnel = normalizeFunnel(row?.funnel);
@@ -288,8 +319,11 @@ export function buildJobFunnelStats(interactions = []) {
       const g = funnel.result_artifact.goal || '(unknown)';
       bridgeGoals.set(g, (bridgeGoals.get(g) || 0) + 1);
     }
-    if (funnel.result_artifact?.bridge === 'runner') {
+    const isRunner = funnel.result_artifact?.bridge === 'runner';
+    if (isRunner) {
       runnerCount += 1;
+      const sourceKey = extractRunnerSource(funnel) || 'other';
+      runnerSourceCounts[sourceKey] = (runnerSourceCounts[sourceKey] || 0) + 1;
     }
 
     const packId =
@@ -305,11 +339,16 @@ export function buildJobFunnelStats(interactions = []) {
         firstResult: 0,
         jobDone: 0,
         runner: 0,
+        sources: {},
       };
       bucket.total += 1;
       if (funnel.stages?.first_result) bucket.firstResult += 1;
       if (funnel.stages?.job_done) bucket.jobDone += 1;
-      if (funnel.result_artifact?.bridge === 'runner') bucket.runner += 1;
+      if (isRunner) {
+        bucket.runner += 1;
+        const sourceKey = extractRunnerSource(funnel) || 'other';
+        bucket.sources[sourceKey] = (bucket.sources[sourceKey] || 0) + 1;
+      }
       packBuckets.set(key, bucket);
     }
   }
@@ -319,9 +358,19 @@ export function buildJobFunnelStats(interactions = []) {
       ...bucket,
       firstResultRate: rate(bucket.firstResult, bucket.total),
       jobDoneRate: rate(bucket.jobDone, bucket.total),
+      runnerRate: rate(bucket.runner, bucket.total),
     }))
     .sort((a, b) => b.total - a.total)
     .slice(0, 12);
+
+  const runnerSourceMix = Object.entries(runnerSourceCounts)
+    .filter(([, count]) => count > 0)
+    .map(([source, count]) => ({
+      source,
+      count,
+      rate: rate(count, runnerCount),
+    }))
+    .sort((a, b) => b.count - a.count);
 
   return {
     withFunnel,
@@ -342,6 +391,8 @@ export function buildJobFunnelStats(interactions = []) {
     topSelectedTools,
     bridgePasteCount,
     runnerCount,
+    runnerSourceCounts,
+    runnerSourceMix,
     bridgeGoals: [...bridgeGoals.entries()]
       .map(([goal, count]) => ({ goal, count }))
       .sort((a, b) => b.count - a.count)

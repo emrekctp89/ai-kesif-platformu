@@ -10,12 +10,24 @@ import { PackRunnerPanel } from '@/components/kasif/PackRunnerPanel';
 
 /**
  * Job pack launcher strip for /kasif (P4 orchestration layer).
+ * Deep link: ?pack=seo-brief&runner=1 opens the pack runner panel.
  */
-export function JobPacksStrip({ locale = 'tr', onAskPack, compact = false }) {
+export function JobPacksStrip({
+  locale = 'tr',
+  onAskPack,
+  compact = false,
+  initialPackId = null,
+  initialOpenRunner = false,
+}) {
   const t = useTranslations('Kasif');
   const packs = listJobPacks(locale);
   const [access, setAccess] = useState(null);
-  const [runnerPackId, setRunnerPackId] = useState(null);
+  const safeInitial =
+    initialPackId && isRunnablePack(initialPackId) ? String(initialPackId).trim() : null;
+  const [runnerPackId, setRunnerPackId] = useState(
+    initialOpenRunner && safeInitial ? safeInitial : null
+  );
+  const [highlightPackId, setHighlightPackId] = useState(safeInitial);
 
   useEffect(() => {
     let active = true;
@@ -35,6 +47,30 @@ export function JobPacksStrip({ locale = 'tr', onAskPack, compact = false }) {
       active = false;
     };
   }, []);
+
+  // React to deep-link changes (learn path → /kasif?pack=&runner=1)
+  useEffect(() => {
+    if (!safeInitial) return;
+    setHighlightPackId(safeInitial);
+    if (initialOpenRunner) {
+      setRunnerPackId(safeInitial);
+      trackEvent('kasif_pack_runner_deep_link', { pack_id: safeInitial });
+      // Wait for runner panel mount, then scroll into view
+      window.setTimeout(() => {
+        document.getElementById('kasif-pack-runner')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 120);
+    } else {
+      window.setTimeout(() => {
+        document.getElementById(`kasif-pack-${safeInitial}`)?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }, 80);
+    }
+  }, [safeInitial, initialOpenRunner]);
 
   function packLocked(packId) {
     const decision = access?.packs?.[packId];
@@ -87,7 +123,10 @@ export function JobPacksStrip({ locale = 'tr', onAskPack, compact = false }) {
           return (
             <li
               key={pack.id}
-              className="flex flex-col rounded-2xl border bg-background/90 p-3 shadow-sm transition-colors hover:border-amber-500/40"
+              id={`kasif-pack-${pack.id}`}
+              className={`flex flex-col rounded-2xl border bg-background/90 p-3 shadow-sm transition-colors hover:border-amber-500/40 ${
+                highlightPackId === pack.id ? 'border-violet-500/50 ring-2 ring-violet-500/25' : ''
+              }`}
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
@@ -164,7 +203,9 @@ export function JobPacksStrip({ locale = 'tr', onAskPack, compact = false }) {
       </ul>
 
       {runnerPackId && isRunnablePack(runnerPackId) && !packLocked(runnerPackId) ? (
-        <PackRunnerPanel locale={locale} packId={runnerPackId} />
+        <div id="kasif-pack-runner" className="scroll-mt-24">
+          <PackRunnerPanel locale={locale} packId={runnerPackId} />
+        </div>
       ) : null}
     </section>
   );

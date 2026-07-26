@@ -43,4 +43,37 @@ describe('kasifJobCompletionPath', () => {
     expect(buildLearnHref('/kasif', 'en', 'hello')).toBe('/en/kasif?q=hello');
     expect(buildLearnHref('/workmind', 'tr')).toBe('/workmind');
   });
+
+  it('buildLearnHref pack + runner deep link üretir', () => {
+    expect(buildLearnHref('/kasif', 'tr', { pack: 'seo-brief', runner: true })).toBe(
+      '/kasif?pack=seo-brief&runner=1'
+    );
+    expect(
+      buildLearnHref('/kasif', 'en', {
+        pack: 'research-brief',
+        runner: true,
+        q: 'AI adoption',
+      })
+    ).toContain('/en/kasif?');
+    expect(
+      buildLearnHref('/kasif', 'en', {
+        pack: 'research-brief',
+        runner: true,
+        q: 'AI adoption',
+      })
+    ).toMatch(/pack=research-brief/);
+    expect(
+      buildLearnHref('/kasif', 'en', {
+        pack: 'research-brief',
+        runner: true,
+        q: 'AI adoption',
+      })
+    ).toMatch(/runner=1/);
+  });
+
+  it('packs modülü runner deep link alanları taşır', () => {
+    const packs = KASIF_LEARN_MODULES.find((m) => m.id === 'packs');
+    expect(packs.practice.pack).toBe('seo-brief');
+    expect(packs.practice.runner).toBe(true);
+  });
 });

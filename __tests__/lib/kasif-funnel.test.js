@@ -106,7 +106,11 @@ describe('kasif funnel', () => {
             job_stated: '2026-07-25T10:00:00.000Z',
             first_result: '2026-07-25T10:05:00.000Z',
           },
-          result_artifact: { bridge: 'runner', packId: 'content-studio' },
+          result_artifact: {
+            bridge: 'runner',
+            packId: 'content-studio',
+            runner_source: 'partner',
+          },
           events: [],
         },
       },
@@ -117,11 +121,38 @@ describe('kasif funnel', () => {
           events: [],
         },
       },
+      {
+        intent: { packId: 'seo-brief' },
+        funnel: {
+          stages: {
+            job_stated: '2026-07-25T12:00:00.000Z',
+            first_result: '2026-07-25T12:02:00.000Z',
+          },
+          result_artifact: {
+            bridge: 'runner',
+            packId: 'seo-brief',
+            runner_source: 'local',
+          },
+          events: [
+            {
+              stage: 'first_result',
+              at: '2026-07-25T12:02:00.000Z',
+              meta: { runner_source: 'local', packId: 'seo-brief' },
+            },
+          ],
+        },
+      },
     ]);
     expect(stats.packStats[0].packId).toBe('content-studio');
     expect(stats.packStats[0].total).toBe(2);
     expect(stats.packStats[0].firstResult).toBe(1);
     expect(stats.packStats[0].firstResultRate).toBe(50);
-    expect(stats.runnerCount).toBe(1);
+    expect(stats.runnerCount).toBe(2);
+    expect(stats.runnerSourceCounts.partner).toBe(1);
+    expect(stats.runnerSourceCounts.local).toBe(1);
+    expect(stats.runnerSourceMix.map((s) => s.source)).toEqual(
+      expect.arrayContaining(['partner', 'local'])
+    );
+    expect(stats.packStats.find((p) => p.packId === 'content-studio')?.sources?.partner).toBe(1);
   });
 });

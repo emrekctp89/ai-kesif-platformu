@@ -124,6 +124,16 @@ North Star artık yalnızca tıklama/affiliate değil:
 
 ---
 
+### P6.1 Runner source mix + learn deep links
+
+- **Funnel stats**: `runnerSourceMix` / `runnerSourceCounts` + pack bazlı `sources`
+- **Pack-runner**: `result_artifact.runner_source` stamp
+- **Admin**: Kâşif kalite hunisinde partner/gemini/local rozetleri
+- **Deep link**: `/kasif?pack=seo-brief&runner=1` → JobPacksStrip runner açar + scroll
+- **Learn path**: packs/capstone modülleri pack+runner query ile bağlanır
+
+---
+
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
@@ -131,10 +141,12 @@ North Star artık yalnızca tıklama/affiliate değil:
 1. ~~**Partner OAuth UX**~~ ✅
 2. ~~**Pack runner genişletme**~~ ✅
 3. ~~**Kâşif “bu aracı ekle”**~~ ✅
-4. ~~**Add-tool ops**~~ ✅ — admin analytics + optional email notify
-5. ~~**Daha fazla pack**~~ ✅ — code / legal / research
-6. **Live eval + pack conversion dashboard** — runner source mix (partner/gemini/local)
-7. **Learn path ↔ pack deep links** — /ogren/kasif modüllerinden pack auto-open
+4. ~~**Add-tool ops**~~ ✅
+5. ~~**Daha fazla pack**~~ ✅
+6. ~~**Pack conversion + runner source mix**~~ ✅
+7. ~~**Learn path ↔ pack deep links**~~ ✅
+8. **Live eval suite genişletme** — pack runner offline cases + add-tool dry eval
+9. **A/B soft-landing copy** — starter chip conversion iyileştirme
 
 ---
 

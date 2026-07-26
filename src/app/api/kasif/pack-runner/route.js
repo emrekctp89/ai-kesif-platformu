@@ -141,6 +141,7 @@ export async function POST(request) {
         preview: artifactText.slice(0, 240),
         bridge: 'runner',
         packId,
+        runner_source: run.source || 'local',
         at: new Date().toISOString(),
       },
     };

@@ -53,6 +53,8 @@ Workmind iki Kâşif katmanı kullanır:
 18. “Bu aracı ekle https://…” intent: scrape → `is_approved=false` aday kuyruğu (admin onay).
     Resmî ürün URL’si gerekir; dizin/aggregator engelli. Rate limit: 5/saat.
     Admin: add-tool queued/dedupe metrikleri. Opsiyonel: `KASIF_ADD_TOOL_NOTIFY=true`.
+19. Pack deep link: `/kasif?pack=seo-brief&runner=1` runner panelini açar (öğren yolu CTAları).
+20. Admin hunisi: runner source mix (partner / gemini / local) + pack conversion sources.
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır. Saf fiyat daraltması

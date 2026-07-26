@@ -2197,6 +2197,25 @@ function KasifQualityTab({ interactions = [] }) {
                     : ''}
                 </Badge>
               </div>
+              {(stats.jobFunnel?.runnerSourceMix || []).length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {t('kasifFunnelRunnerSources')}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {stats.jobFunnel.runnerSourceMix.map((item) => (
+                      <Badge
+                        key={item.source}
+                        variant="secondary"
+                        className="font-mono font-normal"
+                      >
+                        {item.source} · {item.count}
+                        {item.rate != null ? ` · %${item.rate}` : ''}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               {(stats.jobFunnel?.topSelectedTools || []).length > 0 ? (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground">
@@ -2228,6 +2247,12 @@ function KasifQualityTab({ interactions = [] }) {
                           {pack.firstResultRate != null ? ` · FR %${pack.firstResultRate}` : ''}
                           {pack.jobDoneRate != null ? ` · Done %${pack.jobDoneRate}` : ''}
                           {pack.runner ? ` · runner ${pack.runner}` : ''}
+                          {pack.runnerRate != null ? ` · r%${pack.runnerRate}` : ''}
+                          {pack.sources && Object.keys(pack.sources).length
+                            ? ` · ${Object.entries(pack.sources)
+                                .map(([src, n]) => `${src}:${n}`)
+                                .join(' ')}`
+                            : ''}
                         </span>
                       </div>
                     ))}
