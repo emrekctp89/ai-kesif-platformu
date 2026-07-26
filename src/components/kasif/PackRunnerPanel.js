@@ -10,18 +10,24 @@ const PLACEHOLDER_KEYS = {
   'content-studio': 'packs.runnerBriefPlaceholder',
   'sales-outreach': 'packs.runnerBriefPlaceholderSales',
   'meeting-to-action': 'packs.runnerBriefPlaceholderMeeting',
+  'social-launch': 'packs.runnerBriefPlaceholderSocial',
+  'pitch-deck': 'packs.runnerBriefPlaceholderPitch',
 };
 
 const TITLE_KEYS = {
   'content-studio': 'packs.runnerTitle',
   'sales-outreach': 'packs.runnerTitleSales',
   'meeting-to-action': 'packs.runnerTitleMeeting',
+  'social-launch': 'packs.runnerTitleSocial',
+  'pitch-deck': 'packs.runnerTitlePitch',
 };
 
 const HINT_KEYS = {
   'content-studio': 'packs.runnerHint',
   'sales-outreach': 'packs.runnerHintSales',
   'meeting-to-action': 'packs.runnerHintMeeting',
+  'social-launch': 'packs.runnerHintSocial',
+  'pitch-deck': 'packs.runnerHintPitch',
 };
 
 /**

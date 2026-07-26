@@ -35,8 +35,8 @@ Workmind iki Kâşif katmanı kullanır:
    araç çıktısını yapıştır → `POST /api/kasif/result-bridge` ile `first_result`.
 10. P4 iş paketleri: `jobPacks.js` + `/kasif` strip; paket Workmind handoff (`from=pack`).
 11. Pro gate: proHint paketler için giriş + 2 ücretsiz deneme / 30 gün (`/api/kasif/pack-access`).
-12. Pack runner’lar: content-studio, sales-outreach, meeting-to-action
-    (`/api/kasif/pack-runner`, Gemini veya local) → first_result + pack_id funnel.
+12. Pack runner’lar (5): content-studio, sales-outreach, meeting-to-action,
+    social-launch, pitch-deck (`/api/kasif/pack-runner`) → first_result + pack_id.
 
 Takip sorularında son kullanıcı mesajlarındaki konu ve görev niyeti korunur. Güncel mesajdaki açık
 fiyat tercihi (`ücretsiz` veya `ücretli`) önceki tercihin üzerine yazılır.

@@ -60,7 +60,7 @@ North Star artık yalnızca tıklama/affiliate değil:
 - `/uyelik` — iş paketleri / orkestrasyon Pro konumlandırması
 - Analytics: `kasif_pack_ask`, `kasif_pack_workmind`, `kasif_pack_matched_workmind`
 - **Pro gate / kota**: proHint paketler — giriş + 2 ücretsiz/30g, sonrası Pro (`packAccess`)
-- **Runner**: `POST /api/kasif/pack-runner` → content-studio, sales-outreach, meeting-to-action (Gemini/local)
+- **Runner**: `POST /api/kasif/pack-runner` → 5 paket (content, sales, meeting, social, pitch) Gemini/local
 - **Admin**: pack_id conversion kovaları + runner sayacı
 
 ---
@@ -86,11 +86,10 @@ North Star artık yalnızca tıklama/affiliate değil:
 Öncelik sırasıyla tutulacak:
 
 1. **Partner API runner** — seçili araç OAuth ile gerçek dış çağrı
-2. **Kalan pack runner’ları** — social-launch, pitch-deck
-3. **Canlı eval regresyonu** — `npm run kasif:evaluate` CI veya periyodik koşu
-4. **Soft-landing → conversion** — soft-landing sonrası starter tıklama / başarılı öneri oranı
-5. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
-6. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
+2. **Canlı eval regresyonu** — `npm run kasif:evaluate` CI veya periyodik koşu
+3. **Soft-landing → conversion** — soft-landing sonrası starter tıklama / başarılı öneri oranı
+4. **Wizard kapsamı** — kalan goals için sihirbaz ekle (video, music, legal, …)
+5. **History’li follow-up kalitesi** — fiyat daraltması / konu değişimi edge case testleri
 
 ---
 

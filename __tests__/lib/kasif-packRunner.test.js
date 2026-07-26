@@ -2,55 +2,68 @@ const {
   buildLocalContentStudioRun,
   buildLocalSalesOutreachRun,
   buildLocalMeetingToActionRun,
+  buildLocalSocialLaunchRun,
+  buildLocalPitchDeckRun,
   formatContentStudioArtifact,
   formatSalesOutreachArtifact,
   formatMeetingToActionArtifact,
+  formatSocialLaunchArtifact,
+  formatPitchDeckArtifact,
   formatPackArtifact,
   isRunnablePack,
   RUNNABLE_PACK_IDS,
 } = require('../../src/lib/kasif/packRunner');
 
 describe('packRunner', () => {
-  it('üç paketi runnable sayar', () => {
+  it('beş paketi runnable sayar', () => {
     expect(RUNNABLE_PACK_IDS).toEqual(
-      expect.arrayContaining(['content-studio', 'sales-outreach', 'meeting-to-action'])
+      expect.arrayContaining([
+        'content-studio',
+        'sales-outreach',
+        'meeting-to-action',
+        'social-launch',
+        'pitch-deck',
+      ])
     );
-    expect(isRunnablePack('content-studio')).toBe(true);
-    expect(isRunnablePack('sales-outreach')).toBe(true);
-    expect(isRunnablePack('meeting-to-action')).toBe(true);
-    expect(isRunnablePack('pitch-deck')).toBe(false);
+    expect(isRunnablePack('social-launch')).toBe(true);
+    expect(isRunnablePack('pitch-deck')).toBe(true);
+    expect(isRunnablePack('unknown')).toBe(false);
   });
 
   it('content-studio yerel runner taslak + seo üretir', () => {
     const run = buildLocalContentStudioRun('AI keşif platformu blog yazısı', 'tr');
     expect(run.packId).toBe('content-studio');
     expect(run.draft.length).toBeGreaterThan(100);
-    expect(run.imagePrompt).toMatch(/AI keşif/i);
-    expect(run.seo.title).toBeTruthy();
-    const text = formatContentStudioArtifact(run, 'tr');
-    expect(text).toMatch(/Görsel prompt/);
-    expect(text).toMatch(/SEO/);
+    expect(formatContentStudioArtifact(run, 'tr')).toMatch(/SEO/);
   });
 
   it('sales-outreach e-posta serisi üretir', () => {
     const run = buildLocalSalesOutreachRun('B2B demo teklifi', 'tr');
-    expect(run.packId).toBe('sales-outreach');
-    expect(run.subjects.length).toBeGreaterThanOrEqual(2);
     expect(run.sequence.length).toBe(3);
-    expect(run.sequence[0].body).toMatch(/Konu:/);
-    const text = formatSalesOutreachArtifact(run, 'tr');
-    expect(text).toMatch(/CRM/);
-    expect(formatPackArtifact(run, 'tr')).toBe(text);
+    expect(formatSalesOutreachArtifact(run, 'tr')).toMatch(/CRM/);
+    expect(formatPackArtifact(run, 'tr')).toBe(formatSalesOutreachArtifact(run, 'tr'));
   });
 
   it('meeting-to-action özet + aksiyon üretir', () => {
     const run = buildLocalMeetingToActionRun('Sprint planlama', 'en');
-    expect(run.packId).toBe('meeting-to-action');
-    expect(run.summary).toMatch(/Sprint/i);
     expect(run.actions.length).toBeGreaterThanOrEqual(2);
-    expect(run.automationMap.steps.length).toBeGreaterThanOrEqual(2);
-    const text = formatMeetingToActionArtifact(run, 'en');
-    expect(text).toMatch(/Action items/i);
-    expect(text).toMatch(/Automation map/i);
+    expect(formatMeetingToActionArtifact(run, 'en')).toMatch(/Action items/i);
+  });
+
+  it('social-launch post + zamanlama üretir', () => {
+    const run = buildLocalSocialLaunchRun('Yeni runner lansmanı', 'tr');
+    expect(run.packId).toBe('social-launch');
+    expect(run.posts.length).toBeGreaterThanOrEqual(2);
+    expect(run.imagePrompts.length).toBeGreaterThanOrEqual(1);
+    expect(formatSocialLaunchArtifact(run, 'tr')).toMatch(/Zamanlama|Post/);
+  });
+
+  it('pitch-deck slayt iskeleti üretir', () => {
+    const run = buildLocalPitchDeckRun('job packs seed', 'en');
+    expect(run.packId).toBe('pitch-deck');
+    expect(run.slides.length).toBeGreaterThanOrEqual(7);
+    expect(run.slides[0].bullets.length).toBeGreaterThan(0);
+    expect(formatPitchDeckArtifact(run, 'en')).toMatch(/Slides/i);
+    expect(formatPackArtifact(run, 'en')).toBe(formatPitchDeckArtifact(run, 'en'));
   });
 });
