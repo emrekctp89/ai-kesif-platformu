@@ -505,6 +505,8 @@ async function notifyAdmin({ insertedTools, skippedCount }) {
 
 export async function runScheduledToolDiscovery(options = {}) {
   const dryRun = Boolean(options.dryRun);
+  /** When true, fetch each accepted candidate page (native/jina) and enrich fields. */
+  const scrapePages = options.scrapePages !== false;
   const autoApprove = resolveBoolean(
     options.autoApprove ?? process.env.TOOL_DISCOVERY_AUTO_APPROVE,
     false
@@ -590,28 +592,83 @@ export async function runScheduledToolDiscovery(options = {}) {
       continue;
     }
 
-    const slug = buildUniqueSlug(candidate.name, existingSlugs);
-    existingNames.add(nameKey);
-    existingLinks.add(linkKey);
+    // Optional real-page scrape: enrich name/description from official site (not just Gemini text).
+    let scrapeMeta = null;
+    let finalName = candidate.name;
+    let finalDescription = candidate.description;
+    let finalLink = candidate.link;
+    let finalPricing = candidate.pricing_model;
+    let finalPlatforms = candidate.platforms;
+    if (scrapePages) {
+      try {
+        const { scrapeToolPage } = await import('@/lib/toolScrape');
+        const scrape = await scrapeToolPage(candidate.link, {
+          provider: 'auto',
+          timeoutMs: Math.min(Math.max(timeoutMs, 5000), 15000),
+        });
+        if (scrape?.ok && scrape.candidate) {
+          const page = scrape.candidate;
+          scrapeMeta = {
+            ok: true,
+            provider: scrape.provider || page.provider || null,
+            warnings: scrape.warnings || [],
+          };
+          if (page.name && String(page.name).trim().length >= 2) {
+            finalName = String(page.name).trim().slice(0, 120);
+          }
+          if (
+            page.description &&
+            String(page.description).trim().length > finalDescription.length
+          ) {
+            finalDescription = String(page.description).trim().slice(0, 2000);
+          }
+          if (page.link) {
+            finalLink = normalizeToolLink(page.link) || finalLink;
+          }
+          if (page.pricing_model) {
+            finalPricing = normalizePricingModel(page.pricing_model, finalDescription, finalLink);
+          }
+          if (Array.isArray(page.platforms) && page.platforms.length) {
+            finalPlatforms = normalizePlatforms(page.platforms, finalLink);
+          }
+        } else {
+          scrapeMeta = {
+            ok: false,
+            error: scrape?.error || 'scrape_failed',
+          };
+        }
+      } catch (scrapeError) {
+        scrapeMeta = {
+          ok: false,
+          error: scrapeError?.message || 'scrape_error',
+        };
+        logger.warn('Discovery page scrape failed:', candidate.link, scrapeMeta.error);
+      }
+    }
+
+    const slug = buildUniqueSlug(finalName, existingSlugs);
+    existingNames.add(finalName.toLocaleLowerCase('tr-TR'));
+    existingLinks.add(normalizeToolLink(finalLink));
     const shouldAutoApprove = autoApprove && linkCheck.status === 'valid';
     const embedding = await buildEmbeddingValue({
-      name: candidate.name,
-      description: candidate.description,
+      name: finalName,
+      description: finalDescription,
     });
 
     const acceptedCandidate = {
-      name: candidate.name,
+      name: finalName,
       slug,
-      description: candidate.description,
-      link: candidate.link,
+      description: finalDescription,
+      link: finalLink,
       category_id: candidate.category.id,
-      pricing_model: candidate.pricing_model,
-      platforms: candidate.platforms,
+      pricing_model: finalPricing,
+      platforms: finalPlatforms,
       tier: candidate.tier,
       is_approved: shouldAutoApprove,
       suggester_email: DISCOVERY_BOT_EMAIL,
       technical_details: candidate.technical_details,
       __detail_readiness: candidate.detail_readiness,
+      __scrape: scrapeMeta,
       link_check_status: linkCheck.status,
       link_check_error: linkCheck.error,
       link_check_http_status: linkCheck.httpStatus,
@@ -627,7 +684,7 @@ export async function runScheduledToolDiscovery(options = {}) {
 
   let insertedTools = [];
   if (!dryRun && accepted.length > 0) {
-    const insertPayload = accepted.map(({ __detail_readiness, ...tool }) => tool);
+    const insertPayload = accepted.map(({ __detail_readiness, __scrape, ...tool }) => tool);
     const { data, error } = await supabaseAdmin
       .from('tools')
       .insert(insertPayload)
@@ -643,44 +700,50 @@ export async function runScheduledToolDiscovery(options = {}) {
     await notifyAdmin({ insertedTools, skippedCount: skipped.length });
   }
 
+  const scrapedOk = accepted.filter((row) => row.__scrape?.ok).length;
+  const scrapedFail = accepted.filter((row) => row.__scrape && !row.__scrape.ok).length;
+
   return {
     dryRun,
+    scrapePages,
     autoApprove,
     generatedCount: rawCandidates.length,
     acceptedCount: accepted.length,
     insertedCount: insertedTools.length,
     autoApprovedCount: accepted.filter((tool) => tool.is_approved).length,
     skippedCount: skipped.length,
+    scrapedOkCount: scrapePages ? scrapedOk : null,
+    scrapedFailCount: scrapePages ? scrapedFail : null,
     insertedTools,
-    acceptedCandidates: dryRun
-      ? accepted.map(
-          ({
-            name,
-            slug,
-            link,
-            category_id,
-            pricing_model,
-            platforms,
-            tier,
-            technical_details,
-            __detail_readiness,
-            link_check_status,
-            is_approved,
-          }) => ({
-            name,
-            slug,
-            link,
-            category_id,
-            pricing_model,
-            platforms,
-            tier,
-            technical_details,
-            detail_readiness: __detail_readiness,
-            link_check_status,
-            is_approved,
-          })
-        )
-      : [],
+    acceptedCandidates: accepted.map(
+      ({
+        name,
+        slug,
+        link,
+        category_id,
+        pricing_model,
+        platforms,
+        tier,
+        technical_details,
+        __detail_readiness,
+        __scrape,
+        link_check_status,
+        is_approved,
+      }) => ({
+        name,
+        slug,
+        link,
+        category_id,
+        pricing_model,
+        platforms,
+        tier,
+        technical_details,
+        detail_readiness: __detail_readiness,
+        scrape: __scrape || null,
+        link_check_status,
+        is_approved,
+      })
+    ),
     skipped: skipped.slice(0, 20),
   };
 }

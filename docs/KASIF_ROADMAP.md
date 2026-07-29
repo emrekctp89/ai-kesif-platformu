@@ -264,6 +264,13 @@ North Star artık yalnızca tıklama/affiliate değil:
 - Snapshot/email: `partner` bloğu (configured, preferredSource, chain, model, host, via) — key yok
 - `normalizePartnerHealth` / `formatOpsDigestPartnerLines`
 
+### P6.19 Kâşif AI web keşif → onay kuyruğu (UX + scrape)
+
+- Admin **Onay kuyruğu** sekmesinde net kart: “Kâşif AI · web’den araç çek”
+- Akış: Gemini aday → link check → **sayfa scrape** → `is_approved=false` insert
+- `runScheduledToolDiscovery({ scrapePages: true })` varsayılan admin’de açık
+- Önizle (dry-run) / Onay kuyruğuna çek butonları + rapor (scrape✓/✗)
+
 ---
 
 ## Sıradaki adımlar (öneri motoru)

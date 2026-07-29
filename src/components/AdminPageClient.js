@@ -365,9 +365,121 @@ function ApprovalQueueTab({
   allTags,
 }) {
   const t = useTranslations('AdminClient');
+  const router = useRouter();
+  const [kasifDiscoverReport, setKasifDiscoverReport] = React.useState(null);
+  const [isKasifDiscoverPending, startKasifDiscoverTransition] = React.useTransition();
   const approvedLinks = new Set(approvedTools.map((tool) => normalizeToolLink(tool.link)));
+
+  const runKasifWebDiscovery = (dryRun = true) => {
+    startKasifDiscoverTransition(async () => {
+      const result = await runToolDiscoveryAdmin({
+        dryRun,
+        limit: 8,
+        candidateCount: 16,
+        autoApprove: false,
+        scrapePages: true,
+      });
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+      setKasifDiscoverReport(result.report);
+      const accepted = result.report?.acceptedCount ?? 0;
+      const inserted = result.report?.insertedCount ?? 0;
+      const skipped = result.report?.skippedCount ?? 0;
+      toast.success(
+        dryRun
+          ? t('kasifDiscoverDryRunOk', { accepted, skipped })
+          : t('kasifDiscoverLiveOk', { inserted, skipped })
+      );
+      if (!dryRun) router.refresh();
+    });
+  };
+
   return (
     <div className="space-y-6">
+      <Card className="glass-panel border-violet-500/30 bg-violet-500/5">
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-base">{t('kasifDiscoverTitle')}</CardTitle>
+          <CardDescription className="text-sm leading-relaxed">
+            {t('kasifDiscoverDesc')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ol className="list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
+            <li>{t('kasifDiscoverStep1')}</li>
+            <li>{t('kasifDiscoverStep2')}</li>
+            <li>{t('kasifDiscoverStep3')}</li>
+            <li>{t('kasifDiscoverStep4')}</li>
+          </ol>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={isKasifDiscoverPending}
+              onClick={() => runKasifWebDiscovery(true)}
+            >
+              {isKasifDiscoverPending ? t('kasifDiscoverRunning') : t('kasifDiscoverPreview')}
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button type="button" size="sm" disabled={isKasifDiscoverPending}>
+                  {t('kasifDiscoverToQueue')}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t('kasifDiscoverConfirmTitle')}</AlertDialogTitle>
+                  <AlertDialogDescription>{t('kasifDiscoverConfirmBody')}</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => runKasifWebDiscovery(false)}>
+                    {t('kasifDiscoverConfirmCta')}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+          {kasifDiscoverReport ? (
+            <div className="space-y-2 rounded-xl border bg-background/70 p-3 text-xs">
+              <p className="font-medium text-foreground">
+                {t('kasifDiscoverReportLine', {
+                  generated: kasifDiscoverReport.generatedCount ?? 0,
+                  accepted: kasifDiscoverReport.acceptedCount ?? 0,
+                  inserted: kasifDiscoverReport.insertedCount ?? 0,
+                  skipped: kasifDiscoverReport.skippedCount ?? 0,
+                  mode: kasifDiscoverReport.dryRun ? 'dry-run' : 'kayıt',
+                })}
+              </p>
+              {kasifDiscoverReport.scrapedOkCount != null ? (
+                <p className="text-muted-foreground">
+                  {t('kasifDiscoverScrapeLine', {
+                    ok: kasifDiscoverReport.scrapedOkCount,
+                    fail: kasifDiscoverReport.scrapedFailCount ?? 0,
+                  })}
+                </p>
+              ) : null}
+              <ul className="space-y-1 text-muted-foreground">
+                {(kasifDiscoverReport.acceptedCandidates || []).slice(0, 8).map((item) => (
+                  <li key={item.slug || item.link || item.name} className="truncate">
+                    • {item.name}
+                    {item.link ? ` — ${item.link}` : ''}
+                    {item.scrape?.ok === true
+                      ? ' · scrape✓'
+                      : item.scrape?.ok === false
+                        ? ' · scrape✗'
+                        : ''}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          <p className="text-[11px] text-muted-foreground">{t('kasifDiscoverHint')}</p>
+        </CardContent>
+      </Card>
+
       <Card className="glass-panel border-border/50">
         <CardHeader>
           <CardTitle>{t('pendingToolsTitle', { count: unapprovedTools.length })}</CardTitle>
@@ -802,7 +914,12 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
 
   const runDiscovery = (dryRun = true) => {
     startDiscoveryTransition(async () => {
-      const result = await runToolDiscoveryAdmin({ dryRun, limit: 5, autoApprove: false });
+      const result = await runToolDiscoveryAdmin({
+        dryRun,
+        limit: 8,
+        autoApprove: false,
+        scrapePages: true,
+      });
       if (result?.error) {
         toast.error(result.error);
         return;
@@ -817,7 +934,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
       const skipped = result.report?.skippedCount ?? result.report?.skipped?.length ?? 0;
       toast.success(
         dryRun
-          ? `Keşif dry-run: ${accepted} aday, ${skipped} atlandı`
+          ? `Keşif dry-run: ${accepted} aday, ${skipped} atlandı (scrape denendi)`
           : `Keşif tamam: ${accepted} eklendi (onay kuyruğu), ${skipped} atlandı`
       );
       if (!dryRun) router.refresh();
@@ -983,7 +1100,7 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                 onClick={() => runDiscovery(true)}
                 disabled={isDiscoveryPending}
               >
-                {isDiscoveryPending ? 'Keşif çalışıyor...' : 'AI keşif (dry-run)'}
+                {isDiscoveryPending ? 'Keşif çalışıyor...' : 'AI keşif önizleme'}
               </Button>
               <Button
                 size="sm"
@@ -1019,15 +1136,16 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button size="sm" variant="secondary" disabled={isDiscoveryPending}>
-                    Keşfi kaydet (onay kuyruğu)
+                    AI keşif → onay kuyruğu
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Keşfi veritabanına yaz?</AlertDialogTitle>
+                    <AlertDialogTitle>Kâşif AI web keşfini kaydet?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Gemini adayları onaylanmamış araç olarak eklenecek (is_approved=false).
-                      Dry-run değil; gerçek insert yapılır. Devam edilsin mi?
+                      Gemini aday üretir, ürün sayfalarını scrape eder, is_approved=false ile onay
+                      kuyruğuna yazar. Siteye hemen çıkmaz. (Aynı akış Onay kuyruğu sekmesindeki
+                      “Kâşif AI · web’den araç çek” kartındadır.)
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

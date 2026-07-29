@@ -745,8 +745,9 @@ export async function updateTool(formData) {
 }
 
 /**
- * Admin-triggered tool discovery (Gemini pipeline).
- * Prefer dryRun=true from the UI; live insert is opt-in.
+ * Admin-triggered Kâşif AI discovery:
+ * Gemini invents candidates → link check → optional real-page scrape → is_approved=false queue.
+ * Prefer dryRun=true from the UI; live insert is opt-in (never auto-publishes by default).
  */
 export async function runToolDiscoveryAdmin(options = {}) {
   'use server';
@@ -764,9 +765,11 @@ export async function runToolDiscoveryAdmin(options = {}) {
     const { runScheduledToolDiscovery } = await import('@/lib/toolDiscoveryCron');
     const report = await runScheduledToolDiscovery({
       dryRun: options.dryRun !== false,
-      limit: options.limit || 5,
-      candidateCount: options.candidateCount || 12,
+      limit: options.limit || 8,
+      candidateCount: options.candidateCount || 16,
       autoApprove: Boolean(options.autoApprove),
+      // Default ON: official product pages are scraped before queue insert.
+      scrapePages: options.scrapePages !== false,
     });
     return { success: true, report };
   } catch (error) {
