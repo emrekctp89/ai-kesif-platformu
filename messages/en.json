@@ -1525,6 +1525,8 @@
     "kasifOpsDigestWowHelpful": "Helpful",
     "kasifOpsDigestRunNow": "Run now",
     "kasifOpsDigestRunSend": "Run + email",
+    "kasifOpsDigestDryRun": "Dry-run",
+    "kasifOpsDigestDryRunOk": "Dry-run done (no save/email).",
     "kasifOpsDigestRunning": "Running…",
     "kasifOpsDigestRunOk": "Ops digest finished.",
     "kasifOpsDigestRunFail": "Could not run ops digest.",

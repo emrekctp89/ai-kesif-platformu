@@ -187,14 +187,26 @@ export async function runKasifOpsDigestNow(formData = null) {
       return { error: result?.error || 'Ops digest çalıştırılamadı.' };
     }
 
-    revalidatePath('/admin');
+    if (!dryRun) {
+      revalidatePath('/admin');
+    }
+
+    const previewText = String(result.text || '')
+      .split('\n')
+      .slice(0, 14)
+      .join('\n')
+      .slice(0, 500);
+
     return {
       success: dryRun
-        ? `Ops digest dry-run tamam (${result.rowCount || 0} satır).`
+        ? `Dry-run tamam (${result.rowCount || 0} satır) — e-posta/history yazılmadı.`
         : `Ops digest tamamlandı · ${result.subject || ''}`,
+      dryRun,
       windowDays: result.windowDays,
       rowCount: result.rowCount,
       subject: result.subject,
+      previewText: previewText || null,
+      partner: result.snapshot?.partner || null,
       email: result.email,
       weekDelta: result.weekDelta?.available
         ? {

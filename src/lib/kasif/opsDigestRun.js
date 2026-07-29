@@ -89,6 +89,16 @@ export async function runKasifOpsDigest(options = {}) {
   }
 
   const envPins = readSoftLandingEnvPins();
+
+  /** Non-secret partner health (never includes API keys). */
+  let partnerStatus = null;
+  try {
+    const { partnerRunnerStatus } = await import('@/lib/kasif/partnerRunner');
+    partnerStatus = partnerRunnerStatus();
+  } catch (partnerError) {
+    logger.warn('[kasif-ops-digest] partner status failed:', partnerError?.message || partnerError);
+  }
+
   const snapshot = buildOpsDigestSnapshot(
     stats,
     {
@@ -99,7 +109,7 @@ export async function runKasifOpsDigest(options = {}) {
       envForce: envPins.envForce,
       envDefault: envPins.envDefault,
     },
-    { windowDays, generatedAt: new Date() }
+    { windowDays, generatedAt: new Date(), partnerStatus }
   );
 
   // WoW: compare this run against the last saved history entry (before we overwrite).
@@ -168,9 +178,11 @@ export async function runKasifOpsDigest(options = {}) {
     rowCount: rows.length,
     snapshot,
     subject,
+    text,
     email,
     history,
     weekDelta,
+    dryRun,
   };
 }
 

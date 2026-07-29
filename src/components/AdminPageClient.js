@@ -2539,6 +2539,43 @@ function KasifQualityTab({ interactions = [], goalCandidates = [] }) {
                 <Button
                   type="button"
                   size="sm"
+                  variant="ghost"
+                  className="min-h-8 text-xs"
+                  disabled={digestBusy}
+                  onClick={async () => {
+                    setDigestBusy(true);
+                    try {
+                      const result = await runKasifOpsDigestNow({
+                        windowDays: 7,
+                        forceSend: false,
+                        dryRun: true,
+                      });
+                      if (result?.error) {
+                        toast.error(result.error);
+                        return;
+                      }
+                      const partnerHint = result?.partner?.preferredSource
+                        ? ` · LLM: ${result.partner.preferredSource}`
+                        : '';
+                      toast.success(
+                        `${result?.success || t('kasifOpsDigestDryRunOk')}${partnerHint}`,
+                        {
+                          description: result?.subject || result?.previewText || undefined,
+                          duration: 8000,
+                        }
+                      );
+                    } catch (error) {
+                      toast.error(error?.message || t('kasifOpsDigestRunFail'));
+                    } finally {
+                      setDigestBusy(false);
+                    }
+                  }}
+                >
+                  {t('kasifOpsDigestDryRun')}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
                   variant="outline"
                   className="min-h-8 text-xs"
                   disabled={digestBusy}

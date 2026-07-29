@@ -1525,6 +1525,8 @@
     "kasifOpsDigestWowHelpful": "Helpful",
     "kasifOpsDigestRunNow": "Şimdi çalıştır",
     "kasifOpsDigestRunSend": "Çalıştır + e-posta",
+    "kasifOpsDigestDryRun": "Dry-run",
+    "kasifOpsDigestDryRunOk": "Dry-run tamam (kayıt/e-posta yok).",
     "kasifOpsDigestRunning": "Çalışıyor…",
     "kasifOpsDigestRunOk": "Ops digest tamamlandı.",
     "kasifOpsDigestRunFail": "Ops digest çalıştırılamadı.",

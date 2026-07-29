@@ -48,6 +48,8 @@ export {
   formatOpsDigestHtml,
   formatOpsDigestWowMetric,
   formatOpsDigestWowLines,
+  normalizePartnerHealth,
+  formatOpsDigestPartnerLines,
   isOpsDigestNotifyEnabled,
   OPS_DIGEST_HISTORY_KEY,
   OPS_DIGEST_HISTORY_MAX,

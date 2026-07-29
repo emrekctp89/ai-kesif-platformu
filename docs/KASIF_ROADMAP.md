@@ -258,15 +258,21 @@ North Star artık yalnızca tıklama/affiliate değil:
 - Admin: `runKasifOpsDigestNow` (session auth) — “Şimdi çalıştır” + “Çalıştır + e-posta”
 - i18n: `kasifOpsDigestRun*`
 
+### P6.18 Digest dry-run + partner health
+
+- Admin **Dry-run** butonu: snapshot üretir, e-posta/history yazmaz; toast’ta subject + LLM tercihi
+- Snapshot/email: `partner` bloğu (configured, preferredSource, chain, model, host, via) — key yok
+- `normalizePartnerHealth` / `formatOpsDigestPartnerLines`
+
 ---
 
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.17~~ ✅
-2. **Digest dry-run admin butonu** (opsiyonel, e-posta/history yazmadan önizleme)
-3. **Partner status health in digest** (opsiyonel)
+1. ~~P0–P6.18~~ ✅
+2. **Embedding backfill ops runbook** (production 467 tools)
+3. **Faz 5 migration apply** (`user_id` + proactive tables)
 
 ---
 

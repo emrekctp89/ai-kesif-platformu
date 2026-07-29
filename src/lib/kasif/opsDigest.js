@@ -55,6 +55,64 @@ function fmtRatio(ratio) {
 }
 
 /**
+ * Non-secret partner / LLM chain health for digest snapshot + email.
+ * Accepts partnerRunnerStatus() shape or nested { partner } from status API.
+ * @param {object|null|undefined} raw
+ */
+export function normalizePartnerHealth(raw = null) {
+  const src =
+    raw && typeof raw === 'object'
+      ? raw.partner && typeof raw.partner === 'object'
+        ? raw.partner
+        : raw
+      : {};
+  const preferred = String(src.preferredSource || '').toLowerCase();
+  const preferredSource =
+    preferred === 'partner' || preferred === 'gemini' || preferred === 'local'
+      ? preferred
+      : src.configured
+        ? 'partner'
+        : src.hasGeminiFallback
+          ? 'gemini'
+          : 'local';
+  const chain = Array.isArray(src.chain)
+    ? src.chain.map((s) => String(s || '').toLowerCase()).filter(Boolean)
+    : preferredSource === 'partner'
+      ? ['partner', ...(src.hasGeminiFallback ? ['gemini'] : []), 'local']
+      : preferredSource === 'gemini'
+        ? ['gemini', 'local']
+        : ['local'];
+
+  return {
+    configured: Boolean(src.configured),
+    preferredSource,
+    chain,
+    model: src.model ? String(src.model).slice(0, 80) : null,
+    baseUrlHost: src.baseUrlHost ? String(src.baseUrlHost).slice(0, 120) : null,
+    via: src.via ? String(src.via).slice(0, 40) : null,
+    hasGeminiFallback: Boolean(src.hasGeminiFallback),
+    qualityMode: src.qualityMode === 'cloud' || preferredSource !== 'local' ? 'cloud' : 'local',
+  };
+}
+
+/**
+ * @param {ReturnType<typeof normalizePartnerHealth>} partner
+ * @returns {string[]}
+ */
+export function formatOpsDigestPartnerLines(partner) {
+  if (!partner || typeof partner !== 'object') return [];
+  const chain = Array.isArray(partner.chain) ? partner.chain.join(' → ') : 'local';
+  return [
+    '— Partner / LLM zinciri —',
+    `Durum: ${partner.configured ? 'partner yapılandırıldı' : 'partner yok'} · tercih: ${partner.preferredSource || 'local'} · mod: ${partner.qualityMode || 'local'}`,
+    `Zincir: ${chain}`,
+    partner.model || partner.baseUrlHost || partner.via
+      ? `Model: ${partner.model || '—'} · host: ${partner.baseUrlHost || '—'} · via: ${partner.via || '—'}`
+      : `Gemini yedek: ${partner.hasGeminiFallback ? 'açık' : 'kapalı'}`,
+  ];
+}
+
+/**
  * Build a compact ops snapshot from quality stats + pin metadata.
  *
  * @param {object} stats - from buildKasifQualityStats
@@ -99,6 +157,8 @@ export function buildOpsDigestSnapshot(stats = {}, pinInfo = {}, options = {}) {
   else if (envDefault === 'A' || envDefault === 'B') effectivePin = `env_default:${envDefault}`;
   else if (envDefault && String(envDefault).toLowerCase() === 'ab') effectivePin = 'ab_split';
 
+  const partner = normalizePartnerHealth(options.partnerStatus || options.partner || null);
+
   return {
     kind: 'kasif_ops_digest',
     version: 1,
@@ -108,6 +168,7 @@ export function buildOpsDigestSnapshot(stats = {}, pinInfo = {}, options = {}) {
     periodStart: periodStart.toISOString(),
     periodEnd: periodEnd.toISOString(),
     periodLabel: `${isoDay(periodStart)} → ${isoDay(periodEnd)}`,
+    partner,
     quality: {
       total: Number(stats.total) || 0,
       withFeedback: Number(stats.withFeedback) || 0,
@@ -293,6 +354,7 @@ export function formatOpsDigestText(snapshot, options = {}) {
   const pin = sl.pin || {};
   const at = snapshot.addTool || {};
   const weekDelta = options.weekDelta || null;
+  const partner = snapshot.partner || null;
 
   const lines = [
     'Kâşif haftalık ops özeti',
@@ -316,6 +378,11 @@ export function formatOpsDigestText(snapshot, options = {}) {
   const wowLines = formatOpsDigestWowLines(weekDelta);
   if (wowLines.length) {
     lines.push('', ...wowLines);
+  }
+
+  const partnerLines = formatOpsDigestPartnerLines(partner);
+  if (partnerLines.length) {
+    lines.push('', ...partnerLines);
   }
 
   if ((f.runnerSourceMix || []).length) {

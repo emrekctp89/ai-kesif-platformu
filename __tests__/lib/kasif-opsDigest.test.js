@@ -5,6 +5,8 @@ const {
   formatOpsDigestHtml,
   formatOpsDigestWowMetric,
   formatOpsDigestWowLines,
+  normalizePartnerHealth,
+  formatOpsDigestPartnerLines,
   isOpsDigestNotifyEnabled,
   OPS_DIGEST_HISTORY_KEY,
   buildOpsDigestHistorySummary,
@@ -269,6 +271,51 @@ describe('opsDigest', () => {
     expect(parsed.last.funnel.first_result).toBe(1);
     expect(parsed.history.length).toBe(2);
     expect(parseOpsDigestHistoryRow(null).last).toBeNull();
+  });
+
+  it('partner health snapshot + email satırları (key sızdırmaz)', () => {
+    const partner = normalizePartnerHealth({
+      configured: false,
+      preferredSource: 'gemini',
+      chain: ['gemini', 'local'],
+      hasGeminiFallback: true,
+      model: null,
+      baseUrlHost: null,
+      qualityMode: 'cloud',
+    });
+    expect(partner.preferredSource).toBe('gemini');
+    expect(partner.configured).toBe(false);
+
+    const stats = buildKasifQualityStats(interactions, { windowDays: 7 });
+    const snapshot = buildOpsDigestSnapshot(
+      stats,
+      { variant: null },
+      {
+        windowDays: 7,
+        generatedAt: '2026-07-29T08:00:00Z',
+        partnerStatus: {
+          configured: true,
+          preferredSource: 'partner',
+          chain: ['partner', 'gemini', 'local'],
+          model: 'gpt-4o-mini',
+          baseUrlHost: 'api.openai.com',
+          via: 'openai',
+          hasGeminiFallback: true,
+          qualityMode: 'cloud',
+        },
+      }
+    );
+    expect(snapshot.partner.configured).toBe(true);
+    expect(snapshot.partner.baseUrlHost).toBe('api.openai.com');
+    const lines = formatOpsDigestPartnerLines(snapshot.partner).join('\n');
+    expect(lines).toMatch(/Partner \/ LLM/);
+    expect(lines).toMatch(/partner → gemini → local/);
+    expect(lines).toMatch(/gpt-4o-mini/);
+    expect(lines).not.toMatch(/sk-|api[_-]?key|secret/i);
+
+    const text = formatOpsDigestText(snapshot);
+    expect(text).toContain('Partner / LLM zinciri');
+    expect(text).toContain('api.openai.com');
   });
 
   it('buildOpsDigestWeekDelta FR/done/runs farkını hesaplar', () => {
