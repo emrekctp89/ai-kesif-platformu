@@ -26,3 +26,4 @@ export { getSoftLandingOpsPin, setSoftLandingOpsPin } from './softLandingPin';
 export { getOpsDigestHistory } from './opsDigestHistory';
 export { runKasifOpsDigest } from './opsDigestRun';
 export { kasifConfig } from './config';
+export { refreshKasifGoalCandidates } from './goalCandidates';

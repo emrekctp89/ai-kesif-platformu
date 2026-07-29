@@ -6,6 +6,7 @@ const answerMetaQuestion = jest.fn();
 const answerContextlessFollowUp = jest.fn();
 const groundModelResponse = jest.fn();
 const createAdminClient = jest.fn();
+const understandQuestionWithLlm = jest.fn();
 
 jest.mock('next/server', () => ({
   NextResponse: {
@@ -28,6 +29,9 @@ jest.mock('@/lib/kasif/engine', () => ({
   answerQuestion: (...args) => answerQuestion(...args),
   answerMetaQuestion: (...args) => answerMetaQuestion(...args),
   answerContextlessFollowUp: (...args) => answerContextlessFollowUp(...args),
+}));
+jest.mock('@/lib/kasif/understanding', () => ({
+  understandQuestionWithLlm: (...args) => understandQuestionWithLlm(...args),
 }));
 jest.mock('@/lib/kasif/addToolIntent', () => ({
   detectAddToolIntent: () => ({ isAddTool: false, url: null, reason: null }),
@@ -63,6 +67,11 @@ describe('Kâşif ask API', () => {
     jest.clearAllMocks();
     enforceRateLimit.mockResolvedValue({ allowed: true });
     answerMetaQuestion.mockReturnValue(null);
+    understandQuestionWithLlm.mockResolvedValue({
+      intent: {},
+      source: 'regex',
+      confidence: 0.9,
+    });
     answerContextlessFollowUp.mockReturnValue(null);
     retrievePlatformContext.mockResolvedValue([{ id: 7, name: 'Slide Tool', slug: 'slide-tool' }]);
     answerQuestion.mockReturnValue({
@@ -87,7 +96,8 @@ describe('Kâşif ask API', () => {
       'Recommend a presentation tool',
       expect.any(Array),
       [],
-      'en'
+      'en',
+      null
     );
     expect(groundModelResponse).toHaveBeenCalledWith(
       expect.objectContaining({ answer: 'Answer' }),
@@ -114,7 +124,13 @@ describe('Kâşif ask API', () => {
     const response = await POST(requestWith({ question: 'Sunum aracı öner', locale: 'de' }));
 
     expect(response.status).toBe(200);
-    expect(answerQuestion).toHaveBeenCalledWith(expect.any(String), expect.any(Array), [], 'tr');
+    expect(answerQuestion).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(Array),
+      [],
+      'tr',
+      null
+    );
   });
 
   it('geçersiz soru uzunluğu için seçilen dilde hata döndürür', async () => {

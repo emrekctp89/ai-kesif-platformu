@@ -5,6 +5,10 @@
       "schedule": "0 3 * * *"
     },
     {
+      "path": "/api/cron/tool-embeddings",
+      "schedule": "30 3 * * *"
+    },
+    {
       "path": "/api/cron/link-audit",
       "schedule": "0 4 * * 1"
     },
@@ -23,6 +27,10 @@
     {
       "path": "/api/cron/kasif-ops-digest",
       "schedule": "30 6 * * 1"
+    },
+    {
+      "path": "/api/cron/kasif-goal-candidates",
+      "schedule": "0 7 * * 1"
     }
   ]
 }

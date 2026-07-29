@@ -65,6 +65,14 @@ export async function GET(request) {
               historyCount: result.history.history?.history?.length ?? null,
             }
           : null,
+        weekDelta: result.weekDelta?.available
+          ? {
+              available: true,
+              firstResult: result.weekDelta.firstResult,
+              jobDone: result.weekDelta.jobDone,
+              runnerRuns: result.weekDelta.runnerRuns,
+            }
+          : null,
         snapshot: result.snapshot,
       },
       { status: 200 }

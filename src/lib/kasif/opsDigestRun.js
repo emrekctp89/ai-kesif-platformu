@@ -9,7 +9,9 @@ import { createAdminClient } from '@/utils/supabase/admin';
 import { buildKasifQualityStats } from '@/lib/kasif/qualityStats';
 import { getSoftLandingOpsPin } from '@/lib/kasif/softLandingPin';
 import {
+  buildOpsDigestHistorySummary,
   buildOpsDigestSnapshot,
+  buildOpsDigestWeekDelta,
   formatOpsDigestHtml,
   formatOpsDigestSubject,
   formatOpsDigestText,
@@ -100,9 +102,23 @@ export async function runKasifOpsDigest(options = {}) {
     { windowDays, generatedAt: new Date() }
   );
 
-  const subject = formatOpsDigestSubject(snapshot);
-  const text = formatOpsDigestText(snapshot);
-  const html = formatOpsDigestHtml(snapshot);
+  // WoW: compare this run against the last saved history entry (before we overwrite).
+  /** @type {ReturnType<typeof buildOpsDigestWeekDelta>|null} */
+  let weekDelta = null;
+  try {
+    const { getOpsDigestHistory } = await import('@/lib/kasif/opsDigestHistory');
+    const prior = await getOpsDigestHistory();
+    const previous = prior.history?.[0] || prior.last || null;
+    const currentSummary = buildOpsDigestHistorySummary(snapshot);
+    weekDelta = buildOpsDigestWeekDelta(currentSummary, previous);
+  } catch (deltaError) {
+    logger.warn('[kasif-ops-digest] weekDelta failed:', deltaError?.message || deltaError);
+  }
+
+  const formatOpts = { weekDelta };
+  const subject = formatOpsDigestSubject(snapshot, formatOpts);
+  const text = formatOpsDigestText(snapshot, formatOpts);
+  const html = formatOpsDigestHtml(snapshot, formatOpts);
 
   const notifyEnabled = forceSend || isOpsDigestNotifyEnabled();
   let email = { sent: false, reason: dryRun ? 'dry_run' : notifyEnabled ? null : 'disabled' };
@@ -138,6 +154,12 @@ export async function runKasifOpsDigest(options = {}) {
     emailSent: email.sent,
     emailReason: email.reason || null,
     historyOk: history?.ok ?? null,
+    weekDelta: weekDelta?.available
+      ? {
+          fr: weekDelta.firstResult?.delta,
+          done: weekDelta.jobDone?.delta,
+        }
+      : null,
   });
 
   return {
@@ -148,6 +170,7 @@ export async function runKasifOpsDigest(options = {}) {
     subject,
     email,
     history,
+    weekDelta,
   };
 }
 

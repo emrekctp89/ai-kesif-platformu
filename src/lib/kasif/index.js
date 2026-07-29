@@ -46,6 +46,8 @@ export {
   formatOpsDigestSubject,
   formatOpsDigestText,
   formatOpsDigestHtml,
+  formatOpsDigestWowMetric,
+  formatOpsDigestWowLines,
   isOpsDigestNotifyEnabled,
   OPS_DIGEST_HISTORY_KEY,
   OPS_DIGEST_HISTORY_MAX,

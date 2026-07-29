@@ -139,6 +139,80 @@ export async function pinKasifSoftLandingWinner(formData) {
 }
 
 /**
+ * Manually run weekly ops digest (admin session, no CRON_SECRET).
+ * @param {FormData|{ windowDays?: number|string, forceSend?: boolean|string, dryRun?: boolean|string }|null} [formData]
+ */
+export async function runKasifOpsDigestNow(formData = null) {
+  'use server';
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: 'Yetkiniz yok.' };
+  }
+
+  const raw =
+    formData instanceof FormData
+      ? {
+          windowDays: formData.get('windowDays'),
+          forceSend: formData.get('forceSend'),
+          dryRun: formData.get('dryRun'),
+        }
+      : formData && typeof formData === 'object'
+        ? formData
+        : {};
+
+  const windowDaysRaw = Number(raw.windowDays);
+  const windowDays = Number.isFinite(windowDaysRaw) ? Math.min(90, Math.max(1, windowDaysRaw)) : 7;
+  const truthy = (v) => {
+    const s = String(v ?? '')
+      .trim()
+      .toLowerCase();
+    return s === '1' || s === 'true' || s === 'yes' || s === 'on' || v === true;
+  };
+  const forceSend = truthy(raw.forceSend);
+  const dryRun = truthy(raw.dryRun);
+
+  try {
+    const { runKasifOpsDigest } = await import('@/lib/kasif/server');
+    const result = await runKasifOpsDigest({
+      windowDays,
+      forceSend,
+      dryRun,
+    });
+
+    if (!result?.ok) {
+      return { error: result?.error || 'Ops digest çalıştırılamadı.' };
+    }
+
+    revalidatePath('/admin');
+    return {
+      success: dryRun
+        ? `Ops digest dry-run tamam (${result.rowCount || 0} satır).`
+        : `Ops digest tamamlandı · ${result.subject || ''}`,
+      windowDays: result.windowDays,
+      rowCount: result.rowCount,
+      subject: result.subject,
+      email: result.email,
+      weekDelta: result.weekDelta?.available
+        ? {
+            available: true,
+            firstResult: result.weekDelta.firstResult,
+            jobDone: result.weekDelta.jobDone,
+            runnerRuns: result.weekDelta.runnerRuns,
+          }
+        : null,
+      historyOk: result.history?.ok ?? null,
+    };
+  } catch (error) {
+    logger.error('Admin ops digest run failed:', error);
+    return { error: error?.message || 'Ops digest çalıştırılamadı.' };
+  }
+}
+
+/**
  * Last weekly ops digest snapshot + ring history (admin only).
  */
 export async function getKasifOpsDigestHistory() {
@@ -197,4 +271,36 @@ export async function getKasifOpsDigestHistory() {
     logger.error('Ops digest history load failed:', error);
     return { error: error?.message || 'Geçmiş yüklenemedi.' };
   }
+}
+
+export async function reviewKasifGoalCandidate(formData) {
+  'use server';
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) return { error: 'Yetkiniz yok.' };
+
+  const id = String(formData?.get?.('id') || '').trim();
+  const status = String(formData?.get?.('status') || '').trim();
+  if (!id || !['accepted', 'rejected', 'pending'].includes(status)) {
+    return { error: 'Geçersiz goal adayı güncellemesi.' };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from('kasif_goal_candidates')
+    .update({
+      status,
+      reviewed_at: status === 'pending' ? null : new Date().toISOString(),
+      reviewed_by: status === 'pending' ? null : user.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id);
+  if (error) {
+    logger.error('Kâşif goal candidate review failed:', error);
+    return { error: 'Goal adayı güncellenemedi.' };
+  }
+  revalidatePath('/admin');
+  return { success: 'Goal adayı güncellendi.' };
 }

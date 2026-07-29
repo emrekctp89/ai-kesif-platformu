@@ -94,8 +94,8 @@ export async function callPartnerChatJson(userPrompt, options = {}) {
  * Provider chain for pack JSON generation: partner → Gemini → null.
  * Returns { data, source } where source is partner|gemini|null.
  */
-export async function callLlmJson(prompt) {
-  const partner = await callPartnerChatJson(prompt);
+export async function callLlmJson(prompt, options = {}) {
+  const partner = await callPartnerChatJson(prompt, options);
   if (partner && typeof partner === 'object') {
     return { data: partner, source: 'partner' };
   }
@@ -182,7 +182,9 @@ async function callGeminiJson(prompt) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const model =
+    String(process.env.GEMINI_TEXT_MODEL || 'gemini-flash-latest').trim() || 'gemini-flash-latest';
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20000);
   try {
@@ -216,7 +218,7 @@ async function callGeminiText(prompt, options = {}) {
   if (!apiKey) return null;
 
   const model =
-    String(process.env.GEMINI_TEXT_MODEL || 'gemini-2.0-flash').trim() || 'gemini-2.0-flash';
+    String(process.env.GEMINI_TEXT_MODEL || 'gemini-flash-latest').trim() || 'gemini-flash-latest';
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20000);
@@ -244,8 +246,7 @@ async function callGeminiText(prompt, options = {}) {
     });
     if (!response.ok) return null;
     const result = await response.json();
-    const text =
-      result?.candidates?.[0]?.content?.parts?.map((p) => p?.text || '').join('') || '';
+    const text = result?.candidates?.[0]?.content?.parts?.map((p) => p?.text || '').join('') || '';
     return String(text || '').trim() || null;
   } catch {
     return null;

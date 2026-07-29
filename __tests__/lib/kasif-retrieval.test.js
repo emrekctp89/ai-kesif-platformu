@@ -8,7 +8,10 @@ import {
   includesNormalized,
   includesNormalizedConcept,
   includesNormalizedToken,
+  mergeHybridResults,
   normalizeText,
+  scoreLexicalMatch,
+  shouldUseVectorFallback,
 } from '@/lib/kasif/retrieval';
 
 describe('Kâşif semantic retrieval', () => {
@@ -100,5 +103,30 @@ describe('Kâşif semantic retrieval', () => {
     expect(includesNormalizedToken('sohbet asistanı öner', 'sohbet asistan')).toBe(true);
     // Uzun stem kavramlar hâlâ çalışır
     expect(includesNormalizedConcept('metni çevirmek istiyorum', 'çevir')).toBe(true);
+  });
+  it('yüksek güvenli lexical sonuçlarda fast path üzerinde kalır', () => {
+    const rows = ['Analyzer', 'Writer', 'Tracker'].map((name, id) => ({
+      id,
+      name: `SEO ${name}`,
+      description: 'SEO aracı',
+    }));
+    expect(scoreLexicalMatch(rows[0], ['seo'])).toBe(3);
+    expect(shouldUseVectorFallback(rows, ['seo'], 3)).toBe(false);
+  });
+
+  it('zayıf lexical sonuçlarda vektör fallback ister', () => {
+    expect(
+      shouldUseVectorFallback(
+        [{ id: 1, name: 'Genel', description: 'Blog ekiplerine yardımcı' }],
+        ['blog'],
+        3
+      )
+    ).toBe(true);
+  });
+
+  it('hibrit sonuçları vektör öncelikli ve tekrarsız birleştirir', () => {
+    expect(
+      mergeHybridResults([{ id: 1 }, { id: 2 }], [{ id: 2 }, { id: 3 }]).map((row) => row.id)
+    ).toEqual([2, 3, 1]);
   });
 });

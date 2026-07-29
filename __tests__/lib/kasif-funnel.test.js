@@ -276,4 +276,43 @@ describe('kasif funnel', () => {
     expect(stats.proOnboarding.firstResultOfComplete).toBe(100);
     expect(stats.proOnboarding.completeShareOfFirstResult).toBeCloseTo(33.3, 0);
   });
+
+  it('doğrulanmış tamamlamayı self-report kaydından ayrı hesaplar', () => {
+    const at = '2026-07-26T10:00:00.000Z';
+    const stats = buildJobFunnelStats([
+      {
+        funnel: {
+          stages: { job_stated: at, first_result: at, job_done: at },
+          events: [
+            {
+              stage: 'job_done',
+              at,
+              meta: {
+                verified: true,
+                verification: 'partner_webhook',
+                provider: 'hoppycopy',
+              },
+            },
+          ],
+        },
+      },
+      {
+        funnel: {
+          stages: { job_stated: at, first_result: at, job_done: at },
+          events: [
+            {
+              stage: 'job_done',
+              at,
+              meta: { self_report: true, verified: false, verification: 'self_report' },
+            },
+          ],
+        },
+      },
+    ]);
+
+    expect(stats.counts.job_done).toBe(2);
+    expect(stats.verifiedJobDone).toBe(1);
+    expect(stats.selfReportedJobDone).toBe(1);
+    expect(stats.conversion.verifiedDoneOfStated).toBe(50);
+  });
 });

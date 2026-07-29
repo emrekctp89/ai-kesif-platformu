@@ -562,7 +562,13 @@ export function answerContextlessFollowUp(question, locale = 'tr', history = [],
   };
 }
 
-export function answerQuestion(question, records, history = [], locale = 'tr') {
+export function answerQuestion(
+  question,
+  records,
+  history = [],
+  locale = 'tr',
+  intentOverride = null
+) {
   const meta = answerMetaQuestion(question, locale);
   if (meta) return meta;
 
@@ -570,7 +576,7 @@ export function answerQuestion(question, records, history = [], locale = 'tr') {
     return answerContextlessFollowUp(question, locale, history);
   }
 
-  const intent = understandConversation(question, history);
+  const intent = intentOverride || understandConversation(question, history);
   const ranked = rankTools(records, intent, intent.wantsComparison ? 4 : 5);
   if (!ranked.length) {
     return { answer: '', sourceIds: [], insufficientContext: true, confidence: 0, intent };

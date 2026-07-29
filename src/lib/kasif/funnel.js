@@ -238,6 +238,8 @@ export function buildJobFunnelStats(interactions = []) {
   const rows = Array.isArray(interactions) ? interactions : [];
   const counts = Object.fromEntries(KASIF_FUNNEL_STAGES.map((stage) => [stage, 0]));
   let withFunnel = 0;
+  let verifiedJobDone = 0;
+  let selfReportedJobDone = 0;
   const minutesSamples = [];
   const selectedTools = new Map();
 
@@ -248,6 +250,16 @@ export function buildJobFunnelStats(interactions = []) {
     withFunnel += 1;
     for (const stage of KASIF_FUNNEL_STAGES) {
       if (funnel.stages[stage]) counts[stage] += 1;
+    }
+    const doneEvents = funnel.events.filter((event) => event.stage === 'job_done');
+    if (
+      doneEvents.some(
+        (event) => event.meta?.verified === true && event.meta?.verification === 'partner_webhook'
+      )
+    ) {
+      verifiedJobDone += 1;
+    } else if (funnel.stages.job_done) {
+      selfReportedJobDone += 1;
     }
     if (funnel.minutes_to_first_result != null) {
       minutesSamples.push(funnel.minutes_to_first_result);
@@ -338,12 +350,23 @@ export function buildJobFunnelStats(interactions = []) {
         total: 0,
         firstResult: 0,
         jobDone: 0,
+        verifiedJobDone: 0,
         runner: 0,
         sources: {},
       };
       bucket.total += 1;
       if (funnel.stages?.first_result) bucket.firstResult += 1;
       if (funnel.stages?.job_done) bucket.jobDone += 1;
+      if (
+        funnel.events.some(
+          (event) =>
+            event.stage === 'job_done' &&
+            event.meta?.verified === true &&
+            event.meta?.verification === 'partner_webhook'
+        )
+      ) {
+        bucket.verifiedJobDone += 1;
+      }
       if (isRunner) {
         bucket.runner += 1;
         const sourceKey = extractRunnerSource(funnel) || 'other';
@@ -362,21 +385,25 @@ export function buildJobFunnelStats(interactions = []) {
     .map((bucket) => {
       const firstResultRate = rate(bucket.firstResult, bucket.total);
       const jobDoneRate = rate(bucket.jobDone, bucket.total);
+      const verifiedJobDoneRate = rate(bucket.verifiedJobDone, bucket.total);
       const runnerRate = rate(bucket.runner, bucket.total);
       // Cost proxy: each pack-runner first_result counts as 1 run.
       const frPerRun = ratio(bucket.firstResult, bucket.runner);
       const donePerRun = ratio(bucket.jobDone, bucket.runner);
       const doneOfFirstResult = rate(bucket.jobDone, bucket.firstResult);
+      const verifiedDoneOfFirstResult = rate(bucket.verifiedJobDone, bucket.firstResult);
       // ROI score: job completions per runner run (null if no runner cost).
       const roiScore = donePerRun;
       return {
         ...bucket,
         firstResultRate,
         jobDoneRate,
+        verifiedJobDoneRate,
         runnerRate,
         frPerRun,
         donePerRun,
         doneOfFirstResult,
+        verifiedDoneOfFirstResult,
         roiScore,
       };
     })
@@ -394,15 +421,17 @@ export function buildJobFunnelStats(interactions = []) {
       acc.runs += pack.runner || 0;
       acc.firstResults += pack.firstResult || 0;
       acc.jobDones += pack.jobDone || 0;
+      acc.verifiedJobDones += pack.verifiedJobDone || 0;
       return acc;
     },
-    { packs: 0, runs: 0, firstResults: 0, jobDones: 0 }
+    { packs: 0, runs: 0, firstResults: 0, jobDones: 0, verifiedJobDones: 0 }
   );
   const packRoi = {
     ...packRoiTotals,
     frPerRun: ratio(packRoiTotals.firstResults, packRoiTotals.runs),
     donePerRun: ratio(packRoiTotals.jobDones, packRoiTotals.runs),
     doneOfFirstResult: rate(packRoiTotals.jobDones, packRoiTotals.firstResults),
+    verifiedDoneOfFirstResult: rate(packRoiTotals.verifiedJobDones, packRoiTotals.firstResults),
     topByRoi: packStats
       .filter((p) => p.runner > 0 && p.roiScore != null)
       .slice(0, 5)
@@ -479,14 +508,18 @@ export function buildJobFunnelStats(interactions = []) {
       setupOfSelected: rate(counts.setup_started, counts.tool_selected),
       firstResultOfSetup: rate(counts.first_result, counts.setup_started),
       doneOfFirstResult: rate(counts.job_done, counts.first_result),
+      verifiedDoneOfFirstResult: rate(verifiedJobDone, counts.first_result),
       firstResultOfStated: rate(counts.first_result, counts.job_stated || base),
       doneOfStated: rate(counts.job_done, counts.job_stated || base),
+      verifiedDoneOfStated: rate(verifiedJobDone, counts.job_stated || base),
       bridgeOfFirstResult: rate(bridgePasteCount, counts.first_result),
       runnerOfFirstResult: rate(runnerCount, counts.first_result),
     },
     avgMinutesToFirstResult: avgMinutes,
     firstResultSamples: minutesSamples.length,
     topSelectedTools,
+    verifiedJobDone,
+    selfReportedJobDone,
     bridgePasteCount,
     runnerCount,
     runnerSourceCounts,

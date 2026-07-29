@@ -45,6 +45,8 @@ import {
   runScrapeSeedQueueAdmin,
   pinKasifSoftLandingWinner,
   getKasifOpsDigestHistory,
+  runKasifOpsDigestNow,
+  reviewKasifGoalCandidate,
 } from '@/app/actions';
 import { summarizeSeedCatalog } from '@/lib/toolScrape/seedUrls';
 import { deleteReportedComment, dismissAlert } from '@/app/actions/moderation';
@@ -1967,7 +1969,99 @@ function formatWowDelta(metric) {
   return `${sign}${delta}${pct}`;
 }
 
-function KasifQualityTab({ interactions = [] }) {
+function KasifGoalCandidates({ candidates = [] }) {
+  const t = useTranslations('AdminClient');
+  const router = useRouter();
+  const [busyId, setBusyId] = React.useState(null);
+
+  async function review(candidate, status) {
+    setBusyId(candidate.id);
+    const formData = new FormData();
+    formData.set('id', candidate.id);
+    formData.set('status', status);
+    try {
+      const result = await reviewKasifGoalCandidate(formData);
+      if (result?.error) toast.error(result.error);
+      else {
+        toast.success(result?.success || t('kasifGoalCandidateSaved'));
+        router.refresh();
+      }
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <Card className="glass-panel border-border/50">
+      <CardHeader>
+        <CardTitle>{t('kasifGoalCandidatesTitle')}</CardTitle>
+        <CardDescription>{t('kasifGoalCandidatesDesc')}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {!candidates.length ? (
+          <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+            {t('kasifGoalCandidatesEmpty')}
+          </p>
+        ) : null}
+        {candidates.map((candidate) => (
+          <div key={candidate.id} className="rounded-xl border bg-background/60 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold">{candidate.label}</p>
+                  <Badge variant={candidate.status === 'pending' ? 'default' : 'secondary'}>
+                    {t(`kasifGoalCandidateStatus_${candidate.status}`)}
+                  </Badge>
+                  <Badge variant="outline">
+                    {t('kasifGoalCandidateCount', { count: candidate.occurrence_count })}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('kasifGoalCandidateSimilarity', {
+                    value: Math.round(Number(candidate.average_similarity || 0) * 100),
+                  })}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  type="button"
+                  disabled={busyId === candidate.id || candidate.status === 'accepted'}
+                  onClick={() => review(candidate, 'accepted')}
+                >
+                  {t('kasifGoalCandidateAccept')}
+                </Button>
+                <Button
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                  disabled={busyId === candidate.id || candidate.status === 'rejected'}
+                  onClick={() => review(candidate, 'rejected')}
+                >
+                  {t('kasifGoalCandidateReject')}
+                </Button>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {(candidate.keywords || []).map((keyword) => (
+                <Badge key={keyword} variant="secondary">
+                  {keyword}
+                </Badge>
+              ))}
+            </div>
+            <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+              {(candidate.sample_questions || []).map((question) => (
+                <li key={question}>“{question}”</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function KasifQualityTab({ interactions = [], goalCandidates = [] }) {
   const t = useTranslations('AdminClient');
   const router = useRouter();
   const locale = useLocale();
@@ -1976,6 +2070,7 @@ function KasifQualityTab({ interactions = [] }) {
   const [softLandingPin, setSoftLandingPin] = React.useState(null);
   const [pinBusy, setPinBusy] = React.useState(false);
   const [opsDigestHistory, setOpsDigestHistory] = React.useState(null);
+  const [digestBusy, setDigestBusy] = React.useState(false);
   const stats = React.useMemo(
     () => buildKasifQualityStats(interactions, { windowDays: 30, sampleLimit: 12 }),
     [interactions]
@@ -2051,6 +2146,7 @@ function KasifQualityTab({ interactions = [] }) {
 
   return (
     <div className="space-y-6">
+      <KasifGoalCandidates candidates={goalCandidates} />
       <Card className="glass-panel border-border/50">
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1.5">
@@ -2237,6 +2333,15 @@ function KasifQualityTab({ interactions = [] }) {
                     ? '—'
                     : `%${stats.jobFunnel.conversion.doneOfStated}`}
                 </Badge>
+                <Badge variant="default">
+                  {t('kasifFunnelVerifiedDone')}: {stats.jobFunnel?.verifiedJobDone || 0}
+                  {stats.jobFunnel?.conversion?.verifiedDoneOfStated != null
+                    ? ` · %${stats.jobFunnel.conversion.verifiedDoneOfStated}`
+                    : ''}
+                </Badge>
+                <Badge variant="outline">
+                  {t('kasifFunnelSelfReportedDone')}: {stats.jobFunnel?.selfReportedJobDone || 0}
+                </Badge>
                 <Badge variant="outline">
                   {t('kasifFunnelConvSelected')}:{' '}
                   {stats.jobFunnel?.conversion?.selectedOfRecommended == null
@@ -2341,6 +2446,9 @@ function KasifQualityTab({ interactions = [] }) {
                           n={pack.total}
                           {pack.firstResultRate != null ? ` · FR %${pack.firstResultRate}` : ''}
                           {pack.jobDoneRate != null ? ` · Done %${pack.jobDoneRate}` : ''}
+                          {pack.verifiedJobDoneRate != null
+                            ? ` · Verified %${pack.verifiedJobDoneRate}`
+                            : ''}
                           {pack.runner ? ` · runner ${pack.runner}` : ''}
                           {pack.runnerRate != null ? ` · r%${pack.runnerRate}` : ''}
                           {pack.sources && Object.keys(pack.sources).length
@@ -2374,6 +2482,13 @@ function KasifQualityTab({ interactions = [] }) {
                       {t('kasifPackRoiDone')}: {stats.jobFunnel.packRoi.jobDones || 0}
                       {stats.jobFunnel.packRoi.donePerRun != null
                         ? ` · ${stats.jobFunnel.packRoi.donePerRun}/run`
+                        : ''}
+                    </Badge>
+                    <Badge variant="default">
+                      {t('kasifFunnelVerifiedDone')}:{' '}
+                      {stats.jobFunnel.packRoi.verifiedJobDones || 0}
+                      {stats.jobFunnel.packRoi.verifiedDoneOfFirstResult != null
+                        ? ` · %${stats.jobFunnel.packRoi.verifiedDoneOfFirstResult} / FR`
                         : ''}
                     </Badge>
                     {stats.jobFunnel.packRoi.doneOfFirstResult != null ? (
@@ -2413,8 +2528,76 @@ function KasifQualityTab({ interactions = [] }) {
             </>
           )}
           <div className="space-y-2 rounded-xl border bg-background/50 p-3">
-            <p className="text-xs font-medium text-muted-foreground">{t('kasifOpsDigestTitle')}</p>
-            <p className="text-[11px] text-muted-foreground">{t('kasifOpsDigestDesc')}</p>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0 space-y-0.5">
+                <p className="text-xs font-medium text-muted-foreground">
+                  {t('kasifOpsDigestTitle')}
+                </p>
+                <p className="text-[11px] text-muted-foreground">{t('kasifOpsDigestDesc')}</p>
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-1.5">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="min-h-8 text-xs"
+                  disabled={digestBusy}
+                  onClick={async () => {
+                    setDigestBusy(true);
+                    try {
+                      const result = await runKasifOpsDigestNow({
+                        windowDays: 7,
+                        forceSend: false,
+                        dryRun: false,
+                      });
+                      if (result?.error) {
+                        toast.error(result.error);
+                        return;
+                      }
+                      toast.success(result?.success || t('kasifOpsDigestRunOk'));
+                      const next = await getKasifOpsDigestHistory();
+                      if (next?.success) setOpsDigestHistory(next);
+                    } catch (error) {
+                      toast.error(error?.message || t('kasifOpsDigestRunFail'));
+                    } finally {
+                      setDigestBusy(false);
+                    }
+                  }}
+                >
+                  {digestBusy ? t('kasifOpsDigestRunning') : t('kasifOpsDigestRunNow')}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="min-h-8 text-xs"
+                  disabled={digestBusy}
+                  onClick={async () => {
+                    setDigestBusy(true);
+                    try {
+                      const result = await runKasifOpsDigestNow({
+                        windowDays: 7,
+                        forceSend: true,
+                        dryRun: false,
+                      });
+                      if (result?.error) {
+                        toast.error(result.error);
+                        return;
+                      }
+                      toast.success(result?.success || t('kasifOpsDigestRunOk'));
+                      const next = await getKasifOpsDigestHistory();
+                      if (next?.success) setOpsDigestHistory(next);
+                    } catch (error) {
+                      toast.error(error?.message || t('kasifOpsDigestRunFail'));
+                    } finally {
+                      setDigestBusy(false);
+                    }
+                  }}
+                >
+                  {t('kasifOpsDigestRunSend')}
+                </Button>
+              </div>
+            </div>
             {opsDigestHistory?.last ? (
               <div className="space-y-2">
                 <div className="flex flex-wrap gap-2 text-xs">
@@ -2984,6 +3167,7 @@ export function AdminPageClient({ data }) {
     adminAlerts = [],
     creatorApplications = [],
     kasifInteractions = [],
+    kasifGoalCandidates = [],
   } = data;
 
   const approvalCount = unapprovedTools.length + unapprovedShowcaseItems.length;
@@ -3075,7 +3259,7 @@ export function AdminPageClient({ data }) {
       </TabsContent>
 
       <TabsContent value="kasif_quality" className="mt-6">
-        <KasifQualityTab interactions={kasifInteractions} />
+        <KasifQualityTab interactions={kasifInteractions} goalCandidates={kasifGoalCandidates} />
       </TabsContent>
 
       <TabsContent value="admin_alerts" className="mt-6">

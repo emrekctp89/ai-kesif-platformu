@@ -203,19 +203,79 @@ export function buildOpsDigestSnapshot(stats = {}, pinInfo = {}, options = {}) {
 }
 
 /**
- * @param {ReturnType<typeof buildOpsDigestSnapshot>} snapshot
+ * Format a single WoW metric as "+2 (+20%)" / "−5 (−20%)" / "0".
+ * @param {{ delta?: number, pct?: number|null }|null|undefined} metric
  * @returns {string}
  */
-export function formatOpsDigestSubject(snapshot) {
-  const period = snapshot?.periodLabel || 'haftalık';
-  const fr = snapshot?.funnel?.counts?.first_result ?? 0;
-  const done = snapshot?.funnel?.counts?.job_done ?? 0;
-  return `[Kâşif] Ops özeti · ${period} · FR ${fr} / done ${done}`;
+export function formatOpsDigestWowMetric(metric) {
+  if (!metric || typeof metric !== 'object') return '—';
+  const delta = Number(metric.delta);
+  if (!Number.isFinite(delta)) return '—';
+  const sign = delta > 0 ? '+' : '';
+  const pct =
+    metric.pct == null || !Number.isFinite(Number(metric.pct))
+      ? ''
+      : ` (${sign}${Number(metric.pct)}%)`;
+  return `${sign}${delta}${pct}`;
+}
+
+/**
+ * Multi-line WoW block for email / text digest.
+ * @param {ReturnType<typeof buildOpsDigestWeekDelta>} weekDelta
+ * @returns {string[]}
+ */
+export function formatOpsDigestWowLines(weekDelta) {
+  if (!weekDelta?.available) return [];
+  const lines = [
+    '— Haftadan haftaya (WoW) —',
+    `Karşılaştırma: ${weekDelta.currentPeriod || '—'} vs ${weekDelta.previousPeriod || '—'}`,
+    `FR: ${formatOpsDigestWowMetric(weekDelta.firstResult)} · done: ${formatOpsDigestWowMetric(weekDelta.jobDone)} · runner: ${formatOpsDigestWowMetric(weekDelta.runnerRuns)}`,
+  ];
+  if (
+    weekDelta.helpfulRate?.delta != null &&
+    Number.isFinite(Number(weekDelta.helpfulRate.delta))
+  ) {
+    const d = Number(weekDelta.helpfulRate.delta);
+    const sign = d > 0 ? '+' : '';
+    lines.push(`Helpful: ${sign}${d} pp`);
+  }
+  if (weekDelta.qualityTotal) {
+    lines.push(`Etkileşim: ${formatOpsDigestWowMetric(weekDelta.qualityTotal)}`);
+  }
+  return lines;
 }
 
 /**
  * @param {ReturnType<typeof buildOpsDigestSnapshot>} snapshot
- * @param {{ adminPath?: string, siteUrl?: string }} [options]
+ * @param {{ weekDelta?: ReturnType<typeof buildOpsDigestWeekDelta>|null }} [options]
+ * @returns {string}
+ */
+export function formatOpsDigestSubject(snapshot, options = {}) {
+  const period = snapshot?.periodLabel || 'haftalık';
+  const fr = snapshot?.funnel?.counts?.first_result ?? 0;
+  const done = snapshot?.funnel?.counts?.job_done ?? 0;
+  let subject = `[Kâşif] Ops özeti · ${period} · FR ${fr} / done ${done}`;
+  const weekDelta = options.weekDelta;
+  if (weekDelta?.available) {
+    const frDelta = weekDelta.firstResult?.delta;
+    const doneDelta = weekDelta.jobDone?.delta;
+    if (Number.isFinite(Number(frDelta)) || Number.isFinite(Number(doneDelta))) {
+      const frPart = Number.isFinite(Number(frDelta))
+        ? `FR ${Number(frDelta) > 0 ? '+' : ''}${Number(frDelta)}`
+        : null;
+      const donePart = Number.isFinite(Number(doneDelta))
+        ? `done ${Number(doneDelta) > 0 ? '+' : ''}${Number(doneDelta)}`
+        : null;
+      const wow = [frPart, donePart].filter(Boolean).join(' · ');
+      if (wow) subject += ` · WoW ${wow}`;
+    }
+  }
+  return subject;
+}
+
+/**
+ * @param {ReturnType<typeof buildOpsDigestSnapshot>} snapshot
+ * @param {{ adminPath?: string, siteUrl?: string, weekDelta?: object|null }} [options]
  * @returns {string}
  */
 export function formatOpsDigestText(snapshot, options = {}) {
@@ -232,6 +292,7 @@ export function formatOpsDigestText(snapshot, options = {}) {
   const sl = snapshot.softLanding || {};
   const pin = sl.pin || {};
   const at = snapshot.addTool || {};
+  const weekDelta = options.weekDelta || null;
 
   const lines = [
     'Kâşif haftalık ops özeti',
@@ -251,6 +312,11 @@ export function formatOpsDigestText(snapshot, options = {}) {
       ? `Ort. dakika → first_result: ${fmtNum(f.avgMinutesToFirstResult, 1)}`
       : null,
   ];
+
+  const wowLines = formatOpsDigestWowLines(weekDelta);
+  if (wowLines.length) {
+    lines.push('', ...wowLines);
+  }
 
   if ((f.runnerSourceMix || []).length) {
     lines.push(
@@ -322,7 +388,7 @@ function esc(value) {
 
 /**
  * @param {ReturnType<typeof buildOpsDigestSnapshot>} snapshot
- * @param {{ adminPath?: string, siteUrl?: string }} [options]
+ * @param {{ adminPath?: string, siteUrl?: string, weekDelta?: object|null }} [options]
  * @returns {string}
  */
 export function formatOpsDigestHtml(snapshot, options = {}) {

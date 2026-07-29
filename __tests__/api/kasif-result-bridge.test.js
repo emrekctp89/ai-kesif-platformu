@@ -117,5 +117,6 @@ describe('Kâşif result-bridge API', () => {
     expect(body.success).toBe(true);
     expect(body.artifact.bridge).toBe('paste');
     expect(body.jobDone).toBe(true);
+    expect(body.jobDoneVerified).toBe(false);
   });
 });

@@ -88,6 +88,7 @@ async function getAdminData() {
     reportedLinksResult,
     adminAlertsResult,
     kasifInteractionsResult,
+    kasifGoalCandidatesResult,
   ] = await Promise.all([
     loadTools(false),
     loadTools(true),
@@ -121,6 +122,13 @@ async function getAdminData() {
       .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false })
       .limit(300),
+    supabaseAdmin
+      .from('kasif_goal_candidates')
+      .select(
+        'id, label, keywords, sample_questions, occurrence_count, average_similarity, status, first_seen_at, last_seen_at'
+      )
+      .order('occurrence_count', { ascending: false })
+      .limit(100),
   ]);
 
   if (unapprovedShowcaseResult.error) {
@@ -146,6 +154,9 @@ async function getAdminData() {
   }
   if (kasifInteractionsResult.error) {
     logger.error('[admin] kasif interactions:', kasifInteractionsResult.error.message);
+  }
+  if (kasifGoalCandidatesResult.error) {
+    logger.error('[admin] kasif goal candidates:', kasifGoalCandidatesResult.error.message);
   }
 
   const normalizedApprovedTools = (approvedTools || []).map((tool) => ({
@@ -188,6 +199,7 @@ async function getAdminData() {
     reportedLinks: reportedLinksResult.data || [],
     adminAlerts: adminAlertsResult.data || [],
     kasifInteractions: kasifInteractionsResult.data || [],
+    kasifGoalCandidates: kasifGoalCandidatesResult.data || [],
   };
 }
 
@@ -237,6 +249,7 @@ export default async function AdminPage({ params }) {
       reportedLinks: [],
       adminAlerts: [],
       kasifInteractions: [],
+      kasifGoalCandidates: [],
     };
   }
 

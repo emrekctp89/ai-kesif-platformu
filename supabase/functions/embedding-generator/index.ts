@@ -3,14 +3,15 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
 const GEMINI_EMBEDDING_API_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent';
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent';
 
 // Bir metni, Gemini kullanarak anlamsal bir vektöre dönüştüren yardımcı fonksiyon
 async function getEmbedding(text: string, apiKey: string) {
   if (!text) return null;
   const payload = {
-    model: 'models/text-embedding-004',
+    model: 'models/gemini-embedding-2',
     content: { parts: [{ text }] },
+    outputDimensionality: 768,
   };
   const response = await fetch(`${GEMINI_EMBEDDING_API_URL}?key=${apiKey}`, {
     method: 'POST',
@@ -22,7 +23,7 @@ async function getEmbedding(text: string, apiKey: string) {
     return null;
   }
   const result = await response.json();
-  return result.embedding?.value;
+  return result.embedding?.values;
 }
 
 // Bu ana fonksiyon, Edge Function çağrıldığında çalışır

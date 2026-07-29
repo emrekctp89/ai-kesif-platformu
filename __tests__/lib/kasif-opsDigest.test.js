@@ -3,6 +3,8 @@ const {
   formatOpsDigestSubject,
   formatOpsDigestText,
   formatOpsDigestHtml,
+  formatOpsDigestWowMetric,
+  formatOpsDigestWowLines,
   isOpsDigestNotifyEnabled,
   OPS_DIGEST_HISTORY_KEY,
   buildOpsDigestHistorySummary,
@@ -155,6 +157,45 @@ describe('opsDigest', () => {
     expect(html).toContain('Admin · Kâşif kalite');
     expect(html).toContain('https://example.com/admin?tab=kasif_quality');
     expect(html).not.toContain('<script');
+  });
+
+  it('formatOpsDigest text/subject includes WoW when weekDelta given', () => {
+    const stats = buildKasifQualityStats(interactions, { windowDays: 7 });
+    const snapshot = buildOpsDigestSnapshot(
+      stats,
+      { variant: null, envForce: null, envDefault: null },
+      {
+        windowDays: 7,
+        generatedAt: '2026-07-29T08:00:00Z',
+        periodStart: '2026-07-22T00:00:00Z',
+        periodEnd: '2026-07-29T00:00:00Z',
+      }
+    );
+    const weekDelta = {
+      available: true,
+      currentPeriod: '2026-07-22 → 2026-07-29',
+      previousPeriod: '2026-07-15 → 2026-07-22',
+      firstResult: { current: 1, previous: 0, delta: 1, pct: null },
+      jobDone: { current: 1, previous: 0, delta: 1, pct: null },
+      runnerRuns: { current: 1, previous: 2, delta: -1, pct: -50 },
+      qualityTotal: { current: 4, previous: 3, delta: 1, pct: 33.3 },
+      helpfulRate: { current: 100, previous: 90, delta: 10 },
+    };
+
+    expect(formatOpsDigestWowMetric(weekDelta.firstResult)).toBe('+1');
+    expect(formatOpsDigestWowMetric(weekDelta.runnerRuns)).toBe('-1 (-50%)');
+    expect(formatOpsDigestWowLines(weekDelta).join('\n')).toMatch(/Haftadan haftaya/);
+    expect(formatOpsDigestWowLines(null)).toEqual([]);
+
+    const subject = formatOpsDigestSubject(snapshot, { weekDelta });
+    expect(subject).toMatch(/WoW FR \+1/);
+    expect(subject).toMatch(/done \+1/);
+
+    const text = formatOpsDigestText(snapshot, { weekDelta });
+    expect(text).toContain('Haftadan haftaya (WoW)');
+    expect(text).toContain('FR: +1');
+    expect(text).toContain('runner: -1 (-50%)');
+    expect(text).toContain('Helpful: +10 pp');
   });
 
   it('boş stats ile güvenli varsayılanlar', () => {

@@ -1,6 +1,11 @@
 import 'server-only';
 import { createClient } from '@/utils/supabase/server';
+import { embedGeminiText } from '@/utils/gemini';
 import { KASIF_CONCEPTS, KASIF_GOALS } from './lexicon';
+
+const DEFAULT_VECTOR_MATCH_THRESHOLD = 0.65;
+const DEFAULT_VECTOR_MATCH_COUNT = 30;
+const DEFAULT_FAST_PATH_CONFIDENT_MATCHES = 3;
 
 const STOP_WORDS = new Set([
   'acaba',
@@ -213,10 +218,99 @@ export function buildSearchFilter(terms) {
     .join(',');
 }
 
-export async function retrievePlatformContext(question, history = []) {
-  const terms = expandSearchTerms(
-    buildRetrievalQuery(question, history, { isolateCurrentTopic: true })
+export function scoreLexicalMatch(record, terms) {
+  const name = normalizeText(record?.name);
+  const description = normalizeText(record?.description);
+  return (terms || []).reduce((score, term) => {
+    const normalizedTerm = normalizeText(term);
+    if (!normalizedTerm) return score;
+    if (name.includes(normalizedTerm)) return score + 3;
+    if (description.includes(normalizedTerm)) return score + 1;
+    return score;
+  }, 0);
+}
+
+export function shouldUseVectorFallback(records, directTerms, minimumConfidentMatches = 3) {
+  if (!Array.isArray(records) || records.length === 0) return true;
+  return (
+    records.filter((record) => scoreLexicalMatch(record, directTerms) >= 2).length <
+    minimumConfidentMatches
   );
+}
+
+function numberFromEnv(name, fallback, { min, max }) {
+  const value = Number(process.env[name]);
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(Math.max(value, min), max);
+}
+
+function normalizeToolRecord(row) {
+  return {
+    ...row,
+    category: row.category || (row.category_name ? { name: row.category_name } : null),
+    is_verified: Boolean(row.is_verified),
+  };
+}
+
+async function retrieveVectorMatches(supabase, query, signal) {
+  if (!process.env.GEMINI_API_KEY) return [];
+  const queryEmbedding = await embedGeminiText(query);
+  const { data: matches, error: matchError } = await supabase.rpc('match_tools', {
+    query_embedding: queryEmbedding,
+    match_threshold: numberFromEnv('KASIF_VECTOR_MATCH_THRESHOLD', DEFAULT_VECTOR_MATCH_THRESHOLD, {
+      min: 0,
+      max: 1,
+    }),
+    match_count: numberFromEnv('KASIF_VECTOR_MATCH_COUNT', DEFAULT_VECTOR_MATCH_COUNT, {
+      min: 1,
+      max: 100,
+    }),
+  });
+  if (matchError) {
+    throw new Error(
+      `KASIF_VECTOR_RETRIEVAL_FAILED: ${matchError.message || matchError.code || 'unknown'}`
+    );
+  }
+  const ids = (matches || []).map((match) => match.id).filter(Boolean);
+  if (!ids.length) return [];
+
+  let builder = supabase
+    .from('tools_with_ratings')
+    .select(
+      'id, name, slug, link, description, pricing_model, platforms, is_featured, tier, average_rating, total_ratings, category_name'
+    )
+    .in('id', ids)
+    .eq('is_approved', true);
+  if (signal && typeof builder.abortSignal === 'function') builder = builder.abortSignal(signal);
+  const { data, error } = await builder;
+  if (error) {
+    throw new Error(`KASIF_VECTOR_HYDRATION_FAILED: ${error.message || error.code || 'unknown'}`);
+  }
+  const byId = new Map((data || []).map((record) => [String(record.id), record]));
+  return ids
+    .map((id) => {
+      const record = byId.get(String(id));
+      const match = matches.find((candidate) => String(candidate.id) === String(id));
+      return record ? { ...record, vector_similarity: Number(match?.similarity) || 0 } : null;
+    })
+    .filter(Boolean);
+}
+
+export function mergeHybridResults(lexicalRecords, vectorRecords) {
+  const merged = [];
+  const seen = new Set();
+  for (const record of [...(vectorRecords || []), ...(lexicalRecords || [])]) {
+    const key = record?.id ? `id:${record.id}` : `slug:${record?.slug}`;
+    if (!record || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(normalizeToolRecord(record));
+  }
+  return merged;
+}
+
+export async function retrievePlatformContext(question, history = []) {
+  const retrievalQuery = buildRetrievalQuery(question, history, { isolateCurrentTopic: true });
+  const terms = expandSearchTerms(retrievalQuery);
   if (!terms.length) return [];
   const filter = buildSearchFilter(terms);
   if (!filter) return [];
@@ -242,12 +336,24 @@ export async function retrievePlatformContext(question, history = []) {
       throw new Error(`KASIF_RETRIEVAL_FAILED: ${detail}`);
     }
 
-    return (data || []).map((row) => ({
-      ...row,
-      // engine scoreTool category.name bekler
-      category: row.category || (row.category_name ? { name: row.category_name } : null),
-      is_verified: Boolean(row.is_verified),
-    }));
+    const lexicalRecords = (data || []).map(normalizeToolRecord);
+    const directTerms = extractSearchTerms(retrievalQuery);
+    const minimumConfidentMatches = numberFromEnv(
+      'KASIF_FAST_PATH_CONFIDENT_MATCHES',
+      DEFAULT_FAST_PATH_CONFIDENT_MATCHES,
+      { min: 1, max: 20 }
+    );
+    if (!shouldUseVectorFallback(lexicalRecords, directTerms, minimumConfidentMatches)) {
+      return lexicalRecords;
+    }
+    try {
+      return mergeHybridResults(
+        lexicalRecords,
+        await retrieveVectorMatches(supabase, retrievalQuery, controller.signal)
+      );
+    } catch {
+      return lexicalRecords;
+    }
   } finally {
     clearTimeout(timeout);
   }

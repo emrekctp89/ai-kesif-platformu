@@ -16,6 +16,7 @@ import {
   classifyToolQueueStatus,
 } from '@/lib/kasif/addToolStatus';
 import { retrievePlatformContext } from '@/lib/kasif/retrieval';
+import { understandQuestionWithLlm } from '@/lib/kasif/understanding';
 import { groundModelResponse, noInformationAnswer } from '@/lib/kasif/grounding';
 import { seedFunnelFromResponse } from '@/lib/kasif/funnel';
 import { createAdminClient } from '@/utils/supabase/admin';
@@ -456,6 +457,7 @@ export async function POST(request) {
       });
     }
 
+    const understanding = await understandQuestionWithLlm(question);
     const records = await retrievePlatformContext(question, history);
     if (!records.length) {
       return NextResponse.json({
@@ -468,9 +470,24 @@ export async function POST(request) {
     }
 
     const modelResponse = attachClientIntentMeta(
-      answerQuestion(question, records, history, locale),
+      answerQuestion(
+        question,
+        records,
+        history,
+        locale,
+        understanding.source === 'regex' || understanding.source === 'local'
+          ? null
+          : understanding.intent
+      ),
       body
     );
+    modelResponse.intent = {
+      ...(modelResponse.intent || {}),
+      understanding: {
+        source: understanding.source,
+        confidence: understanding.confidence,
+      },
+    };
     const groundedResponse = groundModelResponse(modelResponse, records, locale);
     const interaction = isLocalEvaluation
       ? {}

@@ -141,7 +141,12 @@ export async function POST(request) {
 
     if (markJobDone) {
       nextFunnel = applyFunnelStage(nextFunnel, 'job_done', {
-        meta: { self_report: true, via: 'result_bridge' },
+        meta: {
+          self_report: true,
+          verified: false,
+          verification: 'self_report',
+          via: 'result_bridge',
+        },
       });
     }
 
@@ -176,6 +181,7 @@ export async function POST(request) {
       artifact: nextFunnel.result_artifact,
       minutesToFirstResult: minutes,
       jobDone: markJobDone,
+      jobDoneVerified: false,
     });
   } catch (error) {
     logger.error('Kâşif result-bridge error:', error);

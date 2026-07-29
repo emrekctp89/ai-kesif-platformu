@@ -3,6 +3,31 @@
 Son güncelleme: 2026-07-26
 Çalışma dalı: `codex/kasif-phases`
 
+## Güncel entegrasyon notu — 2026-07-29
+
+- Roadmap ve bağımsız Kâşif public/server sınırı `main` çalışma ağacına geri alındı.
+- Faz 1 hibrit retrieval, `gemini-embedding-2` (768 boyut), eksik embedding yenileme servisi
+  ve günlük `/api/cron/tool-embeddings` cron’u entegre edildi.
+- Yerel doğrulama: boundary/workmind 4 test; Faz 1 retrieval/embedding 17 test başarılı.
+- Canlı read-only ölçüm: 467 approved aracın 467’sinde embedding eksik. Backfill henüz
+  çalıştırılmadı; production verisi değiştirilmedi.
+- Faz 2 clustering backend’i, haftalık goal-candidate cron’u, admin kabul/red arayüzü ve
+  RLS’li migration güncel çalışma ağacına entegre edildi. Migration henüz uygulanmadı.
+- Faz 1–2 + boundary + i18n hedefli doğrulama: 6 suite / 30 test başarılı.
+- Faz 3 gap analizi sonrası yalnız eksik LLM-understanding katmanı entegre edildi:
+  regex → learned alias → partner/Gemini → local fallback; canonical taxonomy doğrulaması ve
+  confidence/source kaydı eklendi.
+- Faz 3 hedefli doğrulama: 5 suite / 71 test başarılı.
+- Production read-only kontrolünde `kasif_lexicon_aliases` erişilebilir ve Gemini yapılandırılmış;
+  Partner API henüz yapılandırılmamış. Bu nedenle canlı zincir şu an Gemini → local çalışabilir.
+- Faz 4 gap analizi sonrası opaque claim, HMAC-SHA256 webhook doğrulaması, beş dakikalık
+  timestamp penceresi, tek kullanımlık/replay korumalı evidence transaction’ı ve
+  verified/self-report metrik ayrımı entegre edildi.
+- Faz 4 hedefli doğrulama: 4 suite / 25 test başarılı; ESLint ve i18n parity temiz.
+- Production read-only kontrolde completion claim/event tabloları erişilebilir; ancak
+  `KASIF_PARTNER_WEBHOOK_SECRETS_JSON` içinde yapılandırılmış provider yok. Gerçek partner
+  sandbox doğrulaması yapılmadan verified completion metriği dış iletişimde kullanılmamalı.
+
 ## Belgenin amacı
 
 Bu belge Kâşif AI için planlanan beş fazın:

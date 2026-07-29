@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const DEFAULT_TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-flash-latest';
-const DEFAULT_EMBED_MODEL = process.env.GEMINI_EMBED_MODEL || 'text-embedding-004';
+const DEFAULT_EMBED_MODEL = process.env.GEMINI_EMBED_MODEL || 'gemini-embedding-2';
+const EMBEDDING_DIMENSIONS = 768;
 
 function requireApiKey() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -46,11 +47,26 @@ export async function generateGeminiText(prompt, options = {}) {
  * @returns {Promise<number[]>}
  */
 export async function embedGeminiText(text) {
-  const genAI = getGenerativeAI();
-  const model = genAI.getGenerativeModel({ model: DEFAULT_EMBED_MODEL });
-  const result = await model.embedContent(text);
+  const apiKey = requireApiKey();
+  const model = DEFAULT_EMBED_MODEL.replace(/^models\//, '');
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: `models/${model}`,
+        content: { parts: [{ text: String(text || '').slice(0, 12000) }] },
+        outputDimensionality: EMBEDDING_DIMENSIONS,
+      }),
+    }
+  );
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result?.error?.message || 'Gemini embedding request failed.');
+  }
   const values = result?.embedding?.values;
-  if (!values?.length) {
+  if (values?.length !== EMBEDDING_DIMENSIONS) {
     throw new Error("API'den geçerli bir embedding vektörü alınamadı.");
   }
   return values;

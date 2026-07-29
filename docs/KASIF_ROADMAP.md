@@ -251,15 +251,22 @@ North Star artık yalnızca tıklama/affiliate değil:
 - `ReceiptSocialProofStrip`: top pack chip’leri → `/kasif?pack=&runner=1`
 - i18n: `kasifOpsDigestWow*` + `receiptSocialPacks` / `receiptSocialPackHint`
 
+### P6.17 Digest email WoW + admin run-now
+
+- `formatOpsDigestWowLines` / subject WoW suffix; cron run loads prior history before save
+- Email text/html includes FR/done/runner/helpful WoW block
+- Admin: `runKasifOpsDigestNow` (session auth) — “Şimdi çalıştır” + “Çalıştır + e-posta”
+- i18n: `kasifOpsDigestRun*`
+
 ---
 
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.16~~ ✅
-2. **Ops digest e-postasına WoW satırı** (opsiyonel)
-3. **Admin “digest şimdi çalıştır”** butonu (cron secret’sız, admin session)
+1. ~~P0–P6.17~~ ✅
+2. **Digest dry-run admin butonu** (opsiyonel, e-posta/history yazmadan önizleme)
+3. **Partner status health in digest** (opsiyonel)
 
 ---
 
