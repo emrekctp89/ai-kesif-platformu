@@ -25,6 +25,7 @@ import {
   ThumbsDown,
   ThumbsUp,
   User,
+  X,
 } from 'lucide-react';
 import {
   buildWorkmindHandoffUrl,
@@ -112,6 +113,7 @@ export default function KasifExperiment() {
   const [loading, setLoading] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [comparison, setComparison] = useState({});
+  const [proactiveSuggestions, setProactiveSuggestions] = useState([]);
   const conversationEndRef = useRef(null);
   const questionRef = useRef(null);
   const activeRequestRef = useRef(null);
@@ -197,6 +199,41 @@ export default function KasifExperiment() {
       // private mode / quota
     }
   }, [turns, history, locale, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    let cancelled = false;
+    fetch(`/api/kasif/proactive?locale=${locale}`)
+      .then((response) => (response.ok ? response.json() : { suggestions: [] }))
+      .then((data) => {
+        if (cancelled || !Array.isArray(data?.suggestions)) return;
+        setProactiveSuggestions(data.suggestions);
+        for (const suggestion of data.suggestions) {
+          void sendProactiveEvent(suggestion, 'shown');
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, locale]);
+
+  async function sendProactiveEvent(suggestion, eventType) {
+    try {
+      await fetch('/api/kasif/proactive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          suggestionKey: suggestion.suggestionKey,
+          toolSlug: suggestion.tool?.slug,
+          interactionId: suggestion.context?.interactionId,
+          eventType,
+        }),
+      });
+    } catch {
+      // Analytics must never block discovery.
+    }
+  }
 
   const askQuestion = useCallback(
     async (rawQuestion, options = {}) => {
@@ -551,6 +588,59 @@ export default function KasifExperiment() {
 
       {turns.length === 0 && (
         <>
+          {proactiveSuggestions.length > 0 && (
+            <section
+              aria-labelledby="kasif-proactive-heading"
+              className="rounded-3xl border border-violet-500/25 bg-violet-500/5 p-5 shadow-sm sm:p-6"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                {t('proactiveEyebrow')}
+              </p>
+              <h2 id="kasif-proactive-heading" className="mt-1 text-lg font-semibold">
+                {t('proactiveTitle')}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t('proactiveDescription')}</p>
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                {proactiveSuggestions.map((suggestion) => (
+                  <article
+                    key={suggestion.suggestionKey}
+                    className="relative rounded-2xl border bg-background p-4"
+                  >
+                    <button
+                      type="button"
+                      className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                      aria-label={t('proactiveDismiss')}
+                      onClick={() => {
+                        setProactiveSuggestions((current) =>
+                          current.filter((item) => item.suggestionKey !== suggestion.suggestionKey)
+                        );
+                        void sendProactiveEvent(suggestion, 'dismissed');
+                      }}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                    <p className="pr-6 text-xs text-muted-foreground">
+                      {t('proactiveReason', {
+                        goal: suggestion.context?.goalLabel || t('proactivePreviousWork'),
+                      })}
+                    </p>
+                    <h3 className="mt-2 font-semibold">{suggestion.tool?.name}</h3>
+                    <p className="mt-1 line-clamp-3 text-xs leading-5 text-muted-foreground">
+                      {suggestion.tool?.description}
+                    </p>
+                    <Link
+                      href={`${locale === 'en' ? '/en' : ''}/tool/${suggestion.tool?.slug}`}
+                      className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                      onClick={() => void sendProactiveEvent(suggestion, 'clicked')}
+                    >
+                      {t('proactiveCta')}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
           <JobPacksStrip
             locale={locale}
             initialPackId={searchParams?.get('pack') || null}

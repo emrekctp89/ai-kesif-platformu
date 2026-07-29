@@ -20,6 +20,7 @@ import { understandQuestionWithLlm } from '@/lib/kasif/understanding';
 import { groundModelResponse, noInformationAnswer } from '@/lib/kasif/grounding';
 import { seedFunnelFromResponse } from '@/lib/kasif/funnel';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { createClient as createServerClient } from '@/utils/supabase/server';
 import { getSoftLandingOpsPin } from '@/lib/kasif/softLandingPin';
 
 export const dynamic = 'force-dynamic';
@@ -90,7 +91,7 @@ function attachClientIntentMeta(modelResponse, body = {}) {
   return changed ? { ...base, intent } : base;
 }
 
-async function recordInteraction(question, modelResponse, groundedResponse) {
+async function recordInteraction(question, modelResponse, groundedResponse, userId = null) {
   const feedbackToken = randomUUID();
   try {
     const admin = createAdminClient();
@@ -102,6 +103,7 @@ async function recordInteraction(question, modelResponse, groundedResponse) {
       source_ids: modelResponse.sourceIds || [],
       intent: modelResponse.intent || {},
       confidence: modelResponse.confidence || 0,
+      ...(userId ? { user_id: userId } : {}),
     };
 
     let data = null;
@@ -112,12 +114,24 @@ async function recordInteraction(question, modelResponse, groundedResponse) {
       .select('id')
       .single());
 
+    // Personalization migration henüz uygulanmadıysa kaydı kullanıcı bağı olmadan sürdür.
+    if (error && userId) {
+      const { user_id: _userId, ...anonymousRow } = baseRow;
+      logger.warn('Kâşif user history insert failed; retrying without user link.', error?.message);
+      ({ data, error } = await admin
+        .from('kasif_interactions')
+        .insert(funnel ? { ...anonymousRow, funnel } : anonymousRow)
+        .select('id')
+        .single());
+    }
+
     // Migration henüz uygulanmadıysa funnel kolonu yoktur; etkileşimi yine kaydet.
     if (error && funnel) {
+      const { user_id: _userId, ...legacyRow } = baseRow;
       logger.warn('Kâşif funnel insert failed; retrying without funnel.', error?.message);
       ({ data, error } = await admin
         .from('kasif_interactions')
-        .insert(baseRow)
+        .insert(legacyRow)
         .select('id')
         .single());
       if (!error && data) {
@@ -178,6 +192,18 @@ export async function POST(request) {
 
   try {
     const isLocalEvaluation = body?.evaluation === true && isLocalEvaluationRequest;
+    let userId = null;
+    if (!isLocalEvaluation) {
+      try {
+        const supabase = await createServerClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        userId = user?.id || null;
+      } catch {
+        userId = null;
+      }
+    }
 
     // Soft-landing A/B: client sticky + env force/default + admin ops pin (DB).
     const softLandingVariant =
@@ -202,7 +228,11 @@ export async function POST(request) {
       const groundedDirect = groundModelResponse(taggedDirect, [], locale);
       const interaction = isLocalEvaluation
         ? {}
-        : await withTimeout(recordInteraction(question, taggedDirect, groundedDirect), 3000, {});
+        : await withTimeout(
+            recordInteraction(question, taggedDirect, groundedDirect, userId),
+            3000,
+            {}
+          );
       return NextResponse.json({
         ...groundedDirect,
         confidence: taggedDirect.confidence || 0.99,
@@ -327,7 +357,11 @@ export async function POST(request) {
       const groundedStatus = groundModelResponse(taggedStatus, [], locale);
       const interaction = isLocalEvaluation
         ? {}
-        : await withTimeout(recordInteraction(question, taggedStatus, groundedStatus), 3000, {});
+        : await withTimeout(
+            recordInteraction(question, taggedStatus, groundedStatus, userId),
+            3000,
+            {}
+          );
       return NextResponse.json({
         ...groundedStatus,
         confidence: taggedStatus.confidence,
@@ -361,7 +395,7 @@ export async function POST(request) {
         const grounded = groundModelResponse(tagged, [], locale);
         const interaction = isLocalEvaluation
           ? {}
-          : await withTimeout(recordInteraction(question, tagged, grounded), 3000, {});
+          : await withTimeout(recordInteraction(question, tagged, grounded, userId), 3000, {});
         return NextResponse.json({
           ...grounded,
           confidence: tagged.confidence,
@@ -444,7 +478,7 @@ export async function POST(request) {
       const tagged = attachClientIntentMeta(modelResponse, body);
       const grounded = groundModelResponse(tagged, [], locale);
       const interaction = await withTimeout(
-        recordInteraction(question, tagged, grounded),
+        recordInteraction(question, tagged, grounded, userId),
         3000,
         {}
       );
@@ -491,7 +525,11 @@ export async function POST(request) {
     const groundedResponse = groundModelResponse(modelResponse, records, locale);
     const interaction = isLocalEvaluation
       ? {}
-      : await withTimeout(recordInteraction(question, modelResponse, groundedResponse), 3000, {});
+      : await withTimeout(
+          recordInteraction(question, modelResponse, groundedResponse, userId),
+          3000,
+          {}
+        );
     return NextResponse.json({
       ...groundedResponse,
       confidence: modelResponse.confidence || 0,

@@ -1780,6 +1780,13 @@
     "subtitle": "İhtiyacını yaz, Kâşif platformdaki araçları senin için sıralasın.",
     "newConversation": "Yeni konuşma",
     "startersTitle": "Nereden başlamak istersin?",
+    "proactiveEyebrow": "Senin için yeni",
+    "proactiveTitle": "Geçmiş işlerine göre yeni araçlar",
+    "proactiveDescription": "Daha önce tamamladığın işler ve seçtiğin paketlerle eşleşen yeni katalog araçları.",
+    "proactiveReason": "{goal} için önceki çalışmana benziyor",
+    "proactivePreviousWork": "önceki işin",
+    "proactiveCta": "Aracı incele",
+    "proactiveDismiss": "Bu öneriyi gizle",
     "startersDescription": "Bir örnek seçebilir veya ihtiyacını aşağıya kendi cümlelerinle yazabilirsin.",
     "starters": {
       "presentation": {

@@ -1780,6 +1780,13 @@
     "subtitle": "Describe what you need and Kâşif will rank the tools on the platform for you.",
     "newConversation": "New conversation",
     "startersTitle": "Where would you like to start?",
+    "proactiveEyebrow": "New for you",
+    "proactiveTitle": "New tools based on your past work",
+    "proactiveDescription": "Recently added catalog tools that match jobs you completed and packs you selected.",
+    "proactiveReason": "Similar to your previous {goal} work",
+    "proactivePreviousWork": "previous",
+    "proactiveCta": "View tool",
+    "proactiveDismiss": "Hide this suggestion",
     "startersDescription": "Choose an example or describe what you need in your own words below.",
     "starters": {
       "presentation": {
