@@ -115,7 +115,7 @@ export async function pinKasifSoftLandingWinner(formData) {
   }
 
   try {
-    const { setSoftLandingOpsPin } = await import('@/lib/kasif/softLandingPin');
+    const { setSoftLandingOpsPin } = await import('@/lib/kasif/server');
     const pin = await setSoftLandingOpsPin(variant, {
       userId: user.id,
       note: note ? String(note).slice(0, 280) : null,
@@ -135,5 +135,66 @@ export async function pinKasifSoftLandingWinner(formData) {
           ? 'app_settings tablosu yok. Migration 20260726120000_create_app_settings.sql uygulayın.'
           : error?.message || 'Pin kaydedilemedi.',
     };
+  }
+}
+
+/**
+ * Last weekly ops digest snapshot + ring history (admin only).
+ */
+export async function getKasifOpsDigestHistory() {
+  'use server';
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: 'Yetkiniz yok.' };
+  }
+
+  try {
+    const { getOpsDigestHistory } = await import('@/lib/kasif/server');
+    const doc = await getOpsDigestHistory();
+    const last = doc.last
+      ? {
+          savedAt: doc.last.savedAt || null,
+          subject: doc.last.subject || null,
+          emailSent: Boolean(doc.last.emailSent),
+          emailReason: doc.last.emailReason || null,
+          dryRun: Boolean(doc.last.dryRun),
+          windowDays: doc.last.windowDays ?? null,
+          periodLabel: doc.last.periodLabel || null,
+          quality: doc.last.quality || null,
+          funnel: doc.last.funnel || null,
+          packRoi: doc.last.packRoi || null,
+          softLanding: doc.last.softLanding || null,
+          addTool: doc.last.addTool || null,
+        }
+      : null;
+
+    const history = (doc.history || []).map((entry) => ({
+      savedAt: entry.savedAt || null,
+      subject: entry.subject || null,
+      emailSent: Boolean(entry.emailSent),
+      periodLabel: entry.periodLabel || null,
+      quality: entry.quality || null,
+      funnel: entry.funnel || null,
+      packRoi: entry.packRoi || null,
+      softLanding: entry.softLanding || null,
+    }));
+
+    const { pickOpsDigestDeltaPair } = await import('@/lib/kasif');
+    const { delta } = pickOpsDigestDeltaPair({ last, history });
+
+    return {
+      success: true,
+      updatedAt: doc.updatedAt || null,
+      last,
+      history,
+      weekDelta: delta,
+    };
+  } catch (error) {
+    logger.error('Ops digest history load failed:', error);
+    return { error: error?.message || 'Geçmiş yüklenemedi.' };
   }
 }

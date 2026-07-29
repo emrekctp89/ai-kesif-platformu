@@ -12,8 +12,8 @@ import {
   compareSelectedToolsWithKasif,
   getKasifAssistantAnswer,
   getKasifRecommendations,
-} from '@/lib/kasif/integrations';
-import { generateStudioText } from '@/lib/kasif/studioText';
+  generateStudioText,
+} from '@/lib/kasif/server';
 
 function isKasifDisabled(error) {
   return error instanceof Error && error.message === 'KASIF_DISABLED';
@@ -481,7 +481,7 @@ PLATFORMUN ANLIK DURUMU:
 - Toplam Kullanıcı: ${snapshotData.totals.total_users}, Toplam Araç: ${snapshotData.totals.total_tools}
 `;
 
-    const { generateCoPilotWithKasif } = await import('@/lib/kasif/adminJsonAssist');
+    const { generateCoPilotWithKasif } = await import('@/lib/kasif/server');
     const { data, source } = await generateCoPilotWithKasif({
       userPrompt: normalized,
       history: Array.isArray(history) ? history : [],

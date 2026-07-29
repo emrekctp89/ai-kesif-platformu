@@ -41,3 +41,23 @@ export {
   buildJobReceiptSharePath,
   formatJobReceiptShareText,
 } from './jobReceipt';
+export {
+  buildOpsDigestSnapshot,
+  formatOpsDigestSubject,
+  formatOpsDigestText,
+  formatOpsDigestHtml,
+  isOpsDigestNotifyEnabled,
+  OPS_DIGEST_HISTORY_KEY,
+  OPS_DIGEST_HISTORY_MAX,
+  buildOpsDigestHistorySummary,
+  buildOpsDigestHistoryRecord,
+  appendOpsDigestHistory,
+  parseOpsDigestHistoryRow,
+  buildOpsDigestWeekDelta,
+  pickOpsDigestDeltaPair,
+} from './opsDigest';
+export {
+  RECEIPT_SOCIAL_PROOF_MIN_VISIBLE,
+  buildReceiptSocialProofStats,
+  toPublicReceiptSocialProof,
+} from './receiptSocialProof';

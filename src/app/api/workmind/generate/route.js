@@ -2,9 +2,12 @@ import logger from '@/utils/logger';
 import { NextResponse } from 'next/server';
 
 import { PRIMARY_CATEGORIES } from '@/lib/categoryTaxonomy';
-import { understandQuestion } from '@/lib/kasif/engine';
-import { normalizeWorkmindWorkflow, planWorkmindWorkflow } from '@/lib/kasif/workmindPlanner';
-import { callLlmJson } from '@/lib/kasif/partnerRunner';
+import {
+  callLlmJson,
+  normalizeWorkmindWorkflow,
+  planWorkmindWorkflow,
+  understandQuestion,
+} from '@/lib/kasif/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -59,7 +62,11 @@ async function generateWithKasifCloud(prompt) {
     }
     return { workflow: null, source: null, error: new Error('empty_nodes') };
   } catch (err) {
-    return { workflow: null, source: null, error: err instanceof Error ? err : new Error(String(err)) };
+    return {
+      workflow: null,
+      source: null,
+      error: err instanceof Error ? err : new Error(String(err)),
+    };
   }
 }
 

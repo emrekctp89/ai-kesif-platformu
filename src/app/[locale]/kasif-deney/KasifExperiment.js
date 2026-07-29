@@ -35,6 +35,7 @@ import {
 } from '@/lib/kasif';
 import { JobFunnelPanel } from '@/components/kasif/JobFunnelPanel';
 import { JobPacksStrip, JobPackSuggestion } from '@/components/kasif/JobPacksStrip';
+import { ReceiptSocialProofStrip } from '@/components/kasif/ReceiptSocialProofStrip';
 import { trackEvent } from '@/utils/analytics';
 
 const STARTER_QUESTIONS = [
@@ -529,6 +530,9 @@ export default function KasifExperiment() {
                 <GitCompareArrows className="h-3.5 w-3.5 text-violet-500" />
                 {t('trust.compare')}
               </span>
+            </div>
+            <div className="mt-4 max-w-xl">
+              <ReceiptSocialProofStrip windowDays={30} compact />
             </div>
           </div>
           {turns.length > 0 && (

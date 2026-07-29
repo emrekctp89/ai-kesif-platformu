@@ -44,6 +44,7 @@ import {
   scrapeToolUrlsAdmin,
   runScrapeSeedQueueAdmin,
   pinKasifSoftLandingWinner,
+  getKasifOpsDigestHistory,
 } from '@/app/actions';
 import { summarizeSeedCatalog } from '@/lib/toolScrape/seedUrls';
 import { deleteReportedComment, dismissAlert } from '@/app/actions/moderation';
@@ -1954,6 +1955,18 @@ function formatGoalLabel(goals, t, locale = 'tr') {
     .join(', ');
 }
 
+function formatWowDelta(metric) {
+  if (!metric || typeof metric !== 'object') return '—';
+  const delta = Number(metric.delta);
+  if (!Number.isFinite(delta)) return '—';
+  const sign = delta > 0 ? '+' : '';
+  const pct =
+    metric.pct == null || !Number.isFinite(Number(metric.pct))
+      ? ''
+      : ` (${sign}${Number(metric.pct)}%)`;
+  return `${sign}${delta}${pct}`;
+}
+
 function KasifQualityTab({ interactions = [] }) {
   const t = useTranslations('AdminClient');
   const router = useRouter();
@@ -1962,6 +1975,7 @@ function KasifQualityTab({ interactions = [] }) {
   const [partnerStatus, setPartnerStatus] = React.useState(null);
   const [softLandingPin, setSoftLandingPin] = React.useState(null);
   const [pinBusy, setPinBusy] = React.useState(false);
+  const [opsDigestHistory, setOpsDigestHistory] = React.useState(null);
   const stats = React.useMemo(
     () => buildKasifQualityStats(interactions, { windowDays: 30, sampleLimit: 12 }),
     [interactions]
@@ -1989,6 +2003,14 @@ function KasifQualityTab({ interactions = [] }) {
         if (!response.ok) return;
         const data = await response.json();
         if (!cancelled) setSoftLandingPin(data);
+      } catch {
+        /* optional */
+      }
+    })();
+    (async () => {
+      try {
+        const data = await getKasifOpsDigestHistory();
+        if (!cancelled && data?.success) setOpsDigestHistory(data);
       } catch {
         /* optional */
       }
@@ -2390,6 +2412,112 @@ function KasifQualityTab({ interactions = [] }) {
               ) : null}
             </>
           )}
+          <div className="space-y-2 rounded-xl border bg-background/50 p-3">
+            <p className="text-xs font-medium text-muted-foreground">{t('kasifOpsDigestTitle')}</p>
+            <p className="text-[11px] text-muted-foreground">{t('kasifOpsDigestDesc')}</p>
+            {opsDigestHistory?.last ? (
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <Badge variant="secondary">
+                    {opsDigestHistory.last.periodLabel || opsDigestHistory.last.savedAt || '—'}
+                  </Badge>
+                  <Badge variant={opsDigestHistory.last.emailSent ? 'default' : 'outline'}>
+                    {opsDigestHistory.last.emailSent
+                      ? t('kasifOpsDigestEmailSent')
+                      : t('kasifOpsDigestEmailSkipped')}
+                  </Badge>
+                  {opsDigestHistory.last.funnel ? (
+                    <Badge variant="outline">
+                      FR {opsDigestHistory.last.funnel.first_result ?? 0} · done{' '}
+                      {opsDigestHistory.last.funnel.job_done ?? 0}
+                    </Badge>
+                  ) : null}
+                  {opsDigestHistory.last.packRoi?.runs != null ? (
+                    <Badge variant="outline">
+                      {t('kasifPackRoiRuns')}: {opsDigestHistory.last.packRoi.runs}
+                    </Badge>
+                  ) : null}
+                  {opsDigestHistory.last.softLanding?.pinEffective ? (
+                    <Badge variant="outline">
+                      pin: {opsDigestHistory.last.softLanding.pinEffective}
+                    </Badge>
+                  ) : null}
+                </div>
+                {opsDigestHistory.last.subject ? (
+                  <p className="text-xs text-foreground/90">{opsDigestHistory.last.subject}</p>
+                ) : null}
+                {opsDigestHistory.weekDelta?.available ? (
+                  <div className="space-y-1.5 rounded-lg border border-dashed px-2.5 py-2">
+                    <p className="text-[11px] font-medium text-muted-foreground">
+                      {t('kasifOpsDigestWowTitle')}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {opsDigestHistory.weekDelta.currentPeriod || '—'} vs{' '}
+                      {opsDigestHistory.weekDelta.previousPeriod || '—'}
+                    </p>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <Badge
+                        variant={
+                          (opsDigestHistory.weekDelta.firstResult?.delta || 0) >= 0
+                            ? 'default'
+                            : 'destructive'
+                        }
+                      >
+                        {t('kasifOpsDigestWowFr')}:{' '}
+                        {formatWowDelta(opsDigestHistory.weekDelta.firstResult)}
+                      </Badge>
+                      <Badge
+                        variant={
+                          (opsDigestHistory.weekDelta.jobDone?.delta || 0) >= 0
+                            ? 'default'
+                            : 'destructive'
+                        }
+                      >
+                        {t('kasifOpsDigestWowDone')}:{' '}
+                        {formatWowDelta(opsDigestHistory.weekDelta.jobDone)}
+                      </Badge>
+                      <Badge variant="outline">
+                        {t('kasifOpsDigestWowRuns')}:{' '}
+                        {formatWowDelta(opsDigestHistory.weekDelta.runnerRuns)}
+                      </Badge>
+                      {opsDigestHistory.weekDelta.helpfulRate?.delta != null ? (
+                        <Badge variant="outline">
+                          {t('kasifOpsDigestWowHelpful')}:{' '}
+                          {opsDigestHistory.weekDelta.helpfulRate.delta > 0 ? '+' : ''}
+                          {opsDigestHistory.weekDelta.helpfulRate.delta} pp
+                        </Badge>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : (opsDigestHistory.history || []).length <= 1 ? (
+                  <p className="text-[11px] text-muted-foreground">{t('kasifOpsDigestWowEmpty')}</p>
+                ) : null}
+                {(opsDigestHistory.history || []).length > 1 ? (
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-medium text-muted-foreground">
+                      {t('kasifOpsDigestHistory')}
+                    </p>
+                    {opsDigestHistory.history.slice(0, 5).map((entry, idx) => (
+                      <div
+                        key={`ops-hist-${entry.savedAt || idx}`}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-[11px]"
+                      >
+                        <span className="text-muted-foreground">
+                          {entry.periodLabel || entry.savedAt || '—'}
+                        </span>
+                        <span>
+                          FR {entry.funnel?.first_result ?? 0} · done {entry.funnel?.job_done ?? 0}
+                          {entry.packRoi?.runs != null ? ` · runs ${entry.packRoi.runs}` : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t('kasifOpsDigestEmpty')}</p>
+            )}
+          </div>
         </CardContent>
       </Card>
 

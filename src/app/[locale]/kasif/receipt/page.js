@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { JobReceiptPublicView } from '@/components/kasif/JobReceiptPublicView';
+import { ReceiptSocialProofStrip } from '@/components/kasif/ReceiptSocialProofStrip';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -31,6 +32,10 @@ export default async function KasifReceiptPage({ params, searchParams }) {
       </div>
 
       <JobReceiptPublicView interactionId={id} feedbackToken={token} locale={locale} />
+
+      <div className="mt-6">
+        <ReceiptSocialProofStrip windowDays={30} />
+      </div>
 
       <p className="mt-8 text-center text-sm">
         <Link

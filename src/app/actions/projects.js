@@ -157,7 +157,7 @@ export async function getAiProjectStrategy(projectId) {
       ${projectData.prompts?.map((p) => `- ${p.title}: "${p.prompt_text}"`).join('\n') || 'Yok'}
     `;
 
-    const { generateProjectStrategyWithKasif } = await import('@/lib/kasif/adminJsonAssist');
+    const { generateProjectStrategyWithKasif } = await import('@/lib/kasif/server');
     const { data, source } = await generateProjectStrategyWithKasif({
       formattedData,
       title: projectData.title,

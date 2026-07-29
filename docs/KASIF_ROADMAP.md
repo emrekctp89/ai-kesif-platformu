@@ -2,7 +2,7 @@
 
 Bu dosya Kâşif’in **öneri motoru** ile **kataloga araç çekme** yönünü ayırır ve sıradaki işleri tutar.
 
-Son güncelleme: 2026-07-26
+Son güncelleme: 2026-07-29
 
 ---
 
@@ -222,15 +222,44 @@ North Star artık yalnızca tıklama/affiliate değil:
 - Pack rows: `frPerRun`, `donePerRun`, `roiScore` (sort by ROI)
 - Admin Kâşif kalite: ROI özeti + lider listesi (source mix ile)
 
+### P6.13 Weekly ops digest
+
+- `opsDigest.js`: saf snapshot + subject/text/html (funnel, pack ROI, soft-landing pin, add-tool)
+- `opsDigestRun.js` (server-only): son N gün `kasif_interactions` + ops pin → Resend e-posta
+- Cron: `GET /api/cron/kasif-ops-digest` (Pzt 06:30 UTC, `vercel.json`)
+- Env: `KASIF_OPS_DIGEST=true` (+ `RESEND_API_KEY`, alıcı: `KASIF_OPS_DIGEST_EMAIL` veya `ADMIN_EMAIL`); `?dryRun=1` / `?forceSend=1`
+- Pin önceliği digest’te: env FORCE → ops pin → env DEFAULT → ab split
+
+### P6.14 Receipt → social proof
+
+- `receiptSocialProof.js`: anonim `first_result` / `job_done` sayaçları (PII yok; minVisible=3)
+- `GET /api/kasif/receipt-stats` — public, 5 dk server cache + short CDN cache
+- `ReceiptSocialProofStrip` — `/kasif` header (compact) + `/kasif/receipt` sayfası
+- i18n: `Kasif.job.receiptSocial*` (tr/en)
+
+### P6.15 Ops digest history + homepage social proof
+
+- `appendOpsDigestHistory` / `parseOpsDigestHistoryRow` — ring (max 8) in `app_settings` key `kasif_ops_digest_last`
+- `opsDigestHistory.js` (server): get/save; cron run persists after non-dryRun
+- Admin Kâşif kalite: son digest + önceki çalıştırmalar (`getKasifOpsDigestHistory`)
+- Homepage hero: `ReceiptSocialProofStrip` + Kâşif CTA (`Homepage.kasifCta`)
+
+### P6.16 WoW delta + pack leaders
+
+- `buildOpsDigestWeekDelta` / `pickOpsDigestDeltaPair` — history[0] vs [1] FR/done/runs/helpful
+- Admin ops digest kartında WoW rozetleri (`weekDelta` from `getKasifOpsDigestHistory`)
+- `ReceiptSocialProofStrip`: top pack chip’leri → `/kasif?pack=&runner=1`
+- i18n: `kasifOpsDigestWow*` + `receiptSocialPacks` / `receiptSocialPackHint`
+
 ---
 
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.12~~ ✅
-2. **Weekly ops digest** — admin e-posta: funnel + pack ROI + soft-landing pin durumu
-3. **Receipt → social proof** (opsiyonel): anonim makbuz sayacı landing’de
+1. ~~P0–P6.16~~ ✅
+2. **Ops digest e-postasına WoW satırı** (opsiyonel)
+3. **Admin “digest şimdi çalıştır”** butonu (cron secret’sız, admin session)
 
 ---
 

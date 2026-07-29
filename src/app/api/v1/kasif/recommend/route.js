@@ -16,8 +16,7 @@ import {
   rateLimitHeaders,
   rateLimitResponse,
 } from '@/lib/developerApi';
-import { kasifConfig } from '@/lib/kasif/config';
-import { getKasifRecommendations } from '@/lib/kasif/integrations';
+import { getKasifRecommendations, kasifConfig } from '@/lib/kasif/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,10 +63,7 @@ export async function POST(request) {
       .trim()
       .slice(0, 800);
     if (question.length < 3) {
-      return jsonResponse(
-        { error: 'question must be between 3 and 800 characters.' },
-        400
-      );
+      return jsonResponse({ error: 'question must be between 3 and 800 characters.' }, 400);
     }
 
     const limit = parsePositiveIntegerParam(body?.limit, 5, { min: 1, max: 10 });

@@ -9,7 +9,7 @@ import { getWorkmindToolRecommendations } from '@/app/actions/workmind';
 import { JobFunnelPanel } from '@/components/kasif/JobFunnelPanel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { resolveJobWizard } from '@/lib/kasif/jobWizards';
+import { resolveJobWizard } from '@/lib/kasif';
 
 export function NodeSidebar({
   node,

@@ -115,7 +115,7 @@ export async function generateChallengeIdeasWithAi(topic) {
   if (safeTopic.length > 200) return { error: 'Konu çok uzun (max 200 karakter).' };
 
   try {
-    const { generateChallengeIdeaWithKasif } = await import('@/lib/kasif/adminJsonAssist');
+    const { generateChallengeIdeaWithKasif } = await import('@/lib/kasif/server');
     const { data, source } = await generateChallengeIdeaWithKasif(safeTopic);
     if (!data?.title || !data?.description) {
       return { error: 'Yapay zeka modelinden beklenen formatta bir cevap alınamadı.' };

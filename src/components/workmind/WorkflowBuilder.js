@@ -28,7 +28,7 @@ import {
   markJobSessionStepDone,
   normalizeJobSession,
   selectToolForJobStep,
-} from '@/lib/kasif/jobSession';
+} from '@/lib/kasif';
 import { trackEvent } from '@/utils/analytics';
 import { JobSessionBar } from './JobSessionBar';
 import { NodeSidebar } from './NodeSidebar';

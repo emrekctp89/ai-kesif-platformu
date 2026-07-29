@@ -21,6 +21,7 @@ import {
   WandSparkles,
   X,
 } from 'lucide-react';
+import { ReceiptSocialProofStrip } from '@/components/kasif/ReceiptSocialProofStrip';
 
 const quickStartDefs = [
   { href: '/kategori/gorsel-video', labelKey: 'goalVisual', icon: ImageIcon },
@@ -239,6 +240,14 @@ export function HomepageClient({
               </div>
             )}
 
+            <div className="mt-4 flex justify-center">
+              <ReceiptSocialProofStrip
+                windowDays={30}
+                compact
+                className="justify-center text-center"
+              />
+            </div>
+
             <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
               <Button
                 asChild
@@ -266,12 +275,33 @@ export function HomepageClient({
                 size="lg"
                 className="glass-button min-h-12 rounded-2xl px-6"
               >
+                <Link
+                  href="/kasif"
+                  prefetch={false}
+                  onClick={() =>
+                    trackEvent('kasif_cta_click', {
+                      source: 'homepage_hero',
+                    })
+                  }
+                  className="font-semibold"
+                >
+                  <WandSparkles className="mr-2 h-5 w-5" aria-hidden="true" />
+                  {t('kasifCta')}
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="glass-button min-h-12 rounded-2xl px-6"
+              >
                 <Link href="/kategori" prefetch={false} className="font-semibold">
                   <LayoutGrid className="mr-2 h-5 w-5" aria-hidden="true" />
                   {t('allCategories')}
                 </Link>
               </Button>
             </div>
+            <p className="mt-2 text-center text-xs text-muted-foreground">{t('kasifCtaHint')}</p>
           </div>
 
           <div className="relative z-10 mt-8 border-t border-border/50 pt-6">

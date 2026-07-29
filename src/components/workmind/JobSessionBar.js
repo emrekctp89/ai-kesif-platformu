@@ -2,8 +2,7 @@
 
 import { CheckCircle2, Circle, ListChecks } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { formatKasifGoalLabel } from '@/lib/kasif/goalLabels';
-import { getJobSessionProgress } from '@/lib/kasif/jobSession';
+import { formatKasifGoalLabel, getJobSessionProgress } from '@/lib/kasif';
 
 /**
  * Compact progress bar for a Workmind ↔ Kâşif job session.

@@ -5,7 +5,7 @@ import logger from '@/utils/logger';
 import { cookies } from 'next/headers';
 
 import { resolvePrimarySlug } from '@/lib/categoryTaxonomy';
-import { getKasifWorkmindRecommendations } from '@/lib/kasif/integrations';
+import { getKasifWorkmindRecommendations } from '@/lib/kasif/server';
 import { createClient } from '@/utils/supabase/server';
 import { enforceRateLimit } from '@/utils/antiAbuse';
 

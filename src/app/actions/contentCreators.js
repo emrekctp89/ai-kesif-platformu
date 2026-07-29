@@ -15,7 +15,7 @@ import {
   plainTextFromMarkdown,
   validatePostForReview,
 } from '@/lib/contentCreatorRules';
-import { assistCreatorContent, CREATOR_ASSIST_MODES } from '@/lib/kasif/contentAssist';
+import { assistCreatorContent, CREATOR_ASSIST_MODES } from '@/lib/kasif/server';
 import { enforceRateLimit } from '@/utils/antiAbuse';
 
 const CREATOR_EDITABLE_STATUSES = new Set(['Taslak', 'İncelemede', 'Reddedildi']);
