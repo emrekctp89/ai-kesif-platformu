@@ -1,31 +1,87 @@
 /**
  * Partner API runner — OpenAI-compatible chat completions for pack generation.
  *
- * Env:
+ * Explicit env (preferred):
  *   KASIF_PARTNER_API_URL  — base URL including /v1 (e.g. https://api.openai.com/v1)
  *   KASIF_PARTNER_API_KEY  — bearer token
  *   KASIF_PARTNER_MODEL    — optional, default gpt-4o-mini
  *   KASIF_PARTNER_TIMEOUT_MS — optional, default 20000
+ *
+ * Convenience fallbacks (when URL/KEY not both set):
+ *   OPENAI_API_KEY  → https://api.openai.com/v1  (+ OPENAI_MODEL / gpt-4o-mini)
+ *   XAI_API_KEY     → https://api.x.ai/v1         (+ XAI_MODEL / grok-2-latest)
  */
 
-export function isPartnerRunnerConfigured() {
-  const url = String(process.env.KASIF_PARTNER_API_URL || '').trim();
-  const key = String(process.env.KASIF_PARTNER_API_KEY || '').trim();
-  return Boolean(url && key);
+function isPlaceholderSecret(value) {
+  const v = String(value || '').trim();
+  if (!v) return true;
+  return /^(your_|change.?me|xxx|placeholder|example|replace)/i.test(v);
 }
 
-export function getPartnerRunnerConfig() {
-  if (!isPartnerRunnerConfigured()) return null;
+/**
+ * Resolve OpenAI-compatible partner endpoint from env.
+ * @returns {{ baseUrl: string, apiKey: string, model: string, timeoutMs: number, via: string }|null}
+ */
+export function resolvePartnerRunnerConfig(env = process.env) {
+  const timeoutMs = Math.min(Math.max(Number(env.KASIF_PARTNER_TIMEOUT_MS) || 20000, 3000), 60000);
+
+  const explicitUrl = String(env.KASIF_PARTNER_API_URL || '')
+    .trim()
+    .replace(/\/$/, '');
+  const explicitKey = String(env.KASIF_PARTNER_API_KEY || '').trim();
+  if (explicitUrl && explicitKey && !isPlaceholderSecret(explicitKey)) {
+    return {
+      baseUrl: explicitUrl,
+      apiKey: explicitKey,
+      model: String(env.KASIF_PARTNER_MODEL || 'gpt-4o-mini').trim() || 'gpt-4o-mini',
+      timeoutMs,
+      via: 'kasif_partner',
+    };
+  }
+
+  // Allow partial explicit: KEY only + default OpenAI URL, or URL only + OPENAI/XAI key.
+  const openaiKey = String(env.OPENAI_API_KEY || '').trim();
+  if (openaiKey && !isPlaceholderSecret(openaiKey)) {
+    return {
+      baseUrl: explicitUrl || 'https://api.openai.com/v1',
+      apiKey: explicitKey && !isPlaceholderSecret(explicitKey) ? explicitKey : openaiKey,
+      model:
+        String(env.KASIF_PARTNER_MODEL || env.OPENAI_MODEL || 'gpt-4o-mini').trim() ||
+        'gpt-4o-mini',
+      timeoutMs,
+      via: explicitUrl || explicitKey ? 'kasif_partner+openai' : 'openai',
+    };
+  }
+
+  const xaiKey = String(env.XAI_API_KEY || '').trim();
+  if (xaiKey && !isPlaceholderSecret(xaiKey)) {
+    return {
+      baseUrl: explicitUrl || 'https://api.x.ai/v1',
+      apiKey: explicitKey && !isPlaceholderSecret(explicitKey) ? explicitKey : xaiKey,
+      model:
+        String(env.KASIF_PARTNER_MODEL || env.XAI_MODEL || 'grok-2-latest').trim() ||
+        'grok-2-latest',
+      timeoutMs,
+      via: explicitUrl || explicitKey ? 'kasif_partner+xai' : 'xai',
+    };
+  }
+
+  return null;
+}
+
+export function isPartnerRunnerConfigured(env = process.env) {
+  return Boolean(resolvePartnerRunnerConfig(env));
+}
+
+export function getPartnerRunnerConfig(env = process.env) {
+  const config = resolvePartnerRunnerConfig(env);
+  if (!config) return null;
   return {
-    baseUrl: String(process.env.KASIF_PARTNER_API_URL || '')
-      .trim()
-      .replace(/\/$/, ''),
-    apiKey: String(process.env.KASIF_PARTNER_API_KEY || '').trim(),
-    model: String(process.env.KASIF_PARTNER_MODEL || 'gpt-4o-mini').trim() || 'gpt-4o-mini',
-    timeoutMs: Math.min(
-      Math.max(Number(process.env.KASIF_PARTNER_TIMEOUT_MS) || 20000, 3000),
-      60000
-    ),
+    baseUrl: config.baseUrl,
+    apiKey: config.apiKey,
+    model: config.model,
+    timeoutMs: config.timeoutMs,
+    via: config.via,
   };
 }
 
@@ -260,10 +316,10 @@ async function callGeminiText(prompt, options = {}) {
  * preferredSource: which LLM tier will be tried first for pack JSON.
  * chain: ordered fallbacks after preferred (always ends with local).
  */
-export function partnerRunnerStatus() {
-  const configured = isPartnerRunnerConfigured();
-  const config = configured ? getPartnerRunnerConfig() : null;
-  const hasGeminiFallback = Boolean(process.env.GEMINI_API_KEY);
+export function partnerRunnerStatus(env = process.env) {
+  const config = getPartnerRunnerConfig(env);
+  const configured = Boolean(config);
+  const hasGeminiFallback = Boolean(String(env.GEMINI_API_KEY || '').trim());
   const preferredSource = configured ? 'partner' : hasGeminiFallback ? 'gemini' : 'local';
   const chain = [];
   if (configured) chain.push('partner');
@@ -283,6 +339,8 @@ export function partnerRunnerStatus() {
           }
         })()
       : null,
+    /** How credentials were resolved: kasif_partner | openai | xai | … */
+    via: config?.via || null,
     hasGeminiFallback,
     preferredSource,
     chain,

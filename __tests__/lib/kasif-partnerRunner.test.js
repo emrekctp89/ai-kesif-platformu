@@ -23,6 +23,8 @@ describe('partnerRunner', () => {
   it('yapılandırılmamışken configured=false döner', () => {
     delete process.env.KASIF_PARTNER_API_URL;
     delete process.env.KASIF_PARTNER_API_KEY;
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.XAI_API_KEY;
     delete process.env.GEMINI_API_KEY;
     const { isPartnerRunnerConfigured, partnerRunnerStatus, getPartnerRunnerConfig } =
       loadPartner();
@@ -50,13 +52,61 @@ describe('partnerRunner', () => {
     expect(config.baseUrl).toBe('https://api.example.com/v1');
     expect(config.model).toBe('gpt-test');
     expect(config.apiKey).toBe('secret-key-xyz');
+    expect(config.via).toBe('kasif_partner');
 
     const status = partnerRunnerStatus();
     expect(status.configured).toBe(true);
     expect(status.model).toBe('gpt-test');
     expect(status.baseUrlHost).toBe('api.example.com');
     expect(status.hasGeminiFallback).toBe(true);
+    expect(status.via).toBe('kasif_partner');
     expect(JSON.stringify(status)).not.toContain('secret-key');
+  });
+
+  it('OPENAI_API_KEY ile otomatik partner yapılandırması', () => {
+    delete process.env.KASIF_PARTNER_API_URL;
+    delete process.env.KASIF_PARTNER_API_KEY;
+    delete process.env.XAI_API_KEY;
+    process.env.OPENAI_API_KEY = 'sk-openai-test-key';
+    process.env.OPENAI_MODEL = 'gpt-4o-mini';
+    process.env.GEMINI_API_KEY = 'gem';
+    const { isPartnerRunnerConfigured, getPartnerRunnerConfig, partnerRunnerStatus } =
+      loadPartner();
+    expect(isPartnerRunnerConfigured()).toBe(true);
+    expect(getPartnerRunnerConfig()).toMatchObject({
+      baseUrl: 'https://api.openai.com/v1',
+      apiKey: 'sk-openai-test-key',
+      model: 'gpt-4o-mini',
+      via: 'openai',
+    });
+    expect(partnerRunnerStatus()).toMatchObject({
+      configured: true,
+      preferredSource: 'partner',
+      baseUrlHost: 'api.openai.com',
+      chain: ['partner', 'gemini', 'local'],
+    });
+  });
+
+  it('XAI_API_KEY ile xAI partner yapılandırması', () => {
+    delete process.env.KASIF_PARTNER_API_URL;
+    delete process.env.KASIF_PARTNER_API_KEY;
+    delete process.env.OPENAI_API_KEY;
+    process.env.XAI_API_KEY = 'xai-test-key';
+    const { getPartnerRunnerConfig } = loadPartner();
+    expect(getPartnerRunnerConfig()).toMatchObject({
+      baseUrl: 'https://api.x.ai/v1',
+      model: 'grok-2-latest',
+      via: 'xai',
+    });
+  });
+
+  it('placeholder OPENAI anahtarını partner saymaz', () => {
+    delete process.env.KASIF_PARTNER_API_URL;
+    delete process.env.KASIF_PARTNER_API_KEY;
+    delete process.env.XAI_API_KEY;
+    process.env.OPENAI_API_KEY = 'your_openai_api_key_here';
+    const { isPartnerRunnerConfigured } = loadPartner();
+    expect(isPartnerRunnerConfigured()).toBe(false);
   });
 
   it('callPartnerChatJson JSON parse eder', async () => {
