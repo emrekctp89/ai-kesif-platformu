@@ -2365,5 +2365,803 @@
     "templateWeeklyBody": "3 araç / haber + kısa yorum formatı.",
     "templateWeeklyDescription": "{title} — bu haftanın öne çıkan AI araçları ve notları.",
     "templateWeeklyContent": "# {title}\n\n## Bu haftanın teması\nKısa giriş (1–2 paragraf).\n\n## 1) Öne çıkan araç\nNe değişti / neden önemli / kim denemeli.\n\n## 2) İkinci sinyal\n…\n\n## 3) Pratik ipucu\nOkuyucunun bugün uygulayabileceği bir şey.\n\n## Kaçırılmaması gereken linkler\n- …\n\n## Kapanış\nGelecek haftaya kısa teaser.\n"
+  },
+  "KasifJobWizards": {
+    "wizards": {
+      "default": {
+        "id": "default",
+        "title": "Genel kurulum",
+        "hint": "Listede bırakmıyoruz — kısa checklist ile ilk sonucu hedefle.",
+        "firstResultHint": "İlk somut çıktıyı aldığında işaretle.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve hesap oluştur / giriş yap",
+            "description": null
+          },
+          {
+            "id": "configure",
+            "label": "İlk kurulum veya şablonu tamamla",
+            "description": null
+          },
+          {
+            "id": "first-output",
+            "label": "İlk çıktıyı üret (taslak, görsel, özet…)",
+            "description": null
+          }
+        ],
+        "prompts": []
+      },
+      "presentation-creation": {
+        "id": "presentation-creation",
+        "title": "Sunum kurulum sihirbazı",
+        "hint": "Amaç: 5–10 slaytlık ilk taslağı aynı oturumda çıkar.",
+        "firstResultHint": "İlk sonuç: en az 5 slaytlık indirilebilir / paylaşılabilir taslak.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç, ücretsiz plan / denemeyi başlat",
+            "description": null
+          },
+          {
+            "id": "brief",
+            "label": "Konu, kitle ve süre (dk) bilgisini gir",
+            "description": "Örn. “Yatırımcı sunumu, 8 dk, SaaS ürünü”"
+          },
+          {
+            "id": "outline",
+            "label": "Anahat / slayt iskeletini oluştur",
+            "description": null
+          },
+          {
+            "id": "first-deck",
+            "label": "İlk tam taslağı üret ve indir / kopyala",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "pitch-outline",
+            "title": "Sunum brief şablonu",
+            "body": "Konu: [ürün / proje]\nHedef kitle: [yatırımcı / ekip / müşteri]\nSüre: [X] dakika\nAmaç: [bilgilendir / ikna et / eğitim]\nTon: [profesyonel / samimi]\nSlayt yapısı: problem → çözüm → kanıt → çağrı\nHer slaytta en fazla 1 ana mesaj olsun."
+          }
+        ]
+      },
+      "image-generation": {
+        "id": "image-generation",
+        "title": "Görsel üretim sihirbazı",
+        "hint": "Amaç: en az 1 kullanılabilir görsel + 2 varyasyon.",
+        "firstResultHint": "İlk sonuç: indirdiğin en az bir görsel dosyası.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve üretim kotasını kontrol et",
+            "description": null
+          },
+          {
+            "id": "brief",
+            "label": "Konu, stil, en-boy ve kullanım yerini yaz",
+            "description": null
+          },
+          {
+            "id": "generate",
+            "label": "İlk prompt ile 2–4 görsel üret",
+            "description": null
+          },
+          {
+            "id": "select",
+            "label": "En iyiyi seç, bir varyasyon dene, indir",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "social-visual",
+            "title": "Sosyal görsel promptu",
+            "body": "Konu: [ürün / sahne]\nStil: [minimal / sinematik / illüstrasyon / foto-gerçekçi]\nRenk paleti: [ana renkler]\nKompozisyon: [orta plan / üstten / yakın çekim]\nEn-boy: 1:1 (Instagram) veya 9:16 (story)\nMetin yok, yüksek detay, temiz arka plan\nNegatif: bulanık, filigran, bozuk el"
+          }
+        ]
+      },
+      "coding-assistant": {
+        "id": "coding-assistant",
+        "title": "Kod asistanı sihirbazı",
+        "hint": "Amaç: çalışan bir iskelet veya hata düzeltmesi.",
+        "firstResultHint": "İlk sonuç: çalışan kod parçası veya düzeltilmiş hata.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç (web veya editör eklentisi)",
+            "description": null
+          },
+          {
+            "id": "context",
+            "label": "Dil, framework ve hedefi tek paragrafta yaz",
+            "description": null
+          },
+          {
+            "id": "scaffold",
+            "label": "İskelet kod / fonksiyon üret veya hata yapıştır",
+            "description": null
+          },
+          {
+            "id": "run",
+            "label": "Çalıştır veya derle; ilk yeşil sonucu al",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "feature-spec",
+            "title": "Özellik istek şablonu",
+            "body": "Dil/stack: [örn. Next.js + Supabase]\nGörev: [ne yapmalı]\nGirdiler: [...]\nÇıktı: [...]\nKısıtlar: [auth yok / ücretsiz plan / edge function]\nLütfen: 1) kısa plan 2) dosya isimleri 3) çalışan kod 4) test adımları\nAçıklamayı Türkçe, kodu İngilizce yaz."
+          }
+        ]
+      },
+      "seo-optimization": {
+        "id": "seo-optimization",
+        "title": "SEO sihirbazı",
+        "hint": "Amaç: site/URL için ilk anahtar kelime + aksiyon listesi.",
+        "firstResultHint": "İlk sonuç: kaydettiğin anahtar kelime veya denetim özeti.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve proje / site ekle",
+            "description": null
+          },
+          {
+            "id": "target",
+            "label": "Hedef URL veya sektörü gir",
+            "description": null
+          },
+          {
+            "id": "keywords",
+            "label": "İlk anahtar kelime / rakip taramasını çalıştır",
+            "description": null
+          },
+          {
+            "id": "actions",
+            "label": "En az 3 aksiyon maddesini kaydet",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "seo-brief",
+            "title": "SEO brief",
+            "body": "Site: [URL]\nÜlke/dil: Türkiye / Türkçe\nHedef: [organik trafik / lead / e-ticaret]\nAna ürün/hizmet: [...]\nRakipler: [2–3 site]\nİstediğim çıktı: birincil KW, uzun kuyruk KW, title/meta önerisi, içerik boşlukları"
+          }
+        ]
+      },
+      "email-writing": {
+        "id": "email-writing",
+        "title": "E-posta yazım sihirbazı",
+        "hint": "Amaç: gönderime hazır 1 e-posta (konu + gövde).",
+        "firstResultHint": "İlk sonuç: kopyalanmış konu + gövde metni.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve yeni taslak başlat",
+            "description": null
+          },
+          {
+            "id": "audience",
+            "label": "Alıcı, amaç ve tonu tanımla",
+            "description": null
+          },
+          {
+            "id": "draft",
+            "label": "Konu satırı + gövde taslağını üret",
+            "description": null
+          },
+          {
+            "id": "polish",
+            "label": "Kısalt, CTA ekle, panoya kopyala",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "cold-email",
+            "title": "Soğuk e-posta şablonu",
+            "body": "Alıcı rolü: [pazarlama müdürü / kurucu]\nÜrünümüz: [tek cümle değer]\nKanıt: [sayı / referans]\nİstek: [15 dk görüşme / demo]\nTon: kısa, samimi, spam hissi yok\nÇıktı: 3 konu satırı + 120 kelimelik gövde + net CTA"
+          }
+        ]
+      },
+      "chatbot-assistant": {
+        "id": "chatbot-assistant",
+        "title": "Sohbet asistanı sihirbazı",
+        "hint": "Amaç: günlük işine yarayan ilk sohbet çıktısı.",
+        "firstResultHint": "İlk sonuç: kaydettiğin / kullandığın asistan cevabı.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve (gerekirse) model seç",
+            "description": null
+          },
+          {
+            "id": "task",
+            "label": "Gerçek bir görevi tek cümlede yaz",
+            "description": null
+          },
+          {
+            "id": "iterate",
+            "label": "Yanıtı al; bir daraltma sorusu sor",
+            "description": null
+          },
+          {
+            "id": "save",
+            "label": "Kullanacağın çıktıyı kaydet / kopyala",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "daily-helper",
+            "title": "Günlük asistan promptu",
+            "body": "Sen pratik bir asistanısın. Görevim: […].\nKısıtlar: [süre / dil / format]\nÖnce 3 maddelik plan ver, sonra nihai çıktıyı üret.\nGereksiz giriş yapma."
+          }
+        ]
+      },
+      "content-writing": {
+        "id": "content-writing",
+        "title": "İçerik yazım sihirbazı",
+        "hint": "Amaç: yayınlanabilir ilk taslak (en az 400 kelime veya outline).",
+        "firstResultHint": "İlk sonuç: kopyalanmış taslak veya net anahat.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve yeni belge başlat",
+            "description": null
+          },
+          {
+            "id": "brief",
+            "label": "Konu, kitle, anahtar kelime ve formatı gir",
+            "description": null
+          },
+          {
+            "id": "outline",
+            "label": "Başlık + alt başlık anahatını üret",
+            "description": null
+          },
+          {
+            "id": "draft",
+            "label": "Tam taslağı yazdır ve panoya al",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "blog-brief",
+            "title": "Blog brief",
+            "body": "Konu: [...]\nKitle: [seviye]\nAna KW: [...]\nFormat: blog / LinkedIn / bülten\nUzunluk: [kelime]\nTon: [bilgi verici / ikna edici]\nYapı: giriş → 3 bölüm → sonuç + CTA\nKaynak uydurma; emin değilsen belirt."
+          }
+        ]
+      },
+      "workflow-automation": {
+        "id": "workflow-automation",
+        "title": "Otomasyon sihirbazı",
+        "hint": "Amaç: tetikleyici → eylem şeklinde ilk çalışan akış.",
+        "firstResultHint": "İlk sonuç: test çalıştırması başarılı olan akış.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve yeni senaryo / workflow oluştur",
+            "description": null
+          },
+          {
+            "id": "map",
+            "label": "Tetikleyici ve hedef uygulamayı seç",
+            "description": null
+          },
+          {
+            "id": "connect",
+            "label": "Hesapları bağla (OAuth / API)",
+            "description": null
+          },
+          {
+            "id": "test",
+            "label": "Test çalıştır; yeşil / başarılı sonucu gör",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "automation-map",
+            "title": "Otomasyon haritası",
+            "body": "Süreç adı: [ör. form → Slack]\nTetikleyici: [yeni form / e-posta / zamanlayıcı]\nVeri alanları: [...]\nEylemler: 1) ... 2) ...\nHata durumunda: [bildirim]\nBaşarı kriteri: testte 1 gerçek kayıt aktarıldı"
+          }
+        ]
+      },
+      "meeting-notes": {
+        "id": "meeting-notes",
+        "title": "Toplantı notu sihirbazı",
+        "hint": "Amaç: aksiyon maddeli ilk özet.",
+        "firstResultHint": "İlk sonuç: aksiyon maddeli özet metni.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve kayıt / yükleme yolunu seç",
+            "description": null
+          },
+          {
+            "id": "input",
+            "label": "Ses/video yükle veya canlı kaydı başlat",
+            "description": null
+          },
+          {
+            "id": "transcript",
+            "label": "Transkript + özeti üret",
+            "description": null
+          },
+          {
+            "id": "actions",
+            "label": "Aksiyon maddelerini kopyala / paylaş",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "summary-format",
+            "title": "Özet formatı",
+            "body": "Toplantı: [başlık / tarih]\nKatılımcılar: [...]\nÖzet (5 madde)\nKararlar\nAksiyonlar: sahip | iş | son tarih\nRiskler / açık sorular"
+          }
+        ]
+      },
+      "logo-design": {
+        "id": "logo-design",
+        "title": "Logo tasarım sihirbazı",
+        "hint": "Amaç: en az 1 logo adayı dosyası.",
+        "firstResultHint": "İlk sonuç: indirdiğin logo dosyası.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve logo / marka şablonunu seç",
+            "description": null
+          },
+          {
+            "id": "brand",
+            "label": "Marka adı, sektör ve stil anahtarlarını gir",
+            "description": null
+          },
+          {
+            "id": "variants",
+            "label": "3–6 varyasyon üret",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "En iyiyi seç ve PNG/SVG indir",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "logo-brief",
+            "title": "Logo brief",
+            "body": "Marka: [ad]\nSektör: [...]\nSembol: [somut nesne / soyut]\nStil: [minimal / geometrik / el çizimi]\nRenkler: [1–2 ana renk]\nKullanım: app ikonu + web header\nİstemediğim: klişe, aşırı detay, okunaksız yazı"
+          }
+        ]
+      },
+      "video-generation": {
+        "id": "video-generation",
+        "title": "Video üretim sihirbazı",
+        "hint": "Amaç: en az 1 kısa klip veya sahne taslağı.",
+        "firstResultHint": "İlk sonuç: indirdiğin veya paylaştığın kısa video.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve metinden video / animasyon modunu seç",
+            "description": null
+          },
+          {
+            "id": "script",
+            "label": "Senaryo, süre ve en-boy oranını yaz",
+            "description": null
+          },
+          {
+            "id": "generate",
+            "label": "İlk klip / sahneyi üret",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "En iyiyi seçip indir veya paylaş",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "video-brief",
+            "title": "Video brief",
+            "body": "Konu: [...]\nSüre: [10–30 sn]\nEn-boy: 16:9 veya 9:16\nStil: [sinematik / animasyon / ürün demo]\nSes: [yok / müzik / seslendirme]\nCTA: [...]"
+          }
+        ]
+      },
+      "voice-generation": {
+        "id": "voice-generation",
+        "title": "Seslendirme sihirbazı",
+        "hint": "Amaç: net bir TTS / dublaj dosyası.",
+        "firstResultHint": "İlk sonuç: dinleyip indirdiğin ses dosyası.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve ses / dil seç",
+            "description": null
+          },
+          {
+            "id": "script",
+            "label": "Seslendirilecek metni yapıştır",
+            "description": null
+          },
+          {
+            "id": "generate",
+            "label": "İlk ses dosyasını üret ve dinle",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "MP3/WAV indir",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "voice-script",
+            "title": "Ses metni",
+            "body": "Ton: [samimi / kurumsal]\nTempo: [normal]\nDil: Türkçe\nMetin:\n[2–3 paragraf]"
+          }
+        ]
+      },
+      "music-generation": {
+        "id": "music-generation",
+        "title": "Müzik üretim sihirbazı",
+        "hint": "Amaç: 1 kullanılabilir parça / loop.",
+        "firstResultHint": "İlk sonuç: indirdiğin müzik dosyası.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve tür / enstrüman seç",
+            "description": null
+          },
+          {
+            "id": "prompt",
+            "label": "Ruh hali, tempo ve kullanım alanını yaz",
+            "description": null
+          },
+          {
+            "id": "generate",
+            "label": "2–3 varyasyon üret, en iyiyi seç",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Lisansı kontrol edip indir",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "music-prompt",
+            "title": "Müzik promptu",
+            "body": "Tür: [lofi / cinematic / upbeat]\nTempo: [bpm]\nKullanım: [reels / podcast intro]\nSüre: [30–60 sn]\nVokal: [yok / soft]"
+          }
+        ]
+      },
+      "data-analysis": {
+        "id": "data-analysis",
+        "title": "Veri analizi sihirbazı",
+        "hint": "Amaç: en az 1 grafik veya bulgu özeti.",
+        "firstResultHint": "İlk sonuç: kaydettiğin grafik veya özet.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve veri kaynağını bağla / yükle",
+            "description": null
+          },
+          {
+            "id": "question",
+            "label": "Analiz sorusunu tek cümlede yaz",
+            "description": null
+          },
+          {
+            "id": "analyze",
+            "label": "İlk grafik veya özeti üret",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Bulguyu kaydet / paylaş",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "analysis-q",
+            "title": "Analiz sorusu",
+            "body": "Veri: [CSV / tablo]\nSoru: [ör. hangi kanal daha iyi dönüşüyor?]\nÇıktı: [grafik + 3 madde özet]\nKısıt: [tarih aralığı]"
+          }
+        ]
+      },
+      "translation": {
+        "id": "translation",
+        "title": "Çeviri sihirbazı",
+        "hint": "Amaç: kaliteli bir hedef dil taslağı.",
+        "firstResultHint": "İlk sonuç: kopyalanmış hedef dil metni.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve dil çiftini seç",
+            "description": null
+          },
+          {
+            "id": "source",
+            "label": "Kaynak metni yapıştır",
+            "description": null
+          },
+          {
+            "id": "translate",
+            "label": "Çeviriyi üret ve gözden geçir",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Son metni kopyala / indir",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "translate-brief",
+            "title": "Çeviri brief",
+            "body": "Kaynak dil: [...]\nHedef dil: [...]\nTon: [resmi / samimi]\nAlan: [pazarlama / teknik]\nMetin:\n[...]"
+          }
+        ]
+      },
+      "ui-design": {
+        "id": "ui-design",
+        "title": "UI/UX tasarım sihirbazı",
+        "hint": "Amaç: en az 1 ekran / wireframe çıktısı.",
+        "firstResultHint": "İlk sonuç: dışa aktardığın ekran görseli.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve UI / wireframe şablonu seç",
+            "description": null
+          },
+          {
+            "id": "brief",
+            "label": "Ekran, kullanıcı ve akışı tanımla",
+            "description": null
+          },
+          {
+            "id": "design",
+            "label": "İlk ekran varyasyonunu üret",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "PNG/Figma bağlantısı al",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "ui-brief",
+            "title": "UI brief",
+            "body": "Ürün: [...]\nEkran: [login / dashboard / checkout]\nKullanıcı: [...]\nStil: [minimal / glass / material]\nCihaz: [mobile / desktop]\nBileşenler: [buton, kart, nav]"
+          }
+        ]
+      },
+      "customer-support": {
+        "id": "customer-support",
+        "title": "Müşteri destek sihirbazı",
+        "hint": "Amaç: ilk bot yanıtı veya makale taslağı.",
+        "firstResultHint": "İlk sonuç: kaydettiğin örnek bot/ticket yanıtı.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve destek / bot şablonu seç",
+            "description": null
+          },
+          {
+            "id": "kb",
+            "label": "SSS veya bilgi tabanı maddelerini ekle",
+            "description": null
+          },
+          {
+            "id": "reply",
+            "label": "Örnek ticket yanıtı üret",
+            "description": null
+          },
+          {
+            "id": "test",
+            "label": "Test sorusu sor ve cevabı kaydet",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "support-reply",
+            "title": "Destek yanıtı",
+            "body": "Müşteri sorunu: [...]\nTon: [empatik / net]\nAdımlar: 1) ... 2) ...\nKapanış: [ek yardım teklifi]"
+          }
+        ]
+      },
+      "ecommerce-copy": {
+        "id": "ecommerce-copy",
+        "title": "E-ticaret metin sihirbazı",
+        "hint": "Amaç: 1 ürün açıklaması + başlık.",
+        "firstResultHint": "İlk sonuç: kopyalanmış ürün başlığı + açıklama.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve ürün açıklaması şablonunu seç",
+            "description": null
+          },
+          {
+            "id": "product",
+            "label": "Ürün adı, özellikler ve kitleyi gir",
+            "description": null
+          },
+          {
+            "id": "copy",
+            "label": "Başlık + açıklama taslağını üret",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Metni mağaza alanına yapıştır",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "pdp-copy",
+            "title": "Ürün metni",
+            "body": "Ürün: [...]\nFaydalar: 1) 2) 3)\nKitle: [...]\nTon: [satış / bilgilendirici]\nUzunluk: [kısa / orta]"
+          }
+        ]
+      },
+      "sales-crm": {
+        "id": "sales-crm",
+        "title": "Satış / CRM sihirbazı",
+        "hint": "Amaç: pipeline iskeleti + 1 outreach taslağı.",
+        "firstResultHint": "İlk sonuç: kaydettiğin aşama listesi veya outreach taslağı.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve pipeline / CRM şablonu kur",
+            "description": null
+          },
+          {
+            "id": "stages",
+            "label": "Aşamaları tanımla (lead → won)",
+            "description": null
+          },
+          {
+            "id": "outreach",
+            "label": "İlk outreach mesajını yazdır",
+            "description": null
+          },
+          {
+            "id": "task",
+            "label": "Takip görevini oluştur",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "crm-setup",
+            "title": "CRM iskeleti",
+            "body": "Aşamalar: Yeni → İletişim → Demo → Teklif → Kapandı\nAlanlar: şirket, rol, bütçe, son tarih\nİlk outreach: [kısa e-posta]"
+          }
+        ]
+      },
+      "learning-tutor": {
+        "id": "learning-tutor",
+        "title": "Öğrenme asistanı sihirbazı",
+        "hint": "Amaç: 1 ders planı veya alıştırmalı oturum.",
+        "firstResultHint": "İlk sonuç: kaydettiğin plan veya çözülmüş alıştırma.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve öğrenme / tutor modunu seç",
+            "description": null
+          },
+          {
+            "id": "goal",
+            "label": "Konu, seviye ve süreyi yaz",
+            "description": null
+          },
+          {
+            "id": "plan",
+            "label": "Ders planı veya ilk alıştırmayı üret",
+            "description": null
+          },
+          {
+            "id": "practice",
+            "label": "Bir soruyu çöz / cevabı kaydet",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "lesson",
+            "title": "Ders planı",
+            "body": "Konu: [...]\nSeviye: [başlangıç / orta]\nSüre: [30 dk]\nÇıktı: plan + 3 alıştırma + mini test"
+          }
+        ]
+      },
+      "legal-review": {
+        "id": "legal-review",
+        "title": "Hukuki inceleme sihirbazı",
+        "hint": "Amaç: risk maddeleri listesi (uzman onayı şart).",
+        "firstResultHint": "İlk sonuç: kaydettiğin risk maddesi listesi.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve sözleşme / belge yükle",
+            "description": null
+          },
+          {
+            "id": "scope",
+            "label": "İnceleme kapsamını yaz (taraflar, dil)",
+            "description": null
+          },
+          {
+            "id": "risks",
+            "label": "Risk / dikkat maddelerini çıkar",
+            "description": null
+          },
+          {
+            "id": "summary",
+            "label": "Özeti kaydet; avukat onayı için işaretle",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "legal-scope",
+            "title": "İnceleme kapsamı",
+            "body": "Belge tipi: [SaaS sözleşmesi / NDA]\nTaraflar: [...]\nOdak: [fesih, sorumluluk, veri]\nUyarı: AI hukuki tavsiye değildir; uzman onayı gerekir."
+          }
+        ]
+      },
+      "three-d-generation": {
+        "id": "three-d-generation",
+        "title": "3D üretim sihirbazı",
+        "hint": "Amaç: 1 model veya avatar taslağı.",
+        "firstResultHint": "İlk sonuç: indirdiğin model veya render.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Aracı aç ve text-to-3D / avatar modunu seç",
+            "description": null
+          },
+          {
+            "id": "brief",
+            "label": "Nesne, stil ve kullanım alanını yaz",
+            "description": null
+          },
+          {
+            "id": "generate",
+            "label": "İlk modeli üret ve önizle",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "GLB/OBJ veya render indir",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "3d-brief",
+            "title": "3D brief",
+            "body": "Nesne: [...]\nStil: [low poly / realistic]\nKullanım: [oyun / ürün görseli]\nArka plan: [şeffaf / stüdyo]\nFormat: [glb]"
+          }
+        ]
+      }
+    }
   }
 }

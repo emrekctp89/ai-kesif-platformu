@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BrainCircuit, Check, ExternalLink, FlaskConical, Loader2, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useMessages, useTranslations } from 'next-intl';
 
 import { getWorkmindToolRecommendations } from '@/app/actions/workmind';
 import { JobFunnelPanel } from '@/components/kasif/JobFunnelPanel';
@@ -29,7 +29,8 @@ export function NodeSidebar({
   const [recommendationSource, setRecommendationSource] = useState(null);
   const [activeToolId, setActiveToolId] = useState(null);
 
-  const wizard = resolveJobWizard(goals, locale);
+  const messages = useMessages();
+  const wizard = resolveJobWizard(goals, messages.KasifJobWizards || {});
 
   useEffect(() => {
     let active = true;

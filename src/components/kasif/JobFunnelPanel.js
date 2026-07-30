@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useMessages, useTranslations } from 'next-intl';
 import { Check, Copy, ExternalLink, LoaderCircle } from 'lucide-react';
 import { trackEvent } from '@/utils/analytics';
 import { resolveJobWizard } from '@/lib/kasif/jobWizards';
@@ -25,7 +25,11 @@ export function JobFunnelPanel({
   initialSelected = false,
 }) {
   const t = useTranslations('Kasif');
-  const wizard = useMemo(() => resolveJobWizard(goals, locale), [goals, locale]);
+  const messages = useMessages();
+  const wizard = useMemo(
+    () => resolveJobWizard(goals, messages.KasifJobWizards || {}),
+    [goals, messages]
+  );
   const primaryGoal = Array.isArray(goals) && goals.length ? goals[0] : wizard.id;
 
   const [active, setActive] = useState(Boolean(initialSelected));

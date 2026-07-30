@@ -767,10 +767,14 @@ export async function runToolDiscoveryAdmin(options = {}) {
       dryRun: options.dryRun !== false,
       limit: options.limit || 8,
       candidateCount: options.candidateCount || 16,
-      autoApprove: Boolean(options.autoApprove),
+      // A manual admin run is always a queue operation. Publishing remains a
+      // separate, explicit approval action even if an auto-approve env is set.
+      queueOnly: true,
+      autoApprove: false,
       // Default ON: official product pages are scraped before queue insert.
       scrapePages: options.scrapePages !== false,
     });
+    if (!report.dryRun && report.insertedCount > 0) revalidatePath('/admin');
     return { success: true, report };
   } catch (error) {
     logger.error('Admin tool discovery failed:', error);

@@ -445,17 +445,17 @@ export function detectMetaIntent(question) {
 function metaAnswers(kind, locale = 'tr') {
   const tr = {
     identity:
-      'Ben Kâşif’im — AI Keşif Platformu’nun yerel öneri motoruyum. Dış bir sohbet modeline bağlı değilim; yalnızca platformdaki onaylı araç kayıtlarından öneri ve karşılaştırma üretirim.',
+      'Ben Kâşif’im — AI Keşif Platformu’nun iş bitirme ve karar orkestratörüyüm. İhtiyacı anlar, onaylı katalogdan doğru araçları seçer, işi adımlara böler, uygulanabilir çıktılar üretir ve sonucu tamamlanana kadar takip ederim.',
     capabilities:
-      'Yapabileceklerim: ihtiyacına göre araç önermek, ücretsiz/ücretli tercihine göre sıralamak, birkaç aracı karşılaştırmak ve neden önerdiğimi platform verisiyle açıklamak. Örnek: “ücretsiz sunum aracı”, “SEO analizi”, “soğuk e-posta yaz”.',
-    how: 'Şöyle çalışırım: sorunu Türkçe/İngilizce normalize ederim, kavram ve görev niyetini çıkarırım, onaylı araçları puanlarım ve cevabı yalnızca bu kayıtlardan üretirim. Genel bilgi sohbeti veya platform dışı web araması yapmam.',
+      'Bir sistem CEO’su gibi çalışabilirim: hedefi netleştirir, ücretsiz/ücretli araçları araştırıp karşılaştırır, çok adımlı çalışma planı kurar, hazır iş paketleri ve sihirbazlarla ilk çıktıyı üretir, otomasyon/partner bağlantılarına devreder, sonucu ve tamamlanma kanıtını izler, yeni katalog araçlarını keşif kuyruğuna alırım. Örnek: “SaaS lansmanımı planla”, “sunumumu üret”, “toplantıdan görev çıkar”, “bu aracı kataloğa ekle: URL”.',
+    how: 'Soruyu Türkçe veya İngilizce anlar; hızlı yerel eşleşme, öğrenilmiş taksonomi ve gerektiğinde yapılandırılmış model zinciriyle niyeti çıkarırım. Önerileri yalnızca onaylı katalog verisiyle temellendiririm; Workmind planı, iş sihirbazı, çalıştırılabilir paket ve sonuç köprüsüyle öneriden tamamlanmış işe ilerlerim. Açık web keşfi güvenlik nedeniyle yalnız yönetici kontrollü onay kuyruğuna yazar; otomatik yayımlamaz.',
   };
   const en = {
     identity:
-      'I am Kâşif — the local recommendation engine of AI Keşif Platformu. I am not a general chatbot; I rank and compare only verified tools from this platform’s catalog.',
+      'I am Kâşif — AI Keşif Platformu’s job-completion and decision orchestrator. I understand the goal, select grounded tools, build an execution plan, produce usable deliverables, and track the work through completion.',
     capabilities:
-      'I can recommend tools for a task, filter free vs paid options, compare tools, and explain matches using platform data. Examples: “free presentation tool”, “SEO analysis”, “cold email writing”.',
-    how: 'I normalize your question, detect task intent, score approved tools, and answer only from those records. I do not browse the open web or invent tools outside the catalog.',
+      'I can act like a system CEO: clarify a goal, research and compare free or paid tools, orchestrate multi-step workflows, generate first deliverables with job packs and wizards, hand work to automation or partner providers, track completion evidence, and place newly discovered tools into the catalog approval queue. Try: “plan my SaaS launch”, “produce a pitch deck”, “turn this meeting into tasks”, or “add this tool: URL”.',
+    how: 'I understand Turkish and English through local matching, learned taxonomy, and a structured provider fallback when needed. Recommendations stay grounded in the approved catalog; Workmind plans, job wizards, runnable packs, and the result bridge move from recommendation to completed work. Open-web discovery is admin-controlled and writes only to an approval queue, never directly to production.',
   };
   const pack = locale === 'en' ? en : tr;
   return pack[kind] || pack.identity;

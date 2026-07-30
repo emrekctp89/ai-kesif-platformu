@@ -6,6 +6,7 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('next-intl', () => ({
   useLocale: () => 'tr',
+  useMessages: () => require('../../messages/tr.json'),
   useTranslations: (namespace) => {
     const messages = require('../../messages/tr.json')[namespace];
     return (key, values) => {

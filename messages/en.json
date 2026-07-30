@@ -2365,5 +2365,803 @@
     "templateWeeklyBody": "Three tools/news items plus short commentary.",
     "templateWeeklyDescription": "{title} — this week’s standout AI tools and notes.",
     "templateWeeklyContent": "# {title}\n\n## This week’s theme\nShort intro (1–2 paragraphs).\n\n## 1) Standout tool\nWhat changed / why it matters / who should try it.\n\n## 2) Second signal\n…\n\n## 3) Practical tip\nSomething the reader can apply today.\n\n## Links worth saving\n- …\n\n## Closing\nA short teaser for next week.\n"
+  },
+  "KasifJobWizards": {
+    "wizards": {
+      "default": {
+        "id": "default",
+        "title": "General setup",
+        "hint": "We don’t leave you at a list — hit first result with a short checklist.",
+        "firstResultHint": "Mark this when you have a concrete first output.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and create an account / sign in",
+            "description": null
+          },
+          {
+            "id": "configure",
+            "label": "Finish first-time setup or pick a template",
+            "description": null
+          },
+          {
+            "id": "first-output",
+            "label": "Produce a first output (draft, image, summary…)",
+            "description": null
+          }
+        ],
+        "prompts": []
+      },
+      "presentation-creation": {
+        "id": "presentation-creation",
+        "title": "Presentation setup wizard",
+        "hint": "Goal: produce a 5–10 slide first draft in one session.",
+        "firstResultHint": "First result: an exportable draft of at least 5 slides.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and start free plan / trial",
+            "description": null
+          },
+          {
+            "id": "brief",
+            "label": "Enter topic, audience, and duration (min)",
+            "description": "e.g. “Investor pitch, 8 min, SaaS product”"
+          },
+          {
+            "id": "outline",
+            "label": "Generate outline / slide skeleton",
+            "description": null
+          },
+          {
+            "id": "first-deck",
+            "label": "Generate full first draft and export / copy",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "pitch-outline",
+            "title": "Presentation brief template",
+            "body": "Topic: [product / project]\nAudience: [investor / team / customer]\nDuration: [X] minutes\nGoal: [inform / persuade / train]\nTone: [professional / friendly]\nSlide flow: problem → solution → proof → call to action\nOne main message per slide."
+          }
+        ]
+      },
+      "image-generation": {
+        "id": "image-generation",
+        "title": "Image generation wizard",
+        "hint": "Goal: at least 1 usable image + 2 variations.",
+        "firstResultHint": "First result: at least one downloaded image file.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and check generation quota",
+            "description": null
+          },
+          {
+            "id": "brief",
+            "label": "Write subject, style, aspect ratio, and use case",
+            "description": null
+          },
+          {
+            "id": "generate",
+            "label": "Generate 2–4 images with the first prompt",
+            "description": null
+          },
+          {
+            "id": "select",
+            "label": "Pick the best, try one variation, download",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "social-visual",
+            "title": "Social visual prompt",
+            "body": "Subject: [product / scene]\nStyle: [minimal / cinematic / illustration / photoreal]\nPalette: [main colors]\nComposition: [medium shot / top-down / close-up]\nAspect: 1:1 (Instagram) or 9:16 (story)\nNo text, high detail, clean background\nNegative: blurry, watermark, deformed hands"
+          }
+        ]
+      },
+      "coding-assistant": {
+        "id": "coding-assistant",
+        "title": "Coding assistant wizard",
+        "hint": "Goal: a working scaffold or a fixed bug.",
+        "firstResultHint": "First result: working code snippet or a fixed error.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool (web or editor plugin)",
+            "description": null
+          },
+          {
+            "id": "context",
+            "label": "State language, framework, and goal in one paragraph",
+            "description": null
+          },
+          {
+            "id": "scaffold",
+            "label": "Generate scaffold code / function or paste an error",
+            "description": null
+          },
+          {
+            "id": "run",
+            "label": "Run or compile; get the first green result",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "feature-spec",
+            "title": "Feature request template",
+            "body": "Language/stack: [e.g. Next.js + Supabase]\nTask: [what it should do]\nInputs: [...]\nOutput: [...]\nConstraints: [no auth / free tier / edge function]\nPlease provide: 1) short plan 2) file names 3) working code 4) test steps\nExplanations in English unless asked otherwise."
+          }
+        ]
+      },
+      "seo-optimization": {
+        "id": "seo-optimization",
+        "title": "SEO wizard",
+        "hint": "Goal: first keyword set + action list for a site/URL.",
+        "firstResultHint": "First result: a saved keyword list or audit summary.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and add project / site",
+            "description": null
+          },
+          {
+            "id": "target",
+            "label": "Enter target URL or niche",
+            "description": null
+          },
+          {
+            "id": "keywords",
+            "label": "Run first keyword / competitor scan",
+            "description": null
+          },
+          {
+            "id": "actions",
+            "label": "Save at least 3 action items",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "seo-brief",
+            "title": "SEO brief",
+            "body": "Site: [URL]\nCountry/language: [market]\nGoal: [organic traffic / leads / ecommerce]\nMain product/service: [...]\nCompetitors: [2–3 sites]\nDesired output: primary KW, long-tail KW, title/meta ideas, content gaps"
+          }
+        ]
+      },
+      "email-writing": {
+        "id": "email-writing",
+        "title": "Email writing wizard",
+        "hint": "Goal: one send-ready email (subject + body).",
+        "firstResultHint": "First result: copied subject + body text.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and start a new draft",
+            "description": null
+          },
+          {
+            "id": "audience",
+            "label": "Define recipient, goal, and tone",
+            "description": null
+          },
+          {
+            "id": "draft",
+            "label": "Generate subject line + body draft",
+            "description": null
+          },
+          {
+            "id": "polish",
+            "label": "Tighten, add CTA, copy to clipboard",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "cold-email",
+            "title": "Cold email template",
+            "body": "Recipient role: [marketing lead / founder]\nOur product: [one-line value]\nProof: [metric / reference]\nAsk: [15 min call / demo]\nTone: short, human, not spammy\nOutput: 3 subject lines + ~120 word body + clear CTA"
+          }
+        ]
+      },
+      "chatbot-assistant": {
+        "id": "chatbot-assistant",
+        "title": "Chat assistant wizard",
+        "hint": "Goal: a first chat output you can use today.",
+        "firstResultHint": "First result: an assistant answer you saved or used.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and pick a model if needed",
+            "description": null
+          },
+          {
+            "id": "task",
+            "label": "Write a real task in one sentence",
+            "description": null
+          },
+          {
+            "id": "iterate",
+            "label": "Get a reply; ask one refinement question",
+            "description": null
+          },
+          {
+            "id": "save",
+            "label": "Save / copy the output you will use",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "daily-helper",
+            "title": "Daily helper prompt",
+            "body": "You are a practical assistant. My task: […].\nConstraints: [time / language / format]\nFirst give a 3-bullet plan, then the final deliverable.\nNo fluff."
+          }
+        ]
+      },
+      "content-writing": {
+        "id": "content-writing",
+        "title": "Content writing wizard",
+        "hint": "Goal: publishable first draft (400+ words or solid outline).",
+        "firstResultHint": "First result: a copied draft or clear outline.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and start a new document",
+            "description": null
+          },
+          {
+            "id": "brief",
+            "label": "Enter topic, audience, keyword, and format",
+            "description": null
+          },
+          {
+            "id": "outline",
+            "label": "Generate title + H2 outline",
+            "description": null
+          },
+          {
+            "id": "draft",
+            "label": "Generate full draft and copy it",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "blog-brief",
+            "title": "Blog brief",
+            "body": "Topic: [...]\nAudience: [level]\nPrimary KW: [...]\nFormat: blog / LinkedIn / newsletter\nLength: [words]\nTone: [informative / persuasive]\nStructure: intro → 3 sections → conclusion + CTA\nDo not invent sources; say when unsure."
+          }
+        ]
+      },
+      "workflow-automation": {
+        "id": "workflow-automation",
+        "title": "Automation wizard",
+        "hint": "Goal: first working trigger → action flow.",
+        "firstResultHint": "First result: a flow with a successful test run.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and create a new scenario / workflow",
+            "description": null
+          },
+          {
+            "id": "map",
+            "label": "Pick trigger and destination app",
+            "description": null
+          },
+          {
+            "id": "connect",
+            "label": "Connect accounts (OAuth / API)",
+            "description": null
+          },
+          {
+            "id": "test",
+            "label": "Run a test; see a successful result",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "automation-map",
+            "title": "Automation map",
+            "body": "Process name: [e.g. form → Slack]\nTrigger: [new form / email / schedule]\nData fields: [...]\nActions: 1) ... 2) ...\nOn error: [notify]\nSuccess: one real record moved in a test run"
+          }
+        ]
+      },
+      "meeting-notes": {
+        "id": "meeting-notes",
+        "title": "Meeting notes wizard",
+        "hint": "Goal: first summary with action items.",
+        "firstResultHint": "First result: a summary with action items.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and choose record / upload path",
+            "description": null
+          },
+          {
+            "id": "input",
+            "label": "Upload audio/video or start live recording",
+            "description": null
+          },
+          {
+            "id": "transcript",
+            "label": "Generate transcript + summary",
+            "description": null
+          },
+          {
+            "id": "actions",
+            "label": "Copy / share action items",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "summary-format",
+            "title": "Summary format",
+            "body": "Meeting: [title / date]\nAttendees: [...]\nSummary (5 bullets)\nDecisions\nActions: owner | task | due date\nRisks / open questions"
+          }
+        ]
+      },
+      "logo-design": {
+        "id": "logo-design",
+        "title": "Logo design wizard",
+        "hint": "Goal: at least one logo candidate file.",
+        "firstResultHint": "First result: a downloaded logo file.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and pick logo / brand template",
+            "description": null
+          },
+          {
+            "id": "brand",
+            "label": "Enter brand name, industry, and style keywords",
+            "description": null
+          },
+          {
+            "id": "variants",
+            "label": "Generate 3–6 variants",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Pick the best and download PNG/SVG",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "logo-brief",
+            "title": "Logo brief",
+            "body": "Brand: [name]\nIndustry: [...]\nSymbol: [concrete object / abstract]\nStyle: [minimal / geometric / hand-drawn]\nColors: [1–2 primary]\nUse: app icon + web header\nAvoid: clichés, excessive detail, unreadable type"
+          }
+        ]
+      },
+      "video-generation": {
+        "id": "video-generation",
+        "title": "Video generation wizard",
+        "hint": "Goal: at least one short clip or scene draft.",
+        "firstResultHint": "First result: a downloaded or shared short video.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and pick text-to-video / animation mode",
+            "description": null
+          },
+          {
+            "id": "script",
+            "label": "Write script, duration, and aspect ratio",
+            "description": null
+          },
+          {
+            "id": "generate",
+            "label": "Generate the first clip / scene",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Pick the best and download or share",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "video-brief",
+            "title": "Video brief",
+            "body": "Topic: [...]\nDuration: [10–30s]\nAspect: 16:9 or 9:16\nStyle: [cinematic / animation / product demo]\nAudio: [none / music / voiceover]\nCTA: [...]"
+          }
+        ]
+      },
+      "voice-generation": {
+        "id": "voice-generation",
+        "title": "Voice generation wizard",
+        "hint": "Goal: a clean TTS / dubbing file.",
+        "firstResultHint": "First result: an audio file you previewed and downloaded.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and pick voice / language",
+            "description": null
+          },
+          {
+            "id": "script",
+            "label": "Paste the script to voice",
+            "description": null
+          },
+          {
+            "id": "generate",
+            "label": "Generate and preview the first audio file",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Download MP3/WAV",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "voice-script",
+            "title": "Voice script",
+            "body": "Tone: [friendly / corporate]\nPace: [normal]\nLanguage: English\nScript:\n[2–3 paragraphs]"
+          }
+        ]
+      },
+      "music-generation": {
+        "id": "music-generation",
+        "title": "Music generation wizard",
+        "hint": "Goal: one usable track / loop.",
+        "firstResultHint": "First result: a downloaded music file.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and pick genre / instruments",
+            "description": null
+          },
+          {
+            "id": "prompt",
+            "label": "Write mood, tempo, and use case",
+            "description": null
+          },
+          {
+            "id": "generate",
+            "label": "Generate 2–3 variations and pick the best",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Check license and download",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "music-prompt",
+            "title": "Music prompt",
+            "body": "Genre: [lofi / cinematic / upbeat]\nTempo: [bpm]\nUse: [reels / podcast intro]\nLength: [30–60s]\nVocals: [none / soft]"
+          }
+        ]
+      },
+      "data-analysis": {
+        "id": "data-analysis",
+        "title": "Data analysis wizard",
+        "hint": "Goal: at least one chart or insight summary.",
+        "firstResultHint": "First result: a saved chart or summary.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and connect / upload a data source",
+            "description": null
+          },
+          {
+            "id": "question",
+            "label": "State the analysis question in one sentence",
+            "description": null
+          },
+          {
+            "id": "analyze",
+            "label": "Generate the first chart or summary",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Save / share the insight",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "analysis-q",
+            "title": "Analysis question",
+            "body": "Data: [CSV / table]\nQuestion: [e.g. which channel converts better?]\nOutput: [chart + 3 bullet insights]\nConstraint: [date range]"
+          }
+        ]
+      },
+      "translation": {
+        "id": "translation",
+        "title": "Translation wizard",
+        "hint": "Goal: a solid target-language draft.",
+        "firstResultHint": "First result: copied target-language text.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and pick the language pair",
+            "description": null
+          },
+          {
+            "id": "source",
+            "label": "Paste the source text",
+            "description": null
+          },
+          {
+            "id": "translate",
+            "label": "Generate and review the translation",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Copy / download the final text",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "translate-brief",
+            "title": "Translation brief",
+            "body": "Source language: [...]\nTarget language: [...]\nTone: [formal / friendly]\nDomain: [marketing / technical]\nText:\n[...]"
+          }
+        ]
+      },
+      "ui-design": {
+        "id": "ui-design",
+        "title": "UI/UX design wizard",
+        "hint": "Goal: at least one screen / wireframe output.",
+        "firstResultHint": "First result: an exported screen image.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and pick a UI / wireframe template",
+            "description": null
+          },
+          {
+            "id": "brief",
+            "label": "Define screen, user, and flow",
+            "description": null
+          },
+          {
+            "id": "design",
+            "label": "Generate the first screen variation",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Export PNG / Figma link",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "ui-brief",
+            "title": "UI brief",
+            "body": "Product: [...]\nScreen: [login / dashboard / checkout]\nUser: [...]\nStyle: [minimal / glass / material]\nDevice: [mobile / desktop]\nComponents: [button, card, nav]"
+          }
+        ]
+      },
+      "customer-support": {
+        "id": "customer-support",
+        "title": "Customer support wizard",
+        "hint": "Goal: a first bot reply or help-article draft.",
+        "firstResultHint": "First result: a saved sample bot/ticket reply.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and pick support / bot template",
+            "description": null
+          },
+          {
+            "id": "kb",
+            "label": "Add FAQ or knowledge-base items",
+            "description": null
+          },
+          {
+            "id": "reply",
+            "label": "Generate a sample ticket reply",
+            "description": null
+          },
+          {
+            "id": "test",
+            "label": "Ask a test question and save the answer",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "support-reply",
+            "title": "Support reply",
+            "body": "Customer issue: [...]\nTone: [empathetic / clear]\nSteps: 1) ... 2) ...\nClose: [offer more help]"
+          }
+        ]
+      },
+      "ecommerce-copy": {
+        "id": "ecommerce-copy",
+        "title": "Ecommerce copy wizard",
+        "hint": "Goal: one product description + title.",
+        "firstResultHint": "First result: copied product title + description.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and pick a product-description template",
+            "description": null
+          },
+          {
+            "id": "product",
+            "label": "Enter product name, features, and audience",
+            "description": null
+          },
+          {
+            "id": "copy",
+            "label": "Generate title + description draft",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Paste the copy into the storefront field",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "pdp-copy",
+            "title": "Product copy",
+            "body": "Product: [...]\nBenefits: 1) 2) 3)\nAudience: [...]\nTone: [salesy / informative]\nLength: [short / medium]"
+          }
+        ]
+      },
+      "sales-crm": {
+        "id": "sales-crm",
+        "title": "Sales / CRM wizard",
+        "hint": "Goal: pipeline skeleton + one outreach draft.",
+        "firstResultHint": "First result: a saved stage list or outreach draft.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and set up pipeline / CRM template",
+            "description": null
+          },
+          {
+            "id": "stages",
+            "label": "Define stages (lead → won)",
+            "description": null
+          },
+          {
+            "id": "outreach",
+            "label": "Generate the first outreach message",
+            "description": null
+          },
+          {
+            "id": "task",
+            "label": "Create a follow-up task",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "crm-setup",
+            "title": "CRM skeleton",
+            "body": "Stages: New → Contacted → Demo → Proposal → Closed\nFields: company, role, budget, due date\nFirst outreach: [short email]"
+          }
+        ]
+      },
+      "learning-tutor": {
+        "id": "learning-tutor",
+        "title": "Learning tutor wizard",
+        "hint": "Goal: one lesson plan or practice session.",
+        "firstResultHint": "First result: a saved plan or completed exercise.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and pick learning / tutor mode",
+            "description": null
+          },
+          {
+            "id": "goal",
+            "label": "Write topic, level, and time budget",
+            "description": null
+          },
+          {
+            "id": "plan",
+            "label": "Generate a lesson plan or first exercise",
+            "description": null
+          },
+          {
+            "id": "practice",
+            "label": "Solve one question / save the answer",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "lesson",
+            "title": "Lesson plan",
+            "body": "Topic: [...]\nLevel: [beginner / intermediate]\nTime: [30 min]\nOutput: plan + 3 exercises + mini quiz"
+          }
+        ]
+      },
+      "legal-review": {
+        "id": "legal-review",
+        "title": "Legal review wizard",
+        "hint": "Goal: a risk-clause list (expert review still required).",
+        "firstResultHint": "First result: a saved list of risk clauses.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and upload contract / document",
+            "description": null
+          },
+          {
+            "id": "scope",
+            "label": "State review scope (parties, language)",
+            "description": null
+          },
+          {
+            "id": "risks",
+            "label": "Extract risk / watch-out clauses",
+            "description": null
+          },
+          {
+            "id": "summary",
+            "label": "Save the summary; flag for attorney review",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "legal-scope",
+            "title": "Review scope",
+            "body": "Document type: [SaaS agreement / NDA]\nParties: [...]\nFocus: [termination, liability, data]\nWarning: AI is not legal advice; expert review required."
+          }
+        ]
+      },
+      "three-d-generation": {
+        "id": "three-d-generation",
+        "title": "3D generation wizard",
+        "hint": "Goal: one model or avatar draft.",
+        "firstResultHint": "First result: a downloaded model or render.",
+        "steps": [
+          {
+            "id": "open",
+            "label": "Open the tool and pick text-to-3D / avatar mode",
+            "description": null
+          },
+          {
+            "id": "brief",
+            "label": "Describe object, style, and use case",
+            "description": null
+          },
+          {
+            "id": "generate",
+            "label": "Generate and preview the first model",
+            "description": null
+          },
+          {
+            "id": "export",
+            "label": "Download GLB/OBJ or a render",
+            "description": null
+          }
+        ],
+        "prompts": [
+          {
+            "id": "3d-brief",
+            "title": "3D brief",
+            "body": "Object: [...]\nStyle: [low poly / realistic]\nUse: [game / product shot]\nBackground: [transparent / studio]\nFormat: [glb]"
+          }
+        ]
+      }
+    }
   }
 }

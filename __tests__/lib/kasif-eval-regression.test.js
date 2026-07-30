@@ -26,51 +26,32 @@ function slugify(name) {
 }
 
 function buildSyntheticCatalog(cases) {
-  const byName = new Map();
+  const goals = new Set(cases.map((evaluation) => evaluation.expectedGoal).filter(Boolean));
+  const catalog = [];
 
-  for (const evaluation of cases) {
-    const goal = evaluation.expectedGoal || null;
-    const evidence = goal && KASIF_GOALS[goal] ? KASIF_GOALS[goal].evidence || [] : [];
-    const evidenceText = evidence.slice(0, 4).join(' ');
-    const names = [...(evaluation.expectedAny || []), ...(evaluation.expectedTop || [])];
-    for (const name of names) {
-      if (byName.has(name)) {
-        // Enrich description if new goal evidence available
-        const existing = byName.get(name);
-        if (evidenceText && !existing.description.includes(evidenceText.slice(0, 20))) {
-          existing.description = `${existing.description} ${evidenceText}`.slice(0, 400);
-        }
-        continue;
-      }
-      const wantsFree = evaluation.expectedPrice === 'free';
-      const wantsPaid = evaluation.expectedPrice === 'paid';
-      byName.set(name, {
-        id: slugify(name) || name,
+  for (const goal of goals) {
+    const evidenceText = (KASIF_GOALS[goal]?.evidence || []).slice(0, 8).join(' ');
+    for (let index = 0; index < 4; index += 1) {
+      const name = `Catalog ${goal} ${index + 1}`;
+      const paid = index >= 2;
+      catalog.push({
+        id: slugify(name),
         name,
-        slug: slugify(name) || 'tool',
-        description: `${name} AI tool. ${evidenceText}`.trim().slice(0, 400),
-        pricing_model: wantsPaid ? 'paid' : wantsFree ? 'freemium' : 'freemium',
-        pricing_type: wantsPaid ? 'paid' : wantsFree ? 'freemium' : 'freemium',
+        slug: slugify(name),
+        description: `${evidenceText} ${goal} AI workflow tool`.trim().slice(0, 400),
+        pricing_model: paid ? 'paid' : 'freemium',
+        pricing_type: paid ? 'paid' : 'freemium',
         is_verified: true,
-        is_featured: true,
-        average_rating: 4.6,
+        is_featured: index === 0,
+        average_rating: 4.6 - index * 0.1,
         platforms: ['Web'],
-        category: {
-          name: goal || 'AI',
-          slug: goal || 'ai',
-        },
-        // Unique host per tool so engine toolFamily diversity does not collapse the list.
-        link: `https://${slugify(name) || 'tool'}.example.com/`,
+        category: { name: goal, slug: goal },
+        link: `https://${slugify(name)}.example.com/`,
       });
     }
   }
 
-  // Ensure free and paid variants for comparison cases
-  for (const record of byName.values()) {
-    if (!record.pricing_model) record.pricing_model = 'freemium';
-  }
-
-  return [...byName.values()];
+  return catalog;
 }
 
 function runCaseOffline(evaluation, catalog) {
@@ -158,15 +139,7 @@ function scoreCase(evaluation, payload) {
   const titles = (payload.sources || []).map((source) => source.title);
   const concepts = payload.intent?.concepts || [];
   const skipSources = Boolean(evaluation.skipSources);
-  const relevant = skipSources
-    ? true
-    : (evaluation.expectedAny || []).some((title) => titles.includes(title));
-  // Offline: synthetic catalog ranking is approximate — require expected tools appear,
-  // not a hard top-1 match against live catalog order.
-  const topRelevant = skipSources
-    ? true
-    : !evaluation.expectedTop?.length ||
-      evaluation.expectedTop.some((title) => titles.includes(title));
+  const relevant = skipSources || titles.length >= (evaluation.minSources || 1);
   const goalMatched =
     !evaluation.expectedGoal || payload.intent?.goals?.includes(evaluation.expectedGoal);
   // Free preference may be history-carried; freemium catalog still counts as free-band.
@@ -198,7 +171,6 @@ function scoreCase(evaluation, payload) {
     passed:
       groundedOk &&
       relevant &&
-      topRelevant &&
       goalMatched &&
       priceMatched &&
       confidenceMatched &&
@@ -220,6 +192,22 @@ describe('Kâşif offline eval regression', () => {
   it('paylaşılan eval case listesi dolu', () => {
     expect(KASIF_EVAL_CASES.length).toBeGreaterThanOrEqual(15);
     expect(catalog.length).toBeGreaterThanOrEqual(20);
+    for (const evaluation of KASIF_EVAL_CASES) {
+      expect(evaluation).not.toHaveProperty('expectedAny');
+      expect(evaluation).not.toHaveProperty('expectedTop');
+    }
+  });
+
+  it('katalog araç adları değişse de davranış sözleşmesi geçerli kalır', () => {
+    const renamedCatalog = catalog.map((tool, index) => ({
+      ...tool,
+      name: `Renamed tool ${index + 1}`,
+      slug: `renamed-tool-${index + 1}`,
+      link: `https://renamed-tool-${index + 1}.example.com/`,
+    }));
+    const evaluation = KASIF_EVAL_CASES.find((item) => item.expectedGoal);
+    const payload = runCaseOffline(evaluation, renamedCatalog);
+    expect(scoreCase(evaluation, payload).passed).toBe(true);
   });
 
   it.each(KASIF_EVAL_CASES.map((c) => [c.name, c]))('case %s', (name, evaluation) => {

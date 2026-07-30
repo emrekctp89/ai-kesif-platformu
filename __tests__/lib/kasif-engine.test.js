@@ -683,7 +683,9 @@ describe('Kâşif engine', () => {
   it('yetenek ve çalışma biçimi meta sorularını ayırır', () => {
     expect(detectMetaIntent('Ne yapabilirsin?')).toBe('capabilities');
     expect(detectMetaIntent('How do you work?')).toBe('how');
-    expect(answerMetaQuestion('What can you do?', 'en').answer).toMatch(/recommend tools/i);
+    expect(answerMetaQuestion('What can you do?', 'en').answer).toMatch(
+      /orchestrate multi-step workflows/i
+    );
   });
 
   it('net goal eşleşmesinde güven tabanı uygular', () => {

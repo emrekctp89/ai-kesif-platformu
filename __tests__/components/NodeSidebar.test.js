@@ -6,6 +6,7 @@ jest.mock('@/app/actions/workmind', () => ({
   getWorkmindToolRecommendations: (...args) => getWorkmindToolRecommendations(...args),
 }));
 jest.mock('next-intl', () => ({
+  useMessages: () => ({ KasifJobWizards: {} }),
   useTranslations: () => (key) =>
     ({
       suggestedTools: 'Önerilen araçlar',

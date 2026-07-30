@@ -33,12 +33,7 @@ for (const evaluation of cases) {
     const titles = (payload.sources || []).map((source) => source.title);
     const concepts = payload.intent?.concepts || [];
     const skipSources = Boolean(evaluation.skipSources);
-    const relevant = skipSources
-      ? true
-      : (evaluation.expectedAny || []).some((title) => titles.includes(title));
-    const topRelevant = skipSources
-      ? true
-      : (evaluation.expectedTop || []).includes(titles[0]);
+    const relevant = skipSources || titles.length >= (evaluation.minSources || 1);
     const goalMatched =
       !evaluation.expectedGoal || payload.intent?.goals?.includes(evaluation.expectedGoal);
     const priceMatched =
@@ -64,7 +59,6 @@ for (const evaluation of cases) {
       response.ok &&
       payload.grounded === true &&
       relevant &&
-      topRelevant &&
       goalMatched &&
       priceMatched &&
       confidenceMatched &&

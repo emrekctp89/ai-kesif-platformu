@@ -505,12 +505,12 @@ async function notifyAdmin({ insertedTools, skippedCount }) {
 
 export async function runScheduledToolDiscovery(options = {}) {
   const dryRun = Boolean(options.dryRun);
+  const queueOnly = Boolean(options.queueOnly);
   /** When true, fetch each accepted candidate page (native/jina) and enrich fields. */
   const scrapePages = options.scrapePages !== false;
-  const autoApprove = resolveBoolean(
-    options.autoApprove ?? process.env.TOOL_DISCOVERY_AUTO_APPROVE,
-    false
-  );
+  const autoApprove =
+    !queueOnly &&
+    resolveBoolean(options.autoApprove ?? process.env.TOOL_DISCOVERY_AUTO_APPROVE, false);
   const limit = clampInteger(options.limit || process.env.TOOL_DISCOVERY_LIMIT, {
     fallback: DEFAULT_LIMIT,
     min: 1,
@@ -706,6 +706,7 @@ export async function runScheduledToolDiscovery(options = {}) {
   return {
     dryRun,
     scrapePages,
+    approvalMode: autoApprove ? 'auto_approve' : 'approval_queue',
     autoApprove,
     generatedCount: rawCandidates.length,
     acceptedCount: accepted.length,
