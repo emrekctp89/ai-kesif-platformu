@@ -2,7 +2,7 @@
 
 Bu dosya Kâşif’in **öneri motoru** ile **kataloga araç çekme** yönünü ayırır ve sıradaki işleri tutar.
 
-Son güncelleme: 2026-07-29
+Son güncelleme: 2026-07-30
 
 ---
 
@@ -271,15 +271,24 @@ North Star artık yalnızca tıklama/affiliate değil:
 - `runScheduledToolDiscovery({ scrapePages: true })` varsayılan admin’de açık
 - Önizle (dry-run) / Onay kuyruğuna çek butonları + rapor (scrape✓/✗)
 
+### P6.20 Embedding backfill ops runbook + tooling
+
+- `getToolEmbeddingCoverage` + cron `coverageBefore/After`
+- Offline CLI: `--status` / `--dry-run` / `--loop` / `--limit` / `--delay-ms`
+- npm: `tools:embeddings:status|dry-run|backfill`
+- Runbook: `docs/EMBEDDING_BACKFILL.md` (smoke → batch → daily cron, ≥%95 kabul)
+- Not: production backfill hâlâ **Gemini API + service role** ile ops çalıştırma ister
+
 ---
 
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.18~~ ✅
-2. **Embedding backfill ops runbook** (production 467 tools)
+1. ~~P0–P6.20~~ ✅ (kod/runbook; production backfill ops’a bağlı)
+2. **Production embedding backfill çalıştır** (`tools:embeddings:backfill`, hedef ≥%95)
 3. **Faz 5 migration apply** (`user_id` + proactive tables)
+4. **Proaktif frekans / cooldown / opt-out** (Faz 5 kabul kriterleri)
 
 ---
 

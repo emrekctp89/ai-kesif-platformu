@@ -17,6 +17,8 @@ export async function GET(request) {
       success: true,
       report: await refreshMissingToolEmbeddings({
         limit: getIntegerParam(searchParams, 'limit', { min: 1, max: 200 }) || 100,
+        delayMs: getIntegerParam(searchParams, 'delayMs', { min: 0, max: 5000 }) || 0,
+        includeCoverage: true,
       }),
     });
   } catch (error) {

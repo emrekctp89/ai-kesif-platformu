@@ -27,6 +27,15 @@ Son güncelleme: 2026-07-26
 - Production read-only kontrolde completion claim/event tabloları erişilebilir; ancak
   `KASIF_PARTNER_WEBHOOK_SECRETS_JSON` içinde yapılandırılmış provider yok. Gerçek partner
   sandbox doğrulaması yapılmadan verified completion metriği dış iletişimde kullanılmamalı.
+- Faz 5 gap analizi sonrası yalnız yeni authenticated interaction’lara `user_id` sahipliği,
+  tamamlanmış iş/pack tabanlı yeni araç sıralaması, authenticated-only API, sahiplik kontrollü
+  shown/clicked/dismissed event’leri ve Kâşif “Senin için yeni” arayüzü entegre edildi.
+- Proaktif event POST yüzeyine ayrıca 120/saat rate limit eklendi; eski anonim kayıtlar için
+  tahmine dayalı backfill yapılmadı.
+- Faz 5 hedefli doğrulama: 4 suite / 19 test ve bileşen suite’inde 14 test başarılı.
+- Production read-only kontrolde `kasif_interactions.user_id` henüz yok (`42703`). Kod bu durumda
+  anonim kayda güvenli fallback yapar ve öneri API’si boş sonuç döndürür; Faz 5 migration’ı
+  uygulanmadan kişiselleştirme canlıda veri biriktirmez.
 
 ## Belgenin amacı
 
@@ -376,12 +385,19 @@ geçmişi güvenli biçimde dönen kullanıcıyla ilişkilendirmek mümkün değ
 - Build kaynak derleme aşamasını geçti; mevcut public export uyarılarından sonra Windows build worker
   `3221226505` ile kapandı.
 
+### Son entegrasyon doğrulaması — 29 Temmuz 2026
+
+- Next.js route dosyalarındaki destek fonksiyonu export’ları ayrıştırıldı.
+- `npx tsc --noEmit --pretty false` başarılı.
+- Güncel Kâşif odaklı regresyon: 42 suite / 318 test başarılı, 1 bilinçli skip.
+- Tam ESLint kontrolü 0 hata ve 0 uyarıyla başarılı.
+- Next.js production build’i başarıyla tamamlandı; Kâşif API rotaları build çıktısında doğrulandı.
+- `git diff --check` başarılı.
+
 ## Bilinen kod/entegrasyon uyarıları
 
-- `buildKasifQualityStats`, `@/lib/kasif` public entry point’inden export edilmiyor uyarısı.
-- `isKasifIssueInteraction`, `@/lib/kasif` public entry point’inden export edilmiyor uyarısı.
-- `JobFunnelPanel` içinde `selectedTool` için `react-hooks/exhaustive-deps` uyarısı.
-- Faz dalı boundary commit’i içermediği için önce `e0ec01b6` ile entegrasyon yapılmalı.
+Kod tarafında canlıya geçişi engelleyen bilinen bir derleme, tip, lint veya Kâşif regresyon hatası
+kalmadı. Aşağıdaki işler ortam, veri, secret veya dış partner sahipliği gerektirir.
 
 ---
 
@@ -416,11 +432,14 @@ Durum: **Engelli — cloud project ayarı gerekli**
 
 ### 3. Katalog embedding backfill
 
-Durum: **Engelli — API + batch çalıştırma gerekli**
+Durum: **Kod/runbook hazır — production batch hâlâ API + ops çalıştırma ister**
 
-- Canlı katalogda 467/467 approved aracın embedding’i eksik.
-- Faz 1 kodu hazır olsa da bu durumda vector fallback fayda üretmez.
-- API etkinleştirildikten sonra kontrollü backfill ve ardından cron çalıştırılmalıdır.
+- Canlı katalogda (son ölçüm) 467/467 approved aracın embedding’i eksik olabilir.
+- Faz 1 kodu + P6.20 tooling hazır: `getToolEmbeddingCoverage`, güvenli batch refresh,
+  offline CLI (`--status` / `--dry-run` / `--loop`), `docs/EMBEDDING_BACKFILL.md`.
+- Vector fallback fayda üretmez ta ki coverage ≥ %95 olana kadar.
+- Sıra: Gemini API etkin → `npm run tools:embeddings:status` → küçük batch smoke →
+  `tools:embeddings:backfill` → daily `/api/cron/tool-embeddings` doğrula.
 
 ### 4. Partner LLM provider
 
@@ -481,18 +500,13 @@ Durum: **Ürün/hukuk kararı gerekli**
 
 ### 10. Dal entegrasyonu ve build
 
-Durum: **Engelli — branch entegrasyonu gerekli**
+Durum: **Tamamlandı — yerel entegrasyon doğrulandı**
 
 - Faz dalı: `codex/kasif-phases`
 - Boundary commit: `e0ec01b6`
 - Grok’un eşzamanlı değişiklikleri ayrı tutuldu.
-- Faz dalı boundary commit ve güncel ana dalla birleştirildikten sonra:
-  - boundary testleri;
-  - tüm Kâşif regresyonu;
-  - ESLint;
-  - Prettier changed-files;
-  - production build
-    yeniden çalıştırılmalıdır.
+- Boundary ayrımı, route export’ları, Kâşif regresyonu, tip kontrolü, ESLint ve production build
+  güncel çalışma ağacında doğrulandı.
 
 ---
 
@@ -500,11 +514,11 @@ Durum: **Engelli — branch entegrasyonu gerekli**
 
 ### Aşama A — Kod entegrasyonu
 
-- [ ] `e0ec01b6` ve `codex/kasif-phases` değişikliklerini tek entegrasyon dalında birleştir.
-- [ ] Public API export uyarılarını düzelt.
-- [ ] Boundary testini çalıştır.
-- [ ] Kâşif regresyonunu çalıştır.
-- [ ] Production build’i temiz biçimde tamamla.
+- [x] `e0ec01b6` ve `codex/kasif-phases` değişikliklerini güncel çalışma ağacında birleştir.
+- [x] Public API/route export uyarılarını düzelt.
+- [x] Boundary testini çalıştır.
+- [x] Kâşif regresyonunu çalıştır.
+- [x] Production build’i temiz biçimde tamamla.
 
 ### Aşama B — Staging veritabanı
 
@@ -516,9 +530,10 @@ Durum: **Engelli — branch entegrasyonu gerekli**
 ### Aşama C — Retrieval ve taxonomy
 
 - [ ] Gemini API’yi etkinleştir.
-- [ ] Küçük embedding batch’iyle kalite/maliyet ölç.
-- [ ] 467 araçlık backfill’i tamamla.
-- [ ] Günlük embedding cron’unu etkinleştir.
+- [x] Offline backfill CLI + coverage raporu + ops runbook (`docs/EMBEDDING_BACKFILL.md`).
+- [ ] `tools:embeddings:status` ile coverage ölç; küçük batch smoke.
+- [ ] 467 (veya güncel) araçlık backfill’i ≥ %95’e tamamla.
+- [ ] Günlük embedding cron’unu production’da doğrula (`coverageAfter`).
 - [ ] Soft-landing logging ve haftalık clustering cron’unu doğrula.
 
 ### Aşama D — LLM understanding
