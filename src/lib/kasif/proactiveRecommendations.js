@@ -1,6 +1,12 @@
 import { KASIF_GOALS } from './lexicon';
 import { formatKasifGoalLabel } from './goalLabels';
 
+export const PROACTIVE_DELIVERY_POLICY = Object.freeze({
+  maxShownPerWindow: 3,
+  frequencyWindowDays: 7,
+  toolCooldownDays: 30,
+});
+
 function normalize(value) {
   return String(value || '')
     .toLocaleLowerCase('tr-TR')
@@ -108,4 +114,51 @@ export function rankProactiveSuggestions(interactions, tools, { locale = 'tr', l
   return candidates
     .sort((a, b) => b.score - a.score || String(b.tool.id).localeCompare(String(a.tool.id)))
     .slice(0, limit);
+}
+
+export function filterProactiveDelivery(
+  suggestions,
+  events,
+  { now = new Date(), limit = 3, policy = PROACTIVE_DELIVERY_POLICY } = {}
+) {
+  const nowMs = new Date(now).getTime();
+  const frequencyStart = nowMs - policy.frequencyWindowDays * 24 * 60 * 60 * 1000;
+  const cooldownStart = nowMs - policy.toolCooldownDays * 24 * 60 * 60 * 1000;
+  const rows = Array.isArray(events) ? events : [];
+  const recentlyShown = rows.filter(
+    (event) =>
+      event?.event_type === 'shown' && new Date(event.created_at).getTime() >= frequencyStart
+  );
+  const remaining = Math.max(policy.maxShownPerWindow - recentlyShown.length, 0);
+  const dismissedKeys = new Set(
+    rows
+      .filter((event) => event?.event_type === 'dismissed')
+      .map((event) => String(event.suggestion_key || ''))
+  );
+  const cooldownToolSlugs = new Set(
+    rows
+      .filter(
+        (event) =>
+          event?.event_type === 'shown' && new Date(event.created_at).getTime() >= cooldownStart
+      )
+      .map((event) => String(event.tool_slug || ''))
+      .filter(Boolean)
+  );
+
+  const eligible = (Array.isArray(suggestions) ? suggestions : []).filter(
+    (suggestion) =>
+      !dismissedKeys.has(String(suggestion?.suggestionKey || '')) &&
+      !cooldownToolSlugs.has(String(suggestion?.tool?.slug || ''))
+  );
+
+  return {
+    suggestions: eligible.slice(0, Math.min(limit, remaining)),
+    delivery: {
+      remaining,
+      limited: remaining === 0,
+      maxShownPerWindow: policy.maxShownPerWindow,
+      frequencyWindowDays: policy.frequencyWindowDays,
+      toolCooldownDays: policy.toolCooldownDays,
+    },
+  };
 }

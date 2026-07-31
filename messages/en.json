@@ -1806,6 +1806,9 @@
     "proactivePreviousWork": "previous",
     "proactiveCta": "View tool",
     "proactiveDismiss": "Hide this suggestion",
+    "proactivePreferenceDisable": "Turn off personalized suggestions",
+    "proactivePreferenceEnable": "Turn on personalized suggestions",
+    "proactivePreferenceSaving": "Saving preference…",
     "startersDescription": "Choose an example or describe what you need in your own words below.",
     "starters": {
       "presentation": {

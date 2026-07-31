@@ -279,16 +279,25 @@ North Star artık yalnızca tıklama/affiliate değil:
 - Runbook: `docs/EMBEDDING_BACKFILL.md` (smoke → batch → daily cron, ≥%95 kabul)
 - Not: production backfill hâlâ **Gemini API + service role** ile ops çalıştırma ister
 
+### P6.21 Proaktif teslim politikası + kullanıcı tercihi
+
+- Rolling frekans sınırı: kullanıcı başına 7 günde en fazla 3 gösterim
+- Aynı araç için interaction’dan bağımsız 30 günlük cooldown
+- Dismiss kalıcı; shown timestamp cooldown sonrası yeniden teslimde yenilenir
+- Authenticated opt-out / opt-in; opt-out durumunda geçmiş ve katalog sorgusu yapılmaz
+- Server-only `kasif_proactive_preferences` migration’ı + RLS/grant sınırı
+- Not: preference migration’ı production’a uygulanana kadar opt-out kontrolü gösterilmez
+
 ---
 
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.20~~ ✅ (kod/runbook; production backfill ops’a bağlı)
+1. ~~P0–P6.21~~ ✅ (kod/runbook; production migration/backfill ops’a bağlı)
 2. **Production embedding backfill çalıştır** (`tools:embeddings:backfill`, hedef ≥%95)
 3. **Faz 5 migration apply** (`user_id` + proactive tables)
-4. **Proaktif frekans / cooldown / opt-out** (Faz 5 kabul kriterleri)
+4. **Proaktif preference migration apply + cohort ölçümü**
 
 ---
 

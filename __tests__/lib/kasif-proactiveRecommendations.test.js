@@ -1,5 +1,6 @@
 import {
   buildProactiveThemes,
+  filterProactiveDelivery,
   rankProactiveSuggestions,
 } from '@/lib/kasif/proactiveRecommendations';
 
@@ -80,5 +81,54 @@ describe('Kâşif proactive recommendations', () => {
       { locale: 'tr' }
     );
     expect(suggestions).toEqual([]);
+  });
+
+  it('haftalık gösterim sınırı ve araç cooldown uygular', () => {
+    const now = new Date('2026-07-31T12:00:00.000Z');
+    const suggestions = ['one', 'two', 'three'].map((slug, index) => ({
+      suggestionKey: `interaction-${index}:${slug}`,
+      tool: { slug },
+    }));
+    const events = [
+      {
+        suggestion_key: 'old:one',
+        event_type: 'shown',
+        tool_slug: 'one',
+        created_at: '2026-07-30T12:00:00.000Z',
+      },
+      {
+        suggestion_key: 'old:other',
+        event_type: 'shown',
+        tool_slug: 'other',
+        created_at: '2026-07-29T12:00:00.000Z',
+      },
+    ];
+
+    const result = filterProactiveDelivery(suggestions, events, { now });
+    expect(result.suggestions.map((item) => item.tool.slug)).toEqual(['two']);
+    expect(result.delivery).toMatchObject({ remaining: 1, limited: false });
+  });
+
+  it('gizlenen öneriyi kalıcı eler ve haftalık kota dolunca sonuç döndürmez', () => {
+    const now = new Date('2026-07-31T12:00:00.000Z');
+    const suggestion = { suggestionKey: 'interaction-1:new-tool', tool: { slug: 'new-tool' } };
+    const events = [
+      {
+        suggestion_key: suggestion.suggestionKey,
+        event_type: 'dismissed',
+        tool_slug: 'new-tool',
+        created_at: '2026-01-01T12:00:00.000Z',
+      },
+      ...[1, 2, 3].map((index) => ({
+        suggestion_key: `other:${index}`,
+        event_type: 'shown',
+        tool_slug: `other-${index}`,
+        created_at: '2026-07-30T12:00:00.000Z',
+      })),
+    ];
+
+    const result = filterProactiveDelivery([suggestion], events, { now });
+    expect(result.suggestions).toEqual([]);
+    expect(result.delivery).toMatchObject({ remaining: 0, limited: true });
   });
 });

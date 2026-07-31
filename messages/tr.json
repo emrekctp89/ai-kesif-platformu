@@ -1806,6 +1806,9 @@
     "proactivePreviousWork": "önceki işin",
     "proactiveCta": "Aracı incele",
     "proactiveDismiss": "Bu öneriyi gizle",
+    "proactivePreferenceDisable": "Kişiselleştirilmiş önerileri kapat",
+    "proactivePreferenceEnable": "Kişiselleştirilmiş önerileri aç",
+    "proactivePreferenceSaving": "Tercih kaydediliyor…",
     "startersDescription": "Bir örnek seçebilir veya ihtiyacını aşağıya kendi cümlelerinle yazabilirsin.",
     "starters": {
       "presentation": {

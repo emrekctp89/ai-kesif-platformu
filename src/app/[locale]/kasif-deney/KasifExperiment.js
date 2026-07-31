@@ -114,6 +114,9 @@ export default function KasifExperiment() {
   const [hydrated, setHydrated] = useState(false);
   const [comparison, setComparison] = useState({});
   const [proactiveSuggestions, setProactiveSuggestions] = useState([]);
+  const [proactivePersonalization, setProactivePersonalization] = useState(null);
+  const [proactivePreferencePending, setProactivePreferencePending] = useState(false);
+  const [proactiveReload, setProactiveReload] = useState(0);
   const conversationEndRef = useRef(null);
   const questionRef = useRef(null);
   const activeRequestRef = useRef(null);
@@ -207,6 +210,9 @@ export default function KasifExperiment() {
       .then((response) => (response.ok ? response.json() : { suggestions: [] }))
       .then((data) => {
         if (cancelled || !Array.isArray(data?.suggestions)) return;
+        setProactivePersonalization(
+          data?.personalization?.available ? data.personalization.enabled !== false : null
+        );
         setProactiveSuggestions(data.suggestions);
         for (const suggestion of data.suggestions) {
           void sendProactiveEvent(suggestion, 'shown');
@@ -216,7 +222,7 @@ export default function KasifExperiment() {
     return () => {
       cancelled = true;
     };
-  }, [hydrated, locale]);
+  }, [hydrated, locale, proactiveReload]);
 
   async function sendProactiveEvent(suggestion, eventType) {
     try {
@@ -232,6 +238,25 @@ export default function KasifExperiment() {
       });
     } catch {
       // Analytics must never block discovery.
+    }
+  }
+
+  async function toggleProactivePersonalization() {
+    if (proactivePersonalization == null || proactivePreferencePending) return;
+    const enabled = !proactivePersonalization;
+    setProactivePreferencePending(true);
+    try {
+      const response = await fetch('/api/kasif/proactive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ personalizationEnabled: enabled }),
+      });
+      if (!response.ok) return;
+      setProactivePersonalization(enabled);
+      if (!enabled) setProactiveSuggestions([]);
+      else setProactiveReload((value) => value + 1);
+    } finally {
+      setProactivePreferencePending(false);
     }
   }
 
@@ -588,6 +613,22 @@ export default function KasifExperiment() {
 
       {turns.length === 0 && (
         <>
+          {proactivePersonalization !== null && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-50"
+                disabled={proactivePreferencePending}
+                onClick={() => void toggleProactivePersonalization()}
+              >
+                {proactivePreferencePending
+                  ? t('proactivePreferenceSaving')
+                  : proactivePersonalization
+                    ? t('proactivePreferenceDisable')
+                    : t('proactivePreferenceEnable')}
+              </button>
+            </div>
+          )}
           {proactiveSuggestions.length > 0 && (
             <section
               aria-labelledby="kasif-proactive-heading"

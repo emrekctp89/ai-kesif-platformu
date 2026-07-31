@@ -556,8 +556,8 @@ Durum: **Tamamlandı — yerel entegrasyon doğrulandı**
 - [ ] Authenticated history birikimini izle.
 - [ ] İlk öneri cohort’unu aç.
 - [ ] CTR, dismiss ve downstream completion ölç.
-- [ ] Frekans/cooldown limitlerini ekle.
-- [ ] Kullanıcı kişiselleştirme tercihini ekle.
+- [x] 7 günlük frekans ve 30 günlük araç cooldown limitlerini ekle.
+- [x] Authenticated kullanıcı kişiselleştirme tercihini ekle (production migration bekliyor).
 - [ ] Yalnız yeterli kalite sonrası dış kanal seçeneklerini değerlendir.
 
 ## North-star ve koruyucu metrikler
