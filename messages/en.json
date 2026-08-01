@@ -1892,6 +1892,9 @@
     "thinking": "Kâşif is thinking",
     "askLabel": "Ask Kâşif",
     "placeholder": "For example: Which tools can I use to create a presentation for free?",
+    "widgetOpenLabel": "Open Kâşif",
+    "widgetExpand": "Open full page",
+    "widgetClose": "Close Kâşif",
     "job": {
       "continueWith": "Continue with this tool",
       "continueWithAria": "Start setup with {tool}",

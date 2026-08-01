@@ -1892,6 +1892,9 @@
     "thinking": "Kâşif düşünüyor",
     "askLabel": "Kâşif'e sor",
     "placeholder": "Örneğin: Ücretsiz sunum hazırlamak için hangi araçları kullanabilirim?",
+    "widgetOpenLabel": "Kâşif'i aç",
+    "widgetExpand": "Tam sayfada aç",
+    "widgetClose": "Kâşif'i kapat",
     "job": {
       "continueWith": "Bu araçla devam et",
       "continueWithAria": "{tool} ile kuruluma başla",
