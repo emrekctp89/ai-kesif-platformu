@@ -14,7 +14,7 @@ export {
   getKasifRecommendations,
   getKasifWorkmindRecommendations,
 } from './integrations';
-export { callLlmJson } from './partnerRunner';
+export { callLlmJson, partnerRunnerStatus } from './partnerRunner';
 export { generateStudioText } from './studioText';
 export {
   generateChallengeIdeaWithKasif,
