@@ -305,13 +305,21 @@ North Star artık yalnızca tıklama/affiliate değil:
 - JSON-LD `Offer.price=0` bilgisini kaynaklı biçimde `Ücretsiz` olarak korur
 - Fiyatın JSON-LD, sayfa metni veya fallback kaynağından geldiğini provenance içinde ayırır
 
+### P6.24 Production scrape → onay kuyruğu CLI
+
+- `npm run tools:scrape-queue` varsayılan olarak yalnız dry-run çalışır
+- Canlı yazma çift opt-in ister: `--apply --confirm=QUEUE_SCRAPED_TOOLS`
+- Araçları zorunlu `is_approved=false` ve scraper kaynak etiketiyle kaydeder
+- Katalog host/isim tekrarlarını çekimden önce eler; en fazla 10 adayla sınırlar
+- İlk production çalışma (2026-08-01): Ideogram ve n8n onay kuyruğuna eklendi
+
 ---
 
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.23~~ ✅ (kod/runbook; production migration/backfill ops’a bağlı)
+1. ~~P0–P6.24~~ ✅ (kod/runbook; production migration/backfill ops’a bağlı)
 2. **Production embedding backfill çalıştır** (`tools:embeddings:backfill`, hedef ≥%95)
 3. **Faz 5 migration apply** (`user_id` + proactive tables)
 4. ~~Proaktif preference migration apply~~ ✅; **ilk cohort ölçümü**

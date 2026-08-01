@@ -84,6 +84,14 @@ It supports drafts, action items, and translation for teams.
     expect(parsed.description).toMatch(/write|summarize|brainstorm/i);
   });
 
+  it('Jina Title satırını ürün adı olarak öneksiz okur', () => {
+    const parsed = parseMarkdownDocument(
+      'Title: Ideogram 4.0 — Visual Intelligence\n\nURL Source: https://ideogram.ai\n\n# Ideogram\n\nGenerate and edit visual assets with AI.',
+      'https://ideogram.ai'
+    );
+    expect(parsed.name).toBe('Ideogram 4.0 — Visual Intelligence');
+  });
+
   it('JSON-LD ve semantik bölümlerden kanıtlı aday alanları çıkarır', () => {
     const html = `
       <html><head>

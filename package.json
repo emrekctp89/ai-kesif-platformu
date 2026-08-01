@@ -10,6 +10,7 @@
     "verify": "npm run lint && npm run build",
     "tools:discover": "node ./scripts/tool-discovery.mjs",
     "tools:discover:dry-run": "node ./scripts/tool-discovery.mjs --dry-run",
+    "tools:scrape-queue": "node ./scripts/scrape-approval-queue.cjs",
     "tools:enrich": "node ./scripts/tool-enrichment.mjs",
     "tools:enrich:dry-run": "node ./scripts/tool-enrichment.mjs --dry-run",
     "tools:enrich:apply": "node ./scripts/tool-enrichment.mjs --apply",

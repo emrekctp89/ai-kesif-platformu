@@ -221,16 +221,16 @@ export function parseMarkdownDocument(markdown, pageUrl) {
   let name = '';
   const bodyLines = [];
   for (const line of lines) {
+    if (line.startsWith('Title:')) {
+      name = name || cleanText(line.slice(6), 120);
+      continue;
+    }
     if (!name && /^#\s+/.test(line)) {
       name = cleanText(line.replace(/^#+\s+/, ''), 120);
       continue;
     }
     if (!name && line.length >= 2 && line.length <= 80 && !/[.:]$/.test(line)) {
       name = cleanText(line, 120);
-      continue;
-    }
-    if (line.startsWith('Title:')) {
-      name = name || cleanText(line.slice(6), 120);
       continue;
     }
     if (line.startsWith('URL Source:') || line.startsWith('Markdown Content:')) continue;
