@@ -1,6 +1,6 @@
 # Kâşif AI — Faz 1–5 uygulama ve canlıya geçiş roadmap’i
 
-Son güncelleme: 2026-07-26
+Son güncelleme: 2026-08-01
 Çalışma dalı: `codex/kasif-phases`
 
 ## Güncel entegrasyon notu — 2026-07-29
@@ -424,21 +424,23 @@ Gerekli işlemler:
 
 ### 2. Gemini API
 
-Durum: **Engelli — cloud project ayarı gerekli**
+Durum: **Kısmen etkin — Google proje erişimi/kota engeli sürüyor**
 
 - Project: `276581158121`
-- `GEMINI_API_KEY` mevcut olsa da Generative Language API devre dışı.
-- API etkinleştirilmeden vector embedding ve Gemini fallback production’da çalışmaz.
+- Generative Language API etkin ve model kataloğu okunabiliyor.
+- Text üretim kotası `0`; embedding çağrısı `403 project denied access` dönüyor.
+- Google proje erişimi/billing düzelmeden vector embedding ve Gemini fallback production’da çalışmaz.
 
 ### 3. Katalog embedding backfill
 
-Durum: **Kod/runbook hazır — production batch hâlâ API + ops çalıştırma ister**
+Durum: **Kod/runbook hazır — Google embedding erişimi engelli**
 
-- Canlı katalogda (son ölçüm) 467/467 approved aracın embedding’i eksik olabilir.
+- 2026-08-01 canlı ölçümünde 467/467 approved aracın embedding’i eksik; smoke çağrısı
+  Google tarafından reddedildiği için production verisi değiştirilmedi.
 - Faz 1 kodu + P6.20 tooling hazır: `getToolEmbeddingCoverage`, güvenli batch refresh,
   offline CLI (`--status` / `--dry-run` / `--loop`), `docs/EMBEDDING_BACKFILL.md`.
 - Vector fallback fayda üretmez ta ki coverage ≥ %95 olana kadar.
-- Sıra: Gemini API etkin → `npm run tools:embeddings:status` → küçük batch smoke →
+- Sıra: Google embedding erişimi/billing düzelt → `npm run tools:embeddings:status` → küçük batch smoke →
   `tools:embeddings:backfill` → daily `/api/cron/tool-embeddings` doğrula.
 
 ### 4. Partner LLM provider
@@ -557,7 +559,7 @@ Durum: **Tamamlandı — yerel entegrasyon doğrulandı**
 - [ ] İlk öneri cohort’unu aç.
 - [ ] CTR, dismiss ve downstream completion ölç.
 - [x] 7 günlük frekans ve 30 günlük araç cooldown limitlerini ekle.
-- [x] Authenticated kullanıcı kişiselleştirme tercihini ekle (production migration bekliyor).
+- [x] Authenticated kullanıcı kişiselleştirme tercihini ekle; production migration 2026-08-01'de doğrulandı.
 - [ ] Yalnız yeterli kalite sonrası dış kanal seçeneklerini değerlendir.
 
 ## North-star ve koruyucu metrikler
