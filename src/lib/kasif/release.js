@@ -1,4 +1,4 @@
-export const KASIF_VERSION = '2.1.0';
+export const KASIF_VERSION = '2.1.1';
 export const KASIF_RELEASE_NAME = 'Evidence CEO';
 export const KASIF_RELEASED_AT = '2026-08-01';
 
@@ -13,6 +13,7 @@ export const KASIF_CAPABILITIES = Object.freeze([
   { id: 'track', tier: 'core', label: 'Job session, funnel and completion tracking' },
   { id: 'learn', tier: 'core', label: 'Reviewed taxonomy and lexicon learning' },
   { id: 'proactive', tier: 'core', label: 'Rate-limited proactive recommendations' },
+  { id: 'conversation', tier: 'optional', label: 'Grounded multi-turn LLM conversation' },
   { id: 'enrich', tier: 'optional', label: 'External model enrichment' },
   { id: 'partner', tier: 'optional', label: 'Partner runner handoff' },
 ]);
@@ -25,6 +26,7 @@ export function buildKasifRuntimeStatus(env = {}) {
   const enabled = env.KASIF_ENABLED !== 'false';
   const scrapingEnabled = env.KASIF_SCRAPE_ENABLED !== 'false';
   const providers = {
+    deepseek: configured(env.DEEPSEEK_API_KEY),
     gemini: configured(env.GEMINI_API_KEY),
     embeddings: configured(env.GEMINI_API_KEY),
     partner: configured(env.KASIF_PARTNER_API_URL) && configured(env.KASIF_PARTNER_API_KEY),
@@ -42,19 +44,24 @@ export function buildKasifRuntimeStatus(env = {}) {
     capabilities: KASIF_CAPABILITIES.map((capability) => ({
       ...capability,
       status:
-        capability.id === 'scrape' || capability.id === 'queue'
-          ? scrapingEnabled
+        capability.id === 'conversation'
+          ? String(env.KASIF_CONVERSATIONAL_LLM_ENABLED || '').toLowerCase() === 'true' &&
+            externalConfigured
             ? 'ready'
-            : 'disabled'
-          : capability.tier === 'core'
-            ? 'ready'
-            : capability.id === 'partner'
-              ? providers.partner
-                ? 'configured'
-                : 'optional'
-              : providers.gemini
-                ? 'configured'
-                : 'optional',
+            : 'optional'
+          : capability.id === 'scrape' || capability.id === 'queue'
+            ? scrapingEnabled
+              ? 'ready'
+              : 'disabled'
+            : capability.tier === 'core'
+              ? 'ready'
+              : capability.id === 'partner'
+                ? providers.partner
+                  ? 'configured'
+                  : 'optional'
+                : providers.deepseek || providers.gemini
+                  ? 'configured'
+                  : 'optional',
     })),
     providers,
     guarantees: {

@@ -15,6 +15,8 @@ describe('partnerRunner', () => {
     delete process.env.KASIF_PARTNER_API_URL;
     delete process.env.KASIF_PARTNER_API_KEY;
     delete process.env.KASIF_PARTNER_MODEL;
+    delete process.env.DEEPSEEK_API_KEY;
+    delete process.env.DEEPSEEK_MODEL;
     delete process.env.GEMINI_API_KEY;
     global.fetch = undefined;
     jest.restoreAllMocks();
@@ -85,6 +87,38 @@ describe('partnerRunner', () => {
       baseUrlHost: 'api.openai.com',
       chain: ['partner', 'gemini', 'local'],
     });
+  });
+
+  it('DEEPSEEK_API_KEY ile güncel OpenAI-compatible DeepSeek yapılandırması', async () => {
+    delete process.env.KASIF_PARTNER_API_URL;
+    delete process.env.KASIF_PARTNER_API_KEY;
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.XAI_API_KEY;
+    process.env.DEEPSEEK_API_KEY = 'ds-test-key';
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: 'DeepSeek yanıtı' } }] }),
+    });
+
+    const { getPartnerRunnerConfig, partnerRunnerStatus, callLlmText } = loadPartner();
+    expect(getPartnerRunnerConfig()).toMatchObject({
+      baseUrl: 'https://api.deepseek.com',
+      model: 'deepseek-v4-flash',
+      via: 'deepseek',
+    });
+    expect(partnerRunnerStatus()).toMatchObject({
+      preferredSource: 'deepseek',
+      chain: ['deepseek', 'local'],
+      baseUrlHost: 'api.deepseek.com',
+    });
+    await expect(callLlmText('Merhaba')).resolves.toEqual({
+      text: 'DeepSeek yanıtı',
+      source: 'deepseek',
+    });
+    expect(global.fetch).toHaveBeenCalledWith(
+      'https://api.deepseek.com/chat/completions',
+      expect.objectContaining({ method: 'POST' })
+    );
   });
 
   it('XAI_API_KEY ile xAI partner yapılandırması', () => {

@@ -176,7 +176,7 @@ Query: ${String(question || '').slice(0, 800)}`;
     concepts: result.concepts,
     signals: result.aliases.map((item) => item.alias),
   });
-  if (source === 'partner' || source === 'gemini') {
+  if (source === 'partner' || source === 'deepseek' || source === 'gemini') {
     await persistAliases(question, result, source);
   }
   return { intent, source, confidence: result.confidence };

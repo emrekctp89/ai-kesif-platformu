@@ -22,6 +22,7 @@ import { seedFunnelFromResponse } from '@/lib/kasif/funnel';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { createClient as createServerClient } from '@/utils/supabase/server';
 import { getSoftLandingOpsPin } from '@/lib/kasif/softLandingPin';
+import { enhanceKasifConversation } from '@/lib/kasif/conversation';
 
 export const dynamic = 'force-dynamic';
 
@@ -503,7 +504,7 @@ export async function POST(request) {
       });
     }
 
-    const modelResponse = attachClientIntentMeta(
+    let modelResponse = attachClientIntentMeta(
       answerQuestion(
         question,
         records,
@@ -522,6 +523,13 @@ export async function POST(request) {
         confidence: understanding.confidence,
       },
     };
+    if (!isLocalEvaluation) {
+      modelResponse = await withTimeout(
+        enhanceKasifConversation({ question, history, modelResponse, records, locale }),
+        8000,
+        modelResponse
+      );
+    }
     const groundedResponse = groundModelResponse(modelResponse, records, locale);
     const interaction = isLocalEvaluation
       ? {}
@@ -534,6 +542,8 @@ export async function POST(request) {
       ...groundedResponse,
       confidence: modelResponse.confidence || 0,
       intent: modelResponse.intent || {},
+      conversational: Boolean(modelResponse.conversational),
+      conversationalSource: modelResponse.conversationalSource || null,
       ...interaction,
     });
   } catch (error) {

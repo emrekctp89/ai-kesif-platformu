@@ -23,7 +23,7 @@ describe('GET /api/kasif/status', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(body).toMatchObject({
       product: 'kasif',
-      version: '2.1.0',
+      version: '2.1.1',
       guarantees: {
         catalogGrounded: true,
         scrapingApprovalRequired: true,

@@ -7,6 +7,7 @@ const answerContextlessFollowUp = jest.fn();
 const groundModelResponse = jest.fn();
 const createAdminClient = jest.fn();
 const understandQuestionWithLlm = jest.fn();
+const enhanceKasifConversation = jest.fn();
 
 jest.mock('next/server', () => ({
   NextResponse: {
@@ -32,6 +33,9 @@ jest.mock('@/lib/kasif/engine', () => ({
 }));
 jest.mock('@/lib/kasif/understanding', () => ({
   understandQuestionWithLlm: (...args) => understandQuestionWithLlm(...args),
+}));
+jest.mock('@/lib/kasif/conversation', () => ({
+  enhanceKasifConversation: (...args) => enhanceKasifConversation(...args),
 }));
 jest.mock('@/lib/kasif/addToolIntent', () => ({
   detectAddToolIntent: () => ({ isAddTool: false, url: null, reason: null }),
@@ -72,6 +76,7 @@ describe('Kâşif ask API', () => {
       source: 'regex',
       confidence: 0.9,
     });
+    enhanceKasifConversation.mockImplementation(async ({ modelResponse }) => modelResponse);
     answerContextlessFollowUp.mockReturnValue(null);
     retrievePlatformContext.mockResolvedValue([{ id: 7, name: 'Slide Tool', slug: 'slide-tool' }]);
     answerQuestion.mockReturnValue({

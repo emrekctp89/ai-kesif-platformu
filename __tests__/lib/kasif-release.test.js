@@ -3,7 +3,7 @@ import { KASIF_CAPABILITIES, KASIF_VERSION, buildKasifRuntimeStatus } from '@/li
 describe('Kâşif v2.1 release manifest', () => {
   it('ücretli sağlayıcı olmadan çekirdek yetenekleri hazır gösterir', () => {
     const status = buildKasifRuntimeStatus({});
-    expect(KASIF_VERSION).toBe('2.1.0');
+    expect(KASIF_VERSION).toBe('2.1.1');
     expect(status.mode).toBe('local-only');
     expect(status.readiness).toBe('ready');
     expect(status.guarantees.paidProviderRequired).toBe(false);
@@ -23,7 +23,12 @@ describe('Kâşif v2.1 release manifest', () => {
       KASIF_PARTNER_API_KEY: secret,
     });
     expect(status.mode).toBe('local-first-hybrid');
-    expect(status.providers).toEqual({ gemini: true, embeddings: true, partner: true });
+    expect(status.providers).toEqual({
+      deepseek: false,
+      gemini: true,
+      embeddings: true,
+      partner: true,
+    });
     expect(JSON.stringify(status)).not.toContain(secret);
   });
 

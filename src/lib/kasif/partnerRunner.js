@@ -8,6 +8,7 @@
  *   KASIF_PARTNER_TIMEOUT_MS — optional, default 20000
  *
  * Convenience fallbacks (when URL/KEY not both set):
+ *   DEEPSEEK_API_KEY → https://api.deepseek.com (+ DEEPSEEK_MODEL / deepseek-v4-flash)
  *   OPENAI_API_KEY  → https://api.openai.com/v1  (+ OPENAI_MODEL / gpt-4o-mini)
  *   XAI_API_KEY     → https://api.x.ai/v1         (+ XAI_MODEL / grok-2-latest)
  */
@@ -36,6 +37,19 @@ export function resolvePartnerRunnerConfig(env = process.env) {
       model: String(env.KASIF_PARTNER_MODEL || 'gpt-4o-mini').trim() || 'gpt-4o-mini',
       timeoutMs,
       via: 'kasif_partner',
+    };
+  }
+
+  const deepseekKey = String(env.DEEPSEEK_API_KEY || '').trim();
+  if (deepseekKey && !isPlaceholderSecret(deepseekKey)) {
+    return {
+      baseUrl: explicitUrl || 'https://api.deepseek.com',
+      apiKey: explicitKey && !isPlaceholderSecret(explicitKey) ? explicitKey : deepseekKey,
+      model:
+        String(env.KASIF_PARTNER_MODEL || env.DEEPSEEK_MODEL || 'deepseek-v4-flash').trim() ||
+        'deepseek-v4-flash',
+      timeoutMs,
+      via: explicitUrl || explicitKey ? 'kasif_partner+deepseek' : 'deepseek',
     };
   }
 
@@ -153,7 +167,8 @@ export async function callPartnerChatJson(userPrompt, options = {}) {
 export async function callLlmJson(prompt, options = {}) {
   const partner = await callPartnerChatJson(prompt, options);
   if (partner && typeof partner === 'object') {
-    return { data: partner, source: 'partner' };
+    const via = getPartnerRunnerConfig()?.via || '';
+    return { data: partner, source: via.includes('deepseek') ? 'deepseek' : 'partner' };
   }
 
   const gemini = await callGeminiJson(prompt);
@@ -197,6 +212,20 @@ export async function callPartnerChatText(userPrompt, options = {}) {
               options.system ||
               'You are Kâşif, the writing assistant for the AI Keşif tools platform. Return only the requested text.',
           },
+          ...(Array.isArray(options.history)
+            ? options.history.slice(-8).flatMap((message) => {
+                const role =
+                  message?.role === 'assistant'
+                    ? 'assistant'
+                    : message?.role === 'user'
+                      ? 'user'
+                      : null;
+                const content = String(message?.content || '')
+                  .trim()
+                  .slice(0, 1200);
+                return role && content ? [{ role, content }] : [];
+              })
+            : []),
           { role: 'user', content: String(userPrompt || '').slice(0, 10000) },
         ],
       }),
@@ -223,7 +252,8 @@ export async function callPartnerChatText(userPrompt, options = {}) {
 export async function callLlmText(prompt, options = {}) {
   const partner = await callPartnerChatText(prompt, options);
   if (partner) {
-    return { text: partner, source: 'partner' };
+    const via = getPartnerRunnerConfig()?.via || '';
+    return { text: partner, source: via.includes('deepseek') ? 'deepseek' : 'partner' };
   }
 
   const gemini = await callGeminiText(prompt, options);
@@ -320,9 +350,10 @@ export function partnerRunnerStatus(env = process.env) {
   const config = getPartnerRunnerConfig(env);
   const configured = Boolean(config);
   const hasGeminiFallback = Boolean(String(env.GEMINI_API_KEY || '').trim());
-  const preferredSource = configured ? 'partner' : hasGeminiFallback ? 'gemini' : 'local';
+  const partnerSource = config?.via?.includes('deepseek') ? 'deepseek' : 'partner';
+  const preferredSource = configured ? partnerSource : hasGeminiFallback ? 'gemini' : 'local';
   const chain = [];
-  if (configured) chain.push('partner');
+  if (configured) chain.push(partnerSource);
   if (hasGeminiFallback) chain.push('gemini');
   chain.push('local');
 
@@ -355,12 +386,14 @@ export function formatRunnerSourceLabel(source, locale = 'tr') {
     .replace(/-fallback$/, '');
   const en = {
     partner: 'Kasif (partner)',
+    deepseek: 'Kasif (DeepSeek)',
     gemini: 'Kasif (Gemini)',
     local: 'Kasif local draft',
     provider: 'Kasif cloud',
   };
   const tr = {
     partner: 'Kâşif (partner)',
+    deepseek: 'Kâşif (DeepSeek)',
     gemini: 'Kâşif (Gemini)',
     local: 'Kâşif yerel taslak',
     provider: 'Kâşif bulut',

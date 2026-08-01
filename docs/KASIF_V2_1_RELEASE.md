@@ -1,4 +1,4 @@
-# Kâşif v2.1 — Evidence CEO
+# Kâşif v2.1.1 — Evidence CEO + DeepSeek
 
 Yayın tarihi: 2026-08-01
 
@@ -15,15 +15,17 @@ paketler. Ücretli model sağlayıcısı çekirdek çalışma için zorunlu değ
 - Robots.txt, SSRF, DNS, boyut ve host korumalı web scraping
 - JSON-LD ve semantik bölüm çıkarımı, kanıt skoru, provenance ve yerel kategori tahmini
 - Scrape adaylarını yalnız admin onay kuyruğuna yazan çift onaylı production CLI
+- DeepSeek V4 uyumlu, açık opt-in ve katalog-grounded çok turlu chatbot katmanı
 
 ## Sürüm sözleşmesi
 
 - Public durum endpoint’i: `GET /api/kasif/status`
-- Developer recommend cevabı: `meta.version = "2.1.0"`
-- Kâşif kimlik yanıtı ve ana ekran etiketi: `v2.1.0`
+- Developer recommend cevabı: `meta.version = "2.1.1"`
+- Kâşif kimlik yanıtı ve ana ekran etiketi: `v2.1.1`
 - Otomatik katalog yayını: kapalı
 - Scrape sonrası admin onayı: zorunlu
 - Ücretli sağlayıcı gereksinimi: yok
+- DeepSeek sohbeti varsayılan kapalıdır; anahtara ek olarak `KASIF_CONVERSATIONAL_LLM_ENABLED=true` ister
 
 ## Bilinen dış engel
 
