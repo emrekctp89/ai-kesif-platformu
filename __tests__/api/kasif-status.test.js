@@ -12,6 +12,9 @@ jest.mock('next/server', () => ({
     }),
   },
 }));
+jest.mock('@/lib/kasif/deepseekMode', () => ({
+  getKasifDeepseekMode: jest.fn().mockResolvedValue({ enabled: false }),
+}));
 
 import { GET } from '@/app/api/kasif/status/route';
 
@@ -23,7 +26,7 @@ describe('GET /api/kasif/status', () => {
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(body).toMatchObject({
       product: 'kasif',
-      version: '2.1.1',
+      version: '2.1.2',
       guarantees: {
         catalogGrounded: true,
         scrapingApprovalRequired: true,

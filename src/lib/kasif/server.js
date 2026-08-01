@@ -23,6 +23,7 @@ export {
 } from './adminJsonAssist';
 export { assistCreatorContent, CREATOR_ASSIST_MODES } from './contentAssist';
 export { getSoftLandingOpsPin, setSoftLandingOpsPin } from './softLandingPin';
+export { getKasifDeepseekMode, setKasifDeepseekMode } from './deepseekMode';
 export { getOpsDigestHistory } from './opsDigestHistory';
 export { runKasifOpsDigest } from './opsDigestRun';
 export { kasifConfig } from './config';

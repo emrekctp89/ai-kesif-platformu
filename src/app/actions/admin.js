@@ -138,6 +138,56 @@ export async function pinKasifSoftLandingWinner(formData) {
   }
 }
 
+/** Admin-only runtime switch. API credentials remain server-side environment variables. */
+export async function setKasifDeepseekSuperpower(formData) {
+  'use server';
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { error: 'Yetkiniz yok.' };
+  }
+
+  const raw =
+    formData instanceof FormData
+      ? formData.get('enabled')
+      : formData && typeof formData === 'object'
+        ? formData.enabled
+        : false;
+  const enabled = raw === true || ['1', 'true', 'on', 'yes'].includes(String(raw).toLowerCase());
+
+  try {
+    const { partnerRunnerStatus } = await import('@/lib/kasif/partnerRunner');
+    const provider = partnerRunnerStatus();
+    const deepseekConfigured = Boolean(provider.configured && provider.via?.includes('deepseek'));
+    if (enabled && !deepseekConfigured) {
+      return { error: 'DeepSeek API anahtarı yapılandırılmadan süper güç modu açılamaz.' };
+    }
+
+    const { setKasifDeepseekMode } = await import('@/lib/kasif/deepseekMode');
+    const mode = await setKasifDeepseekMode(enabled, { userId: user.id });
+    revalidatePath('/admin');
+    revalidatePath('/kasif');
+    revalidatePath('/en/kasif');
+    return {
+      success: enabled
+        ? 'DeepSeek süper güç modu açıldı.'
+        : 'DeepSeek kapatıldı; varsayılan Kâşif modu aktif.',
+      mode: { ...mode, configured: deepseekConfigured },
+    };
+  } catch (error) {
+    logger.error('Kâşif DeepSeek mode update failed:', error);
+    return {
+      error:
+        error?.message?.includes('app_settings') || error?.code === '42P01'
+          ? 'app_settings tablosu yok. İlgili migration uygulanmalı.'
+          : error?.message || 'DeepSeek modu kaydedilemedi.',
+    };
+  }
+}
+
 /**
  * Manually run weekly ops digest (admin session, no CRON_SECRET).
  * @param {FormData|{ windowDays?: number|string, forceSend?: boolean|string, dryRun?: boolean|string }|null} [formData]

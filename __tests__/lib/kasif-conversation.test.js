@@ -2,8 +2,10 @@
 
 jest.mock('server-only', () => ({}));
 jest.mock('@/lib/kasif/partnerRunner', () => ({ callLlmText: jest.fn() }));
+jest.mock('@/lib/kasif/deepseekMode', () => ({ getKasifDeepseekMode: jest.fn() }));
 
 import { callLlmText } from '@/lib/kasif/partnerRunner';
+import { getKasifDeepseekMode } from '@/lib/kasif/deepseekMode';
 import { enhanceKasifConversation, isConversationalLlmEnabled } from '@/lib/kasif/conversation';
 
 const base = {
@@ -23,17 +25,18 @@ const records = [
 ];
 
 describe('Kâşif grounded conversational layer', () => {
-  const previous = process.env.KASIF_CONVERSATIONAL_LLM_ENABLED;
+  const previousKey = process.env.DEEPSEEK_API_KEY;
 
   afterEach(() => {
-    if (previous === undefined) delete process.env.KASIF_CONVERSATIONAL_LLM_ENABLED;
-    else process.env.KASIF_CONVERSATIONAL_LLM_ENABLED = previous;
+    if (previousKey === undefined) delete process.env.DEEPSEEK_API_KEY;
+    else process.env.DEEPSEEK_API_KEY = previousKey;
     jest.clearAllMocks();
   });
 
   it('opt-in kapalıyken provider çağırmaz ve deterministik yanıtı korur', async () => {
-    delete process.env.KASIF_CONVERSATIONAL_LLM_ENABLED;
-    expect(isConversationalLlmEnabled()).toBe(false);
+    process.env.DEEPSEEK_API_KEY = 'ds-key';
+    getKasifDeepseekMode.mockResolvedValue({ enabled: false });
+    expect(isConversationalLlmEnabled(process.env, { enabled: false })).toBe(false);
     await expect(
       enhanceKasifConversation({ question: 'Öner', modelResponse: base, records })
     ).resolves.toBe(base);
@@ -41,7 +44,8 @@ describe('Kâşif grounded conversational layer', () => {
   });
 
   it('opt-in açıkken yalnız seçilmiş katalog kaynaklarıyla sohbet yanıtı üretir', async () => {
-    process.env.KASIF_CONVERSATIONAL_LLM_ENABLED = 'true';
+    process.env.DEEPSEEK_API_KEY = 'ds-key';
+    getKasifDeepseekMode.mockResolvedValue({ enabled: true });
     callLlmText.mockResolvedValue({
       text: 'Catalog Tool, doğrulanmış katalog verisine göre bu iş için uygun bir başlangıçtır.',
       source: 'deepseek',
@@ -61,7 +65,8 @@ describe('Kâşif grounded conversational layer', () => {
   });
 
   it('provider boş dönerse yerel yanıtı korur', async () => {
-    process.env.KASIF_CONVERSATIONAL_LLM_ENABLED = 'true';
+    process.env.DEEPSEEK_API_KEY = 'ds-key';
+    getKasifDeepseekMode.mockResolvedValue({ enabled: true });
     callLlmText.mockResolvedValue({ text: null, source: null });
     await expect(
       enhanceKasifConversation({ question: 'Öner', modelResponse: base, records })

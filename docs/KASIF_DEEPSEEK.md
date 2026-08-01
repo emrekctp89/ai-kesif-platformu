@@ -9,7 +9,6 @@ kaynaklarla doğal sohbet yanıtı oluşturur.
 ```env
 DEEPSEEK_API_KEY=...
 DEEPSEEK_MODEL=deepseek-v4-flash
-KASIF_CONVERSATIONAL_LLM_ENABLED=true
 ```
 
 API base URL otomatik olarak `https://api.deepseek.com`; endpoint `/chat/completions` olur.
@@ -18,7 +17,8 @@ API base URL otomatik olarak `https://api.deepseek.com`; endpoint `/chat/complet
 ## Maliyet güvenliği
 
 - API anahtarı tek başına chatbot çağrısını açmaz.
-- Açık opt-in değişkeni varsayılan `false` değerindedir.
+- Mod Admin → Kâşif kalite panelinden açılır ve varsayılan kapalıdır.
+- Admin tercihi server-only `app_settings.kasif_deepseek_superpower` kaydında tutulur.
 - Yerel niyet eşleşmesi, katalog retrieval ve güvenlik kuralları model çağrısından önce çalışır.
 - Provider hatası, boş yanıt veya timeout durumunda deterministik yerel cevap korunur.
 - Scraping ve katalog onayı DeepSeek’e devredilmez.

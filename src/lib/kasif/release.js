@@ -1,4 +1,4 @@
-export const KASIF_VERSION = '2.1.1';
+export const KASIF_VERSION = '2.1.2';
 export const KASIF_RELEASE_NAME = 'Evidence CEO';
 export const KASIF_RELEASED_AT = '2026-08-01';
 
@@ -22,7 +22,7 @@ function configured(value) {
   return Boolean(String(value || '').trim());
 }
 
-export function buildKasifRuntimeStatus(env = {}) {
+export function buildKasifRuntimeStatus(env = {}, runtime = {}) {
   const enabled = env.KASIF_ENABLED !== 'false';
   const scrapingEnabled = env.KASIF_SCRAPE_ENABLED !== 'false';
   const providers = {
@@ -45,8 +45,7 @@ export function buildKasifRuntimeStatus(env = {}) {
       ...capability,
       status:
         capability.id === 'conversation'
-          ? String(env.KASIF_CONVERSATIONAL_LLM_ENABLED || '').toLowerCase() === 'true' &&
-            externalConfigured
+          ? runtime.deepseekEnabled === true && providers.deepseek
             ? 'ready'
             : 'optional'
           : capability.id === 'scrape' || capability.id === 'queue'

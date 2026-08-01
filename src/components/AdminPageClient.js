@@ -44,6 +44,7 @@ import {
   scrapeToolUrlsAdmin,
   runScrapeSeedQueueAdmin,
   pinKasifSoftLandingWinner,
+  setKasifDeepseekSuperpower,
   getKasifOpsDigestHistory,
   runKasifOpsDigestNow,
   reviewKasifGoalCandidate,
@@ -2204,6 +2205,7 @@ function KasifQualityTab({ interactions = [], goalCandidates = [] }) {
   const locale = useLocale();
   const kasifHref = locale === 'en' ? '/en/kasif' : '/kasif';
   const [partnerStatus, setPartnerStatus] = React.useState(null);
+  const [deepseekBusy, setDeepseekBusy] = React.useState(false);
   const [softLandingPin, setSoftLandingPin] = React.useState(null);
   const [pinBusy, setPinBusy] = React.useState(false);
   const [opsDigestHistory, setOpsDigestHistory] = React.useState(null);
@@ -2214,6 +2216,33 @@ function KasifQualityTab({ interactions = [], goalCandidates = [] }) {
   );
   const feedbackCoverage =
     stats.total > 0 ? Math.round((stats.withFeedback / stats.total) * 100) : null;
+
+  async function updateDeepseekMode(enabled) {
+    setDeepseekBusy(true);
+    try {
+      const result = await setKasifDeepseekSuperpower({ enabled });
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(result.success);
+      setPartnerStatus((current) => ({
+        ...(current || {}),
+        deepseekMode: {
+          ...(current?.deepseekMode || {}),
+          enabled,
+          requestedEnabled: enabled,
+          configured: result.mode?.configured ?? current?.deepseekMode?.configured ?? false,
+          updatedAt: result.mode?.updatedAt || new Date().toISOString(),
+        },
+      }));
+      router.refresh();
+    } catch (error) {
+      toast.error(error?.message || t('kasifDeepseekFailed'));
+    } finally {
+      setDeepseekBusy(false);
+    }
+  }
 
   React.useEffect(() => {
     let cancelled = false;
@@ -2413,6 +2442,60 @@ function KasifQualityTab({ interactions = [], goalCandidates = [] }) {
                 </div>
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground">{t('kasifPartnerEnvHint')}</p>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3">
+                <div>
+                  <p className="text-sm font-semibold">{t('kasifDeepseekTitle')}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {partnerStatus.deepseekMode?.enabled
+                      ? t('kasifDeepseekOnHint')
+                      : t('kasifDeepseekOffHint')}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={partnerStatus.deepseekMode?.enabled ? 'default' : 'secondary'}>
+                    {partnerStatus.deepseekMode?.enabled
+                      ? t('kasifDeepseekOn')
+                      : t('kasifDeepseekOff')}
+                  </Badge>
+                  {partnerStatus.deepseekMode?.enabled ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={deepseekBusy}
+                      onClick={() => void updateDeepseekMode(false)}
+                    >
+                      {t('kasifDeepseekDisable')}
+                    </Button>
+                  ) : (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={deepseekBusy || !partnerStatus.deepseekMode?.configured}
+                        >
+                          {t('kasifDeepseekEnable')}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{t('kasifDeepseekConfirmTitle')}</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {t('kasifDeepseekConfirmDescription')}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => void updateDeepseekMode(true)}>
+                            {t('kasifDeepseekConfirmAction')}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
+              </div>
             </div>
           ) : null}
         </CardContent>

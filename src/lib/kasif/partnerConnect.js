@@ -88,6 +88,16 @@ export function buildPartnerConnectSteps(packId, locale = 'tr', options = {}) {
 export function describeRunnerProvider(status, locale = 'tr') {
   const lang = locale === 'en' ? 'en' : 'tr';
   const preferred = status?.preferredSource || 'local';
+  if (preferred === 'deepseek') {
+    return {
+      level: 'deepseek',
+      label: lang === 'en' ? 'DeepSeek superpower ready' : 'DeepSeek süper güç hazır',
+      hint:
+        lang === 'en'
+          ? 'Admin can switch grounded Kâşif conversations to DeepSeek.'
+          : 'Admin, grounded Kâşif sohbetlerini DeepSeek moduna geçirebilir.',
+    };
+  }
   if (preferred === 'partner') {
     return {
       level: 'partner',

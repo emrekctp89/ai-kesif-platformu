@@ -39,6 +39,7 @@ describe('partnerConnect', () => {
 
   it('provider açıklaması preferredSource’a göre değişir', () => {
     expect(describeRunnerProvider({ preferredSource: 'partner' }, 'tr').level).toBe('partner');
+    expect(describeRunnerProvider({ preferredSource: 'deepseek' }, 'tr').level).toBe('deepseek');
     expect(describeRunnerProvider({ preferredSource: 'gemini' }, 'en').label).toMatch(/Gemini/i);
     expect(describeRunnerProvider({ preferredSource: 'local' }, 'tr').level).toBe('local');
   });

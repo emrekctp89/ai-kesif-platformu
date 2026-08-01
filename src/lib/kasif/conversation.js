@@ -1,9 +1,10 @@
 import 'server-only';
 
 import { callLlmText } from './partnerRunner';
+import { getKasifDeepseekMode } from './deepseekMode';
 
-export function isConversationalLlmEnabled(env = process.env) {
-  return String(env.KASIF_CONVERSATIONAL_LLM_ENABLED || '').toLowerCase() === 'true';
+export function isConversationalLlmEnabled(env = process.env, mode = {}) {
+  return mode.enabled === true && Boolean(String(env.DEEPSEEK_API_KEY || '').trim());
 }
 
 function sourceContext(records, sourceIds) {
@@ -32,7 +33,12 @@ export async function enhanceKasifConversation({
   records = [],
   locale = 'tr',
 }) {
-  if (!isConversationalLlmEnabled() || !modelResponse?.answer || modelResponse?.meta) {
+  const mode = await getKasifDeepseekMode();
+  if (
+    !isConversationalLlmEnabled(process.env, mode) ||
+    !modelResponse?.answer ||
+    modelResponse?.meta
+  ) {
     return modelResponse;
   }
   const sources = sourceContext(records, modelResponse.sourceIds);
