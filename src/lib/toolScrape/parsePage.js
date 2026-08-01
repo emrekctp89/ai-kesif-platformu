@@ -314,7 +314,10 @@ export function toToolCandidate(parsed, { provider, sourceUrl }) {
     ? observedTargetUsers
     : ['AI araçlarını keşfeden profesyoneller', 'Ürün ve operasyon ekipleri'];
 
-  const pricing_model = inferPricingModel(description, link) || 'Freemium';
+  const structuredPrice = Number.parseFloat(String(parsed.structuredData?.price || ''));
+  const hasStructuredFreePrice = Number.isFinite(structuredPrice) && structuredPrice === 0;
+  const inferredPricing = inferPricingModel(description, link);
+  const pricing_model = hasStructuredFreePrice ? 'Ücretsiz' : inferredPricing || 'Freemium';
 
   return {
     name: name.slice(0, 80),
@@ -342,13 +345,24 @@ export function toToolCandidate(parsed, { provider, sourceUrl }) {
         use_cases: observedUseCases.length,
         target_users: observedTargetUsers.length,
         structured_data: Boolean(parsed.structuredData),
+        pricing: hasStructuredFreePrice || Boolean(inferredPricing),
       },
       inferred: {
         description: !parsed.description || String(parsed.description).length < 60,
         features: Math.max(0, 2 - observedFeatures.length),
         use_cases: observedUseCases.length < 2,
         target_users: observedTargetUsers.length === 0,
+        pricing: !hasStructuredFreePrice && !inferredPricing,
       },
     },
+    pricing_evidence: hasStructuredFreePrice
+      ? {
+          source: 'json_ld_offer',
+          price: parsed.structuredData.price,
+          currency: parsed.structuredData.priceCurrency || null,
+        }
+      : inferredPricing
+        ? { source: 'page_text', value: inferredPricing }
+        : { source: 'fallback', value: 'Freemium' },
   };
 }

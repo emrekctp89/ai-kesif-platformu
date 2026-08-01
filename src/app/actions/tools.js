@@ -821,8 +821,9 @@ export async function scrapeToolUrlAdmin(options = {}) {
     let candidate = scrape.candidate;
     const supabaseAdmin = createAdminClient();
 
-    // Kategori (enrich prompt'u için önce çöz)
+    // Explicit admin choice wins; otherwise use explainable local taxonomy matching.
     let category = null;
+    let categoryMatch = null;
     if (categoryId) {
       const { data } = await supabaseAdmin
         .from('categories')
@@ -837,10 +838,9 @@ export async function scrapeToolUrlAdmin(options = {}) {
         .select('id, name, slug')
         .order('name')
         .limit(50);
-      category =
-        (categories || []).find((item) => /yapay zeka|genel|ai/i.test(String(item.name || ''))) ||
-        (categories || [])[0] ||
-        null;
+      const { suggestScrapeCategory } = await import('@/lib/toolScrape');
+      categoryMatch = suggestScrapeCategory(candidate, categories || []);
+      category = categoryMatch.category;
     }
 
     let enrichMeta = { requested: enrichWithGemini, enriched: false, error: null };
@@ -940,6 +940,11 @@ export async function scrapeToolUrlAdmin(options = {}) {
       );
     }
     if (!category) qualityWarnings.push('Kategori bulunamadı.');
+    if (categoryMatch?.requiresReview) {
+      qualityWarnings.push(
+        `Kategori sinyali zayıf (${categoryMatch.slug}, skor ${categoryMatch.score}); admin kategori seçmeli.`
+      );
+    }
     if (enrichMeta.requested && !enrichMeta.enriched) {
       qualityWarnings.push(`Gemini enrich atlandı: ${enrichMeta.error || 'bilinmiyor'}`);
     }
@@ -968,6 +973,7 @@ export async function scrapeToolUrlAdmin(options = {}) {
         : null,
       duplicates,
       category,
+      categoryMatch,
       inserted: null,
     };
 

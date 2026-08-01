@@ -297,13 +297,21 @@ North Star artık yalnızca tıklama/affiliate değil:
 - Bozuk JSON-LD tüm scrape işlemini bozmaz; meta/HTML fallback devam eder
 - Dry-run sonucu admin ekranında kanıt skoru ve doğrulama ihtiyaçlarını gösterir
 
+### P6.23 Açıklanabilir yerel kategori ve fiyat kararı
+
+- Scrape adayını ad, açıklama, özellik, kullanım alanı ve hedef kullanıcı sinyalleriyle sınıflandırır
+- Güçlü/orta eşleşmede mevcut production kategori kaydını önerir; düşük güvende kategori uydurmaz
+- Admin dry-run raporunda kategori skoru, güven seviyesi ve eşleşen sinyalleri gösterir
+- JSON-LD `Offer.price=0` bilgisini kaynaklı biçimde `Ücretsiz` olarak korur
+- Fiyatın JSON-LD, sayfa metni veya fallback kaynağından geldiğini provenance içinde ayırır
+
 ---
 
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.22~~ ✅ (kod/runbook; production migration/backfill ops’a bağlı)
+1. ~~P0–P6.23~~ ✅ (kod/runbook; production migration/backfill ops’a bağlı)
 2. **Production embedding backfill çalıştır** (`tools:embeddings:backfill`, hedef ≥%95)
 3. **Faz 5 migration apply** (`user_id` + proactive tables)
 4. ~~Proaktif preference migration apply~~ ✅; **ilk cohort ölçümü**

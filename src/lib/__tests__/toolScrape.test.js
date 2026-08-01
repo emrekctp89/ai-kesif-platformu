@@ -18,6 +18,7 @@ const { scrapeToolPage } = require('../toolScrape');
 const { assertPublicDnsAddresses } = require('../toolScrape/providers');
 const { parseBulkUrls, clampBulkLimit } = require('../toolScrape/bulk');
 const { mergeEnrichedCandidate } = require('../toolScrape/enrichCandidate');
+const { suggestScrapeCategory } = require('../toolScrape/categorizeCandidate');
 const {
   extractHostKey,
   normalizeNameKey,
@@ -121,6 +122,62 @@ It supports drafts, action items, and translation for teams.
     );
     expect(parsed.name).toBe('Fallback AI');
     expect(parsed.meta.evidence.jsonLd).toBe(false);
+  });
+
+  it('JSON-LD sıfır fiyatını ücretsiz olarak ve kaynak bilgisiyle korur', () => {
+    const parsed = parseHtmlDocument(
+      `<html><head><script type="application/ld+json">{
+        "@type":"SoftwareApplication", "name":"Free Writer",
+        "description":"Free Writer helps content teams draft and edit long-form marketing copy with an AI writing workspace.",
+        "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}
+      }</script></head><body><ul><li>Draft long-form marketing copy</li><li>Edit campaign content collaboratively</li></ul></body></html>`,
+      'https://free-writer.example/'
+    );
+    const candidate = toToolCandidate(parsed, {
+      provider: 'native',
+      sourceUrl: 'https://free-writer.example/',
+    });
+    expect(candidate.pricing_model).toBe('Ücretsiz');
+    expect(candidate.pricing_evidence).toEqual({
+      source: 'json_ld_offer',
+      price: '0',
+      currency: 'USD',
+    });
+    expect(candidate.provenance.inferred.pricing).toBe(false);
+  });
+});
+
+describe('toolScrape local category suggestion', () => {
+  const categories = [
+    { id: 'code', name: 'Kod & Geliştirici', slug: 'kod-yazilim' },
+    { id: 'other', name: 'Diğer', slug: 'diger' },
+  ];
+
+  it('güçlü sayfa sinyallerini mevcut production kategorisine bağlar', () => {
+    const result = suggestScrapeCategory(
+      {
+        name: 'DevPilot',
+        link: 'https://devpilot.example',
+        description: 'AI coding assistant for software developers, API testing and code review.',
+        features: ['Generate code', 'Review pull requests'],
+        use_cases: ['Debug application code'],
+      },
+      categories
+    );
+    expect(result.category?.slug).toBe('kod-yazilim');
+    expect(result.confidence).not.toBe('low');
+    expect(result.requiresReview).toBe(false);
+    expect(result.matched.length).toBeGreaterThan(0);
+  });
+
+  it('zayıf sinyalde kategori uydurmaz ve admin incelemesi ister', () => {
+    const result = suggestScrapeCategory(
+      { name: 'Nova', link: 'https://nova.example', description: 'A useful new digital product.' },
+      categories
+    );
+    expect(result.category).toBeNull();
+    expect(result.confidence).toBe('low');
+    expect(result.requiresReview).toBe(true);
   });
 });
 

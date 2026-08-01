@@ -242,6 +242,8 @@ export {
 
 export { enrichScrapeCandidate, mergeEnrichedCandidate } from '@/lib/toolScrape/enrichCandidate';
 
+export { suggestScrapeCategory } from '@/lib/toolScrape/categorizeCandidate';
+
 export {
   parseBulkUrls,
   clampBulkLimit,

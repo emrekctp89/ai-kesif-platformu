@@ -1379,6 +1379,19 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                     {scrapeReport.candidate?.name || 'Aday yok'}
                     {scrapeReport.category?.name ? ` · ${scrapeReport.category.name}` : ''}
                   </p>
+                  {scrapeReport.categoryMatch ? (
+                    <p>
+                      Yerel kategori:{' '}
+                      {scrapeReport.categoryMatch.suggestedCategory?.name || 'belirsiz'}
+                      {' · '}
+                      {scrapeReport.categoryMatch.confidence}
+                      {' · skor '}
+                      {scrapeReport.categoryMatch.score}
+                      {scrapeReport.categoryMatch.matched?.length
+                        ? ` · sinyal: ${scrapeReport.categoryMatch.matched.join(', ')}`
+                        : ''}
+                    </p>
+                  ) : null}
                   {scrapeReport.candidate?.link ? (
                     <p className="truncate">{scrapeReport.candidate.link}</p>
                   ) : null}
