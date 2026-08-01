@@ -12,8 +12,11 @@ import { generatePageMetadata } from '@/utils/seo';
 import { getSiteOrigin } from '@/utils/siteUrl';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
+import { KasifWidget } from '@/components/kasif/KasifWidget';
 
 const siteUrl = getSiteOrigin();
+const kasifWidgetEnabled =
+  process.env.KASIF_ENABLED === 'true' || process.env.LOCAL_KASIF_ENABLED === 'true';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -86,6 +89,10 @@ export default async function LocaleLayout(props) {
           <Footer />
           {/* Must stay inside NextIntlClientProvider — uses useTranslations('Common'). */}
           <AnnouncementBanner />
+          {/* Global floating Kâşif chat widget; gated by the same flag as /kasif-deney. */}
+          <Suspense fallback={null}>
+            <KasifWidget enabled={kasifWidgetEnabled} />
+          </Suspense>
         </NextIntlClientProvider>
       </div>
 
