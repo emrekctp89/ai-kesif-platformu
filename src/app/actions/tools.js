@@ -921,6 +921,16 @@ export async function scrapeToolUrlAdmin(options = {}) {
 
     const qualityWarnings = [];
     if (candidate.description.length < 80) qualityWarnings.push('Açıklama kısa.');
+    if ((scrape.quality?.evidenceScore || 0) < 50) {
+      qualityWarnings.push(
+        `Yerel kanıt skoru düşük (${scrape.quality?.evidenceScore || 0}/100); alanları manuel doğrulayın.`
+      );
+    }
+    if (scrape.quality?.inferredFields?.length) {
+      qualityWarnings.push(
+        `Sayfadan doğrulanamayan alanlar: ${scrape.quality.inferredFields.join(', ')}.`
+      );
+    }
     if (linkCheck?.status === 'invalid') qualityWarnings.push('Link invalid.');
     if (isDuplicate) {
       qualityWarnings.push(

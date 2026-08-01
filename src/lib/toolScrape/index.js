@@ -207,6 +207,17 @@ export async function scrapeToolPage(rawUrl, options = {}) {
     descriptionLength: candidate.description.length,
     featureCount: candidate.features.length,
     thin: isThinContent(parsed),
+    evidenceScore: Math.min(
+      100,
+      (candidate.provenance?.observed?.description ? 25 : 0) +
+        Math.min(30, (candidate.provenance?.observed?.features || 0) * 10) +
+        Math.min(20, (candidate.provenance?.observed?.use_cases || 0) * 10) +
+        (candidate.provenance?.observed?.target_users ? 10 : 0) +
+        (candidate.provenance?.observed?.structured_data ? 15 : 0)
+    ),
+    inferredFields: Object.entries(candidate.provenance?.inferred || {})
+      .filter(([, value]) => Boolean(value))
+      .map(([key]) => key),
   };
 
   return {

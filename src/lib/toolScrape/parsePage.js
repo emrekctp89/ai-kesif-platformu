@@ -28,11 +28,113 @@ function metaContent($, ...selectors) {
   return '';
 }
 
+function normalizeJsonLdItems(value) {
+  if (Array.isArray(value)) return value.flatMap(normalizeJsonLdItems);
+  if (!value || typeof value !== 'object') return [];
+  if (Array.isArray(value['@graph'])) return normalizeJsonLdItems(value['@graph']);
+  return [value];
+}
+
+function parseJsonLd($) {
+  const items = [];
+  $('script[type="application/ld+json"]').each((_index, element) => {
+    try {
+      items.push(...normalizeJsonLdItems(JSON.parse($(element).text())));
+    } catch {
+      // Invalid third-party structured data must not make the whole scrape fail.
+    }
+  });
+  return items;
+}
+
+function schemaTypes(item) {
+  return (Array.isArray(item?.['@type']) ? item['@type'] : [item?.['@type']])
+    .filter(Boolean)
+    .map((value) => String(value).toLowerCase());
+}
+
+function schemaText(value) {
+  if (Array.isArray(value)) return value.map(schemaText).filter(Boolean).join(', ');
+  if (value && typeof value === 'object') return schemaText(value.name || value.description);
+  return cleanText(value, 500);
+}
+
+function extractSchemaData(items) {
+  const software = items.find((item) =>
+    schemaTypes(item).some((type) =>
+      ['softwareapplication', 'webapplication', 'mobileapplication', 'product'].includes(type)
+    )
+  );
+  if (!software) return null;
+
+  const offer = Array.isArray(software.offers) ? software.offers[0] : software.offers;
+  const features = Array.isArray(software.featureList)
+    ? software.featureList
+    : String(software.featureList || '').split(/[\n;]+/);
+
+  return {
+    type: schemaTypes(software),
+    name: schemaText(software.name),
+    description: schemaText(software.description),
+    category: schemaText(software.applicationCategory || software.category),
+    operatingSystem: schemaText(software.operatingSystem),
+    price: cleanText(offer?.price, 80),
+    priceCurrency: cleanText(offer?.priceCurrency, 20),
+    features: features
+      .map((value) => cleanText(value, 120))
+      .filter(Boolean)
+      .slice(0, 8),
+  };
+}
+
+const SECTION_PATTERNS = {
+  features: /feature|capabilit|what (?:it|you) can|özellik|yetenek/i,
+  useCases: /use cases?|solutions?|workflows?|kullanım|senaryo|çözümler/i,
+  targetUsers: /who (?:is|it's|it is) for|for teams?|audience|kimler için|hedef kullanıcı/i,
+  limitations: /limitations?|considerations?|requirements?|sınırlama|gereksinim/i,
+};
+
+function extractSectionLists($) {
+  const sections = { features: [], useCases: [], targetUsers: [], limitations: [] };
+  $('h1, h2, h3, h4').each((_index, heading) => {
+    const title = cleanText($(heading).text(), 120);
+    const key = Object.keys(SECTION_PATTERNS).find((name) => SECTION_PATTERNS[name].test(title));
+    if (!key) return;
+    $(heading)
+      .nextUntil('h1, h2, h3, h4')
+      .find('li')
+      .addBack('li')
+      .each((_itemIndex, item) => {
+        const text = cleanText($(item).text(), 140);
+        if (text.length >= 8 && text.length <= 140 && !sections[key].includes(text)) {
+          sections[key].push(text);
+        }
+      });
+  });
+  return Object.fromEntries(
+    Object.entries(sections).map(([key, values]) => [key, values.slice(0, 8)])
+  );
+}
+
+function inferPlatformsFromEvidence(schema, pageText) {
+  const source = `${schema?.operatingSystem || ''} ${pageText}`.toLowerCase();
+  const platforms = ['Web'];
+  if (/\bios\b|iphone|ipad|app store/.test(source)) platforms.push('iOS');
+  if (/android|google play/.test(source)) platforms.push('Android');
+  if (/windows/.test(source)) platforms.push('Windows');
+  if (/macos|mac os|\bmac\b/.test(source)) platforms.push('macOS');
+  if (/linux/.test(source)) platforms.push('Linux');
+  if (/chrome extension|chrome web store/.test(source)) platforms.push('Chrome Uzantısı');
+  return [...new Set(platforms)].slice(0, 5);
+}
+
 /**
  * HTML string → ham alanlar
  */
 export function parseHtmlDocument(html, pageUrl) {
   const $ = cheerio.load(String(html || ''));
+  const jsonLd = parseJsonLd($);
+  const schema = extractSchemaData(jsonLd);
   $('script, style, noscript, svg').remove();
 
   const canonical =
@@ -48,7 +150,7 @@ export function parseHtmlDocument(html, pageUrl) {
   const ogTitle = metaContent($, 'meta[property="og:title"]', 'meta[name="twitter:title"]');
   const docTitle = cleanText($('title').first().text(), 200);
   const h1 = cleanText($('h1').first().text(), 200);
-  const name = firstNonEmpty(ogTitle, h1, docTitle)
+  const name = firstNonEmpty(schema?.name, ogTitle, h1, docTitle)
     .replace(/\s*[|\-–—].*$/, '')
     .trim();
 
@@ -65,13 +167,17 @@ export function parseHtmlDocument(html, pageUrl) {
     .filter((text) => text.length >= 40)
     .slice(0, 4);
 
-  const description = firstNonEmpty(ogDescription, paragraphBits.join(' '));
+  const description = firstNonEmpty(schema?.description, ogDescription, paragraphBits.join(' '));
 
-  const featureCandidates = $('li')
+  const sectionLists = extractSectionLists($);
+  const genericListItems = $('main li, article li, li')
     .toArray()
     .map((el) => cleanText($(el).text(), 120))
     .filter((text) => text.length >= 12 && text.length <= 120)
     .slice(0, 8);
+  const featureCandidates = [
+    ...new Set([...(schema?.features || []), ...sectionLists.features, ...genericListItems]),
+  ].slice(0, 8);
 
   const siteName = metaContent($, 'meta[property="og:site_name"]');
 
@@ -81,12 +187,23 @@ export function parseHtmlDocument(html, pageUrl) {
     link: normalizeToolUrl(finalUrl) || finalUrl,
     siteName: siteName || '',
     features: featureCandidates,
+    useCases: sectionLists.useCases,
+    targetUsers: sectionLists.targetUsers,
+    limitations: sectionLists.limitations,
+    platforms: inferPlatformsFromEvidence(schema, $('body').text()),
+    structuredData: schema,
     meta: {
       ogTitle,
       ogDescription,
       docTitle,
       h1,
       canonical: finalUrl,
+      evidence: {
+        jsonLd: Boolean(schema),
+        semanticSections: Object.fromEntries(
+          Object.entries(sectionLists).map(([key, values]) => [key, values.length])
+        ),
+      },
     },
   };
 }
@@ -164,10 +281,11 @@ export function toToolCandidate(parsed, { provider, sourceUrl }) {
   }
   description = description.slice(0, 600);
 
-  const features = (parsed.features || [])
+  const observedFeatures = (parsed.features || [])
     .map((item) => normalizeTextField(item))
     .filter((item) => item.length >= 8)
     .slice(0, 5);
+  const features = [...observedFeatures];
 
   while (features.length < 2) {
     features.push(
@@ -177,11 +295,24 @@ export function toToolCandidate(parsed, { provider, sourceUrl }) {
     );
   }
 
-  const useCases = [
-    `${name} ile ilgili iş akışlarını hızlandırmak.`,
-    'Ekip içinde deneme ve değerlendirme yapmak.',
-  ];
-  const targetUsers = ['AI araçlarını keşfeden profesyoneller', 'Ürün ve operasyon ekipleri'];
+  const observedUseCases = (parsed.useCases || [])
+    .map((item) => normalizeTextField(item))
+    .filter(Boolean)
+    .slice(0, 5);
+  const observedTargetUsers = (parsed.targetUsers || [])
+    .map((item) => normalizeTextField(item))
+    .filter(Boolean)
+    .slice(0, 4);
+  const useCases =
+    observedUseCases.length >= 2
+      ? observedUseCases
+      : [
+          `${name} ile ilgili iş akışlarını hızlandırmak.`,
+          'Ekip içinde deneme ve değerlendirme yapmak.',
+        ];
+  const targetUsers = observedTargetUsers.length
+    ? observedTargetUsers
+    : ['AI araçlarını keşfeden profesyoneller', 'Ürün ve operasyon ekipleri'];
 
   const pricing_model = inferPricingModel(description, link) || 'Freemium';
 
@@ -190,13 +321,34 @@ export function toToolCandidate(parsed, { provider, sourceUrl }) {
     link,
     description,
     pricing_model,
-    platforms: ['Web'],
+    platforms: parsed.platforms?.length ? parsed.platforms : ['Web'],
     features,
     use_cases: useCases,
     target_users: targetUsers,
-    limitations: ['Scrape ile alınan veri admin incelemesi gerektirir.'],
+    limitations: (parsed.limitations || [])
+      .map((item) => normalizeTextField(item))
+      .filter(Boolean)
+      .slice(0, 2)
+      .concat(['Scrape ile alınan veri admin incelemesi gerektirir.'])
+      .slice(0, 3),
     source_reason: `URL scrape (${provider}): ${sourceUrl}`,
     category: null,
     tier: 'Normal',
+    provenance: {
+      provider,
+      observed: {
+        description: Boolean(parsed.description),
+        features: observedFeatures.length,
+        use_cases: observedUseCases.length,
+        target_users: observedTargetUsers.length,
+        structured_data: Boolean(parsed.structuredData),
+      },
+      inferred: {
+        description: !parsed.description || String(parsed.description).length < 60,
+        features: Math.max(0, 2 - observedFeatures.length),
+        use_cases: observedUseCases.length < 2,
+        target_users: observedTargetUsers.length === 0,
+      },
+    },
   };
 }

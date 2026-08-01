@@ -288,13 +288,22 @@ North Star artık yalnızca tıklama/affiliate değil:
 - Server-only `kasif_proactive_preferences` migration’ı + RLS/grant sınırı
 - Production doğrulaması (2026-08-01): preference migration erişilebilir; tablo başlangıçta 0 kayıt
 
+### P6.22 Kanıt tabanlı ücretsiz scraping zekâsı
+
+- Gemini olmadan JSON-LD `SoftwareApplication` / `Product` verisini çıkarır
+- Features, use cases, hedef kullanıcı ve sınırlama başlıklarının altındaki gerçek maddeleri sınıflandırır
+- Platform sinyallerini structured data ve sayfa içeriğinden yerel olarak belirler
+- Her aday için 0–100 kanıt skoru ve manuel doğrulanacak inferred alanları raporlar
+- Bozuk JSON-LD tüm scrape işlemini bozmaz; meta/HTML fallback devam eder
+- Dry-run sonucu admin ekranında kanıt skoru ve doğrulama ihtiyaçlarını gösterir
+
 ---
 
 ## Sıradaki adımlar (öneri motoru)
 
 Öncelik sırasıyla tutulacak:
 
-1. ~~P0–P6.21~~ ✅ (kod/runbook; production migration/backfill ops’a bağlı)
+1. ~~P0–P6.22~~ ✅ (kod/runbook; production migration/backfill ops’a bağlı)
 2. **Production embedding backfill çalıştır** (`tools:embeddings:backfill`, hedef ≥%95)
 3. **Faz 5 migration apply** (`user_id` + proactive tables)
 4. ~~Proaktif preference migration apply~~ ✅; **ilk cohort ölçümü**

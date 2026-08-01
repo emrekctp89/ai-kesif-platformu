@@ -82,6 +82,46 @@ It supports drafts, action items, and translation for teams.
     expect(parsed.name).toMatch(/Notion AI/i);
     expect(parsed.description).toMatch(/write|summarize|brainstorm/i);
   });
+
+  it('JSON-LD ve semantik bölümlerden kanıtlı aday alanları çıkarır', () => {
+    const html = `
+      <html><head>
+        <script type="application/ld+json">{
+          "@context":"https://schema.org", "@type":"SoftwareApplication",
+          "name":"Signal AI", "description":"Signal AI turns customer interviews into searchable product insights for research teams.",
+          "operatingSystem":"Web, Windows, macOS", "featureList":["Transcribes customer interviews", "Clusters recurring product themes"]
+        }</script>
+      </head><body>
+        <h2>Use cases</h2><ul><li>Analyze weekly customer interviews</li><li>Prioritize evidence-backed roadmap themes</li></ul>
+        <h2>Who it is for</h2><ul><li>Product research teams</li></ul>
+      </body></html>`;
+    const parsed = parseHtmlDocument(html, 'https://signal.example/');
+    const candidate = toToolCandidate(parsed, {
+      provider: 'native',
+      sourceUrl: 'https://signal.example/',
+    });
+
+    expect(candidate.name).toBe('Signal AI');
+    expect(candidate.features).toContain('Transcribes customer interviews');
+    expect(candidate.use_cases).toContain('Analyze weekly customer interviews');
+    expect(candidate.target_users).toContain('Product research teams');
+    expect(candidate.platforms).toEqual(expect.arrayContaining(['Web', 'Windows', 'macOS']));
+    expect(candidate.provenance.observed).toMatchObject({
+      structured_data: true,
+      use_cases: 2,
+      target_users: 1,
+    });
+    expect(candidate.provenance.inferred.use_cases).toBe(false);
+  });
+
+  it('bozuk JSON-LD verisini atlayıp meta etiketleriyle devam eder', () => {
+    const parsed = parseHtmlDocument(
+      '<html><head><script type="application/ld+json">{oops</script><meta property="og:title" content="Fallback AI"><meta name="description" content="Fallback AI provides a reliable assistant for operational teams managing recurring work."></head></html>',
+      'https://fallback.example/'
+    );
+    expect(parsed.name).toBe('Fallback AI');
+    expect(parsed.meta.evidence.jsonLd).toBe(false);
+  });
 });
 
 describe('scrapeToolPage', () => {

@@ -1371,6 +1371,9 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                       : scrapeReport.enrich?.requested
                         ? ' · Gemini: atlandı'
                         : ''}
+                    {Number.isFinite(scrapeReport.quality?.evidenceScore)
+                      ? ` · kanıt: ${scrapeReport.quality.evidenceScore}/100`
+                      : ''}
                   </p>
                   <p className="font-medium text-foreground">
                     {scrapeReport.candidate?.name || 'Aday yok'}
@@ -1381,6 +1384,9 @@ function ToolManagementTab({ approvedTools, categories, allTags }) {
                   ) : null}
                   {scrapeReport.candidate?.description ? (
                     <p className="line-clamp-3">{scrapeReport.candidate.description}</p>
+                  ) : null}
+                  {scrapeReport.quality?.inferredFields?.length ? (
+                    <p>Manuel doğrulama: {scrapeReport.quality.inferredFields.join(', ')}</p>
                   ) : null}
                   {(scrapeReport.warnings || []).length > 0 ? (
                     <p>Uyarı: {scrapeReport.warnings.join(' · ')}</p>
