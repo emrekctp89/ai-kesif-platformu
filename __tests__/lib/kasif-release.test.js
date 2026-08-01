@@ -3,7 +3,7 @@ import { KASIF_CAPABILITIES, KASIF_VERSION, buildKasifRuntimeStatus } from '@/li
 describe('Kâşif v2.1 release manifest', () => {
   it('ücretli sağlayıcı olmadan çekirdek yetenekleri hazır gösterir', () => {
     const status = buildKasifRuntimeStatus({});
-    expect(KASIF_VERSION).toBe('2.1.1');
+    expect(KASIF_VERSION).toBe('2.1.2');
     expect(status.mode).toBe('local-only');
     expect(status.readiness).toBe('ready');
     expect(status.guarantees.paidProviderRequired).toBe(false);
