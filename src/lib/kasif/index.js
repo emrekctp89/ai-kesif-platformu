@@ -17,6 +17,13 @@ export {
 } from './jobSession';
 export { resolveJobWizard } from './jobWizards';
 export {
+  KASIF_VERSION,
+  KASIF_RELEASE_NAME,
+  KASIF_RELEASED_AT,
+  KASIF_CAPABILITIES,
+  buildKasifRuntimeStatus,
+} from './release';
+export {
   SOFT_LANDING_STORAGE_KEY,
   pickSoftLandingVariant,
   resolveSoftLandingVariant,

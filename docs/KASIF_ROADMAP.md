@@ -1,5 +1,8 @@
 # Kâşif yol haritası (notlar)
 
+> Güncel sürüm: **Kâşif v2.1.0 — Evidence CEO** (2026-08-01). Ayrıntılar:
+> `docs/KASIF_V2_1_RELEASE.md`.
+
 Bu dosya Kâşif’in **öneri motoru** ile **kataloga araç çekme** yönünü ayırır ve sıradaki işleri tutar.
 
 Son güncelleme: 2026-07-30

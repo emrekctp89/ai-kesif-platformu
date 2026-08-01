@@ -17,6 +17,7 @@ import {
   rateLimitResponse,
 } from '@/lib/developerApi';
 import { getKasifRecommendations, kasifConfig } from '@/lib/kasif/server';
+import { KASIF_VERSION } from '@/lib/kasif/release';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,6 +100,7 @@ export async function POST(request) {
         },
         meta: {
           engine: 'kasif',
+          version: KASIF_VERSION,
           count: recommendations?.length || 0,
           limit,
         },
@@ -127,6 +129,7 @@ export async function GET() {
       history: 'optional [{ role, content }]',
     },
     engine: 'kasif',
+    version: KASIF_VERSION,
     enabled: kasifConfig.enabled,
   });
 }

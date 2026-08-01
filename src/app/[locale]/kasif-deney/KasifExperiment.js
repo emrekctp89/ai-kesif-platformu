@@ -30,6 +30,7 @@ import {
 import {
   buildWorkmindHandoffUrl,
   formatKasifGoalLabel,
+  KASIF_VERSION,
   matchJobPack,
   pickSoftLandingVariant,
   SOFT_LANDING_STORAGE_KEY,
@@ -577,7 +578,7 @@ export default function KasifExperiment() {
           <div className="max-w-2xl">
             <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-background/70 px-3 py-1 text-xs font-semibold text-primary backdrop-blur">
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              {t('eyebrow')}
+              {t('eyebrow')} · v{KASIF_VERSION}
             </p>
             <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">{t('title')}</h1>
             <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">

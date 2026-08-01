@@ -11,6 +11,7 @@ import {
   listSoftLandingStarters,
   resolveSoftLandingVariant,
 } from './softLanding';
+import { KASIF_VERSION } from './release';
 
 function pricingOf(record) {
   return normalizeText(record.pricing_type || record.pricing_model || '');
@@ -444,15 +445,13 @@ export function detectMetaIntent(question) {
 
 function metaAnswers(kind, locale = 'tr') {
   const tr = {
-    identity:
-      'Ben Kâşif’im — AI Keşif Platformu’nun iş bitirme ve karar orkestratörüyüm. İhtiyacı anlar, onaylı katalogdan doğru araçları seçer, işi adımlara böler, uygulanabilir çıktılar üretir ve sonucu tamamlanana kadar takip ederim.',
+    identity: `Ben Kâşif v${KASIF_VERSION}’im — AI Keşif Platformu’nun iş bitirme ve karar orkestratörüyüm. İhtiyacı anlar, onaylı katalogdan doğru araçları seçer, işi adımlara böler, uygulanabilir çıktılar üretir ve sonucu tamamlanana kadar takip ederim.`,
     capabilities:
       'Bir sistem CEO’su gibi çalışabilirim: hedefi netleştirir, ücretsiz/ücretli araçları araştırıp karşılaştırır, çok adımlı çalışma planı kurar, hazır iş paketleri ve sihirbazlarla ilk çıktıyı üretir, otomasyon/partner bağlantılarına devreder, sonucu ve tamamlanma kanıtını izler, yeni katalog araçlarını keşif kuyruğuna alırım. Örnek: “SaaS lansmanımı planla”, “sunumumu üret”, “toplantıdan görev çıkar”, “bu aracı kataloğa ekle: URL”.',
     how: 'Soruyu Türkçe veya İngilizce anlar; hızlı yerel eşleşme, öğrenilmiş taksonomi ve gerektiğinde yapılandırılmış model zinciriyle niyeti çıkarırım. Önerileri yalnızca onaylı katalog verisiyle temellendiririm; Workmind planı, iş sihirbazı, çalıştırılabilir paket ve sonuç köprüsüyle öneriden tamamlanmış işe ilerlerim. Açık web keşfi güvenlik nedeniyle yalnız yönetici kontrollü onay kuyruğuna yazar; otomatik yayımlamaz.',
   };
   const en = {
-    identity:
-      'I am Kâşif — AI Keşif Platformu’s job-completion and decision orchestrator. I understand the goal, select grounded tools, build an execution plan, produce usable deliverables, and track the work through completion.',
+    identity: `I am Kâşif v${KASIF_VERSION} — AI Keşif Platformu’s job-completion and decision orchestrator. I understand the goal, select grounded tools, build an execution plan, produce usable deliverables, and track the work through completion.`,
     capabilities:
       'I can act like a system CEO: clarify a goal, research and compare free or paid tools, orchestrate multi-step workflows, generate first deliverables with job packs and wizards, hand work to automation or partner providers, track completion evidence, and place newly discovered tools into the catalog approval queue. Try: “plan my SaaS launch”, “produce a pitch deck”, “turn this meeting into tasks”, or “add this tool: URL”.',
     how: 'I understand Turkish and English through local matching, learned taxonomy, and a structured provider fallback when needed. Recommendations stay grounded in the approved catalog; Workmind plans, job wizards, runnable packs, and the result bridge move from recommendation to completed work. Open-web discovery is admin-controlled and writes only to an approval queue, never directly to production.',
@@ -474,6 +473,7 @@ export function answerMetaQuestion(question, locale = 'tr') {
     confidence: 0.99,
     meta: true,
     metaKind: kind,
+    version: KASIF_VERSION,
     intent: {
       concepts: [],
       goals: [],
