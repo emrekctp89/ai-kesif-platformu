@@ -1,13 +1,17 @@
 'use client';
 
-import * as React from 'react';
-import { Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import Link from 'next/link';
-import { Bot, ExternalLink, X } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
+import { Bot, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { KasifChatCore } from '@/components/kasif/KasifChatCore';
+
+// Pages that already render the full Kâşif experience — hide the floating
+// widget there so the chat isn't shown twice.
+const KASIF_PAGE_PATTERN = /^\/(en\/)?kasif(-deney)?(\/|$)/;
 
 /**
  * Global floating Kâşif widget. Mounted once in the locale layout so the full
@@ -16,9 +20,12 @@ import { KasifChatCore } from '@/components/kasif/KasifChatCore';
  */
 export function KasifWidget({ enabled = true }) {
   const t = useTranslations('Kasif');
-  const [isOpen, setIsOpen] = React.useState(false);
+  const tc = useTranslations('Common');
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   if (!enabled) return null;
+  if (KASIF_PAGE_PATTERN.test(pathname || '')) return null;
 
   return (
     <>
@@ -26,16 +33,19 @@ export function KasifWidget({ enabled = true }) {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: 1, duration: 0.5 }}
-        className="fixed bottom-20 right-6 z-[100]"
+        className="fixed bottom-6 right-6 z-[100]"
       >
-        <Button
-          onClick={() => setIsOpen(true)}
-          size="icon"
-          className="h-16 w-16 rounded-full shadow-lg"
-          aria-label={t('widgetOpenLabel')}
-        >
-          <Bot className="h-8 w-8" />
-        </Button>
+        {!isOpen && (
+          <Button
+            onClick={() => setIsOpen(true)}
+            size="icon"
+            className="h-14 w-14 rounded-full shadow-lg"
+            aria-label={t('widgetOpenLabel')}
+            title={t('widgetOpenLabel')}
+          >
+            <Bot className="h-7 w-7" />
+          </Button>
+        )}
       </motion.div>
 
       <AnimatePresence>
@@ -44,30 +54,37 @@ export function KasifWidget({ enabled = true }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-24 right-6 z-[100] flex h-[75vh] w-[92vw] max-w-md flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl"
+            role="dialog"
+            aria-modal="false"
+            aria-label={t('title')}
+            className="fixed bottom-4 right-4 z-[100] flex h-[min(38rem,calc(100vh-2rem))] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border bg-card shadow-2xl"
           >
-            <header className="flex items-center justify-between gap-2 border-b p-3">
-              <Link
-                href="/kasif-deney"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                {t('widgetExpand')}
-              </Link>
+            <header className="flex shrink-0 items-center justify-between gap-2 border-b p-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <Bot className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold leading-tight">{t('title')}</p>
+                  <Link
+                    href="/kasif"
+                    className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {t('widgetExpand')}
+                  </Link>
+                </div>
+              </div>
               <Button
                 onClick={() => setIsOpen(false)}
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
-                aria-label={t('widgetClose')}
+                className="h-7 w-7 shrink-0"
+                aria-label={tc('close')}
               >
                 <X className="h-4 w-4" />
               </Button>
             </header>
-            <div className="flex-1 overflow-y-auto p-3">
-              <Suspense fallback={null}>
-                <KasifChatCore variant="widget" />
-              </Suspense>
+            <div className="min-h-0 flex-1 overflow-y-auto p-3">
+              <KasifChatCore compact showHeader={false} showStarters maxStarters={4} autoFocus />
             </div>
           </motion.div>
         )}

@@ -3,5 +3,5 @@
 import { KasifChatCore } from '@/components/kasif/KasifChatCore';
 
 export default function KasifExperiment() {
-  return <KasifChatCore variant="page" />;
+  return <KasifChatCore compact={false} showHeader />;
 }

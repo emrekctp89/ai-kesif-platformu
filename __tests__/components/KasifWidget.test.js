@@ -1,7 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
+let mockPathname = '/';
+
 jest.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
+  usePathname: () => mockPathname,
 }));
 
 jest.mock('next-intl', () => ({
@@ -35,6 +38,7 @@ const PACK_ACCESS_RESPONSE = {
 };
 
 beforeEach(() => {
+  mockPathname = '/';
   window.requestAnimationFrame = (callback) => callback();
   Element.prototype.scrollIntoView = jest.fn();
   sessionStorage.clear();
@@ -51,6 +55,16 @@ describe('Kâşif widget', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it('/kasif ve /kasif-deney sayfalarında render edilmez', () => {
+    mockPathname = '/kasif';
+    const { container: kasifContainer } = render(<KasifWidget enabled />);
+    expect(kasifContainer).toBeEmptyDOMElement();
+
+    mockPathname = '/en/kasif-deney';
+    const { container: kasifDeneyContainer } = render(<KasifWidget enabled />);
+    expect(kasifDeneyContainer).toBeEmptyDOMElement();
+  });
+
   it('açma butonunu erişilebilir etiketle gösterir ve panel kapalı başlar', () => {
     render(<KasifWidget enabled />);
     expect(screen.getByRole('button', { name: "Kâşif'i aç" })).toBeInTheDocument();
@@ -61,18 +75,14 @@ describe('Kâşif widget', () => {
     render(<KasifWidget enabled />);
     fireEvent.click(screen.getByRole('button', { name: "Kâşif'i aç" }));
 
-    expect(screen.getByText('Tam sayfada aç').closest('a')).toHaveAttribute(
-      'href',
-      '/kasif-deney'
-    );
-    expect(screen.getByRole('button', { name: "Kâşif'i kapat" })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Kâşif' })).toBeInTheDocument();
+    expect(screen.getByText('Tam sayfada aç').closest('a')).toHaveAttribute('href', '/kasif');
+    expect(screen.getByRole('dialog', { name: 'Kâşif' })).toBeInTheDocument();
   });
 
   it('kapat butonuna tıklanınca paneli kapatır', async () => {
     render(<KasifWidget enabled />);
     fireEvent.click(screen.getByRole('button', { name: "Kâşif'i aç" }));
-    fireEvent.click(screen.getByRole('button', { name: "Kâşif'i kapat" }));
+    fireEvent.click(screen.getByRole('button', { name: 'Kapat' }));
 
     await waitFor(() =>
       expect(screen.queryByText('Tam sayfada aç')).not.toBeInTheDocument()

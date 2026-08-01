@@ -105,11 +105,15 @@ function getOrCreateSoftLandingVariant(remoteConfig = null) {
   }
 }
 
-// `variant` gives the shared chat logic two presentations:
-// - "page": the original full-page /kasif-deney chrome (hero, decorative blurs, wide container).
-// - "widget": a compact presentation meant to fit inside the KasifWidget floating panel.
-export function KasifChatCore({ variant = 'page' } = {}) {
-  const isWidget = variant === 'widget';
+// Prop-driven presentation controls so the same chat logic can render as the
+// full /kasif(-deney) page or as a compact panel inside the floating KasifWidget.
+export function KasifChatCore({
+  compact = false,
+  showHeader = true,
+  showStarters = true,
+  maxStarters = STARTER_QUESTIONS.length,
+  autoFocus = false,
+} = {}) {
   const t = useTranslations('Kasif');
   const locale = useLocale();
   const searchParams = useSearchParams();
@@ -146,6 +150,13 @@ export function KasifChatCore({ variant = 'page' } = {}) {
   }, [turns, loading]);
 
   useEffect(() => () => activeRequestRef.current?.abort(), []);
+
+  useEffect(() => {
+    if (!autoFocus) return;
+    requestAnimationFrame(() => questionRef.current?.focus());
+    // Only intended to run once on mount for widget-style embeds.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Oturum geçmişini locale bazlı geri yükle + soft-landing pin config.
   useEffect(() => {
@@ -575,83 +586,99 @@ export function KasifChatCore({ variant = 'page' } = {}) {
     ));
   }
 
-  const Wrapper = isWidget ? 'div' : 'main';
+  const Wrapper = compact ? 'div' : 'main';
 
   return (
     <Wrapper
       className={cn(
         'mx-auto flex w-full flex-col gap-6',
-        isWidget ? 'max-w-none gap-4 px-1 py-2' : 'min-h-[70vh] max-w-5xl px-2 py-8 sm:px-4 sm:py-12'
+        compact ? 'max-w-none gap-4 px-1 py-2' : 'min-h-[70vh] max-w-5xl px-2 py-8 sm:px-4 sm:py-12'
       )}
     >
-      <header
-        className={cn(
-          'relative overflow-hidden rounded-3xl border bg-gradient-to-br from-violet-500/10 via-background to-cyan-500/10',
-          isWidget ? 'p-4' : 'p-5 sm:p-8'
-        )}
-      >
-        {!isWidget && (
-          <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-violet-500/15 blur-3xl" />
-        )}
-        <div className="relative flex items-start justify-between gap-4">
-          <div className="max-w-2xl">
-            {!isWidget && (
-              <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-background/70 px-3 py-1 text-xs font-semibold text-primary backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                {t('eyebrow')} · v{KASIF_VERSION}
+      {showHeader ? (
+        <header
+          className={cn(
+            'relative overflow-hidden rounded-3xl border bg-gradient-to-br from-violet-500/10 via-background to-cyan-500/10',
+            compact ? 'p-4' : 'p-5 sm:p-8'
+          )}
+        >
+          {!compact && (
+            <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-violet-500/15 blur-3xl" />
+          )}
+          <div className="relative flex items-start justify-between gap-4">
+            <div className="max-w-2xl">
+              {!compact && (
+                <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-background/70 px-3 py-1 text-xs font-semibold text-primary backdrop-blur">
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t('eyebrow')} · v{KASIF_VERSION}
+                </p>
+              )}
+              <h1
+                className={
+                  compact ? 'text-lg font-bold tracking-tight' : 'text-3xl font-bold tracking-tight sm:text-5xl'
+                }
+              >
+                {t('title')}
+              </h1>
+              <p
+                className={
+                  compact
+                    ? 'mt-1.5 text-xs leading-5 text-muted-foreground'
+                    : 'mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base'
+                }
+              >
+                {t('subtitle')}
               </p>
-            )}
-            <h1
-              className={
-                isWidget ? 'text-lg font-bold tracking-tight' : 'text-3xl font-bold tracking-tight sm:text-5xl'
-              }
-            >
-              {t('title')}
-            </h1>
-            <p
-              className={
-                isWidget
-                  ? 'mt-1.5 text-xs leading-5 text-muted-foreground'
-                  : 'mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base'
-              }
-            >
-              {t('subtitle')}
-            </p>
-            {!isWidget && (
-              <div className="mt-5 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1.5 rounded-full border bg-background/70 px-2.5 py-1">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                  {t('trust.catalog')}
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border bg-background/70 px-2.5 py-1">
-                  <GitCompareArrows className="h-3.5 w-3.5 text-violet-500" />
-                  {t('trust.compare')}
-                </span>
-              </div>
-            )}
-            {!isWidget && (
-              <div className="mt-4 max-w-xl">
-                <ReceiptSocialProofStrip windowDays={30} compact />
-              </div>
+              {!compact && (
+                <div className="mt-5 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border bg-background/70 px-2.5 py-1">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                    {t('trust.catalog')}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border bg-background/70 px-2.5 py-1">
+                    <GitCompareArrows className="h-3.5 w-3.5 text-violet-500" />
+                    {t('trust.compare')}
+                  </span>
+                </div>
+              )}
+              {!compact && (
+                <div className="mt-4 max-w-xl">
+                  <ReceiptSocialProofStrip windowDays={30} compact />
+                </div>
+              )}
+            </div>
+            {turns.length > 0 && (
+              <button
+                type="button"
+                onClick={resetConversation}
+                className="shrink-0 rounded-xl border bg-background/70 p-2.5 text-muted-foreground backdrop-blur transition-colors hover:bg-muted hover:text-foreground"
+                aria-label={t('newConversation')}
+                title={t('newConversation')}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
             )}
           </div>
-          {turns.length > 0 && (
+        </header>
+      ) : (
+        turns.length > 0 && (
+          <div className="flex justify-end">
             <button
               type="button"
               onClick={resetConversation}
-              className="shrink-0 rounded-xl border bg-background/70 p-2.5 text-muted-foreground backdrop-blur transition-colors hover:bg-muted hover:text-foreground"
+              className="shrink-0 rounded-xl border bg-background/70 p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label={t('newConversation')}
               title={t('newConversation')}
             >
               <RotateCcw className="h-4 w-4" />
             </button>
-          )}
-        </div>
-      </header>
+          </div>
+        )
+      )}
 
       {turns.length === 0 && (
         <>
-          {proactivePersonalization !== null && (
+          {!compact && proactivePersonalization !== null && (
             <div className="flex justify-end">
               <button
                 type="button"
@@ -667,7 +694,7 @@ export function KasifChatCore({ variant = 'page' } = {}) {
               </button>
             </div>
           )}
-          {proactiveSuggestions.length > 0 && (
+          {!compact && proactiveSuggestions.length > 0 && (
             <section
               aria-labelledby="kasif-proactive-heading"
               className="rounded-3xl border border-violet-500/25 bg-violet-500/5 p-5 shadow-sm sm:p-6"
@@ -720,30 +747,47 @@ export function KasifChatCore({ variant = 'page' } = {}) {
               </div>
             </section>
           )}
-          <JobPacksStrip
-            locale={locale}
-            initialPackId={searchParams?.get('pack') || null}
-            initialOpenRunner={
-              searchParams?.get('runner') === '1' ||
-              searchParams?.get('runner') === 'true' ||
-              searchParams?.get('openRunner') === '1'
-            }
-            onAskPack={(pack) => {
-              void askQuestion(pack.starterQuestion);
-            }}
-          />
-          <section
-            aria-labelledby="kasif-starters-heading"
-            className="rounded-3xl border bg-card/80 p-5 shadow-sm sm:p-6"
-          >
-            <h2 id="kasif-starters-heading" className="text-sm font-semibold">
-              {t('startersTitle')}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t('startersDescription')}</p>
-            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              <StarterChips prefix="home" autoAsk={false} />
-            </div>
-          </section>
+          {!compact && (
+            <JobPacksStrip
+              locale={locale}
+              initialPackId={searchParams?.get('pack') || null}
+              initialOpenRunner={
+                searchParams?.get('runner') === '1' ||
+                searchParams?.get('runner') === 'true' ||
+                searchParams?.get('openRunner') === '1'
+              }
+              onAskPack={(pack) => {
+                void askQuestion(pack.starterQuestion);
+              }}
+            />
+          )}
+          {showStarters && (
+            <section
+              aria-labelledby="kasif-starters-heading"
+              className={cn(
+                'rounded-3xl border bg-card/80 shadow-sm',
+                compact ? 'p-3' : 'p-5 sm:p-6'
+              )}
+            >
+              <h2
+                id="kasif-starters-heading"
+                className={compact ? 'text-xs font-semibold' : 'text-sm font-semibold'}
+              >
+                {t('startersTitle')}
+              </h2>
+              {!compact && (
+                <p className="mt-1 text-sm text-muted-foreground">{t('startersDescription')}</p>
+              )}
+              <div
+                className={cn(
+                  'grid gap-2',
+                  compact ? 'mt-2 grid-cols-1' : 'mt-5 sm:grid-cols-2 lg:grid-cols-3'
+                )}
+              >
+                <StarterChips prefix="home" autoAsk={false} limit={maxStarters} />
+              </div>
+            </section>
+          )}
         </>
       )}
 
