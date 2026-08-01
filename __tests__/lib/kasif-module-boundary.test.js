@@ -18,6 +18,11 @@ describe('Kâşif module boundary', () => {
     const allowedDomainDirectories = [
       `${path.sep}lib${path.sep}kasif${path.sep}`,
       `${path.sep}app${path.sep}api${path.sep}kasif${path.sep}`,
+      // Bug fix: versiyonlanmış Kâşif rotaları (ör. app/api/v1/kasif/recommend)
+      // önceden bu izin listesine hiç uymuyordu, çünkü "kasif" segmenti bir alt
+      // seviyede (v1/ içinde) yer alıyor — bu da onları hatalı şekilde "domain
+      // dışı" sayıp gerçek olmayan bir ihlal bildirmesine yol açıyordu.
+      `${path.sep}app${path.sep}api${path.sep}v1${path.sep}kasif${path.sep}`,
       `${path.sep}components${path.sep}kasif${path.sep}`,
     ];
     const violations = [];
