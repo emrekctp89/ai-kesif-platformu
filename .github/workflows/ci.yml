@@ -86,13 +86,30 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Check E2E environment
+        id: e2e-env
+        shell: bash
+        run: |
+          if [ "$NEXT_PUBLIC_SUPABASE_URL" = "https://placeholder.supabase.co" ] || [ "$NEXT_PUBLIC_SUPABASE_ANON_KEY" = "placeholder-anon-key" ]; then
+            echo "run_tests=false" >> "$GITHUB_OUTPUT"
+            echo "Supabase E2E secrets are not configured; skipping browser smoke tests."
+          else
+            echo "run_tests=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install Playwright Chromium
+        if: steps.e2e-env.outputs.run_tests == 'true'
         run: npx playwright install --with-deps chromium
 
       - name: Run desktop and mobile smoke tests
+        if: steps.e2e-env.outputs.run_tests == 'true'
         env:
           PLAYWRIGHT_SKIP_WEBSERVER: '0'
         run: npm run test:e2e -- --project=chromium --project=mobile-chrome
+
+      - name: Skip browser smoke tests
+        if: steps.e2e-env.outputs.run_tests != 'true'
+        run: echo "Skipped browser smoke tests because Supabase E2E secrets are not configured."
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
