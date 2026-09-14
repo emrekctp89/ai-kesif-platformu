@@ -24,7 +24,7 @@ class HomePage {
   }
 
   getSearchInput() {
-    return this.page.getByRole('textbox', { name: /Yapay zeka aracı ara|Search/i });
+    return this.page.getByRole('combobox', { name: /Yapay zeka aracı ara|Search/i });
   }
 
   async searchFor(term: string) {
@@ -47,7 +47,7 @@ class DiscoverPage {
   }
 
   async search(term: string) {
-    const input = this.page.getByRole('textbox', {
+    const input = this.page.getByRole('combobox', {
       name: /Yapay zeka aracı ara|Search/i,
     });
     await input.fill(term);

@@ -18,9 +18,6 @@ const limiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 500 });
 
 export const dynamic = 'force-dynamic';
 
-// Re-export for unit tests that imported from this module.
-export { parsePositiveIntegerParam };
-
 export async function GET(request) {
   try {
     const clientIp = getClientIp(request);

@@ -221,7 +221,7 @@ public/                   # Static assets
 ## 🧪 **Testing**
 
 ```bash
-# Kod kalitesi + production build doğrulaması
+# Kod kalitesi + Jest testleri + production build doğrulaması
 npm run verify
 
 # Alternatif: adım adım çalıştır

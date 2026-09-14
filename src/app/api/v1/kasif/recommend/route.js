@@ -17,7 +17,7 @@ import {
   rateLimitResponse,
 } from '@/lib/developerApi';
 import { getKasifRecommendations, kasifConfig } from '@/lib/kasif/server';
-import { KASIF_VERSION } from '@/lib/kasif/release';
+import { KASIF_VERSION } from '@/lib/kasif';
 
 export const dynamic = 'force-dynamic';
 

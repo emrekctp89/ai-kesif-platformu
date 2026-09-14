@@ -1,4 +1,16 @@
 {
+  "Payments": {
+    "title": "Payments are coming soon",
+    "body": "We are preparing Pro membership purchases. We are not accepting new payments yet. You can keep discovering and comparing tools for free. We will announce availability on this page.",
+    "promotionTitle": "Tool sponsorship is coming soon",
+    "promotionBody": "We are preparing tool promotions. Sponsorship payments are currently unavailable. We will announce availability here.",
+    "proTitle": "Pro membership · Coming soon",
+    "preview": "Explore the Pro features below; new membership purchases are not available yet.",
+    "faqQ": "When can I purchase Pro membership?",
+    "faqA": "Payments are being prepared. There is no confirmed launch date yet; we will announce availability on this page. You can use the free features in the meantime.",
+    "existingQ": "Can I manage my existing membership?",
+    "existingA": "Your existing membership access is unaffected by this change. If you have a subscription, you can still manage cancellation and invoices through billing management."
+  },
   "Navigation": {
     "home": "Home",
     "discover": "Discover",

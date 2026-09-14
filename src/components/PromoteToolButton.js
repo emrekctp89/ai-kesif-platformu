@@ -7,6 +7,8 @@ import { Gem } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { PAYMENTS_ENABLED } from '@/lib/paymentAvailability';
+import { PaymentComingSoon } from '@/components/PaymentComingSoon';
 
 export function PromoteToolButton({ toolId, toolSlug }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,12 +16,14 @@ export function PromoteToolButton({ toolId, toolSlug }) {
   const t = useTranslations('Tool');
 
   useEffect(() => {
-    if (searchParams.get('promoted') === 'success') {
+    if (PAYMENTS_ENABLED && searchParams.get('promoted') === 'success') {
       toast.success('Ödeme başarılı! Araç 30 gün boyunca sponsorlu yapıldı.');
       // Remove query param from URL without refreshing
       window.history.replaceState({}, '', `/tool/${toolSlug}`);
     }
   }, [searchParams, toolSlug]);
+
+  if (!PAYMENTS_ENABLED) return <PaymentComingSoon promotion />;
 
   const handlePromote = async () => {
     setIsLoading(true);

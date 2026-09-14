@@ -15,7 +15,7 @@ test.describe('Authentication Flows', () => {
     await expect(passwordInput).toBeVisible();
 
     // Check if login button exists
-    const loginBtn = page.getByRole('button', { name: /Giriş Yap/i });
+    const loginBtn = page.getByRole('button', { name: /Giriş Yap|Log in/i });
     await expect(loginBtn).toBeVisible();
   });
 
@@ -27,7 +27,7 @@ test.describe('Authentication Flows', () => {
     await expect(page.locator('input[type="password"]')).toBeVisible();
 
     // Check if there is a link back to the login page
-    const loginLink = page.getByRole('link', { name: /Giriş Yap/i });
+    const loginLink = page.getByRole('link', { name: /Giriş Yap|Log in/i }).first();
     await expect(loginLink).toBeVisible();
   });
 });

@@ -159,14 +159,13 @@ export async function setKasifDeepseekSuperpower(formData) {
   const enabled = raw === true || ['1', 'true', 'on', 'yes'].includes(String(raw).toLowerCase());
 
   try {
-    const { partnerRunnerStatus } = await import('@/lib/kasif/partnerRunner');
+    const { partnerRunnerStatus, setKasifDeepseekMode } = await import('@/lib/kasif/server');
     const provider = partnerRunnerStatus();
     const deepseekConfigured = Boolean(provider.configured && provider.via?.includes('deepseek'));
     if (enabled && !deepseekConfigured) {
       return { error: 'DeepSeek API anahtarı yapılandırılmadan süper güç modu açılamaz.' };
     }
 
-    const { setKasifDeepseekMode } = await import('@/lib/kasif/deepseekMode');
     const mode = await setKasifDeepseekMode(enabled, { userId: user.id });
     revalidatePath('/admin');
     revalidatePath('/kasif');

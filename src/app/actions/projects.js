@@ -3,10 +3,34 @@
 import logger from '@/utils/logger';
 
 import { createClient } from '@/utils/supabase/actions';
-import { createAdminClient } from '@/utils/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { slugify } from '@/utils/slugify';
+
+const AUTH_REQUIRED_ERROR = 'Bu işlem için giriş yapmalısınız.';
+const PROJECT_ACCESS_ERROR = 'Proje bulunamadı veya bu işlem için yetkiniz yok.';
+
+async function authorizeProjectOwner(supabase, projectId) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: AUTH_REQUIRED_ERROR };
+  if (!projectId) return { error: "Proje ID'si bulunamadı." };
+
+  const { data: project, error } = await supabase
+    .from('projects')
+    .select('id')
+    .eq('id', projectId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (error || !project) {
+    return { error: PROJECT_ACCESS_ERROR };
+  }
+
+  return { user };
+}
 
 export async function createProject(formData) {
   'use server';
@@ -48,10 +72,15 @@ export async function updateProject(formData) {
   const title = formData.get('title');
   const description = formData.get('description');
 
+  const authorization = await authorizeProjectOwner(supabase, id);
+  if (authorization.error) return authorization;
+  if (!title?.trim()) return { error: 'Proje başlığı boş olamaz.' };
+
   const { error } = await supabase
     .from('projects')
-    .update({ title, description, updated_at: new Date().toISOString() })
-    .eq('id', id);
+    .update({ title: title.trim(), description, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('user_id', authorization.user.id);
 
   if (error) {
     logger.error('Proje güncelleme hatası:', error);
@@ -68,7 +97,14 @@ export async function deleteProject(formData) {
   const supabase = await createClient();
   const id = formData.get('id');
 
-  const { error } = await supabase.from('projects').delete().eq('id', id);
+  const authorization = await authorizeProjectOwner(supabase, id);
+  if (authorization.error) return authorization;
+
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', authorization.user.id);
 
   if (error) {
     logger.error('Proje silme hatası:', error);
@@ -83,11 +119,17 @@ export async function updateProjectItems(formData) {
   const supabase = await createClient();
 
   const projectId = formData.get('projectId');
-  const items = JSON.parse(formData.get('items') || '[]');
-
-  if (!projectId) {
-    return { error: "Proje ID'si bulunamadı." };
+  let items;
+  try {
+    items = JSON.parse(formData.get('items') || '[]');
+  } catch {
+    return { error: 'Proje içerikleri geçerli bir formatta değil.' };
   }
+
+  if (!Array.isArray(items)) return { error: 'Proje içerikleri geçerli bir formatta değil.' };
+
+  const authorization = await authorizeProjectOwner(supabase, projectId);
+  if (authorization.error) return authorization;
 
   const { error: deleteError } = await supabase
     .from('project_items')
@@ -122,16 +164,8 @@ export async function getAiProjectStrategy(projectId) {
   'use server';
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: 'Bu özelliği kullanmak için giriş yapmalısınız.' };
-  }
-
-  if (!projectId) {
-    return { error: "Proje ID'si bulunamadı." };
-  }
+  const authorization = await authorizeProjectOwner(supabase, projectId);
+  if (authorization.error) return authorization;
 
   try {
     const { data: projectData, error: projectError } = await supabase.rpc(

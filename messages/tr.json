@@ -1,4 +1,16 @@
 {
+  "Payments": {
+    "title": "Ödemeler yakında açılacak",
+    "body": "Pro üyelik satın alımlarını hazırlıyoruz. Şu anda yeni ödeme almıyoruz. Bu sırada ücretsiz araç keşfi ve karşılaştırma özelliklerini kullanmaya devam edebilirsiniz. Açılış bilgisini bu sayfada paylaşacağız.",
+    "promotionTitle": "Araç sponsorluğu yakında açılacak",
+    "promotionBody": "Aracınızı öne çıkarma özelliğini hazırlıyoruz. Şu anda sponsorluk ödemesi alınmıyor. Kullanıma açıldığında burada duyuracağız.",
+    "proTitle": "Pro üyelik · Yakında",
+    "preview": "Pro özelliklerini inceleyebilirsiniz; yeni üyelik satın alımları henüz açık değil.",
+    "faqQ": "Pro üyeliği ne zaman satın alabilirim?",
+    "faqA": "Ödeme sistemi hazırlık aşamasında. Henüz kesin bir açılış tarihi yok; kullanıma açıldığında bu sayfada duyuracağız. Şimdilik ücretsiz özellikleri kullanabilirsiniz.",
+    "existingQ": "Mevcut üyeliğimi yönetebilir miyim?",
+    "existingA": "Mevcut üyelik erişiminiz bu değişiklikten etkilenmez. Aboneliğiniz varsa faturalama yönetimi üzerinden iptal ve fatura işlemlerinizi sürdürebilirsiniz."
+  },
   "Navigation": {
     "home": "Ana Sayfa",
     "discover": "Keşfet",

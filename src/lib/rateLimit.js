@@ -10,14 +10,14 @@
  *   const { success } = await limiter.check(10, identifier);
  */
 
-const tokenBuckets = new Map();
-
 /**
  * @param {Object} options
  * @param {number} options.interval - Pencere süresi (ms). Varsayılan: 60.000 (1 dakika)
  * @param {number} options.uniqueTokenPerInterval - Pencere başına izlenen benzersiz token sayısı
  */
 export function rateLimit({ interval = 60_000, uniqueTokenPerInterval = 500 } = {}) {
+  const tokenBuckets = new Map();
+
   return {
     /**
      * @param {number} limit   — pencere başına izin verilen maksimum istek sayısı
@@ -32,19 +32,19 @@ export function rateLimit({ interval = 60_000, uniqueTokenPerInterval = 500 } = 
       if (tokenBuckets.size > uniqueTokenPerInterval) {
         const oldest = now - interval;
         for (const [key, value] of tokenBuckets) {
-          if (value.timestamp < oldest) {
+          if (value.timestamp <= oldest) {
             tokenBuckets.delete(key);
           }
         }
       }
 
       const bucket = tokenBuckets.get(windowKey);
-      const reset = now + interval;
+      const reset = bucket ? bucket.timestamp + interval : now + interval;
 
-      if (!bucket || bucket.timestamp < now - interval) {
+      if (!bucket || bucket.timestamp <= now - interval) {
         // Yeni pencere başlat
         tokenBuckets.set(windowKey, { count: 1, timestamp: now });
-        return { success: true, limit, remaining: limit - 1, reset };
+        return { success: true, limit, remaining: limit - 1, reset: now + interval };
       }
 
       if (bucket.count >= limit) {

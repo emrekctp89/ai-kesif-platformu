@@ -46,13 +46,17 @@ export function JobFunnelPanel({
   const [copiedPromptId, setCopiedPromptId] = useState(null);
   const [bridgeDone, setBridgeDone] = useState(false);
 
-  const selectedTool = source
-    ? {
-        id: source.id,
-        slug: source.slug || null,
-        title: source.title,
-      }
-    : null;
+  const selectedTool = useMemo(
+    () =>
+      source
+        ? {
+            id: source.id,
+            slug: source.slug || null,
+            title: source.title,
+          }
+        : null,
+    [source]
+  );
 
   const allStepsDone = useMemo(
     () => wizard.steps.length > 0 && wizard.steps.every((step) => checked[step.id]),

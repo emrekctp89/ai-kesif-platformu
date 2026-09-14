@@ -6,6 +6,22 @@ import { createClient } from '@/utils/supabase/actions';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+const CONVERSATION_ACCESS_ERROR = 'Sohbet bulunamadı veya bu işlem için yetkiniz yok.';
+
+async function authorizeConversationParticipant(supabase, conversationId, userId) {
+  if (!conversationId) return { error: "Sohbet ID'si eksik." };
+
+  const { data: participant, error } = await supabase
+    .from('conversation_participants')
+    .select('conversation_id')
+    .eq('conversation_id', conversationId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !participant) return { error: CONVERSATION_ACCESS_ERROR };
+  return { success: true };
+}
+
 export async function startConversation(recipientUserId) {
   'use server';
 
@@ -56,6 +72,9 @@ export async function sendMessage(formData) {
     return { error: 'Mesaj içeriği boş olamaz.' };
   }
 
+  const authorization = await authorizeConversationParticipant(supabase, conversationId, user.id);
+  if (authorization.error) return authorization;
+
   const { error: messageError } = await supabase.from('messages').insert({
     conversation_id: conversationId,
     sender_id: user.id,
@@ -86,10 +105,16 @@ export async function searchUsers(searchTerm) {
   } = await supabase.auth.getUser();
   if (!user) return [];
 
+  const safeSearchTerm = String(searchTerm || '')
+    .trim()
+    .replace(/[%_,().]/g, '')
+    .slice(0, 80);
+  if (safeSearchTerm.length < 2) return [];
+
   const { data, error } = await supabase
     .from('profiles')
     .select('id, username, email, avatar_url')
-    .or(`username.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
+    .or(`username.ilike.%${safeSearchTerm}%,email.ilike.%${safeSearchTerm}%`)
     .neq('id', user.id)
     .limit(5);
 
@@ -218,6 +243,9 @@ export async function markConversationAsRead(conversationId) {
   if (!user || !conversationId) {
     return { error: "Kullanıcı veya sohbet ID'si eksik." };
   }
+
+  const authorization = await authorizeConversationParticipant(supabase, conversationId, user.id);
+  if (authorization.error) return authorization;
 
   const { error } = await supabase.rpc('mark_conversation_as_read', {
     p_conversation_id: conversationId,

@@ -9,13 +9,13 @@ test.describe('Araç Detay Sayfası', () => {
     await expect(page.getByRole('heading', { name: 'Slack', exact: true })).toBeVisible({
       timeout: 15000,
     });
-    await expect(page.getByRole('link', { name: /Resmî Siteyi İncele/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Resmî Siteyi İncele|Visit Official/i })).toBeVisible();
   });
 
   test('benzer araçlar ve link bildirme kontrolü görünüyor', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: /Bunları da Beğenebilirsiniz/i })).toBeVisible({
+    await expect(page.getByRole('heading', { name: /Bunları da Beğenebilirsiniz|You May Also Like/i })).toBeVisible({
       timeout: 15000,
     });
-    await expect(page.getByRole('button', { name: /Link Hatalı Bildir/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Link Hatalı Bildir|Report Broken Link/i })).toBeVisible();
   });
 });

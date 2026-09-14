@@ -1,6 +1,40 @@
 import { rateLimit } from '../rateLimit';
 
 describe('rateLimit', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('keeps separate limiter instances independent for the same token', async () => {
+    const first = rateLimit({ interval: 60_000 });
+    const second = rateLimit({ interval: 1_000 });
+    await first.check(1, 'shared-user');
+    expect((await first.check(1, 'shared-user')).success).toBe(false);
+    expect((await second.check(1, 'shared-user')).success).toBe(true);
+  });
+
+  it('reports the same reset time throughout a fixed window', async () => {
+    const now = jest.spyOn(Date, 'now').mockReturnValue(100_000);
+    const limiter = rateLimit({ interval: 1_000 });
+    expect((await limiter.check(2, 'user')).reset).toBe(101_000);
+    now.mockReturnValue(100_500);
+    expect(await limiter.check(2, 'user')).toMatchObject({ success: true, reset: 101_000 });
+    expect(await limiter.check(2, 'user')).toMatchObject({ success: false, reset: 101_000 });
+  });
+
+  it('starts a new window at the exact expiration boundary', async () => {
+    const now = jest.spyOn(Date, 'now').mockReturnValue(100_000);
+    const limiter = rateLimit({ interval: 1_000 });
+    await limiter.check(1, 'user');
+    now.mockReturnValue(101_000);
+    expect(await limiter.check(1, 'user')).toEqual({
+      success: true,
+      limit: 1,
+      remaining: 0,
+      reset: 102_000,
+    });
+  });
+
   it('limiti aşmayan isteklere izin verir', async () => {
     const limiter = rateLimit({ interval: 60_000 });
     const result = await limiter.check(5, 'user-1');

@@ -1,5 +1,9 @@
 import dns from 'node:dns/promises';
-import { assertSafeFetchUrl, GET, isDisallowedHost } from '../route';
+import { GET } from '../route';
+import {
+  assertSafeToolIconFetchUrl as assertSafeFetchUrl,
+  isDisallowedToolIconHost as isDisallowedHost,
+} from '@/lib/toolIconSecurity';
 
 class TestResponse {
   constructor(body, init = {}) {
@@ -44,7 +48,16 @@ describe('tool-icon route security', () => {
     expect(isDisallowedHost('127.0.0.1')).toBe(true);
     expect(isDisallowedHost('10.0.0.4')).toBe(true);
     expect(isDisallowedHost('192.168.1.10')).toBe(true);
+    expect(isDisallowedHost('100.64.0.1')).toBe(true);
+    expect(isDisallowedHost('198.18.0.1')).toBe(true);
+    expect(isDisallowedHost('224.0.0.1')).toBe(true);
+    expect(isDisallowedHost('2001:db8::1')).toBe(true);
+    expect(isDisallowedHost('fe90::1')).toBe(true);
+    expect(isDisallowedHost('ff02::1')).toBe(true);
+    expect(isDisallowedHost('::ffff:7f00:1')).toBe(true);
     expect(isDisallowedHost('example.com')).toBe(false);
+    expect(isDisallowedHost('8.8.8.8')).toBe(false);
+    expect(isDisallowedHost('198.51.1.1')).toBe(false);
   });
 
   it('rejects public hostnames that resolve to private addresses', async () => {

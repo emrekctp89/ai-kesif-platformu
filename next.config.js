@@ -58,9 +58,6 @@ const nextConfig = {
   ...(process.env.DOCKER_BUILD === '1' ? { output: 'standalone' } : {}),
   outputFileTracingRoot: __dirname,
   serverExternalPackages: ['@supabase/supabase-js'],
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   experimental: {
     serverActions: {
       bodySizeLimit: '4mb',

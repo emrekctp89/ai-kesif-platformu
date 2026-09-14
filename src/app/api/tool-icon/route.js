@@ -1,6 +1,5 @@
-import dns from 'node:dns/promises';
-import net from 'node:net';
 import { TOOL_ICON_OVERRIDES } from '@/lib/toolIconOverrides';
+import { assertSafeToolIconFetchUrl, isDisallowedToolIconHost } from '@/lib/toolIconSecurity';
 import logger from '@/utils/logger';
 
 const ICON_LINK_REGEX = /<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["'][^>]*>/gi;
@@ -10,48 +9,6 @@ const META_IMAGE_REGEX =
   /<meta[^>]+(?:property|name)=["'](?:og:image|twitter:image)["'][^>]+content=["']([^"']+)["'][^>]*>/gi;
 const COMMON_SECOND_LEVEL_LABELS = new Set(['ac', 'co', 'com', 'edu', 'gov', 'net', 'org']);
 const MAX_REDIRECTS = 3;
-
-function isPrivateIpv4(hostname) {
-  if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return false;
-  const parts = hostname.split('.').map((part) => Number(part));
-  if (parts.some((part) => Number.isNaN(part) || part < 0 || part > 255)) return false;
-
-  const [a, b] = parts;
-  if (a === 10) return true;
-  if (a === 127) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 169 && b === 254) return true;
-  return false;
-}
-
-function isPrivateIpv6(hostname) {
-  const normalized = String(hostname || '')
-    .toLowerCase()
-    .replace(/^\[|\]$/g, '');
-
-  if (normalized === '::1') return true;
-  if (normalized === '::') return true;
-  if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true;
-  if (normalized.startsWith('fe80:')) return true;
-  if (normalized.startsWith('::ffff:')) {
-    return isPrivateIpv4(normalized.replace('::ffff:', ''));
-  }
-
-  return false;
-}
-
-export function isDisallowedHost(hostname) {
-  const normalized = String(hostname || '').toLowerCase();
-  if (!normalized) return true;
-  if (normalized === 'localhost') return true;
-  if (normalized.endsWith('.local')) return true;
-  if (normalized.endsWith('.localhost')) return true;
-  if (net.isIP(normalized) === 6) return isPrivateIpv6(normalized);
-  if (isPrivateIpv4(normalized)) return true;
-  if (isPrivateIpv6(normalized)) return true;
-  return false;
-}
 
 function getRegistrableDomain(hostname) {
   const parts = String(hostname || '')
@@ -76,12 +33,12 @@ function normalizeLink(link) {
   try {
     const parsed = new URL(raw);
     if (!['http:', 'https:'].includes(parsed.protocol)) return null;
-    if (isDisallowedHost(parsed.hostname)) return null;
+    if (isDisallowedToolIconHost(parsed.hostname)) return null;
     return parsed;
   } catch {
     try {
       const parsed = new URL(`https://${raw}`);
-      if (isDisallowedHost(parsed.hostname)) return null;
+      if (isDisallowedToolIconHost(parsed.hostname)) return null;
       return parsed;
     } catch {
       return null;
@@ -136,7 +93,7 @@ function extractIconLinksFromHtml(html, baseUrl) {
     try {
       const absolute = new URL(href, baseUrl);
       if (!['http:', 'https:'].includes(absolute.protocol)) continue;
-      if (isDisallowedHost(absolute.hostname)) continue;
+      if (isDisallowedToolIconHost(absolute.hostname)) continue;
       results.push({
         url: absolute.toString(),
         source: 'html-link-icon',
@@ -154,7 +111,7 @@ function extractMetaImageLinksFromHtml(html, baseUrl) {
     try {
       const absolute = new URL(href, baseUrl);
       if (!['http:', 'https:'].includes(absolute.protocol)) continue;
-      if (isDisallowedHost(absolute.hostname)) continue;
+      if (isDisallowedToolIconHost(absolute.hostname)) continue;
       results.push({
         url: absolute.toString(),
         source: 'html-meta-image',
@@ -172,7 +129,7 @@ function extractManifestLinksFromHtml(html, baseUrl) {
     try {
       const absolute = new URL(href, baseUrl);
       if (!['http:', 'https:'].includes(absolute.protocol)) continue;
-      if (isDisallowedHost(absolute.hostname)) continue;
+      if (isDisallowedToolIconHost(absolute.hostname)) continue;
       results.push(absolute.toString());
     } catch {}
   }
@@ -189,7 +146,7 @@ function extractIconLinksFromManifest(manifest, manifestUrl) {
     try {
       const absolute = new URL(icon.src, manifestUrl);
       if (!['http:', 'https:'].includes(absolute.protocol)) continue;
-      if (isDisallowedHost(absolute.hostname)) continue;
+      if (isDisallowedToolIconHost(absolute.hostname)) continue;
       candidates.push({
         url: absolute.toString(),
         source: 'web-manifest-icon',
@@ -209,7 +166,7 @@ function extractIconLinksFromManifest(manifest, manifestUrl) {
 const FETCH_TIMEOUT_MS = 5000;
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = FETCH_TIMEOUT_MS) {
-  const safeUrl = await assertSafeFetchUrl(url);
+  const safeUrl = await assertSafeToolIconFetchUrl(url);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -218,25 +175,6 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = FETCH_TIMEOUT_MS)
   } finally {
     clearTimeout(timeoutId);
   }
-}
-
-export async function assertSafeFetchUrl(input) {
-  const url = input instanceof URL ? input : new URL(String(input));
-
-  if (!['http:', 'https:'].includes(url.protocol) || isDisallowedHost(url.hostname)) {
-    throw new Error('Unsafe URL');
-  }
-
-  const resolvedAddresses = await dns.lookup(url.hostname, { all: true, verbatim: true });
-  if (
-    resolvedAddresses.some(({ address, family }) =>
-      family === 6 ? isPrivateIpv6(address) : isPrivateIpv4(address)
-    )
-  ) {
-    throw new Error('Unsafe resolved address');
-  }
-
-  return url;
 }
 
 async function fetchWithSafeRedirects(url, options, redirectCount = 0) {
@@ -258,7 +196,7 @@ async function fetchWithSafeRedirects(url, options, redirectCount = 0) {
     return response;
   }
 
-  const nextUrl = await assertSafeFetchUrl(new URL(location, url));
+  const nextUrl = await assertSafeToolIconFetchUrl(new URL(location, url));
   const nextOptions =
     response.status === 303 ? { ...options, method: 'GET', body: undefined } : options;
 

@@ -10,6 +10,8 @@ import { createCheckoutSession } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PAYMENTS_ENABLED } from '@/lib/paymentAvailability';
+import { PaymentComingSoon } from '@/components/PaymentComingSoon';
 
 function normalizePromoCode(raw) {
   if (!raw || typeof raw !== 'string') return '';
@@ -47,6 +49,8 @@ export function ProUpgradeForm({
   const t = useTranslations('MembershipPage');
   const locale = useLocale();
   const [promoCode, setPromoCode] = React.useState(normalizePromoCode(initialPromoCode));
+
+  if (!PAYMENTS_ENABLED) return <PaymentComingSoon />;
 
   const formatPrice = (amount) =>
     (amount / 100).toLocaleString(locale === 'en' ? 'en-US' : 'tr-TR', {

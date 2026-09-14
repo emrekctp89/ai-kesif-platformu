@@ -2237,7 +2237,7 @@ export async function getSearchSuggestions(query) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('tools')
-    .select('id, name, slug, link, tier, category_name')
+    .select('id, name, slug, link, tier, categories(name, slug)')
     .eq('is_approved', true)
     .ilike('name', `%${query}%`)
     .limit(5);
@@ -2245,5 +2245,10 @@ export async function getSearchSuggestions(query) {
     logger.error('Arama önerileri hatası:', error);
     return [];
   }
-  return data || [];
+  return (data || []).map((tool) => ({
+    ...tool,
+    category_name: tool.categories?.name || null,
+    category_slug: tool.categories?.slug || null,
+    categories: undefined,
+  }));
 }

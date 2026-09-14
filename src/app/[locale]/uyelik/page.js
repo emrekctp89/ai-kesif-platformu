@@ -19,6 +19,8 @@ import { createClient } from '@/utils/supabase/server';
 import { generatePageMetadata } from '@/utils/seo';
 import { ProUpgradeForm } from '@/components/ProUpgradeForm';
 import { ManageBillingButton } from '@/components/ManageBillingButton';
+import { PaymentComingSoon } from '@/components/PaymentComingSoon';
+import { PAYMENTS_ENABLED } from '@/lib/paymentAvailability';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -80,6 +82,7 @@ export default async function PricingPage(props) {
   const searchParams = await props.searchParams;
   const locale = params?.locale;
   const t = await getTranslations({ locale, namespace: 'MembershipPage' });
+  const paymentText = await getTranslations({ locale, namespace: 'Payments' });
   const supabase = await createClient(await cookies());
   const {
     data: { user },
@@ -93,7 +96,7 @@ export default async function PricingPage(props) {
           .eq('id', user.id)
           .single()
       : Promise.resolve({ data: null }),
-    getProducts(),
+    PAYMENTS_ENABLED ? getProducts() : Promise.resolve([]),
   ]);
 
   const isAdmin = user?.email === process.env.ADMIN_EMAIL;
@@ -171,15 +174,21 @@ export default async function PricingPage(props) {
     { label: t('compareBadge'), basic: false, pro: true },
   ];
 
-  const faqs = [
-    { q: t('faq1Q'), a: t('faq1A') },
-    { q: t('faq2Q'), a: t('faq2A') },
-    { q: t('faq3Q'), a: t('faq3A') },
-    { q: t('faq4Q'), a: t('faq4A') },
-  ];
+  const faqs = PAYMENTS_ENABLED
+    ? [
+        { q: t('faq1Q'), a: t('faq1A') },
+        { q: t('faq2Q'), a: t('faq2A') },
+        { q: t('faq3Q'), a: t('faq3A') },
+        { q: t('faq4Q'), a: t('faq4A') },
+      ]
+    : [
+        { q: paymentText('faqQ'), a: paymentText('faqA') },
+        { q: paymentText('existingQ'), a: paymentText('existingA') },
+      ];
 
   return (
     <div className="mx-auto max-w-5xl space-y-12 pb-12 sm:space-y-16">
+      {!PAYMENTS_ENABLED ? <PaymentComingSoon /> : null}
       {message ? (
         <div
           role="alert"
@@ -189,7 +198,7 @@ export default async function PricingPage(props) {
         </div>
       ) : null}
 
-      {checkoutSuccess && isProUser ? (
+      {PAYMENTS_ENABLED && checkoutSuccess && isProUser ? (
         <div
           role="status"
           className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200"
@@ -212,7 +221,7 @@ export default async function PricingPage(props) {
             {t('title')}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            {t('subtitle')}
+            {PAYMENTS_ENABLED ? t('subtitle') : paymentText('preview')}
           </p>
 
           <div className="mx-auto mt-8 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-4">
@@ -299,7 +308,32 @@ export default async function PricingPage(props) {
             </CardFooter>
           </Card>
 
-          {proProduct && price ? (
+          {!PAYMENTS_ENABLED ? (
+            <Card className="flex flex-col rounded-2xl border-primary/30 shadow-md glass-panel">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-2xl">
+                  <Lock className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                  {paymentText('proTitle')}
+                </CardTitle>
+                <CardDescription>{paymentText('preview')}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1">
+                <ul className="space-y-3">
+                  {proFeatures.map((feature) => (
+                    <FeatureRow key={feature} included label={feature} />
+                  ))}
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button asChild variant="outline" className="min-h-11 w-full">
+                  <Link href={locale === 'en' ? '/en/kesfet' : '/kesfet'} prefetch={false}>
+                    <Compass className="mr-2 h-4 w-4" aria-hidden="true" />
+                    {t('ctaDiscover')}
+                  </Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ) : proProduct && price ? (
             <Card className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-primary shadow-xl glass-panel">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-amber-400" />
               <div className="absolute right-4 top-4">
@@ -364,20 +398,22 @@ export default async function PricingPage(props) {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground sm:text-sm">
-          <span className="inline-flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
-            {t('trustSecure')}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Check className="h-4 w-4 text-primary" aria-hidden="true" />
-            {t('trustCancel')}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
-            {t('trustInstant')}
-          </span>
-        </div>
+        {PAYMENTS_ENABLED ? (
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground sm:text-sm">
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+              {t('trustSecure')}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Check className="h-4 w-4 text-primary" aria-hidden="true" />
+              {t('trustCancel')}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
+              {t('trustInstant')}
+            </span>
+          </div>
+        ) : null}
       </section>
 
       <section className="space-y-6">

@@ -7,6 +7,6 @@ test.describe('Araç karşılaştırma', () => {
     await expect(page.getByRole('heading', { name: /Karşılaştırma|Compare/i })).toBeVisible({
       timeout: 15000,
     });
-    await expect(page.getByText(/Karşılaştırmak istediğiniz araçları seçin/i)).toBeVisible();
+    await expect(page.getByText(/Karşılaştırmak istediğiniz araçları seçin|Select the tools/i)).toBeVisible();
   });
 });

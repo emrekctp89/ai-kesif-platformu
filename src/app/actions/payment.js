@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import Stripe from 'stripe';
 import { logServerError } from '@/utils/serverLogger';
 import { getPromoCode, toStripeCouponId } from '@/lib/promoCodes';
+import { PAYMENTS_ENABLED } from '@/lib/paymentAvailability';
 
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -40,6 +41,8 @@ async function getOrCreateStripeCoupon(stripe, promo) {
 
 export async function createCheckoutSession(formData) {
   'use server';
+  if (!PAYMENTS_ENABLED) return redirect('/uyelik');
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -180,6 +183,8 @@ export async function createBillingPortalSession() {
 
 export async function createPromotionCheckout(toolId, toolSlug) {
   'use server';
+  if (!PAYMENTS_ENABLED) return redirect('/uyelik');
+
   const supabase = await createClient();
   const {
     data: { user },
