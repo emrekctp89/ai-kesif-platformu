@@ -62,7 +62,7 @@ R08 için salt-okunur rapor komutu: `npm run catalog:quality-report -- --output=
 
 15 Eylül 2026 canlı R08 baseline: 540 araç / 469 onaylı; embedding kapsamı %0; 303 İngilizce açıklama eksik; 11 kesin kırık, 17 manuel inceleme gereken link; 1 fiyat alanı eksik; 58 araç aynı üst alan adını paylaşarak inceleme kuyruğuna girdi. Domain paylaşımı tek başına mükerrer ürün anlamına gelmez. Öncelik: embedding üretim hattının neden boş kaldığını doğrula, linkleri tekrar kontrol et, eksik çevirileri içerik denetimiyle tamamla.
 
-Embedding sağlayıcı probe'u `Your project has been denied access` döndürüyor; sağlayıcı erişimi düzelmeden toplu backfill çalıştırılmamalı. 469 linklik salt-okunur yeniden tarama 419 geçerli, 13 kesin kırık, 37 inceleme sonucunu verdi; HTTP 402/405'in kesin kırık yerine inceleme olarak sınıflandırılması düzeltildi. Link audit veritabanına yazmadı ve hiçbir araç pasife alınmadı.
+Embedding sağlayıcı probe'u `Your project has been denied access` döndürüyor; sağlayıcı erişimi düzelmeden toplu backfill çalıştırılmamalı. 469 linklik salt-okunur yeniden tarama 422 geçerli, 11 kesin kırık, 36 inceleme sonucunu verdi; HTTP 402/405'in kesin kırık yerine inceleme olarak sınıflandırılması düzeltildi. Link audit veritabanına yazmadı ve hiçbir araç pasife alınmadı.
 
 - Sprint 3, hafta 5–6: R10–R12; mobil kullanım, dil/SEO ve ölçülen performans.
 - Sprint 4, hafta 7–8: R13–R15; operasyon, PWA gizliliği ve dönüşüm.
