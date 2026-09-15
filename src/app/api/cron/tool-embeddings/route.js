@@ -13,14 +13,15 @@ export async function GET(request) {
   }
   const { searchParams } = new URL(request.url);
   try {
-    return NextResponse.json({
-      success: true,
-      report: await refreshMissingToolEmbeddings({
-        limit: getIntegerParam(searchParams, 'limit', { min: 1, max: 200 }) || 100,
-        delayMs: getIntegerParam(searchParams, 'delayMs', { min: 0, max: 5000 }) || 0,
-        includeCoverage: true,
-      }),
+    const report = await refreshMissingToolEmbeddings({
+      limit: getIntegerParam(searchParams, 'limit', { min: 1, max: 200 }) || 100,
+      delayMs: getIntegerParam(searchParams, 'delayMs', { min: 0, max: 5000 }) || 0,
+      includeCoverage: true,
     });
+    return NextResponse.json(
+      { success: !report.blocked, report },
+      { status: report.blocked ? 503 : 200 }
+    );
   } catch (error) {
     logger.error('[cron/tool-embeddings] failed:', error);
     return NextResponse.json(

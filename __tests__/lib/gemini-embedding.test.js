@@ -15,7 +15,10 @@ describe('Gemini embedding helper', () => {
     await expect(embedGeminiText('test')).resolves.toHaveLength(768);
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/models/gemini-embedding-2:embedContent'),
-      expect.objectContaining({ body: expect.stringContaining('"outputDimensionality":768') })
+      expect.objectContaining({
+        body: expect.stringContaining('"outputDimensionality":768'),
+        headers: expect.objectContaining({ 'x-goog-api-key': 'test-key' }),
+      })
     );
   });
 });

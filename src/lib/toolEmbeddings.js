@@ -90,6 +90,7 @@ export async function refreshMissingToolEmbeddings({
   if (error) throw new Error(`TOOL_EMBEDDING_FETCH_FAILED: ${error.message || error.code}`);
 
   const results = [];
+  let blocked = false;
   for (const tool of tools || []) {
     try {
       const embedding = await embedGeminiText(`${tool.name}. ${tool.description || ''}`);
@@ -106,15 +107,24 @@ export async function refreshMissingToolEmbeddings({
         ok: false,
         error: error_?.message || 'Embedding failed',
       });
+      if (
+        error_?.status === 401 ||
+        error_?.status === 403 ||
+        ['PERMISSION_DENIED', 'UNAUTHENTICATED'].includes(error_?.code)
+      ) {
+        blocked = true;
+        break;
+      }
     }
     await sleep(safeDelayMs);
   }
 
   const report = {
-    scanned: (tools || []).length,
+    scanned: results.length,
     updated: results.filter((result) => result.ok).length,
     failed: results.filter((result) => !result.ok).length,
-    hasMore: (tools || []).length === safeLimit,
+    hasMore: !blocked && (tools || []).length === safeLimit,
+    blocked,
     limit: safeLimit,
     delayMs: safeDelayMs,
     results,

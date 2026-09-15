@@ -42,6 +42,39 @@ describe('toolEmbeddings', () => {
     expect(embedGeminiText).toHaveBeenCalledWith('Tool. Desc');
   });
 
+  it('sağlayıcı erişimi reddedildiğinde batch tek istekten sonra durur', async () => {
+    const fetchQuery = {};
+    for (const method of ['select', 'eq', 'is', 'order']) {
+      fetchQuery[method] = jest.fn().mockReturnValue(fetchQuery);
+    }
+    fetchQuery.limit = jest.fn().mockResolvedValue({
+      data: [
+        { id: 1, name: 'A', description: 'd' },
+        { id: 2, name: 'B', description: 'd' },
+        { id: 3, name: 'C', description: 'd' },
+      ],
+      error: null,
+    });
+    const from = jest.fn().mockReturnValue(fetchQuery);
+    createAdminClient.mockReturnValue({ from });
+    const denied = Object.assign(new Error('Project access denied'), {
+      status: 403,
+      code: 'PERMISSION_DENIED',
+    });
+    embedGeminiText.mockRejectedValue(denied);
+
+    const report = await refreshMissingToolEmbeddings({ limit: 3 });
+    expect(report).toMatchObject({
+      scanned: 1,
+      updated: 0,
+      failed: 1,
+      blocked: true,
+      hasMore: false,
+    });
+    expect(embedGeminiText).toHaveBeenCalledTimes(1);
+    expect(from).toHaveBeenCalledTimes(1);
+  });
+
   it('limit ve delayMs değerlerini güvenli aralığa sıkıştırır', async () => {
     const fetchQuery = {};
     for (const method of ['select', 'eq', 'is', 'order']) {

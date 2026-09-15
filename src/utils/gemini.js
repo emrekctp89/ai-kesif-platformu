@@ -42,7 +42,7 @@ export async function generateGeminiText(prompt, options = {}) {
 }
 
 /**
- * Embedding helper (text-embedding-004).
+ * Embedding helper (gemini-embedding-2).
  * @param {string} text
  * @returns {Promise<number[]>}
  */
@@ -50,10 +50,10 @@ export async function embedGeminiText(text) {
   const apiKey = requireApiKey();
   const model = DEFAULT_EMBED_MODEL.replace(/^models\//, '');
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
       body: JSON.stringify({
         model: `models/${model}`,
         content: { parts: [{ text: String(text || '').slice(0, 12000) }] },
@@ -63,7 +63,10 @@ export async function embedGeminiText(text) {
   );
   const result = await response.json();
   if (!response.ok) {
-    throw new Error(result?.error?.message || 'Gemini embedding request failed.');
+    const error = new Error(result?.error?.message || 'Gemini embedding request failed.');
+    error.status = response.status;
+    error.code = result?.error?.status || null;
+    throw error;
   }
   const values = result?.embedding?.values;
   if (values?.length !== EMBEDDING_DIMENSIONS) {

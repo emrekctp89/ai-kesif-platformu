@@ -157,17 +157,20 @@ async function getEmbedding(text) {
   };
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${embeddingModel}:embedContent?key=${geminiApiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${embeddingModel}:embedContent`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiApiKey },
       body: JSON.stringify(payload),
     }
   );
 
   const result = await response.json();
   if (!response.ok) {
-    throw new Error(result.error?.message || 'Embedding API error');
+    const error = new Error(result.error?.message || 'Embedding API error');
+    error.status = response.status;
+    error.code = result.error?.status || null;
+    throw error;
   }
   const values = result.embedding?.values;
   if (!values || values.length !== EMBEDDING_DIMENSIONS) {
@@ -184,6 +187,7 @@ function sleep(ms) {
 async function processBatch(supabase, tools, { dryRun, delayMs }) {
   let successCount = 0;
   let failCount = 0;
+  let blocked = false;
 
   for (let i = 0; i < tools.length; i++) {
     const tool = tools[i];
@@ -213,12 +217,21 @@ async function processBatch(supabase, tools, { dryRun, delayMs }) {
     } catch (err) {
       console.log(`fail: ${err.message}`);
       failCount++;
+      if (
+        err?.status === 401 ||
+        err?.status === 403 ||
+        ['PERMISSION_DENIED', 'UNAUTHENTICATED'].includes(err?.code)
+      ) {
+        blocked = true;
+        console.error('Provider access blocked; stopping this batch before further requests.');
+        break;
+      }
     }
 
     await sleep(delayMs);
   }
 
-  return { successCount, failCount };
+  return { successCount, failCount, blocked };
 }
 
 async function run() {
@@ -274,10 +287,15 @@ async function run() {
     console.log(
       `\nBatch ${batches}: ${tools.length} tool(s) (onlyMissing=${options.onlyMissing}, dryRun=${options.dryRun})`
     );
-    const { successCount, failCount } = await processBatch(supabase, tools, options);
+    const { successCount, failCount, blocked } = await processBatch(supabase, tools, options);
     totalSuccess += successCount;
     totalFail += failCount;
-    totalScanned += tools.length;
+    totalScanned += successCount + failCount;
+
+    if (blocked) {
+      process.exitCode = 3;
+      break;
+    }
 
     const hasMore = tools.length === options.limit && options.onlyMissing;
     if (!options.loop || !hasMore || batches >= options.maxBatches) {
@@ -295,7 +313,7 @@ async function run() {
   if (!options.dryRun) {
     const coverageAfter = await getCoverage(supabase);
     printCoverage('Coverage after', coverageAfter);
-    if (!coverageAfter.readyForVectorFallback) {
+    if (!coverageAfter.readyForVectorFallback && process.exitCode !== 3) {
       console.log(
         `Still below 95% coverage (${coverageAfter.coveragePct}%). Re-run with --loop or daily cron.`
       );

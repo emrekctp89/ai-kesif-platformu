@@ -1,6 +1,6 @@
 # Katalog embedding backfill — ops runbook
 
-Son güncelleme: 2026-07-30
+Son güncelleme: 2026-09-15
 
 Faz 1 hibrit retrieval, eksik embedding olduğunda `match_tools` vector fallback’e düşer.
 Production kabul eşiği: **approved araçların ≥ %95’inde embedding**.
@@ -21,6 +21,10 @@ cron’u doğrulamak içindir.
 
 API kapalıysa script/cron hata verir; production verisi kısmen güncellenmiş kalabilir —
 batch idempotent’tir (`embedding IS NULL` satırları).
+
+15 Eylül 2026 erişim denetimi: `gemini-embedding-2` ve `gemini-embedding-001` aynı anahtarla HTTP 403 `PERMISSION_DENIED` / `Your project has been denied access` döndürdü. Yerel OpenAI anahtarı geçersiz. Vertex AI servis hesabı da proje için billing etkin olmadığı gerekçesiyle HTTP 403 döndürdü. Bu koşullarda backfill çalıştırılmamalı; batch ve cron artık kalıcı 401/403 hatasında ilk isteğin ardından durur.
+
+Hesap erişimini açmak için kullanılan anahtarın projesini [Google AI Studio API Keys](https://aistudio.google.com/api-keys) ekranında bulun. Aynı projenin [Projects](https://aistudio.google.com/app/projects) ve Billing ekranlarındaki uyarıları kontrol edin; neden görünmüyorsa [Cloud Billing Support](https://cloud.google.com/support/billing) üzerinden inceleme isteyin. Vertex AI kullanılacaksa ilgili Google Cloud projesinde billing etkin olmalıdır. Erişim açıldıktan sonra önce `--probe`, ardından `--limit=1` çalıştırın; üretim batch’ine ancak ikisi de başarılıysa geçin.
 
 ## Hızlı komutlar
 
@@ -104,11 +108,12 @@ Yanıtta `coverageBefore` / `coverageAfter`, `updated`, `failed`, `hasMore` geli
 
 ## Exit kodları (CLI)
 
-| Kod | Anlam                                          |
-| --- | ---------------------------------------------- |
-| `0` | Status ready / dry-run tamam / backfill ≥ %95  |
-| `1` | Ortam veya beklenmeyen hata                    |
-| `2` | Status/backfill sonrası coverage hâlâ &lt; %95 |
+| Kod | Anlam                                                            |
+| --- | ---------------------------------------------------------------- |
+| `0` | Status ready / dry-run tamam / backfill ≥ %95                    |
+| `1` | Ortam veya beklenmeyen hata                                      |
+| `2` | Status/backfill sonrası coverage hâlâ &lt; %95                   |
+| `3` | API anahtarı/proje erişimi kalıcı olarak engellendi; batch durdu |
 
 ## Bilinen engeller
 

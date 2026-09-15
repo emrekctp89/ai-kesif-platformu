@@ -64,6 +64,8 @@ R08 için salt-okunur rapor komutu: `npm run catalog:quality-report -- --output=
 
 Embedding sağlayıcı probe'u `Your project has been denied access` döndürüyor; sağlayıcı erişimi düzelmeden toplu backfill çalıştırılmamalı. 469 linklik salt-okunur yeniden tarama 422 geçerli, 11 kesin kırık, 36 inceleme sonucunu verdi; HTTP 402/405'in kesin kırık yerine inceleme olarak sınıflandırılması düzeltildi. Link audit veritabanına yazmadı ve hiçbir araç pasife alınmadı.
 
+15 Eylül embedding teşhisi: iki Gemini embedding modeli aynı 403 proje erişim reddini verdi; Vertex AI servis hesabı billing kapalı hatası, yerel OpenAI anahtarı geçersiz anahtar hatası verdi. Kalıcı 401/403 durumunda CLI ve cron ilk istekte duracak şekilde düzeltildi. Hesap erişimi açılmadan embedding kapsamı artırılamaz; açılınca tek araçlık yazma ve vector retrieval smoke testi zorunlu.
+
 - Sprint 3, hafta 5–6: R10–R12; mobil kullanım, dil/SEO ve ölçülen performans.
 - Sprint 4, hafta 7–8: R13–R15; operasyon, PWA gizliliği ve dönüşüm.
 - Sprint 5, hafta 9–10+: R16–R18; moderasyon, API ve talebe bağlı büyüme.
