@@ -2,7 +2,7 @@
 
 Yapay zeka araçlarını keşfet, karşılaştır, test et ve toplulukla paylaş.
 
-[🌐 Live Demo](https://ai-kesif-platformu.vercel.app) | [📖 Documentation](#documentation) | [🤝 Contributing](#contributing)
+[🌐 Live Demo](https://www.aikeşif.com) | [📖 Documentation](#documentation) | [🤝 Contributing](#contributing)
 
 ---
 
@@ -302,7 +302,7 @@ Bu proje [MIT License](./LICENSE) altında lisanslanmıştır.
 
 ## 📞 **İletişim**
 
-- 🌐 Website: [ai-kesif-platformu.vercel.app](https://ai-kesif-platformu.vercel.app)
+- 🌐 Website: [www.aikeşif.com](https://www.aikeşif.com)
 - 📧 Email: [support@ai-kesif-platformu.com](mailto:support@ai-kesif-platformu.com)
 - 🐦 Twitter: [@AIKesifPlatformu](https://twitter.com)
 - 💬 Discord: [Join Community](https://discord.gg)

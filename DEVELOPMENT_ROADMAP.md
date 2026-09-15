@@ -57,6 +57,9 @@ P0: kullanıcı/veri/ödeme doğruluğu ve sürüm güvenilirliği. P1: ana kull
 - Sprint 0, ilk 1–2 gün: R01, R02; doğrulanmış başlangıç raporu.
 - Sprint 1, hafta 1–2: R03–R06; güvenlik ve ödeme doğruluğu, CI kapıları.
 - Sprint 2, hafta 3–4: R07–R09; otomatik ana akışlar, katalog ve Kâşif baseline.
+
+R08 için salt-okunur rapor komutu: `npm run catalog:quality-report -- --output=catalog-quality.json`. Rapor yalnızca onaylı araçlardaki eksik alanları, isim/domain çakışmalarını, önceki link denetim sonuçlarını ve embedding kapsamasını ölçer. Canlı veri baseline'ı için Supabase service key ve URL gerekli; rapor üretilmeden otomatik düzeltme yapılmaz.
+
 - Sprint 3, hafta 5–6: R10–R12; mobil kullanım, dil/SEO ve ölçülen performans.
 - Sprint 4, hafta 7–8: R13–R15; operasyon, PWA gizliliği ve dönüşüm.
 - Sprint 5, hafta 9–10+: R16–R18; moderasyon, API ve talebe bağlı büyüme.
