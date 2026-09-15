@@ -339,7 +339,7 @@ function classifyHttpResponse(response, method) {
   }
 
   return {
-    status: 'invalid',
+    status: 'review',
     reason: `HTTP ${httpStatus}`,
     httpStatus,
     finalUrl,

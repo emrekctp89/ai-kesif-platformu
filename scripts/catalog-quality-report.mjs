@@ -100,7 +100,22 @@ async function main() {
   const outputArg = process.argv.find((arg) => arg.startsWith('--output='));
   if (outputArg)
     await writeFile(outputArg.slice('--output='.length), JSON.stringify(report, null, 2));
-  console.log(JSON.stringify(report, null, 2));
+  console.log(
+    JSON.stringify(
+      process.argv.includes('--verbose')
+        ? report
+        : {
+            generatedAt: report.generatedAt,
+            totalTools: report.totalTools,
+            approvedTools: report.approvedTools,
+            embeddingCoverage: report.embeddingCoverage,
+            counts: report.counts,
+            reportFile: outputArg ? outputArg.slice('--output='.length) : null,
+          },
+      null,
+      2
+    )
+  );
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
