@@ -39,6 +39,10 @@ import { formatPricing } from '@/utils/formatPricing';
 import { getSiteOrigin } from '@/utils/siteUrl';
 import { requireProAccess } from '@/lib/proAccess';
 import { getPublishedPostsForTool } from '@/lib/contentAuthors';
+import {
+  getFallbackToolBySlug,
+  isPlaywrightCatalogFallbackEnabled,
+} from '@/lib/playwrightCatalogFallback';
 
 export const revalidate = 3600;
 
@@ -68,7 +72,12 @@ async function getToolData(slug, categoryFallback) {
     .eq('is_approved', true)
     .maybeSingle();
 
-  if (error || !tool) return null;
+  if (error || !tool) {
+    if (isPlaywrightCatalogFallbackEnabled()) {
+      return getFallbackToolBySlug(slug, categoryFallback);
+    }
+    return null;
+  }
 
   const [categoryResult, ratingResult, tagsResult] = await Promise.all([
     tool.category_id

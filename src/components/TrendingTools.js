@@ -5,13 +5,23 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Flame } from 'lucide-react';
 import ToolIcon from '@/components/ToolIcon';
+import {
+  getFallbackTrendingTools,
+  isPlaywrightCatalogFallbackEnabled,
+} from '@/lib/playwrightCatalogFallback';
 
 async function getTrendingData() {
   const supabase = await createClient(await cookies());
   const { data, error } = await supabase.rpc('get_trending_tools');
   if (error) {
     logger.error('Trend olan araçlar çekilirken hata:', error);
+    if (isPlaywrightCatalogFallbackEnabled()) {
+      return getFallbackTrendingTools();
+    }
     return [];
+  }
+  if ((!data || data.length === 0) && isPlaywrightCatalogFallbackEnabled()) {
+    return getFallbackTrendingTools();
   }
   return data;
 }

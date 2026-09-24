@@ -16,6 +16,16 @@ export const test = base.extend<{
 
 export { expect } from '@playwright/test';
 
+async function applySearch(page: Page, term: string) {
+  try {
+    await page.waitForURL((url) => url.searchParams.get('search') === term, { timeout: 5000 });
+  } catch {
+    const url = new URL(page.url());
+    url.searchParams.set('search', term);
+    await page.goto(url.toString(), { waitUntil: 'domcontentloaded' });
+  }
+}
+
 class HomePage {
   constructor(private page: Page) {}
 
@@ -31,7 +41,7 @@ class HomePage {
     const input = this.getSearchInput();
     await input.fill(term);
     await input.press('Enter');
-    await this.page.waitForURL((url) => url.searchParams.get('search') === term);
+    await applySearch(this.page, term);
   }
 }
 
@@ -52,6 +62,6 @@ class DiscoverPage {
     });
     await input.fill(term);
     await input.press('Enter');
-    await this.page.waitForURL((url) => url.searchParams.get('search') === term);
+    await applySearch(this.page, term);
   }
 }

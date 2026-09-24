@@ -7,6 +7,13 @@ import { ToolOfTheDay } from '@/components/ToolOfTheDay';
 import { TrendingTools } from '@/components/TrendingTools';
 import { CategoryGrid } from '@/components/CategoryGrid';
 import { filterPrimaryCategories, sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
+import {
+  getFallbackCategories,
+  getFallbackTags,
+  getFallbackToolCount,
+  getFallbackTools,
+  isPlaywrightCatalogFallbackEnabled,
+} from '@/lib/playwrightCatalogFallback';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { getTranslations } from 'next-intl/server';
 import { getSiteOrigin } from '@/utils/siteUrl';
@@ -15,40 +22,67 @@ const siteUrl = getSiteOrigin();
 
 // Bu fonksiyon, sayfa için gerekli olan tüm verileri sunucuda tek seferde çeker.
 async function getPageData(searchParams) {
-  const supabase = await createClient(await cookies());
-
-  const { fetchMoreTools } = await import('@/app/actions');
-  const [authResult, initialTools, categoriesResult, tagsResult, toolsCountResult] =
-    await Promise.all([
-      supabase.auth.getUser(),
-      fetchMoreTools({ page: 0, searchParams }),
-      supabase.from('categories').select('name, slug').order('name'),
-      supabase.from('tags').select('id, name').order('name'),
-      supabase.from('tools').select('id', { count: 'exact', head: true }).eq('is_approved', true),
-    ]);
-
-  const user = authResult.data.user;
-  const { data: favorites } = user
-    ? await supabase.from('favorites').select('tool_id').eq('user_id', user.id)
-    : { data: [] };
-
-  // Client Component props must be serializable — pass an array, not a Set.
-  const favoriteToolIds = favorites?.map((f) => f.tool_id).filter(Boolean) || [];
-  const categories = sortCategoriesByCanonicalOrder(
-    filterPrimaryCategories(categoriesResult.data || [])
-  );
-
-  return {
-    user,
-    favoriteToolIds,
-    initialTools,
-    categories,
-    allTags: tagsResult.data || [],
+  const fallbackCategories = getFallbackCategories();
+  const fallbackData = {
+    user: null,
+    favoriteToolIds: [],
+    initialTools: getFallbackTools({ page: 0, searchParams }),
+    categories: fallbackCategories,
+    allTags: getFallbackTags(),
     stats: {
-      toolCount: toolsCountResult.count ?? 0,
-      categoryCount: categories.length,
+      toolCount: getFallbackToolCount(),
+      categoryCount: fallbackCategories.length,
     },
   };
+
+  try {
+    const supabase = await createClient(await cookies());
+    const { fetchMoreTools } = await import('@/app/actions');
+    const [authResult, initialTools, categoriesResult, tagsResult, toolsCountResult] =
+      await Promise.all([
+        supabase.auth.getUser(),
+        fetchMoreTools({ page: 0, searchParams }),
+        supabase.from('categories').select('name, slug').order('name'),
+        supabase.from('tags').select('id, name').order('name'),
+        supabase.from('tools').select('id', { count: 'exact', head: true }).eq('is_approved', true),
+      ]);
+
+    const user = authResult.data.user;
+    const { data: favorites } = user
+      ? await supabase.from('favorites').select('tool_id').eq('user_id', user.id)
+      : { data: [] };
+
+    const favoriteToolIds = favorites?.map((f) => f.tool_id).filter(Boolean) || [];
+    const categories = sortCategoriesByCanonicalOrder(
+      filterPrimaryCategories(categoriesResult.data || [])
+    );
+
+    if (
+      isPlaywrightCatalogFallbackEnabled() &&
+      initialTools.length === 0 &&
+      categories.length === 0 &&
+      (tagsResult.data || []).length === 0
+    ) {
+      return fallbackData;
+    }
+
+    return {
+      user,
+      favoriteToolIds,
+      initialTools,
+      categories,
+      allTags: tagsResult.data || [],
+      stats: {
+        toolCount: toolsCountResult.count ?? 0,
+        categoryCount: categories.length,
+      },
+    };
+  } catch {
+    if (isPlaywrightCatalogFallbackEnabled()) {
+      return fallbackData;
+    }
+    throw new Error('Homepage data could not be loaded.');
+  }
 }
 
 export default async function HomePage(props) {

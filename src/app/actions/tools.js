@@ -13,6 +13,10 @@ import { logServerError } from '@/utils/serverLogger';
 import logger from '@/utils/logger';
 import { enforceRateLimit, validateHumanForm } from '@/utils/antiAbuse';
 import {
+  getFallbackTools,
+  isPlaywrightCatalogFallbackEnabled,
+} from '@/lib/playwrightCatalogFallback';
+import {
   inferPlatformsFromLink,
   inferPricingModel,
   isLikelyEnglishDescription,
@@ -1887,6 +1891,9 @@ export async function fetchMoreTools({ page = 0, searchParams }) {
 
   if (error) {
     logger.error('Araç çekerken hata:', error.message);
+    if (isPlaywrightCatalogFallbackEnabled()) {
+      return getFallbackTools({ page, searchParams, pageSize: ITEMS_PER_PAGE });
+    }
     return [];
   }
 

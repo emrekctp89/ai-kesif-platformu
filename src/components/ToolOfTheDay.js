@@ -8,6 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Star, Zap } from 'lucide-react'; // Zap ikonu "Günün Aracı" temasını güçlendirir
 import ToolIcon from '@/components/ToolIcon';
 import { TrackedExternalLink } from '@/components/TrackedExternalLink';
+import {
+  getFallbackToolOfTheDay,
+  isPlaywrightCatalogFallbackEnabled,
+} from '@/lib/playwrightCatalogFallback';
 
 // Veritabanındaki RPC fonksiyonunu çağıran fonksiyon
 async function getToolOfTheDayData() {
@@ -17,7 +21,13 @@ async function getToolOfTheDayData() {
 
   if (error) {
     logger.error('Günün aracı çekilirken hata:', error);
+    if (isPlaywrightCatalogFallbackEnabled()) {
+      return getFallbackToolOfTheDay();
+    }
     return null;
+  }
+  if (!data && isPlaywrightCatalogFallbackEnabled()) {
+    return getFallbackToolOfTheDay();
   }
   return data;
 }

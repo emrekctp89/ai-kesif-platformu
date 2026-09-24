@@ -72,7 +72,9 @@ export default defineConfig({
   webServer: skipWebServer
     ? undefined
     : {
-        command: process.env.CI ? 'npm run start -- -p 3005' : 'npm run dev',
+        command: process.env.CI
+          ? 'npx cross-env PLAYWRIGHT_TEST=1 next start -p 3005'
+          : 'npx cross-env PLAYWRIGHT_TEST=1 next dev -p 3005 --turbopack',
         url: 'http://localhost:3005',
         reuseExistingServer: !process.env.CI,
         timeout: 180 * 1000,

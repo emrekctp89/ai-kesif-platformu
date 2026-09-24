@@ -8,6 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 import ToolIcon from '@/components/ToolIcon';
 import { TrackedExternalLink } from '@/components/TrackedExternalLink';
+import {
+  getFallbackFeaturedTools,
+  isPlaywrightCatalogFallbackEnabled,
+} from '@/lib/playwrightCatalogFallback';
 
 async function getFeaturedTools() {
   const supabase = await createClient(await cookies());
@@ -21,7 +25,14 @@ async function getFeaturedTools() {
 
   if (error) {
     logger.error('Öne çıkan araçlar çekilirken hata:', error);
+    if (isPlaywrightCatalogFallbackEnabled()) {
+      return getFallbackFeaturedTools();
+    }
     return [];
+  }
+
+  if ((!data || data.length === 0) && isPlaywrightCatalogFallbackEnabled()) {
+    return getFallbackFeaturedTools();
   }
 
   return data || [];

@@ -13,6 +13,10 @@ import {
   CarouselPrevious,
 } from '@/components/ui/carousel';
 import ToolIcon from '@/components/ToolIcon';
+import {
+  getFallbackSimilarTools,
+  isPlaywrightCatalogFallbackEnabled,
+} from '@/lib/playwrightCatalogFallback';
 
 async function getSimilarTools(currentTool, labels) {
   const similarToolSelect =
@@ -56,7 +60,14 @@ async function getSimilarTools(currentTool, labels) {
 
   if (error) {
     logger.error('Benzer araçlar çekilirken hata:', error);
+    if (isPlaywrightCatalogFallbackEnabled()) {
+      return getFallbackSimilarTools(currentTool, labels);
+    }
     return [];
+  }
+
+  if ((!data || data.length === 0) && isPlaywrightCatalogFallbackEnabled()) {
+    return getFallbackSimilarTools(currentTool, labels);
   }
 
   return (data || []).map((tool) => ({
