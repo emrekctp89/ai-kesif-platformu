@@ -1,15 +1,9 @@
 import './globals.css';
-import { Onest } from 'next/font/google';
 import Script from 'next/script';
 import { generateStructuredData } from '@/utils/seo';
 import { getSiteOrigin } from '@/utils/siteUrl';
 
 const siteUrl = getSiteOrigin();
-
-const onest = Onest({
-  subsets: ['latin'],
-  weight: ['400', '500', '700', '900'],
-});
 
 export const metadata = {
   metadataBase: new URL(siteUrl),
@@ -73,13 +67,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="AI Keşif" />
 
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         <link rel="alternate" type="application/rss+xml" href="/rss.xml" />
       </head>
-      <body className={`${onest.className} bg-background text-foreground`}>
+      <body className="bg-background text-foreground">
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-T6J56FT3"
