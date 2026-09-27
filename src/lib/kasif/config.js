@@ -1,9 +1,8 @@
 import 'server-only';
+import { isKasifEnabled as resolveKasifEnabled } from './activation';
 
 export function isKasifEnabled(env = process.env) {
-  const globalEnabled = env.KASIF_ENABLED !== 'false';
-  const localOverride = env.LOCAL_KASIF_ENABLED === 'true';
-  return globalEnabled || localOverride;
+  return resolveKasifEnabled(env);
 }
 
 export const kasifConfig = {

@@ -1,3 +1,5 @@
+import { isKasifEnabled } from './activation';
+
 export const KASIF_VERSION = '2.1.2';
 export const KASIF_RELEASE_NAME = 'Evidence CEO';
 export const KASIF_RELEASED_AT = '2026-08-01';
@@ -23,7 +25,7 @@ function configured(value) {
 }
 
 export function buildKasifRuntimeStatus(env = {}, runtime = {}) {
-  const enabled = env.KASIF_ENABLED !== 'false' || env.LOCAL_KASIF_ENABLED === 'true';
+  const enabled = isKasifEnabled(env);
   const scrapingEnabled = env.KASIF_SCRAPE_ENABLED !== 'false';
   const providers = {
     deepseek: configured(env.DEEPSEEK_API_KEY),
