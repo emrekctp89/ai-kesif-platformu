@@ -23,7 +23,7 @@ function configured(value) {
 }
 
 export function buildKasifRuntimeStatus(env = {}, runtime = {}) {
-  const enabled = env.KASIF_ENABLED !== 'false';
+  const enabled = env.KASIF_ENABLED !== 'false' || env.LOCAL_KASIF_ENABLED === 'true';
   const scrapingEnabled = env.KASIF_SCRAPE_ENABLED !== 'false';
   const providers = {
     deepseek: configured(env.DEEPSEEK_API_KEY),

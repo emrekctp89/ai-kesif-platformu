@@ -37,4 +37,13 @@ describe('Kâşif v2.1 release manifest', () => {
     expect(status.capabilities.find((item) => item.id === 'scrape')?.status).toBe('disabled');
     expect(KASIF_CAPABILITIES.length).toBeGreaterThanOrEqual(10);
   });
+
+  it('global kapalı olsa da local override ile aktifliği bildirir', () => {
+    const status = buildKasifRuntimeStatus({
+      KASIF_ENABLED: 'false',
+      LOCAL_KASIF_ENABLED: 'true',
+    });
+    expect(status.enabled).toBe(true);
+    expect(status.readiness).toBe('ready');
+  });
 });
