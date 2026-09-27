@@ -3,3 +3,7 @@ export function isKasifEnabled(env = {}) {
   const localOverride = env.LOCAL_KASIF_ENABLED === 'true';
   return globalEnabled || localOverride;
 }
+
+export function isKasifSiteEnabled(env = {}) {
+  return env.KASIF_ENABLED === 'true' || env.LOCAL_KASIF_ENABLED === 'true';
+}

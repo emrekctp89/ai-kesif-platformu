@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import KasifExperiment from './KasifExperiment';
-import { isKasifEnabled } from '@/lib/kasif/config';
+import { isKasifSiteEnabled } from '@/lib/kasif/activation';
 
 export const metadata = {
   title: 'Kâşif Yerel AI Deneyi',
@@ -9,7 +9,7 @@ export const metadata = {
 };
 
 export default function KasifExperimentPage() {
-  if (!isKasifEnabled(process.env)) notFound();
+  if (!isKasifSiteEnabled(process.env)) notFound();
   return (
     <Suspense fallback={null}>
       <KasifExperiment />

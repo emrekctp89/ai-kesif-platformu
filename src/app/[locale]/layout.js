@@ -13,10 +13,10 @@ import { getSiteOrigin } from '@/utils/siteUrl';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 import { KasifWidget } from '@/components/kasif/KasifWidget';
-import { isKasifEnabled } from '@/lib/kasif/config';
+import { isKasifSiteEnabled } from '@/lib/kasif/activation';
 
 const siteUrl = getSiteOrigin();
-const kasifWidgetEnabled = isKasifEnabled(process.env);
+const kasifWidgetEnabled = isKasifSiteEnabled(process.env);
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
