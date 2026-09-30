@@ -1,13 +1,12 @@
 /**
  * Public site origin helpers for OAuth, email links, SEO.
  *
- * Priority in production:
- * 1) Request host (user is actually on this domain)
- * 2) NEXT_PUBLIC_SITE_URL
- * 3) VERCEL_PROJECT_PRODUCTION_URL
+ * SEO and other public URLs use one canonical production origin.
  *
  * Local dev always prefers localhost:3005 so callbacks don't bounce to prod.
  */
+
+export const PRODUCTION_SITE_ORIGIN = 'https://www.xn--aikeif-zjb.com';
 
 function withProtocol(raw, fallbackProto = 'https') {
   if (!raw) return null;
@@ -42,14 +41,7 @@ export function getSiteOrigin() {
     );
   }
 
-  return (
-    toOrigin(process.env.NEXT_PUBLIC_SITE_URL, 'https') ||
-    toOrigin(process.env.VERCEL_PROJECT_PRODUCTION_URL, 'https') ||
-    toOrigin(process.env.NEXT_PUBLIC_VERCEL_URL, 'https') ||
-    toOrigin(process.env.VERCEL_URL, 'https') ||
-    // ASCII / punycode fallback only — HTTP headers cannot carry raw IDN (ş etc.)
-    'https://www.xn--aikeif-zjb.com'
-  );
+  return PRODUCTION_SITE_ORIGIN;
 }
 
 /**

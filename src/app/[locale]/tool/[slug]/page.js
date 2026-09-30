@@ -198,7 +198,9 @@ export async function generateMetadata({ params }) {
 
   const title = t('metaTitle', { name: tool.displayName });
   const description = createMetaDescription(tool.displayDescription);
-  const pageUrl = `${siteUrl}/tool/${tool.slug}`;
+  const trPageUrl = `${siteUrl}/tool/${tool.slug}`;
+  const enPageUrl = `${siteUrl}/en/tool/${tool.slug}`;
+  const pageUrl = locale === 'en' ? enPageUrl : trPageUrl;
   const ogImageUrl = `${siteUrl}/opengraph-image`;
 
   return {
@@ -207,6 +209,11 @@ export async function generateMetadata({ params }) {
     description,
     alternates: {
       canonical: pageUrl,
+      languages: {
+        tr: trPageUrl,
+        en: enPageUrl,
+        'x-default': trPageUrl,
+      },
     },
     openGraph: {
       type: 'website',
@@ -247,7 +254,7 @@ export default async function ToolPage(props) {
     });
   }
 
-  const shareUrl = `${siteUrl}/tool/${tool.slug}`;
+  const shareUrl = `${siteUrl}${locale === 'en' ? '/en' : ''}/tool/${tool.slug}`;
   const linkHealth = getLinkHealthMeta(tool, t, locale);
   const LinkHealthIcon = linkHealth.icon;
   const addedDate = formatDate(tool.created_at, locale);
