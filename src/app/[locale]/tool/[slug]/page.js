@@ -482,6 +482,42 @@ export default async function ToolPage(props) {
                   {tool.displayDescription}
                 </p>
 
+                <div
+                  className="mt-5 rounded-2xl border border-border/60 bg-background/70 p-3 shadow-sm backdrop-blur-sm sm:mt-6 sm:p-4"
+                  aria-label={t('decisionSnapshot')}
+                >
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                      {t('decisionSnapshot')}
+                    </p>
+                    <span className="hidden text-xs text-muted-foreground sm:inline">
+                      {t('decisionSnapshotHint')}
+                    </span>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                    <DecisionSignal
+                      icon={Layers3}
+                      label={t('bestFor')}
+                      value={tool.category_name}
+                    />
+                    <DecisionSignal
+                      icon={WalletCards}
+                      label={t('costModel')}
+                      value={pricingLabel}
+                    />
+                    <DecisionSignal
+                      icon={MonitorSmartphone}
+                      label={t('worksOn')}
+                      value={`${platforms[0]}${platforms.length > 1 ? ` +${platforms.length - 1}` : ''}`}
+                    />
+                    <DecisionSignal
+                      icon={LinkHealthIcon}
+                      label={t('linkConfidence')}
+                      value={linkHealth.badge}
+                    />
+                  </div>
+                </div>
+
                 {tool.tags?.length > 0 ? (
                   <div className="mt-4">
                     <p className="sr-only">{t('tags')}</p>
@@ -800,6 +836,20 @@ function InfoCard({ icon: Icon, label, value }) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function DecisionSignal({ icon: Icon, label, value }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-xl border border-border/50 bg-muted/35 px-3 py-2.5">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Icon className="h-4 w-4" aria-hidden="true" />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[11px] font-medium text-muted-foreground">{label}</span>
+        <span className="block truncate text-sm font-semibold text-foreground">{value}</span>
+      </span>
+    </div>
   );
 }
 

@@ -66,7 +66,7 @@ export default async function HomePage(props) {
   const discoverySections = (
     <div key="discovery-sections" className="space-y-12 sm:space-y-14">
       <ToolOfTheDay key="tool-of-the-day" />
-      <FeaturedTools key="featured-tools" />
+      <FeaturedTools key="featured-tools" locale={locale} />
       <TrendingTools key="trending-tools" emptyMode="hide" />
       <CategoryGrid key="category-grid" categories={initialData.categories} limit={12} />
       <SpeedInsights key="speed-insights" />
