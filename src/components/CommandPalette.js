@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/routing';
 import {
   CommandDialog,
   CommandGroup,
@@ -24,7 +25,9 @@ const resultIcons = {
 };
 
 export function CommandPalette() {
+  const t = useTranslations('GlobalSearch');
   const router = useRouter();
+  const inputRef = React.useRef(null);
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState('');
   const [debouncedQuery] = useDebounce(query, 300);
@@ -32,6 +35,7 @@ export function CommandPalette() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [searchError, setSearchError] = React.useState('');
   const [retryCount, setRetryCount] = React.useState(0);
+  const [selectedValue, setSelectedValue] = React.useState('/submit');
 
   React.useEffect(() => {
     const down = (e) => {
@@ -49,6 +53,7 @@ export function CommandPalette() {
     const searchQuery = query.trim();
     setData({ results: [], suggestions: [] });
     setSearchError('');
+    setSelectedValue(searchQuery.length > 1 ? '' : '/submit');
     setIsLoading(open && searchQuery.length > 1);
 
     if (open && searchQuery.length > 1 && query === debouncedQuery) {
@@ -60,6 +65,9 @@ export function CommandPalette() {
             setSearchError('Arama tamamlanamadı. Lütfen tekrar deneyin.');
           } else {
             setData({ results: response.results || [], suggestions: response.suggestions || [] });
+            setSelectedValue(
+              response.results?.[0]?.url || response.suggestions?.[0]?.url || '/submit'
+            );
           }
         } catch {
           if (active) setSearchError('Arama tamamlanamadı. Lütfen tekrar deneyin.');
@@ -91,35 +99,45 @@ export function CommandPalette() {
       <Button
         variant="ghost"
         size="icon"
-        aria-label="Hızlı aramayı aç"
+        aria-label={t('open')}
         aria-haspopup="dialog"
-        title="Hızlı Arama (Ctrl+K / Cmd+K)"
+        title={t('shortcut')}
         onClick={() => setOpen(true)}
       >
         <Search className="h-4 w-4" aria-hidden="true" />
       </Button>
-      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
-        <DialogTitle className="sr-only">Genel Arama</DialogTitle>
-        <DialogDescription className="sr-only">
-          Sitedeki herhangi bir şeyi arayın.
-        </DialogDescription>
+      <CommandDialog
+        open={open}
+        onOpenChange={setOpen}
+        shouldFilter={false}
+        commandProps={{ value: selectedValue, onValueChange: setSelectedValue }}
+      >
+        <DialogTitle className="sr-only">{t('title')}</DialogTitle>
+        <DialogDescription className="sr-only">{t('description')}</DialogDescription>
         <CommandInput
-          placeholder="Bir problem, fikir veya araç adı yazın..."
+          ref={inputRef}
+          placeholder={t('placeholder')}
+          clearLabel={t('clear')}
           value={query}
           onValueChange={setQuery}
+          onClear={
+            query
+              ? () => {
+                  setQuery('');
+                  inputRef.current?.focus();
+                }
+              : undefined
+          }
         />
         <CommandList>
           {isLoading && (
             <div role="status" className="py-6 text-center text-sm">
-              Aranıyor...
+              {t('loading')}
             </div>
           )}
           {!isLoading && data.results.length === 0 && data.suggestions.length === 0 && (
             <div role="status" className="py-6 text-center text-sm">
-              {searchError ||
-                (query.trim().length < 2
-                  ? 'Aramak için en az 2 karakter yazın.'
-                  : 'Sonuç bulunamadı. Farklı bir kelime deneyin.')}
+              {searchError ? t('error') : query.trim().length < 2 ? t('minimum') : t('empty')}
               {searchError && (
                 <div className="mt-3">
                   <Button
@@ -127,7 +145,7 @@ export function CommandPalette() {
                     size="sm"
                     onClick={() => setRetryCount((count) => count + 1)}
                   >
-                    Tekrar dene
+                    {t('retry')}
                   </Button>
                 </div>
               )}
@@ -139,7 +157,7 @@ export function CommandPalette() {
               {items.map((item) => (
                 <CommandItem
                   key={item.url}
-                  value={`${item.title} ${item.description}`}
+                  value={item.url}
                   onSelect={() => runCommand(() => router.push(item.url))}
                 >
                   <div className="flex items-center gap-3">
@@ -164,11 +182,11 @@ export function CommandPalette() {
           ))}
 
           {!isLoading && data.results.length === 0 && data.suggestions.length > 0 && (
-            <CommandGroup heading="Belki bunlar da ilginizi çeker...">
+            <CommandGroup heading={t('suggestions')}>
               {data.suggestions.map((item) => (
                 <CommandItem
                   key={item.url}
-                  value={item.title}
+                  value={item.url}
                   onSelect={() => runCommand(() => router.push(item.url))}
                 >
                   <div className="flex items-center gap-3">
@@ -190,10 +208,14 @@ export function CommandPalette() {
           )}
 
           <CommandSeparator />
-          <CommandGroup heading="Hızlı Eylemler">
-            <CommandItem onSelect={() => runCommand(() => router.push('/submit'))}>
+          <CommandGroup heading={t('actions')}>
+            <CommandItem
+              value="/submit"
+              disabled={isLoading}
+              onSelect={() => runCommand(() => router.push('/submit'))}
+            >
               <CornerDownLeft className="mr-2 h-4 w-4" />
-              Yeni Araç Öner
+              {t('submit')}
             </CommandItem>
           </CommandGroup>
         </CommandList>

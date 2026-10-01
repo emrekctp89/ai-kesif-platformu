@@ -2,8 +2,11 @@ import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { CommandPalette } from '../CommandPalette';
 import { runGlobalSearch } from '@/app/actions/globalSearch';
+jest.mock('next-intl', () => ({
+  useTranslations: () => (key) => require('../../../messages/tr.json').GlobalSearch[key],
+}));
 
-jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+jest.mock('@/i18n/routing', () => ({ useRouter: () => ({ push: jest.fn() }) }));
 jest.mock('@/app/actions/globalSearch', () => ({ runGlobalSearch: jest.fn() }));
 jest.mock('use-debounce', () => ({ useDebounce: (value) => [value] }));
 jest.mock('@/components/ui/dialog', () => ({
@@ -14,7 +17,7 @@ jest.mock('@/components/ui/command', () => {
   const Container = ({ children }) => <div>{children}</div>;
   return {
     CommandDialog: ({ open, children }) => (open ? <div>{children}</div> : null),
-    CommandInput: ({ onValueChange, ...props }) => (
+    CommandInput: ({ onValueChange, onClear: _onClear, clearLabel: _clearLabel, ...props }) => (
       <input {...props} onChange={(event) => onValueChange(event.target.value)} />
     ),
     CommandEmpty: Container,

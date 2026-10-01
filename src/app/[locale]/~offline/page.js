@@ -1,13 +1,13 @@
 import { WifiOff } from 'lucide-react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { OfflineRecovery } from '@/components/OfflineRecovery';
 
 export const metadata = {
   title: 'Çevrimdışı (Offline) | AI Keşif Platformu',
   description: 'Şu anda internet bağlantınız yok.',
 };
 
-export default function OfflinePage() {
+export default async function OfflinePage({ params }) {
+  const { locale } = await params;
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
       <div className="bg-muted/50 p-6 rounded-full mb-6">
@@ -18,9 +18,7 @@ export default function OfflinePage() {
         Görünüşe göre internet bağlantınız kesildi. Uygulamayı kullanmaya devam etmek için lütfen
         bağlantınızı kontrol edin.
       </p>
-      <Button asChild size="lg">
-        <Link href="/">Yeniden Dene</Link>
-      </Button>
+      <OfflineRecovery homeHref={locale === 'en' ? '/en' : '/'} />
     </div>
   );
 }

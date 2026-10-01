@@ -1,4 +1,20 @@
 {
+  "GlobalSearch": {
+    "open": "Open quick search",
+    "shortcut": "Quick Search (Ctrl+K / Cmd+K)",
+    "title": "Global Search",
+    "description": "Search across the site.",
+    "placeholder": "Type a problem, idea, or tool name...",
+    "clear": "Clear search",
+    "loading": "Searching...",
+    "minimum": "Type at least 2 characters to search.",
+    "empty": "No results found. Try a different keyword.",
+    "error": "Search failed. Please try again.",
+    "retry": "Try again",
+    "suggestions": "You might also like...",
+    "actions": "Quick Actions",
+    "submit": "Suggest a Tool"
+  },
   "Payments": {
     "title": "Payments are coming soon",
     "body": "We are preparing Pro membership purchases. We are not accepting new payments yet. You can keep discovering and comparing tools for free. We will announce availability on this page.",

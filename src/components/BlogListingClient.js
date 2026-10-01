@@ -133,6 +133,14 @@ export function BlogListingClient({ posts, locale, categories = [], tags = [] })
   const [filter, setFilter] = useState('all'); // all | guide | post
   const [categoryId, setCategoryId] = useState('all');
   const [tagId, setTagId] = useState('all');
+  const hasActiveFilters =
+    query !== '' || filter !== 'all' || categoryId !== 'all' || tagId !== 'all';
+  const clearFilters = () => {
+    setQuery('');
+    setFilter('all');
+    setCategoryId('all');
+    setTagId('all');
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('tr-TR');
@@ -242,9 +250,16 @@ export function BlogListingClient({ posts, locale, categories = [], tags = [] })
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        {t('resultsCount', { count: filtered.length })}
-      </p>
+      <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
+        <p role="status" className="text-sm text-muted-foreground">
+          {t('resultsCount', { count: filtered.length })}
+        </p>
+        {hasActiveFilters && filtered.length > 0 && (
+          <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
+            {t('clearFilters')}
+          </Button>
+        )}
+      </div>
 
       {filtered.length === 0 ? (
         <section className="rounded-3xl border border-dashed bg-muted/20 px-6 py-14 text-center">
@@ -253,17 +268,7 @@ export function BlogListingClient({ posts, locale, categories = [], tags = [] })
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
             {t('noResultsBody')}
           </p>
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-5"
-            onClick={() => {
-              setQuery('');
-              setFilter('all');
-              setCategoryId('all');
-              setTagId('all');
-            }}
-          >
+          <Button type="button" variant="outline" className="mt-5" onClick={clearFilters}>
             {t('clearFilters')}
           </Button>
         </section>

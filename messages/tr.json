@@ -1,4 +1,20 @@
 {
+  "GlobalSearch": {
+    "open": "Hızlı aramayı aç",
+    "shortcut": "Hızlı Arama (Ctrl+K / Cmd+K)",
+    "title": "Genel Arama",
+    "description": "Sitedeki herhangi bir şeyi arayın.",
+    "placeholder": "Bir problem, fikir veya araç adı yazın...",
+    "clear": "Aramayı temizle",
+    "loading": "Aranıyor...",
+    "minimum": "Aramak için en az 2 karakter yazın.",
+    "empty": "Sonuç bulunamadı. Farklı bir kelime deneyin.",
+    "error": "Arama tamamlanamadı. Lütfen tekrar deneyin.",
+    "retry": "Tekrar dene",
+    "suggestions": "Belki bunlar da ilginizi çeker...",
+    "actions": "Hızlı Eylemler",
+    "submit": "Yeni Araç Öner"
+  },
   "Payments": {
     "title": "Ödemeler yakında açılacak",
     "body": "Pro üyelik satın alımlarını hazırlıyoruz. Şu anda yeni ödeme almıyoruz. Bu sırada ücretsiz araç keşfi ve karşılaştırma özelliklerini kullanmaya devam edebilirsiniz. Açılış bilgisini bu sayfada paylaşacağız.",

@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import { Command as CommandPrimitive } from 'cmdk';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 import { cn } from '../../lib/utils.js';
 import { Dialog, DialogContent } from './dialog.jsx';
@@ -18,11 +18,12 @@ const Command = React.forwardRef(({ className, ...props }, ref) => (
 ));
 Command.displayName = CommandPrimitive.displayName;
 
-const CommandDialog = ({ children, shouldFilter = true, ...props }) => {
+const CommandDialog = ({ children, shouldFilter = true, commandProps, ...props }) => {
   return (
     <Dialog {...props}>
       <DialogContent className="overflow-hidden p-0">
         <Command
+          {...commandProps}
           shouldFilter={shouldFilter}
           className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5"
         >
@@ -33,19 +34,31 @@ const CommandDialog = ({ children, shouldFilter = true, ...props }) => {
   );
 };
 
-const CommandInput = React.forwardRef(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-    <CommandPrimitive.Input
-      ref={ref}
-      className={cn(
-        'flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
-        className
+const CommandInput = React.forwardRef(
+  ({ className, onClear, clearLabel = 'Aramayı temizle', ...props }, ref) => (
+    <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+      <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+      <CommandPrimitive.Input
+        ref={ref}
+        className={cn(
+          'flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
+          className
+        )}
+        {...props}
+      />
+      {onClear && (
+        <button
+          type="button"
+          aria-label={clearLabel}
+          onClick={onClear}
+          className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
       )}
-      {...props}
-    />
-  </div>
-));
+    </div>
+  )
+);
 
 CommandInput.displayName = CommandPrimitive.Input.displayName;
 
