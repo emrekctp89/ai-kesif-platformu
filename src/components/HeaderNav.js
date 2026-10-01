@@ -10,6 +10,7 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { NotificationCenter } from './NotificationCenter';
 import { UserNav } from './UserNav';
 import { MobileNav } from './MobileNav';
+import { CommandPalette } from './CommandPalette';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -151,6 +152,7 @@ export function HeaderNav({
       </nav>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
+        <CommandPalette />
         <div className="hidden items-center gap-2 sm:flex">
           <Button asChild className="ai-tavsiye-gradient font-semibold shadow-md">
             <Link href="/tavsiye" prefetch={false}>

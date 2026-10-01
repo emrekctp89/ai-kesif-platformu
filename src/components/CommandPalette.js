@@ -4,7 +4,6 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import {
   CommandDialog,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -14,9 +13,9 @@ import {
 import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useDebounce } from 'use-debounce';
 import { runAdvancedOmniSearch } from '@/app/actions';
-import { FileText, Laptop, User, CornerDownLeft, Sparkles } from 'lucide-react';
+import { FileText, Laptop, User, CornerDownLeft, Search } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import toast from 'react-hot-toast'; // toast'ı import ediyoruz
+import { Button } from './ui/button';
 
 const resultIcons = {
   Tool: <Laptop className="h-5 w-5 text-muted-foreground" />,
@@ -31,10 +30,12 @@ export function CommandPalette() {
   const [debouncedQuery] = useDebounce(query, 300);
   const [data, setData] = React.useState({ results: [], suggestions: [] });
   const [isLoading, setIsLoading] = React.useState(false);
+  const [searchError, setSearchError] = React.useState('');
+  const [retryCount, setRetryCount] = React.useState(0);
 
   React.useEffect(() => {
     const down = (e) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+      if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey) && !e.repeat) {
         e.preventDefault();
         setOpen((open) => !open);
       }
@@ -44,20 +45,34 @@ export function CommandPalette() {
   }, []);
 
   React.useEffect(() => {
-    if (debouncedQuery.length > 1) {
-      setIsLoading(true);
-      runAdvancedOmniSearch(debouncedQuery).then((data) => {
-        // DEĞİŞİKLİK: Sunucudan bir hata gelirse, bunu kullanıcıya gösteriyoruz.
-        if (data.error) {
-          toast.error(data.error);
+    let active = true;
+    const searchQuery = query.trim();
+    setData({ results: [], suggestions: [] });
+    setSearchError('');
+    setIsLoading(open && searchQuery.length > 1);
+
+    if (open && searchQuery.length > 1 && query === debouncedQuery) {
+      const search = async () => {
+        try {
+          const response = await runAdvancedOmniSearch(searchQuery);
+          if (!active) return;
+          if (response.error) {
+            setSearchError('Arama tamamlanamadı. Lütfen tekrar deneyin.');
+          } else {
+            setData({ results: response.results || [], suggestions: response.suggestions || [] });
+          }
+        } catch {
+          if (active) setSearchError('Arama tamamlanamadı. Lütfen tekrar deneyin.');
+        } finally {
+          if (active) setIsLoading(false);
         }
-        setData(data);
-        setIsLoading(false);
-      });
-    } else {
-      setData({ results: [], suggestions: [] });
+      };
+      search();
     }
-  }, [debouncedQuery]);
+    return () => {
+      active = false;
+    };
+  }, [debouncedQuery, query, open, retryCount]);
 
   const runCommand = React.useCallback((command) => {
     setOpen(false);
@@ -73,7 +88,17 @@ export function CommandPalette() {
 
   return (
     <>
-      <CommandDialog open={open} onOpenChange={setOpen}>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Hızlı aramayı aç"
+        aria-haspopup="dialog"
+        title="Hızlı Arama (Ctrl+K / Cmd+K)"
+        onClick={() => setOpen(true)}
+      >
+        <Search className="h-4 w-4" aria-hidden="true" />
+      </Button>
+      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
         <DialogTitle className="sr-only">Genel Arama</DialogTitle>
         <DialogDescription className="sr-only">
           Sitedeki herhangi bir şeyi arayın.
@@ -84,9 +109,29 @@ export function CommandPalette() {
           onValueChange={setQuery}
         />
         <CommandList>
-          {isLoading && <CommandEmpty>Aranıyor...</CommandEmpty>}
+          {isLoading && (
+            <div role="status" className="py-6 text-center text-sm">
+              Aranıyor...
+            </div>
+          )}
           {!isLoading && data.results.length === 0 && data.suggestions.length === 0 && (
-            <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
+            <div role="status" className="py-6 text-center text-sm">
+              {searchError ||
+                (query.trim().length < 2
+                  ? 'Aramak için en az 2 karakter yazın.'
+                  : 'Sonuç bulunamadı. Farklı bir kelime deneyin.')}
+              {searchError && (
+                <div className="mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRetryCount((count) => count + 1)}
+                  >
+                    Tekrar dene
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
 
           {Object.entries(groupedResults).map(([type, items]) => (
