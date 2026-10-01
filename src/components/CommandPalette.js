@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/command';
 import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useDebounce } from 'use-debounce';
-import { runAdvancedOmniSearch } from '@/app/actions';
+import { runGlobalSearch } from '@/app/actions/globalSearch';
 import { FileText, Laptop, User, CornerDownLeft, Search } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
@@ -54,7 +54,7 @@ export function CommandPalette() {
     if (open && searchQuery.length > 1 && query === debouncedQuery) {
       const search = async () => {
         try {
-          const response = await runAdvancedOmniSearch(searchQuery);
+          const response = await runGlobalSearch(searchQuery);
           if (!active) return;
           if (response.error) {
             setSearchError('Arama tamamlanamadı. Lütfen tekrar deneyin.');

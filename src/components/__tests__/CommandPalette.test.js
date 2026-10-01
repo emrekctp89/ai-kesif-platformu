@@ -1,10 +1,10 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { CommandPalette } from '../CommandPalette';
-import { runAdvancedOmniSearch } from '@/app/actions';
+import { runGlobalSearch } from '@/app/actions/globalSearch';
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
-jest.mock('@/app/actions', () => ({ runAdvancedOmniSearch: jest.fn() }));
+jest.mock('@/app/actions/globalSearch', () => ({ runGlobalSearch: jest.fn() }));
 jest.mock('use-debounce', () => ({ useDebounce: (value) => [value] }));
 jest.mock('@/components/ui/dialog', () => ({
   DialogTitle: ({ children }) => <div>{children}</div>,
@@ -45,13 +45,13 @@ it('opens from the search button and ignores held shortcut repeats', () => {
 
 it('keeps the latest results when an older request finishes last', async () => {
   let finishOld;
-  runAdvancedOmniSearch.mockImplementationOnce(
+  runGlobalSearch.mockImplementationOnce(
     () =>
       new Promise((resolve) => {
         finishOld = resolve;
       })
   );
-  runAdvancedOmniSearch.mockResolvedValueOnce({
+  runGlobalSearch.mockResolvedValueOnce({
     results: [{ title: 'Yeni sonuç', url: '/new', result_type: 'Tool' }],
     suggestions: [],
   });
@@ -70,7 +70,7 @@ it('keeps the latest results when an older request finishes last', async () => {
 });
 
 it('recovers from a rejected request and allows another search', async () => {
-  runAdvancedOmniSearch.mockRejectedValueOnce(new Error('offline'));
+  runGlobalSearch.mockRejectedValueOnce(new Error('offline'));
   const input = openSearch();
   fireEvent.change(input, { target: { value: 'arama' } });
   expect(
@@ -82,8 +82,8 @@ it('recovers from a rejected request and allows another search', async () => {
 });
 
 it('retries the same query after a server error', async () => {
-  runAdvancedOmniSearch.mockResolvedValueOnce({ error: 'Database connection failed' });
-  runAdvancedOmniSearch.mockResolvedValueOnce({
+  runGlobalSearch.mockResolvedValueOnce({ error: 'Database connection failed' });
+  runGlobalSearch.mockResolvedValueOnce({
     results: [{ title: 'Başarılı sonuç', url: '/success', result_type: 'Tool' }],
     suggestions: [],
   });
@@ -91,7 +91,7 @@ it('retries the same query after a server error', async () => {
   fireEvent.change(input, { target: { value: 'tasarım' } });
   fireEvent.click(await screen.findByRole('button', { name: 'Tekrar dene' }));
   expect(await screen.findByText('Başarılı sonuç')).toBeInTheDocument();
-  expect(runAdvancedOmniSearch).toHaveBeenNthCalledWith(2, 'tasarım');
+  expect(runGlobalSearch).toHaveBeenNthCalledWith(2, 'tasarım');
   expect(screen.queryByRole('button', { name: 'Tekrar dene' })).not.toBeInTheDocument();
   expect(screen.queryByText('Database connection failed')).not.toBeInTheDocument();
 });

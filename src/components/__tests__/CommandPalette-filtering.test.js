@@ -1,10 +1,10 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { CommandPalette } from '../CommandPalette';
-import { runAdvancedOmniSearch } from '@/app/actions';
+import { runGlobalSearch } from '@/app/actions/globalSearch';
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn() }) }));
-jest.mock('@/app/actions', () => ({ runAdvancedOmniSearch: jest.fn() }));
+jest.mock('@/app/actions/globalSearch', () => ({ runGlobalSearch: jest.fn() }));
 jest.mock('use-debounce', () => ({ useDebounce: (value) => [value] }));
 jest.mock('@/components/ui/dialog', () => ({
   Dialog: ({ open, children }) => (open ? <div>{children}</div> : null),
@@ -29,7 +29,7 @@ afterAll(() => {
 });
 
 it('shows semantic results and search status alongside quick actions', async () => {
-  runAdvancedOmniSearch.mockResolvedValue({
+  runGlobalSearch.mockResolvedValue({
     results: [
       {
         title: 'Midjourney',
