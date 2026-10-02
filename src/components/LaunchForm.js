@@ -69,6 +69,7 @@ export function LaunchForm({ userTools }) {
         <Popover>
           <PopoverTrigger asChild>
             <Button
+              type="button"
               variant="outline"
               role="combobox"
               className="w-full md:w-[400px] justify-between"

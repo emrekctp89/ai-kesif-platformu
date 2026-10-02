@@ -44,6 +44,7 @@ export function AcademicProfileManager({ allPapers, userPapers }) {
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            type="button"
             variant="outline"
             role="combobox"
             className="h-auto min-h-10 w-full justify-between"
