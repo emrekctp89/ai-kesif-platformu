@@ -43,6 +43,7 @@ function MultiSelect({ items, selectedIds, onSelectionChange, placeholder }) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           className="w-full justify-between h-auto min-h-[40px]"

@@ -76,7 +76,12 @@ function SubmitToolDialog({ bountyId, allTools }) {
             <Label>Araç Seçin *</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" className="w-full justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  role="combobox"
+                  className="w-full justify-between"
+                >
                   {selectedToolId
                     ? allTools.find((t) => t.id === selectedToolId)?.name
                     : 'Bir araç seçin...'}

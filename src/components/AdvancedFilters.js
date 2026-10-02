@@ -48,7 +48,7 @@ export function AdvancedFilters({ selectedPricing, selectedPlatforms, onFiltersC
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-10 w-full border-dashed">
+        <Button type="button" variant="outline" size="sm" className="h-10 w-full border-dashed">
           <PlusCircle className="mr-2 h-4 w-4" aria-hidden="true" />
           {t('advancedFilters')}
           {activeFilterCount > 0 ? (

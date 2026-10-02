@@ -32,7 +32,7 @@ function AddToolsToCollection({ allTools, selectedTools, onToolToggle }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="min-h-10 w-full justify-start">
+        <Button type="button" variant="outline" className="min-h-10 w-full justify-start">
           {t('addTool')}
         </Button>
       </PopoverTrigger>

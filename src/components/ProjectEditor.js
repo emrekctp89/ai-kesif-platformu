@@ -31,7 +31,7 @@ function AddItemToProject({ items, onSelect, typeLabel }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="min-h-10 w-full justify-start">
+        <Button type="button" variant="outline" className="min-h-10 w-full justify-start">
           {t('addType', { type: typeLabel })}
         </Button>
       </PopoverTrigger>
