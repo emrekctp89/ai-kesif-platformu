@@ -54,6 +54,9 @@ function buildDisabledRedirects(routes) {
 }
 
 const nextConfig = {
+  // Keep SEO metadata in the initial <head> for every user agent. Without this,
+  // Next.js streams dynamic route metadata into <body> for regular browsers.
+  htmlLimitedBots: /.*/,
   // Smaller self-contained image for Docker; Vercel builds leave this unset.
   ...(process.env.DOCKER_BUILD === '1' ? { output: 'standalone' } : {}),
   outputFileTracingRoot: __dirname,
