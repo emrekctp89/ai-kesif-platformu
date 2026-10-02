@@ -104,6 +104,10 @@ export async function GET() {
       url: withBase(`/tool/${tool.slug}`),
       lastModified: tool.updated_at || generatedAt,
     });
+    urls.push({
+      url: withBase(`/en/tool/${tool.slug}`),
+      lastModified: tool.updated_at || generatedAt,
+    });
   });
 
   newslettersData.forEach((item) => {
