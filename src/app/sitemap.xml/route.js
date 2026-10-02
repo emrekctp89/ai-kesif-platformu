@@ -20,25 +20,24 @@ function escapeXml(value) {
 }
 
 export async function GET() {
-  const generatedAt = new Date().toISOString();
   // Paused community/explore surfaces intentionally omitted (soft landing + noindex).
   const urls = [
-    { url: withBase('/'), lastModified: generatedAt },
-    { url: withBase('/kategori'), lastModified: generatedAt },
-    { url: withBase('/ogren'), lastModified: generatedAt },
-    { url: withBase('/ogren/kasif'), lastModified: generatedAt },
-    { url: withBase('/workmind'), lastModified: generatedAt },
-    { url: withBase('/blog'), lastModified: generatedAt },
-    { url: withBase('/arastirma'), lastModified: generatedAt },
-    { url: withBase('/karsilastir'), lastModified: generatedAt },
-    { url: withBase('/tavsiye'), lastModified: generatedAt },
-    { url: withBase('/bulten'), lastModified: generatedAt },
-    { url: withBase('/hakkimizda'), lastModified: generatedAt },
-    { url: withBase('/iletisim'), lastModified: generatedAt },
-    { url: withBase('/gizlilik'), lastModified: generatedAt },
-    { url: withBase('/kullanim-kosullari'), lastModified: generatedAt },
-    { url: withBase('/submit'), lastModified: generatedAt },
-    { url: withBase('/developer'), lastModified: generatedAt },
+    { url: withBase('/') },
+    { url: withBase('/kategori') },
+    { url: withBase('/ogren') },
+    { url: withBase('/ogren/kasif') },
+    { url: withBase('/workmind') },
+    { url: withBase('/blog') },
+    { url: withBase('/arastirma') },
+    { url: withBase('/karsilastir') },
+    { url: withBase('/tavsiye') },
+    { url: withBase('/bulten') },
+    { url: withBase('/hakkimizda') },
+    { url: withBase('/iletisim') },
+    { url: withBase('/gizlilik') },
+    { url: withBase('/kullanim-kosullari') },
+    { url: withBase('/submit') },
+    { url: withBase('/developer') },
   ];
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -95,25 +94,24 @@ export async function GET() {
   categoriesData.forEach((category) => {
     urls.push({
       url: withBase(`/kategori/${category.slug}`),
-      lastModified: generatedAt,
     });
   });
 
   toolsData.forEach((tool) => {
     urls.push({
       url: withBase(`/tool/${tool.slug}`),
-      lastModified: tool.updated_at || generatedAt,
+      ...(tool.updated_at ? { lastModified: tool.updated_at } : {}),
     });
     urls.push({
       url: withBase(`/en/tool/${tool.slug}`),
-      lastModified: tool.updated_at || generatedAt,
+      ...(tool.updated_at ? { lastModified: tool.updated_at } : {}),
     });
   });
 
   newslettersData.forEach((item) => {
     urls.push({
       url: withBase(`/bulten/${item.slug}`),
-      lastModified: item.updated_at || item.sent_at || generatedAt,
+      ...(item.updated_at || item.sent_at ? { lastModified: item.updated_at || item.sent_at } : {}),
     });
   });
 
@@ -127,8 +125,12 @@ ${urls
   .map(
     ({ url, lastModified }) => `
   <url>
-    <loc>${escapeXml(url)}</loc>
-    <lastmod>${escapeXml(lastModified)}</lastmod>
+    <loc>${escapeXml(url)}</loc>${
+      lastModified
+        ? `
+    <lastmod>${escapeXml(lastModified)}</lastmod>`
+        : ''
+    }
   </url>`
   )
   .join('')}
