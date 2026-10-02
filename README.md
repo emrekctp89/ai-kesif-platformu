@@ -1,4 +1,4 @@
-# 🚀 AI Keşif Platformu (AI Discovery Platform)
+# AI Keşif Platformu (AI Discovery Platform)
 
 Yapay zeka araçlarını keşfet, karşılaştır, test et ve toplulukla paylaş.
 
