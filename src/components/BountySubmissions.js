@@ -74,7 +74,7 @@ function SubmitToolDialog({ bountyId, allTools }) {
           <input type="hidden" name="bountyId" value={bountyId} />
           <div className="space-y-2">
             <Label>Araç Seçin *</Label>
-            <Popover>
+            <Popover modal>
               <PopoverTrigger asChild>
                 <Button
                   type="button"

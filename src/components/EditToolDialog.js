@@ -51,7 +51,7 @@ function MultiSelectTags({ allTags, initialSelectedTags }) {
       {Array.from(selectedTags).map((tagId) => (
         <input key={tagId} type="hidden" name="tagId" value={tagId} />
       ))}
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={setOpen} modal>
         <PopoverTrigger asChild>
           <Button
             type="button"
