@@ -83,7 +83,14 @@ const nextConfig = {
     ],
   },
   async redirects() {
-    return buildDisabledRedirects(disabledRoutes);
+    return [
+      ...buildDisabledRedirects(disabledRoutes),
+      {
+        source: '/en/en/karsilastir',
+        destination: '/en/karsilastir',
+        permanent: true,
+      },
+    ];
   },
   async headers() {
     return [
