@@ -57,6 +57,8 @@ export default async function HomePage(props) {
   const resolvedSearchParams = await searchParams;
 
   const t = await getTranslations({ locale, namespace: 'Hero' });
+  const isEnglish = locale === 'en';
+  const homepageUrl = isEnglish ? `${siteUrl}/en` : `${siteUrl}/`;
 
   // Tüm verileri sunucuda çekiyoruz
   const initialData = await getPageData(resolvedSearchParams);
@@ -85,10 +87,10 @@ export default async function HomePage(props) {
       },
       {
         '@type': 'WebSite',
-        '@id': `${siteUrl}/#website`,
+        '@id': `${homepageUrl}#website`,
         name: 'AI Keşif Platformu',
-        url: siteUrl,
-        inLanguage: 'tr-TR',
+        url: homepageUrl,
+        inLanguage: isEnglish ? 'en-US' : 'tr-TR',
         publisher: {
           '@id': `${siteUrl}/#organization`,
         },
@@ -96,7 +98,7 @@ export default async function HomePage(props) {
           '@type': 'SearchAction',
           target: {
             '@type': 'EntryPoint',
-            urlTemplate: `${siteUrl}/?search={search_term_string}`,
+            urlTemplate: `${homepageUrl}?search={search_term_string}`,
           },
           'query-input': 'required name=search_term_string',
         },

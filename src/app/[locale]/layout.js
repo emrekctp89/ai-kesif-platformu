@@ -33,6 +33,7 @@ export async function generateMetadata({ params }) {
     title: null,
     description: t('subtitle'),
     path: locale === 'en' ? '/en' : '/',
+    locale,
     type: 'website',
   });
   const trUrl = siteUrl;
@@ -90,7 +91,7 @@ export default async function LocaleLayout(props) {
   await cookies();
   const messages = await getMessages();
   const organizationSchema = generateStructuredData('Organization', {});
-  const websiteSchema = generateStructuredData('WebSite', {});
+  const websiteSchema = generateStructuredData('WebSite', { locale });
 
   return (
     <html lang={locale} suppressHydrationWarning>

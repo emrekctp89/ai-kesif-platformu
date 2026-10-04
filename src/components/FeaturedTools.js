@@ -1,5 +1,5 @@
 import logger from '@/utils/logger';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
 import { Card, CardContent } from '@/components/ui/card';

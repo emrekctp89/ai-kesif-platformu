@@ -1,7 +1,7 @@
 import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

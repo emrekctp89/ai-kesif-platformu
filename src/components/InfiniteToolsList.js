@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { fetchMoreTools } from '@/app/actions';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ToolIcon from '@/components/ToolIcon';

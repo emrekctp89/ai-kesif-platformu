@@ -2,8 +2,8 @@
 
 import { useState, useEffect, Suspense, useMemo } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import { SearchInput } from '@/components/SearchInput';
 import { FilterSheet } from '@/components/FilterSheet';
 import { InfiniteToolsList } from '@/components/InfiniteToolsList';

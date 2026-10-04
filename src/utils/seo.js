@@ -20,6 +20,7 @@ export function generatePageMetadata({
   title,
   description,
   path = '',
+  locale = 'tr',
   image = siteConfig.ogImage,
   type = 'website',
   author = 'AI Keşif Platformu',
@@ -78,7 +79,7 @@ export function generatePageMetadata({
           type: 'image/png',
         },
       ],
-      locale: 'tr_TR',
+      locale: locale === 'en' ? 'en_US' : 'tr_TR',
       type,
       ...(publishedTime && { publishedTime }),
       ...(modifiedTime && { modifiedTime }),
@@ -203,15 +204,18 @@ export function generateStructuredData(type, data) {
       };
 
     case 'WebSite':
+      const locale = data.locale === 'en' ? 'en' : 'tr';
+      const websiteUrl = locale === 'en' ? `${siteConfig.url}/en` : `${siteConfig.url}/`;
       return {
         ...baseSchema,
         name: siteConfig.name,
-        url: siteConfig.url,
+        url: websiteUrl,
+        inLanguage: locale === 'en' ? 'en-US' : 'tr-TR',
         potentialAction: {
           '@type': 'SearchAction',
           target: {
             '@type': 'EntryPoint',
-            urlTemplate: `${siteConfig.url}/ara?q={search_term_string}`,
+            urlTemplate: `${websiteUrl}?search={search_term_string}`,
           },
           'query-input': 'required name=search_term_string',
         },

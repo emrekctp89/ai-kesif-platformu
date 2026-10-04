@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { ArrowRight } from 'lucide-react';
 
+import { Link } from '@/i18n/routing';
 import { getCategoryConfig } from '@/lib/categoryConfig';
 import { Card, CardContent } from '@/components/ui/card';
 
