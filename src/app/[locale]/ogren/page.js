@@ -1,6 +1,6 @@
 import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import {
   ArrowRight,

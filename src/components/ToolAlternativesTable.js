@@ -1,6 +1,6 @@
 import logger from '@/utils/logger';
 import { createClient } from '@supabase/supabase-js';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { GitCompareArrows, Star, Table2 } from 'lucide-react';
 

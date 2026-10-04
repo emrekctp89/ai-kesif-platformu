@@ -20,7 +20,7 @@ export function generatePageMetadata({
   title,
   description,
   path = '',
-  locale = 'tr',
+  locale,
   image = siteConfig.ogImage,
   type = 'website',
   author = 'AI Keşif Platformu',
@@ -31,6 +31,13 @@ export function generatePageMetadata({
   const fullTitle = title ? `${title} | ${siteConfig.name}` : siteConfig.name;
   const fullDescription = description || siteConfig.description;
   const fullUrl = `${siteConfig.url}${path}`;
+  const pathWithoutEnglishPrefix =
+    path === '/en' || path === '/en/' ? '/' : path.startsWith('/en/') ? path.slice(3) : path;
+  const trUrl = `${siteConfig.url}${pathWithoutEnglishPrefix}`;
+  const enUrl = `${siteConfig.url}${
+    pathWithoutEnglishPrefix === '/' ? '/en' : `/en${pathWithoutEnglishPrefix}`
+  }`;
+  const resolvedLocale = locale || (path === '/en' || path.startsWith('/en/') ? 'en' : 'tr');
 
   return {
     metadataBase: new URL(siteConfig.url),
@@ -54,8 +61,8 @@ export function generatePageMetadata({
     alternates: {
       canonical: fullUrl,
       languages: {
-        en: `${siteConfig.url}/en${path}`,
-        tr: fullUrl,
+        en: enUrl,
+        tr: trUrl,
       },
     },
     openGraph: {
@@ -79,7 +86,7 @@ export function generatePageMetadata({
           type: 'image/png',
         },
       ],
-      locale: locale === 'en' ? 'en_US' : 'tr_TR',
+      locale: resolvedLocale === 'en' ? 'en_US' : 'tr_TR',
       type,
       ...(publishedTime && { publishedTime }),
       ...(modifiedTime && { modifiedTime }),

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { Suspense } from 'react';
 import {
   AlertTriangle,

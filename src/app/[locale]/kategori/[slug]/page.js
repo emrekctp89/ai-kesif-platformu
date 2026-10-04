@@ -1,7 +1,7 @@
 import logger from '@/utils/logger';
 import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { LayoutGrid, GitCompareArrows } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
