@@ -69,7 +69,8 @@ async function getLinkHealthStats() {
 
   return {
     total: tools.length,
-    valid: tools.filter((tool) => tool.link_check_status === 'valid').length,
+    valid: tools.filter((tool) => ['valid', 'manual_valid'].includes(tool.link_check_status))
+      .length,
     invalid: tools.filter((tool) => tool.link_check_status === 'invalid').length,
     review: tools.filter((tool) => tool.link_check_status === 'review').length,
     unchecked: tools.filter((tool) => !tool.link_checked_at).length,

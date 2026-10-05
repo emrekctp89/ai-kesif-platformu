@@ -181,7 +181,7 @@ function classifyHttpResponse(response, method) {
   }
 
   return {
-    status: 'invalid',
+    status: 'review',
     reason: `HTTP ${httpStatus}`,
     httpStatus,
     finalUrl,
@@ -293,7 +293,7 @@ export function buildLinkCheckUpdatePayload(result, checkedAt = new Date().toISO
     link_checked_at: checkedAt,
   };
 
-  if (result.status === 'valid' || result.status === 'skipped') {
+  if (['valid', 'manual_valid', 'skipped'].includes(result.status)) {
     payload.link_deactivated_at = null;
     payload.link_deactivation_reason = null;
   }
@@ -331,7 +331,12 @@ async function updateAuditMetadata(supabaseAdmin, results, checkedAt) {
   for (const result of results) {
     const payload = buildLinkCheckUpdatePayload(result, checkedAt);
 
-    const { error } = await supabaseAdmin.from('tools').update(payload).eq('id', result.toolId);
+    const { error } = await supabaseAdmin
+      .from('tools')
+      .update(payload)
+      .eq('id', result.toolId)
+      .eq('link', result.link)
+      .or('link_check_status.is.null,link_check_status.neq.manual_valid');
 
     if (error) {
       throw new Error(`Tool ${result.toolId} audit metadata update başarısız: ${error.message}`);
@@ -475,7 +480,7 @@ export async function getDueTools(supabaseAdmin, { limit, staleBefore, priority 
     }
 
     for (const row of data || []) {
-      if (seen.has(row.id)) continue;
+      if (seen.has(row.id) || row.link_check_status === 'manual_valid') continue;
       if (!row.link) continue;
       seen.add(row.id);
       collected.push(row);
@@ -490,6 +495,7 @@ export async function getDueTools(supabaseAdmin, { limit, staleBefore, priority 
       .select(selectCols)
       .eq('is_approved', true)
       .not('link', 'is', null)
+      .or('link_check_status.is.null,link_check_status.neq.manual_valid')
       .is('link_checked_at', null)
       .order('created_at', { ascending: false })
   );
@@ -502,6 +508,7 @@ export async function getDueTools(supabaseAdmin, { limit, staleBefore, priority 
         .select(selectCols)
         .eq('is_approved', true)
         .not('link', 'is', null)
+        .or('link_check_status.is.null,link_check_status.neq.manual_valid')
         .in('link_check_status', PROBLEM_STATUSES)
         .order('link_checked_at', { ascending: true, nullsFirst: true })
         .order('id', { ascending: true })
@@ -516,6 +523,7 @@ export async function getDueTools(supabaseAdmin, { limit, staleBefore, priority 
         .select(selectCols)
         .eq('is_approved', true)
         .not('link', 'is', null)
+        .or('link_check_status.is.null,link_check_status.neq.manual_valid')
         .not('link_checked_at', 'is', null)
         .lt('link_checked_at', staleBefore)
         .order('link_checked_at', { ascending: true })
@@ -534,6 +542,7 @@ async function countRemainingDue(supabaseAdmin, { staleBefore, priority = 'all' 
         .select('id', { count: 'exact', head: true })
         .eq('is_approved', true)
         .not('link', 'is', null)
+        .or('link_check_status.is.null,link_check_status.neq.manual_valid')
         .is('link_checked_at', null);
 
       const { count: problemCount } = await supabaseAdmin
@@ -541,6 +550,7 @@ async function countRemainingDue(supabaseAdmin, { staleBefore, priority = 'all' 
         .select('id', { count: 'exact', head: true })
         .eq('is_approved', true)
         .not('link', 'is', null)
+        .or('link_check_status.is.null,link_check_status.neq.manual_valid')
         .in('link_check_status', PROBLEM_STATUSES);
 
       return (nullCount || 0) + (problemCount || 0);
@@ -551,6 +561,7 @@ async function countRemainingDue(supabaseAdmin, { staleBefore, priority = 'all' 
       .select('id', { count: 'exact', head: true })
       .eq('is_approved', true)
       .not('link', 'is', null)
+      .or('link_check_status.is.null,link_check_status.neq.manual_valid')
       .or(`link_checked_at.is.null,link_checked_at.lt.${staleBefore}`);
 
     return count || 0;

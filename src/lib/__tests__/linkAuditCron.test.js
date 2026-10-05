@@ -50,6 +50,16 @@ describe('buildLinkCheckUpdatePayload', () => {
     expect(payload).not.toHaveProperty('link_deactivated_at');
   });
 
+  it('clears deactivation for manual approval without inventing an HTTP response', () => {
+    const payload = buildLinkCheckUpdatePayload(
+      { status: 'manual_valid', errorDetail: null, httpStatus: null },
+      checkedAt
+    );
+    expect(payload.link_check_status).toBe('manual_valid');
+    expect(payload.link_check_http_status).toBeNull();
+    expect(payload.link_deactivated_at).toBeNull();
+  });
+
   it('treats skipped like valid for deactivation cleanup', () => {
     const payload = buildLinkCheckUpdatePayload(
       {
@@ -97,6 +107,9 @@ describe('getDueTools prioritization', () => {
       const builder = {
         _rows: rows,
         select() {
+          return builder;
+        },
+        or() {
           return builder;
         },
         eq() {
@@ -159,6 +172,7 @@ describe('getDueTools prioritization', () => {
       },
     ];
     const stale = [
+      { id: 5, link: 'https://approved.test', link_check_status: 'manual_valid' },
       {
         id: 4,
         name: 'Stale',
@@ -208,5 +222,20 @@ describe('getDueTools prioritization', () => {
     expect(due.map((t) => t.id)).toEqual([1, 3]);
     // only two from() calls for pending (never + problems)
     expect(mock.calls.length).toBe(2);
+  });
+});
+
+describe('HTTP responses requiring an admin decision', () => {
+  it.each([402, 405])('marks HTTP %s for review rather than broken', async (status) => {
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn().mockResolvedValue({ status, ok: false, url: 'https://example.com/' });
+    try {
+      const { checkToolLink } = await import('@/lib/linkAuditCron');
+      const result = await checkToolLink('https://www.domo.com/');
+      expect(result.status).toBe('review');
+      expect(result.httpStatus).toBe(status);
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 });

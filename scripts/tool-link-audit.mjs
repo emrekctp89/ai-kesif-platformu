@@ -451,7 +451,12 @@ async function updateAuditMetadata(supabase, results, checkedAt) {
       link_deactivation_reason: null,
     };
 
-    const { error } = await supabase.from('tools').update(payload).eq('id', result.toolId);
+    const { error } = await supabase
+      .from('tools')
+      .update(payload)
+      .eq('id', result.toolId)
+      .eq('link', result.link)
+      .or('link_check_status.is.null,link_check_status.neq.manual_valid');
     if (error) {
       if (
         error.message.includes("Could not find the 'link_check_") &&
@@ -486,7 +491,12 @@ async function deactivateInvalidTools(supabase, invalidLinks, checkedAt, include
           is_approved: false,
         };
 
-    const { error } = await supabase.from('tools').update(payload).eq('id', result.toolId);
+    const { error } = await supabase
+      .from('tools')
+      .update(payload)
+      .eq('id', result.toolId)
+      .eq('link', result.link)
+      .or('link_check_status.is.null,link_check_status.neq.manual_valid');
     if (error) {
       if (
         includeAuditColumns &&
@@ -554,6 +564,7 @@ async function main() {
   let query = supabase
     .from('tools')
     .select('id, name, slug, link, is_approved')
+    .or('link_check_status.is.null,link_check_status.neq.manual_valid')
     .eq('is_approved', true)
     .order('id', { ascending: true });
 

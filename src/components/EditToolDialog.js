@@ -117,6 +117,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
   const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState(tool.name || '');
   const [link, setLink] = useState(tool.link || '');
+  const [linkDecision, setLinkDecision] = useState('keep');
   const [description, setDescription] = useState(tool.description || '');
   const [nameEn, setNameEn] = useState(tool.name_en || '');
   const [descriptionEn, setDescriptionEn] = useState(tool.description_en || '');
@@ -147,6 +148,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
     if (open) {
       setName(tool.name || '');
       setLink(tool.link || '');
+      setLinkDecision('keep');
       setDescription(tool.description || '');
       setNameEn(tool.name_en || '');
       setDescriptionEn(tool.description_en || '');
@@ -273,12 +275,64 @@ export function EditToolDialog({ tool, categories, allTags }) {
                 id={`link-${tool.id}`}
                 name="link"
                 value={link}
-                onChange={(event) => setLink(event.target.value)}
+                onChange={(event) => {
+                  setLink(event.target.value);
+                  setLinkDecision('keep');
+                }}
                 className={cn(!parsedLink && link && 'border-destructive')}
                 maxLength={2048}
                 aria-invalid={Boolean(link) && !parsedLink}
                 required
               />
+              <div className="mt-3 space-y-2 rounded-md border p-3">
+                <p className="text-sm font-medium">
+                  Link kontrolü:{' '}
+                  {tool.link_check_status === 'manual_valid'
+                    ? 'Admin tarafından onaylandı'
+                    : tool.link_check_status === 'invalid'
+                      ? 'Otomatik kontrol kırık işaretledi'
+                      : tool.link_check_status === 'review'
+                        ? 'Manuel inceleme bekliyor'
+                        : tool.link_check_status === 'valid'
+                          ? 'Geçerli'
+                          : 'Henüz doğrulanmadı'}
+                </p>
+                {tool.link_check_error && (
+                  <p className="text-xs text-muted-foreground">{tool.link_check_error}</p>
+                )}
+                {parsedLink && (
+                  <a
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary underline"
+                  >
+                    Linki aç ve kontrol et ↗
+                  </a>
+                )}
+                <Label htmlFor={`link-decision-${tool.id}`} className="block">
+                  Admin kararı
+                </Label>
+                <select
+                  id={`link-decision-${tool.id}`}
+                  name="linkDecision"
+                  value={linkDecision}
+                  onChange={(event) => setLinkDecision(event.target.value)}
+                  className="w-full rounded-md border bg-background p-2 text-sm"
+                >
+                  <option value="keep">
+                    Mevcut kararı koru (URL değişirse yeniden kontrol et)
+                  </option>
+                  <option value="manual_valid">Link çalışıyor — manuel onayla</option>
+                  <option value="automatic">
+                    Manuel onayı kaldır ve otomatik kontrolü çalıştır
+                  </option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Manuel onay kaydedildiğinde otomatik taramalar bu linki değiştirmez. URL değişirse
+                  onay sıfırlanır.
+                </p>
+              </div>
               {link && !parsedLink && (
                 <p className="mt-1 text-xs text-destructive">
                   http:// veya https:// ile başlayan geçerli bir adres girin.

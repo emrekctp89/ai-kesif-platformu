@@ -141,7 +141,8 @@ function getLinkAuditIssue(tool) {
   const status = String(tool.link_check_status || '')
     .trim()
     .toLowerCase();
-  if (!status || status === 'valid' || status === 'skipped') return null;
+  if (!status || status === 'valid' || status === 'manual_valid' || status === 'skipped')
+    return null;
 
   const checkedAt = tool.link_checked_at
     ? new Intl.DateTimeFormat('tr-TR', {

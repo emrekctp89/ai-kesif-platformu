@@ -655,10 +655,24 @@ export async function updateTool(formData) {
     .trim()
     .toLowerCase();
   const linkChanged = String(existingTool.link || '').trim() !== normalizedLink;
+  const linkDecision = String(formData.get('linkDecision') || 'keep');
+  if (!['keep', 'manual_valid', 'automatic'].includes(linkDecision)) {
+    return { error: 'Geçersiz link yönetimi seçimi.' };
+  }
   const shouldRecheckLink =
-    linkChanged || !previousStatus || previousStatus === 'invalid' || previousStatus === 'review';
+    linkDecision === 'automatic' ||
+    (linkDecision !== 'manual_valid' &&
+      (linkChanged ||
+        !previousStatus ||
+        previousStatus === 'invalid' ||
+        previousStatus === 'review'));
 
   let linkCheck = null;
+  if (linkDecision === 'manual_valid') {
+    const { buildLinkCheckUpdatePayload } = await import('@/lib/linkAuditCron');
+    linkCheck = { status: 'manual_valid', errorDetail: null, httpStatus: null };
+    Object.assign(updatedData, buildLinkCheckUpdatePayload(linkCheck));
+  }
   if (shouldRecheckLink) {
     try {
       const { checkToolLink, buildLinkCheckUpdatePayload } = await import('@/lib/linkAuditCron');
@@ -692,7 +706,7 @@ export async function updateTool(formData) {
   }
 
   // Link geçerliyse açık kullanıcı raporlarını otomatik çöz.
-  if (linkCheck?.status === 'valid') {
+  if (['valid', 'manual_valid'].includes(linkCheck?.status)) {
     try {
       const supabaseAdmin = createAdminClient();
       await supabaseAdmin
@@ -720,6 +734,8 @@ export async function updateTool(formData) {
   }
 
   const linkCheckMessages = {
+    manual_valid:
+      'Link admin tarafından manuel onaylandı. Otomatik taramalar bu kararı değiştirmeyecek.',
     valid: 'Link doğrulandı (geçerli).',
     invalid: 'Link hâlâ kırık görünüyor; alternatif URL deneyin.',
     review: 'Link manuel inceleme gerektiriyor (ör. bot koruması).',
