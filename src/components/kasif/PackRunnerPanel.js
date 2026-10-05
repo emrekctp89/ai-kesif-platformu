@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Copy, ExternalLink, LoaderCircle, Lock, Sparkles, Wand2 } from 'lucide-react';
@@ -10,6 +10,7 @@ import { isProPackId, buildPackPaywall } from '@/lib/kasif/packAccess';
 import { buildPartnerConnectSteps } from '@/lib/kasif/partnerConnect';
 import { getProPackOnboardingStatus } from '@/lib/kasif/packOnboarding';
 import { ProPackOnboarding } from '@/components/kasif/ProPackOnboarding';
+import { DownloadArtifactButton } from '@/components/kasif/DownloadArtifactButton';
 import { JobReceiptCard } from '@/components/kasif/JobReceiptCard';
 
 const PLACEHOLDER_KEYS = {
@@ -89,13 +90,24 @@ export function PackRunnerPanel({
   const [result, setResult] = useState(null);
   const [copied, setCopied] = useState(false);
   const [provider, setProvider] = useState(null);
+  const requestRef = useRef(null);
+  const draftKey = `kasif-pack-brief-v1:${locale}:${safePackId}`;
 
   useEffect(() => {
-    setBrief(defaultBrief || '');
+    requestRef.current?.abort();
+    requestRef.current = null;
+    let savedBrief = '';
+    try {
+      savedBrief = sessionStorage.getItem(draftKey) || '';
+    } catch {
+      /* storage unavailable */
+    }
+    setBrief(defaultBrief || savedBrief.slice(0, 800));
+    setCopied(false);
     setResult(null);
     setError(null);
     setStatus('idle');
-  }, [safePackId, defaultBrief]);
+  }, [safePackId, defaultBrief, draftKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,6 +128,8 @@ export function PackRunnerPanel({
     };
   }, [locale]);
 
+  useEffect(() => () => requestRef.current?.abort(), []);
+
   const connectSteps = useMemo(() => {
     if (!result?.run) return [];
     return buildPartnerConnectSteps(safePackId, locale, {
@@ -126,16 +140,21 @@ export function PackRunnerPanel({
 
   async function run(event) {
     event.preventDefault();
+    if (requestRef.current) return;
     setError(null);
     if (brief.trim().length < 8) {
       setError(t('packs.runnerBriefShort'));
       return;
     }
+    const controller = new AbortController();
+    requestRef.current = controller;
     setStatus('running');
+    setCopied(false);
     try {
       const onboardingStatus = getProPackOnboardingStatus();
       const response = await fetch('/api/kasif/pack-runner', {
         method: 'POST',
+        signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           packId: safePackId,
@@ -146,6 +165,7 @@ export function PackRunnerPanel({
         }),
       });
       const data = await response.json().catch(() => ({}));
+      if (controller.signal.aborted || requestRef.current !== controller) return;
       if (!response.ok) {
         throw Object.assign(new Error(data.error || t('packs.runnerFailed')), {
           upgradePath: data.upgradePath,
@@ -163,6 +183,7 @@ export function PackRunnerPanel({
       });
       onComplete?.(data);
     } catch (err) {
+      if (controller.signal.aborted || requestRef.current !== controller) return;
       setStatus('error');
       setError(err?.message || t('packs.runnerFailed'));
       if (err?.upgradePath || err?.paywall || err?.reason) {
@@ -177,6 +198,8 @@ export function PackRunnerPanel({
           reason: err.reason,
         });
       }
+    } finally {
+      if (requestRef.current === controller) requestRef.current = null;
     }
   }
 
@@ -230,7 +253,16 @@ export function PackRunnerPanel({
         <textarea
           id={`pack-runner-brief-${safePackId}`}
           value={brief}
-          onChange={(e) => setBrief(e.target.value)}
+          onChange={(event) => {
+            const value = event.target.value;
+            setBrief(value);
+            try {
+              if (value) sessionStorage.setItem(draftKey, value);
+              else sessionStorage.removeItem(draftKey);
+            } catch {
+              /* storage unavailable */
+            }
+          }}
           rows={3}
           maxLength={800}
           placeholder={t(PLACEHOLDER_KEYS[safePackId] || PLACEHOLDER_KEYS['content-studio'])}
@@ -330,6 +362,7 @@ export function PackRunnerPanel({
               <Copy className="h-3 w-3" />
               {copied ? t('job.copied') : t('packs.runnerCopy')}
             </button>
+            <DownloadArtifactButton text={result.artifactText} packId={safePackId} />
           </div>
 
           {Array.isArray(result.run.steps) && result.run.steps.length > 0 ? (

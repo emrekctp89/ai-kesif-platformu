@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 jest.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
@@ -68,6 +68,57 @@ describe('Kâşif ekranı', () => {
     Element.prototype.scrollIntoView = jest.fn();
     mockFetchHandlers();
     sessionStorage.clear();
+  });
+
+  it('gönderilmeyen taslağı yenileme sonrası geri yükler', async () => {
+    const view = render(<KasifExperiment />);
+    const question = screen.getByRole('textbox', { name: "Kâşif'e sor" });
+    fireEvent.change(question, { target: { value: 'Ücretsiz bir görsel aracı arıyorum' } });
+    await waitFor(() =>
+      expect(JSON.parse(sessionStorage.getItem('kasif-conversation-v1:tr')).draft).toBe(
+        'Ücretsiz bir görsel aracı arıyorum'
+      )
+    );
+    view.unmount();
+    render(<KasifExperiment />);
+    expect(screen.getByRole('textbox', { name: "Kâşif'e sor" })).toHaveValue(
+      'Ücretsiz bir görsel aracı arıyorum'
+    );
+  });
+
+  it('metin oluşturma sırasında Enter ile göndermez', () => {
+    render(<KasifExperiment />);
+    const question = screen.getByRole('textbox', { name: "Kâşif'e sor" });
+    fireEvent.change(question, { target: { value: 'Ücretsiz araç bul' } });
+    fireEvent.keyDown(question, { key: 'Enter', isComposing: true });
+    expect(
+      global.fetch.mock.calls.filter(([url]) => String(url).includes('/api/kasif/ask'))
+    ).toHaveLength(0);
+    expect(question).toHaveValue('Ücretsiz araç bul');
+  });
+
+  it('isteği durdurur, taslağı geri getirir ve geç gelen yanıtı göstermez', async () => {
+    let resolveRequest;
+    mockFetchHandlers({
+      ask: () =>
+        new Promise((resolve) => {
+          resolveRequest = resolve;
+        }),
+    });
+    render(<KasifExperiment />);
+    const question = screen.getByRole('textbox', { name: "Kâşif'e sor" });
+    fireEvent.change(question, { target: { value: 'Ücretsiz sunum aracı öner' } });
+    fireEvent.click(screen.getByRole('button', { name: "Kâşif'e sor" }));
+    const askCall = global.fetch.mock.calls.find(([url]) => String(url).includes('/api/kasif/ask'));
+    fireEvent.click(screen.getByRole('button', { name: 'Durdur' }));
+    expect(askCall[1].signal.aborted).toBe(true);
+    expect(question).toHaveValue('Ücretsiz sunum aracı öner');
+    expect(screen.getByText(/İstek durduruldu/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: "Kâşif'e sor" })).toBeEnabled();
+    await act(async () => {
+      resolveRequest({ ok: true, json: async () => ({ answer: 'Geç gelen yanıt', sources: [] }) });
+    });
+    expect(screen.queryByText('Geç gelen yanıt')).not.toBeInTheDocument();
   });
 
   it('başlangıç sorusunu giriş alanına taşır ve odağı korur', () => {

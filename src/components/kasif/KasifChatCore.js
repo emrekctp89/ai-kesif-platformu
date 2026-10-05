@@ -20,6 +20,7 @@ import {
   RotateCcw,
   Search,
   Send,
+  Square,
   ShieldCheck,
   Sparkles,
   ThumbsDown,
@@ -35,6 +36,7 @@ import {
   pickSoftLandingVariant,
   SOFT_LANDING_STORAGE_KEY,
 } from '@/lib/kasif';
+import { CopyAnswerButton } from '@/components/kasif/CopyAnswerButton';
 import { JobFunnelPanel } from '@/components/kasif/JobFunnelPanel';
 import { JobPacksStrip, JobPackSuggestion } from '@/components/kasif/JobPacksStrip';
 import { ReceiptSocialProofStrip } from '@/components/kasif/ReceiptSocialProofStrip';
@@ -130,6 +132,7 @@ export function KasifChatCore({
   const conversationEndRef = useRef(null);
   const questionRef = useRef(null);
   const activeRequestRef = useRef(null);
+  const activeTurnRef = useRef(null);
   const feedbackRequestsRef = useRef(new Set());
   const historyRef = useRef(history);
   const loadingRef = useRef(loading);
@@ -149,6 +152,13 @@ export function KasifChatCore({
     conversationEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [turns, loading]);
 
+  useEffect(() => {
+    const input = questionRef.current;
+    if (!input) return;
+    input.style.height = 'auto';
+    input.style.height = `${Math.min(Math.max(input.scrollHeight, 80), 200)}px`;
+  }, [question]);
+
   useEffect(() => () => activeRequestRef.current?.abort(), []);
 
   useEffect(() => {
@@ -166,13 +176,16 @@ export function KasifChatCore({
         const raw = sessionStorage.getItem(storageKeyFor(locale));
         if (raw) {
           const parsed = JSON.parse(raw);
+          setQuestion(typeof parsed?.draft === 'string' ? parsed.draft.slice(0, 800) : '');
           if (Array.isArray(parsed?.turns)) setTurns(parsed.turns);
           if (Array.isArray(parsed?.history)) setHistory(parsed.history);
         } else {
+          setQuestion('');
           setTurns([]);
           setHistory([]);
         }
       } catch {
+        setQuestion('');
         setTurns([]);
         setHistory([]);
       }
@@ -213,12 +226,13 @@ export function KasifChatCore({
             feedbackStatus: turn.feedbackStatus,
           })),
           history,
+          draft: question,
         })
       );
     } catch {
       // private mode / quota
     }
-  }, [turns, history, locale, hydrated]);
+  }, [turns, history, question, locale, hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -297,6 +311,8 @@ export function KasifChatCore({
       const turnId = crypto.randomUUID();
       const controller = new AbortController();
       activeRequestRef.current = controller;
+      activeTurnRef.current = { id: turnId, question: submittedQuestion };
+      loadingRef.current = true;
       setLoading(true);
       setQuestion('');
       setTurns((current) => [...current, { id: turnId, question: submittedQuestion }]);
@@ -323,6 +339,7 @@ export function KasifChatCore({
           }),
         });
         const data = await response.json();
+        if (controller.signal.aborted || activeRequestRef.current !== controller) return;
         const result = response.ok ? data : { error: data.error || t('genericError') };
         setTurns((current) =>
           current.map((turn) => (turn.id === turnId ? { ...turn, result } : turn))
@@ -392,7 +409,12 @@ export function KasifChatCore({
           }
         }
       } catch (error) {
-        if (error?.name === 'AbortError') return;
+        if (
+          controller.signal.aborted ||
+          activeRequestRef.current !== controller ||
+          error?.name === 'AbortError'
+        )
+          return;
         setTurns((current) =>
           current.map((turn) =>
             turn.id === turnId ? { ...turn, result: { error: t('connectionError') } } : turn
@@ -401,6 +423,8 @@ export function KasifChatCore({
       } finally {
         if (activeRequestRef.current === controller) {
           activeRequestRef.current = null;
+          activeTurnRef.current = null;
+          loadingRef.current = false;
           setLoading(false);
         }
       }
@@ -473,10 +497,30 @@ export function KasifChatCore({
     }
   }
 
+  function stopRequest() {
+    const activeTurn = activeTurnRef.current;
+    activeRequestRef.current?.abort();
+    activeRequestRef.current = null;
+    activeTurnRef.current = null;
+    loadingRef.current = false;
+    setLoading(false);
+    if (activeTurn) {
+      setTurns((current) =>
+        current.map((turn) =>
+          turn.id === activeTurn.id ? { ...turn, result: { cancelled: true } } : turn
+        )
+      );
+      setQuestion((current) => current || activeTurn.question);
+    }
+    questionRef.current?.focus();
+  }
+
   function resetConversation() {
     activeRequestRef.current?.abort();
     activeRequestRef.current = null;
     softLandingPendingRef.current = null;
+    activeTurnRef.current = null;
+    loadingRef.current = false;
     setLoading(false);
     setTurns([]);
     setHistory([]);
@@ -615,7 +659,9 @@ export function KasifChatCore({
               )}
               <h1
                 className={
-                  compact ? 'text-lg font-bold tracking-tight' : 'text-3xl font-bold tracking-tight sm:text-5xl'
+                  compact
+                    ? 'text-lg font-bold tracking-tight'
+                    : 'text-3xl font-bold tracking-tight sm:text-5xl'
                 }
               >
                 {t('title')}
@@ -810,7 +856,22 @@ export function KasifChatCore({
                     <Bot className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
-                    {turn.result.error ? (
+                    {turn.result.cancelled ? (
+                      <div>
+                        <p role="status" className="text-sm text-muted-foreground">
+                          {t('requestStopped')}
+                        </p>
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={() => retryQuestion(turn.question)}
+                          className="mt-3 inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
+                        >
+                          <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+                          {t('retry')}
+                        </button>
+                      </div>
+                    ) : turn.result.error ? (
                       <div>
                         <p role="alert" className="text-sm text-destructive">
                           {turn.result.error}
@@ -829,6 +890,7 @@ export function KasifChatCore({
                         <p className="whitespace-pre-wrap text-sm leading-6">
                           {turn.result.answer}
                         </p>
+                        <CopyAnswerButton answer={turn.result.answer} />
                         {(turn.result.addTool ||
                           turn.result.intent?.addTool ||
                           turn.result.metaKind === 'add-tool') && (
@@ -1279,31 +1341,52 @@ export function KasifChatCore({
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
+            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
               event.preventDefault();
               event.currentTarget.form?.requestSubmit();
             }
           }}
+          aria-describedby="kasif-input-hint"
           maxLength={800}
           rows={3}
-          className="w-full resize-none bg-transparent p-2 text-sm outline-none"
+          className="max-h-[200px] min-h-20 w-full resize-none overflow-y-auto bg-transparent p-2 text-sm outline-none"
           placeholder={t('placeholder')}
         />
         <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-muted-foreground">{question.length}/800</span>
-          <button
-            type="submit"
-            disabled={loading || question.trim().length < 3}
-            className="rounded-md bg-primary p-2 text-primary-foreground disabled:opacity-50"
-            aria-label={t('askLabel')}
-            title={t('askLabel')}
-          >
-            {loading ? (
-              <LoaderCircle className="h-5 w-5 animate-spin" />
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
-          </button>
+          <div className="text-xs text-muted-foreground">
+            <span
+              className={cn(
+                question.length >= 720 && 'font-medium text-amber-700 dark:text-amber-300'
+              )}
+            >
+              {question.length}/800
+            </span>
+            <p id="kasif-input-hint" className="mt-1">
+              {t('inputHint')}
+            </p>
+          </div>
+          {loading ? (
+            <button
+              type="button"
+              onClick={stopRequest}
+              aria-label={t('stopRequest')}
+              title={t('stopRequest')}
+              className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted"
+            >
+              <Square className="h-4 w-4" aria-hidden="true" />
+              {t('stopRequest')}
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={question.trim().length < 3}
+              className="rounded-md bg-primary p-2 text-primary-foreground disabled:opacity-50"
+              aria-label={t('askLabel')}
+              title={t('askLabel')}
+            >
+              <Send className="h-5 w-5" aria-hidden="true" />
+            </button>
+          )}
         </div>
       </form>
     </Wrapper>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { ArrowRight, Layers3, Lock, Sparkles } from 'lucide-react';
@@ -22,6 +22,20 @@ export function JobPacksStrip({
 }) {
   const t = useTranslations('Kasif');
   const packs = listJobPacks(locale);
+  const [query, setQuery] = useState('');
+  const searchId = useId();
+  const searchRef = useRef(null);
+  const normalize = (value) =>
+    String(value)
+      .toLocaleLowerCase('tr-TR')
+      .replaceAll('ı', 'i')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  const terms = normalize(query).trim().split(/\s+/).filter(Boolean);
+  const visiblePacks = packs.filter((pack) => {
+    const text = normalize([pack.title, pack.summary, ...pack.stepLabels].join(' '));
+    return terms.every((term) => text.includes(term));
+  });
   const [access, setAccess] = useState(null);
   const safeInitial =
     initialPackId && isRunnablePack(initialPackId) ? String(initialPackId).trim() : null;
@@ -52,16 +66,11 @@ export function JobPacksStrip({
   // React to deep-link changes (learn path → /kasif?pack=&runner=1)
   useEffect(() => {
     if (!safeInitial) return;
+    setQuery('');
     setHighlightPackId(safeInitial);
     if (initialOpenRunner) {
       setRunnerPackId(safeInitial);
       trackEvent('kasif_pack_runner_deep_link', { pack_id: safeInitial });
-      window.setTimeout(() => {
-        document.getElementById('kasif-pack-runner')?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        });
-      }, 120);
     } else {
       window.setTimeout(() => {
         document.getElementById(`kasif-pack-${safeInitial}`)?.scrollIntoView({
@@ -71,6 +80,19 @@ export function JobPacksStrip({
       }, 80);
     }
   }, [safeInitial, initialOpenRunner]);
+
+  useEffect(() => {
+    if (!runnerPackId) return;
+    const timer = window.setTimeout(() => {
+      document.getElementById('kasif-pack-runner')?.scrollIntoView({
+        behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+          ? 'auto'
+          : 'smooth',
+        block: 'start',
+      });
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [runnerPackId]);
 
   function packLocked(packId) {
     const decision = access?.packs?.[packId];
@@ -149,8 +171,51 @@ export function JobPacksStrip({
         </span>
       </div>
 
+      {!compact && (
+        <div className="mt-4 space-y-2">
+          <label htmlFor={searchId} className="text-xs font-medium">
+            {t('packs.searchLabel')}
+          </label>
+          <div className="flex gap-2">
+            <input
+              ref={searchRef}
+              id={searchId}
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') setQuery('');
+              }}
+              placeholder={t('packs.searchPlaceholder')}
+              className="min-w-0 flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('');
+                  searchRef.current?.focus();
+                }}
+                className="rounded-lg border px-3 py-2 text-xs font-medium hover:bg-muted"
+              >
+                {t('packs.clearSearch')}
+              </button>
+            )}
+          </div>
+          {query.trim() && (
+            <p role="status" className="text-xs text-muted-foreground">
+              {t('packs.searchCount', { count: visiblePacks.length, total: packs.length })}
+            </p>
+          )}
+        </div>
+      )}
+      {visiblePacks.length === 0 && (
+        <p className="mt-4 rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+          {t('packs.noSearchResults')}
+        </p>
+      )}
       <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {packs.map((pack) => {
+        {visiblePacks.map((pack) => {
           const locked = packLocked(pack.id);
           const reason = lockReason(pack.id);
           const paywall = locked
@@ -183,7 +248,7 @@ export function JobPacksStrip({
                   </p>
                 ) : null}
                 <ol className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
-                  {pack.stepLabels.slice(0, 3).map((label, index) => (
+                  {pack.stepLabels.map((label, index) => (
                     <li key={`${pack.id}-${index}`}>
                       {index + 1}. {label}
                     </li>
@@ -245,11 +310,18 @@ export function JobPacksStrip({
                         type="button"
                         onClick={() => {
                           setRunnerPackId((current) => (current === pack.id ? null : pack.id));
-                          trackEvent('kasif_pack_runner_open', { pack_id: pack.id });
+                          trackEvent(
+                            runnerPackId === pack.id
+                              ? 'kasif_pack_runner_close'
+                              : 'kasif_pack_runner_open',
+                            { pack_id: pack.id }
+                          );
                         }}
+                        aria-expanded={runnerPackId === pack.id}
+                        aria-controls={runnerPackId === pack.id ? 'kasif-pack-runner' : undefined}
                         className="inline-flex min-h-8 w-full items-center justify-center gap-1 rounded-lg border border-violet-500/30 bg-violet-500/10 px-2.5 py-1.5 text-xs font-semibold text-violet-900 dark:text-violet-100"
                       >
-                        {t('packs.runnerOpen')}
+                        {t(runnerPackId === pack.id ? 'packs.runnerClose' : 'packs.runnerOpen')}
                       </button>
                     ) : null}
                   </>
@@ -262,7 +334,26 @@ export function JobPacksStrip({
 
       {runnerPackId && isRunnablePack(runnerPackId) && !packLocked(runnerPackId) ? (
         <div id="kasif-pack-runner" className="scroll-mt-24">
-          <PackRunnerPanel locale={locale} packId={runnerPackId} />
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border bg-muted/30 p-3">
+            <p className="text-sm font-semibold">
+              {packs.find((pack) => pack.id === runnerPackId)?.title}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                const trigger = document
+                  .getElementById(`kasif-pack-${runnerPackId}`)
+                  ?.querySelector('button[aria-expanded]');
+                setRunnerPackId(null);
+                if (trigger) trigger.focus();
+                else searchRef.current?.focus();
+              }}
+              className="rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-muted"
+            >
+              {t('packs.runnerClose')}
+            </button>
+          </div>
+          <PackRunnerPanel key={runnerPackId} locale={locale} packId={runnerPackId} />
         </div>
       ) : null}
     </section>
