@@ -10,6 +10,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { TopLoader } from '@/components/TopLoader';
 import { Analytics } from '@vercel/analytics/react';
 import { GoogleAnalytics } from '@/components/GoogleAnalytics';
+import { EnglishExperienceNotice } from '@/components/EnglishExperienceNotice';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { generatePageMetadata, generateStructuredData } from '@/utils/seo';
 import { getSiteOrigin } from '@/utils/siteUrl';
@@ -176,6 +177,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
             <NextIntlClientProvider messages={messages}>
               <Header />
+              {locale === 'en' && <EnglishExperienceNotice />}
 
               <main id="main-content" tabIndex={-1} className="flex-1">
                 <div className="container mx-auto p-4 md:p-6">{children}</div>
