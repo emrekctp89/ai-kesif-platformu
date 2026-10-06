@@ -6,6 +6,20 @@ import trMessages from '../../../messages/tr.json';
 import { FeedbackDialog } from '@/components/FeedbackDialog';
 
 jest.mock('@/app/actions', () => ({ sendFeedback: jest.fn() }));
+jest.mock('next-intl', () => {
+  const React = require('react');
+  const Context = React.createContext({ locale: 'en', messages: {} });
+
+  return {
+    NextIntlClientProvider: ({ locale, messages, children }) =>
+      React.createElement(Context.Provider, { value: { locale, messages } }, children),
+    useLocale: () => React.useContext(Context).locale,
+    useTranslations: (namespace) => {
+      const { messages } = React.useContext(Context);
+      return (key) => messages[namespace][key];
+    },
+  };
+});
 
 function renderFeedbackDialog(locale, messages) {
   return render(
