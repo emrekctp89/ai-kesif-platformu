@@ -18,21 +18,39 @@ export async function runGlobalSearch(query) {
   try {
     const supabase = await createClient();
     const pattern = term.replace(/[\\%_]/g, '\\$&');
-    const { data, error } = await supabase
-      .from('tools')
-      .select('name, slug, description')
-      .eq('is_approved', true)
-      .ilike('name', `%${pattern}%`)
-      .order('name')
-      .limit(10);
-    if (error) throw error;
+    const [toolsResponse, postsResponse] = await Promise.all([
+      supabase
+        .from('tools')
+        .select('name, slug, description')
+        .eq('is_approved', true)
+        .ilike('name', `%${pattern}%`)
+        .order('name')
+        .limit(10),
+      supabase
+        .from('posts')
+        .select('title, slug, description')
+        .eq('status', 'Yayınlandı')
+        .ilike('title', `%${pattern}%`)
+        .order('published_at', { ascending: false })
+        .limit(10),
+    ]);
+    if (toolsResponse.error && postsResponse.error) throw toolsResponse.error;
+
     return {
-      results: (data || []).map((tool) => ({
-        title: tool.name,
-        description: tool.description,
-        url: `/tool/${encodeURIComponent(tool.slug)}`,
-        result_type: 'Tool',
-      })),
+      results: [
+        ...(toolsResponse.data || []).map((tool) => ({
+          title: tool.name,
+          description: tool.description,
+          url: `/tool/${encodeURIComponent(tool.slug)}`,
+          result_type: 'Tool',
+        })),
+        ...(postsResponse.data || []).map((post) => ({
+          title: post.title,
+          description: post.description,
+          url: `/blog/${encodeURIComponent(post.slug)}`,
+          result_type: 'Post',
+        })),
+      ],
       suggestions: [],
     };
   } catch (error) {

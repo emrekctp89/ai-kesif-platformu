@@ -14,7 +14,7 @@ import {
 import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useDebounce } from 'use-debounce';
 import { runGlobalSearch } from '@/app/actions/globalSearch';
-import { FileText, Laptop, User, CornerDownLeft, Search } from 'lucide-react';
+import { FileText, Laptop, User, CornerDownLeft, Search, Sparkles } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 
@@ -23,6 +23,7 @@ const resultIcons = {
   Post: <FileText className="h-5 w-5 text-muted-foreground" />,
   Kullanıcı: <User className="h-5 w-5 text-muted-foreground" />,
 };
+const fallbackResultIcon = <Sparkles className="h-5 w-5 text-muted-foreground" />;
 
 export function CommandPalette() {
   const t = useTranslations('GlobalSearch');
@@ -152,34 +153,38 @@ export function CommandPalette() {
             </div>
           )}
 
-          {Object.entries(groupedResults).map(([type, items]) => (
-            <CommandGroup key={type} heading={type}>
-              {items.map((item) => (
-                <CommandItem
-                  key={item.url}
-                  value={item.url}
-                  onSelect={() => runCommand(() => router.push(item.url))}
-                >
-                  <div className="flex items-center gap-3">
-                    {type === 'Kullanıcı' ? (
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={item.image_url} />
-                        <AvatarFallback>{item.title.substring(0, 2)}</AvatarFallback>
-                      </Avatar>
-                    ) : (
-                      resultIcons[type]
-                    )}
-                    <div>
-                      <p className="font-medium">{item.title}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {item.description}
-                      </p>
+          {Object.entries(groupedResults)
+            .sort(([firstType], [secondType]) =>
+              firstType === 'Tool' ? -1 : secondType === 'Tool' ? 1 : 0
+            )
+            .map(([type, items]) => (
+              <CommandGroup key={type} heading={type}>
+                {items.map((item) => (
+                  <CommandItem
+                    key={item.url}
+                    value={item.url}
+                    onSelect={() => runCommand(() => router.push(item.url))}
+                  >
+                    <div className="flex items-center gap-3">
+                      {type === 'Kullanıcı' ? (
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={item.image_url} />
+                          <AvatarFallback>{item.title.substring(0, 2)}</AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        resultIcons[type] || fallbackResultIcon
+                      )}
+                      <div>
+                        <p className="font-medium">{item.title}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-1">
+                          {item.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          ))}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            ))}
 
           {!isLoading && data.results.length === 0 && data.suggestions.length > 0 && (
             <CommandGroup heading={t('suggestions')}>
@@ -193,7 +198,7 @@ export function CommandPalette() {
                     {
                       resultIcons[
                         item.result_type.charAt(0).toUpperCase() + item.result_type.slice(1)
-                      ]
+                      ] || fallbackResultIcon
                     }
                     <div>
                       <p className="font-medium">{item.title}</p>
