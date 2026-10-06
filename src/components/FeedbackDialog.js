@@ -19,8 +19,11 @@ import { Textarea } from '@/components/ui/textarea';
 import toast from 'react-hot-toast';
 import { sendFeedback } from '@/app/actions';
 import { LoaderCircle, MessageSquarePlus } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 
 export function FeedbackDialog() {
+  const locale = useLocale();
+  const t = useTranslations('FeedbackDialog');
   const [isOpen, setIsOpen] = React.useState(false);
   const [startedAt, setStartedAt] = React.useState(() => Date.now());
   const [isPending, startTransition] = useTransition();
@@ -33,7 +36,7 @@ export function FeedbackDialog() {
       if (result?.error) {
         toast.error(result.error);
       } else {
-        toast.success('Geri bildiriminiz için teşekkürler!');
+        toast.success(t('success'));
         formRef.current?.reset();
         setMessageLength(0);
         setIsOpen(false);
@@ -52,23 +55,22 @@ export function FeedbackDialog() {
       <DialogTrigger asChild>
         <Button variant="outline" className="text-sm">
           <MessageSquarePlus className="mr-2 h-4 w-4" />
-          Geri Bildirim Gönder
+          {t('open')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Geri Bildirim</DialogTitle>
-          <DialogDescription>
-            Platformla ilgili görüşlerinizi veya yaşadığınız sorunları bizimle paylaşın.
-          </DialogDescription>
+          <DialogTitle>{t('title')}</DialogTitle>
+          <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
         <form ref={formRef} action={handleFormAction} className="space-y-4 py-2">
           <input type="hidden" name="started_at" value={startedAt} />
+          <input type="hidden" name="locale" value={locale} />
           <div
             className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden"
             aria-hidden="true"
           >
-            <Label htmlFor="feedback-company-website">Şirket web sitesi</Label>
+            <Label htmlFor="feedback-company-website">{t('companyWebsite')}</Label>
             <input
               id="feedback-company-website"
               name="company_website"
@@ -78,21 +80,21 @@ export function FeedbackDialog() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">E-posta adresiniz</Label>
+            <Label htmlFor="email">{t('email')}</Label>
             <Input
               type="email"
               id="email"
               name="email"
               required
               disabled={isPending}
-              placeholder="ornek@eposta.com"
+              placeholder={t('emailPlaceholder')}
               maxLength={254}
               autoComplete="email"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="feedback-type">Geri bildirim türü</Label>
+            <Label htmlFor="feedback-type">{t('type')}</Label>
             <select
               id="feedback-type"
               name="feedback_type"
@@ -100,15 +102,15 @@ export function FeedbackDialog() {
               disabled={isPending}
               className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="Genel">Genel görüş</option>
-              <option value="Hata">Hata bildirimi</option>
-              <option value="Öneri">Özellik önerisi</option>
-              <option value="İçerik">İçerik düzeltmesi</option>
+              <option value="Genel">{t('typeGeneral')}</option>
+              <option value="Hata">{t('typeBug')}</option>
+              <option value="Öneri">{t('typeSuggestion')}</option>
+              <option value="İçerik">{t('typeContent')}</option>
             </select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="feedback">Mesajınız</Label>
+            <Label htmlFor="feedback">{t('message')}</Label>
             <Textarea
               id="feedback"
               name="feedback"
@@ -117,7 +119,7 @@ export function FeedbackDialog() {
               minLength={20}
               maxLength={2000}
               onChange={(event) => setMessageLength(event.target.value.length)}
-              placeholder="Görüşünüzü veya yaşadığınız sorunu yazın..."
+              placeholder={t('messagePlaceholder')}
               className="min-h-[150px]"
               aria-describedby="feedback-message-help"
             />
@@ -125,7 +127,7 @@ export function FeedbackDialog() {
               id="feedback-message-help"
               className="flex justify-between text-xs text-muted-foreground"
             >
-              <span>En az 20 karakter yazın.</span>
+              <span>{t('messageHelp')}</span>
               <span>{messageLength}/2000</span>
             </div>
           </div>
@@ -133,17 +135,17 @@ export function FeedbackDialog() {
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary" disabled={isPending}>
-                İptal
+                {t('cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" disabled={isPending}>
               {isPending ? (
                 <>
                   <LoaderCircle aria-hidden="true" className="mr-2 h-4 w-4 animate-spin" />
-                  Gönderiliyor…
+                  {t('submitting')}
                 </>
               ) : (
-                'Gönder'
+                t('submit')
               )}
             </Button>
           </DialogFooter>

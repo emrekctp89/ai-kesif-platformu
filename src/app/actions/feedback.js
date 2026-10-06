@@ -7,6 +7,7 @@ import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import { ContactFormEmail } from '@/components/emails/ContactFormEmail';
 import { enforceRateLimit, validateHumanForm } from '@/utils/antiAbuse';
+import { getTranslations } from 'next-intl/server';
 
 // Basit bir e-posta şablonu
 const FeedbackEmail = ({ feedback, userEmail, feedbackType }) => (
@@ -27,8 +28,10 @@ const FeedbackEmail = ({ feedback, userEmail, feedbackType }) => (
 export async function sendFeedback(formData) {
   'use server';
 
+  const locale = formData.get('locale') === 'en' ? 'en' : 'tr';
+  const t = await getTranslations({ locale, namespace: 'FeedbackDialog' });
   const humanCheck = validateHumanForm(formData);
-  if (!humanCheck.valid) return { error: humanCheck.error };
+  if (!humanCheck.valid) return { error: t('humanCheckError') };
 
   const rateLimit = await enforceRateLimit('feedback', {
     limit: 5,
@@ -36,9 +39,7 @@ export async function sendFeedback(formData) {
   });
   if (!rateLimit.allowed) {
     return {
-      error: `Çok fazla geri bildirim gönderdiniz. Yaklaşık ${Math.ceil(
-        rateLimit.retryAfterSeconds / 60
-      )} dakika sonra tekrar deneyin.`,
+      error: t('rateLimit', { minutes: Math.ceil(rateLimit.retryAfterSeconds / 60) }),
     };
   }
 
@@ -57,19 +58,19 @@ export async function sendFeedback(formData) {
   const senderEmail = user?.email || submittedEmail;
 
   if (!feedback) {
-    return { error: 'Geri bildirim mesajı boş olamaz.' };
+    return { error: t('emptyMessageError') };
   }
 
   if (feedback.length < 20 || feedback.length > 2000) {
-    return { error: 'Geri bildiriminiz 20 ile 2000 karakter arasında olmalıdır.' };
+    return { error: t('messageLengthError') };
   }
 
   if (!senderEmail || !emailPattern.test(senderEmail) || senderEmail.length > 254) {
-    return { error: 'Geçerli bir e-posta adresi girin.' };
+    return { error: t('emailError') };
   }
 
   if (!allowedFeedbackTypes.includes(feedbackType)) {
-    return { error: 'Geçerli bir geri bildirim türü seçin.' };
+    return { error: t('typeError') };
   }
 
   try {
@@ -88,10 +89,10 @@ export async function sendFeedback(formData) {
     if (error) throw error;
   } catch (emailError) {
     logger.error('Geri bildirim gönderme hatası:', emailError);
-    return { error: 'Geri bildirim gönderilirken bir hata oluştu.' };
+    return { error: t('sendError') };
   }
 
-  return { success: 'Geri bildiriminiz için teşekkürler!' };
+  return { success: t('success') };
 }
 
 export async function sendContactMessage(formData) {
