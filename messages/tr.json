@@ -614,6 +614,27 @@
     "announcementTitle": "Geliştirme notu:",
     "announcementBody": "Platformumuz henüz çok yeni ve sürekli olarak yeni özellikler ekleniyor. Bir sorunla karşılaşırsanız veya bir fikriniz varsa, bizimle paylaşmaktan çekinmeyin!"
   },
+  "Feedback": {
+    "triggerButton": "Geri Bildirim Gönder",
+    "dialogTitle": "Geri Bildirim",
+    "dialogDescription": "Platformla ilgili görüşlerinizi veya yaşadığınız sorunları bizimle paylaşın.",
+    "companyWebsite": "Şirket web sitesi",
+    "emailLabel": "E-posta adresiniz",
+    "emailPlaceholder": "ornek@eposta.com",
+    "typeLabel": "Geri bildirim türü",
+    "typeGeneral": "Genel görüş",
+    "typeBug": "Hata bildirimi",
+    "typeSuggestion": "Özellik önerisi",
+    "typeContent": "İçerik düzeltmesi",
+    "messageLabel": "Mesajınız",
+    "messagePlaceholder": "Görüşünüzü veya yaşadığınız sorunu yazın...",
+    "messageHelp": "En az 20 karakter yazın.",
+    "messageCount": "{count}/2000",
+    "cancel": "İptal",
+    "submit": "Gönder",
+    "submitting": "Gönderiliyor…",
+    "successToast": "Geri bildiriminiz için teşekkürler!"
+  },
   "Tool": {
     "visitSite": "Ziyaret Et",
     "promoteTool": "Bu Aracı Öne Çıkar"
