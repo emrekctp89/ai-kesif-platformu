@@ -179,6 +179,9 @@ export async function submitTool(formData) {
   const rawLink = String(formData.get('link') || '').trim();
   const description = String(formData.get('description') || '').trim();
   const category_id = String(formData.get('category_id') || '').trim();
+  const category_note = String(formData.get('category_note') || '').trim();
+  const pricing_model = String(formData.get('pricing_model') || '').trim();
+  const platforms = formData.getAll('platforms').map((platform) => String(platform));
   const suggester_email_from_form = String(formData.get('suggester_email') || '').trim();
 
   const final_suggester_email = user ? user.email : suggester_email_from_form;
@@ -193,6 +196,24 @@ export async function submitTool(formData) {
   ) {
     const errorMessage = 'Lütfen tüm alanları belirtilen kurallara uygun doldurun.';
     return redirect(`/submit?message=${encodeURIComponent(errorMessage)}`);
+  }
+
+  const allowedPricingModels = ['Ücretsiz', 'Freemium', 'Abonelik', 'Tek Seferlik Ödeme'];
+  if (pricing_model && !allowedPricingModels.includes(pricing_model)) {
+    return redirect(
+      `/submit?message=${encodeURIComponent('Geçersiz fiyatlandırma modeli seçildi.')}`
+    );
+  }
+
+  const allowedPlatforms = ['Web', 'iOS', 'Android', 'Windows', 'macOS', 'Linux', 'Chrome Uzantısı'];
+  if (platforms.some((platform) => !allowedPlatforms.includes(platform))) {
+    return redirect(`/submit?message=${encodeURIComponent('Geçersiz platform seçimi.')}`);
+  }
+
+  if (category_note.length > 200) {
+    return redirect(
+      `/submit?message=${encodeURIComponent('Kategori notu en fazla 200 karakter olabilir.')}`
+    );
   }
 
   let normalizedLink;
@@ -223,12 +244,20 @@ export async function submitTool(formData) {
 
   const { data: category } = await supabase
     .from('categories')
-    .select('id')
+    .select('id, slug')
     .eq('id', category_id)
     .maybeSingle();
 
   if (!category) {
     return redirect(`/submit?message=${encodeURIComponent('Lütfen geçerli bir kategori seçin.')}`);
+  }
+
+  if (category.slug === 'diger' && category_note.length < 3) {
+    return redirect(
+      `/submit?message=${encodeURIComponent(
+        '“Diğer” kategorisini seçtiniz. Lütfen aracın ne tür bir araç olduğunu kısaca belirtin.'
+      )}`
+    );
   }
 
   const slug = slugify(name);
@@ -239,6 +268,9 @@ export async function submitTool(formData) {
     link: normalizedLink,
     description,
     category_id,
+    category_note: category_note || null,
+    pricing_model: pricing_model || null,
+    platforms: platforms.length ? platforms : null,
     user_id: user?.id,
     suggester_email: final_suggester_email,
     is_approved: false,
@@ -273,6 +305,9 @@ export async function submitTool(formData) {
         toolDescription: description,
         suggesterEmail: final_suggester_email,
         isLoggedInUser: !!user,
+        categoryNote: category_note || null,
+        pricingModel: pricing_model || null,
+        platforms: platforms.length ? platforms : null,
       }),
     });
   } catch (emailError) {
@@ -543,6 +578,7 @@ export async function updateTool(formData) {
   const name_en = String(formData.get('name_en') || '').trim();
   const description_en = String(formData.get('description_en') || '').trim();
   const category_id = String(formData.get('category_id') || '').trim();
+  const category_note = String(formData.get('category_note') || '').trim();
   const pricing_model = String(formData.get('pricing_model') || '').trim();
   const platforms = formData.getAll('platforms').map((platform) => String(platform));
   const tier = String(formData.get('tier') || '').trim();
@@ -635,6 +671,7 @@ export async function updateTool(formData) {
     name_en: name_en || null,
     description_en: description_en || null,
     category_id,
+    category_note: category_note || null,
     pricing_model: pricing_model || null,
     platforms,
     tier,

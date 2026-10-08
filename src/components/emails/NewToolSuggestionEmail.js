@@ -6,6 +6,9 @@ export const NewToolSuggestionEmail = ({
   toolDescription,
   suggesterEmail,
   isLoggedInUser, // Yeni prop'u burada alıyoruz
+  categoryNote,
+  pricingModel,
+  platforms,
 }) => (
   <div>
     <h1>Yeni Bir AI Aracı Önerildi!</h1>
@@ -22,6 +25,21 @@ export const NewToolSuggestionEmail = ({
       <li>
         <strong>Açıklama:</strong> {toolDescription}
       </li>
+      {categoryNote ? (
+        <li>
+          <strong>Kategori notu:</strong> {categoryNote}
+        </li>
+      ) : null}
+      {pricingModel ? (
+        <li>
+          <strong>Fiyatlandırma:</strong> {pricingModel}
+        </li>
+      ) : null}
+      {platforms && platforms.length ? (
+        <li>
+          <strong>Platformlar:</strong> {platforms.join(', ')}
+        </li>
+      ) : null}
       {/* DEĞİŞİKLİK: Kullanıcı durumuna göre farklı metin gösteriyoruz */}
       <li>
         <strong>Öneren E-posta:</strong> {suggesterEmail}{' '}
