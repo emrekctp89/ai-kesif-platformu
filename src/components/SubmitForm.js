@@ -13,6 +13,11 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
+import { Checkbox } from './ui/checkbox';
+
+const PRICING_MODELS = ['Ücretsiz', 'Freemium', 'Abonelik', 'Tek Seferlik Ödeme'];
+const PLATFORM_OPTIONS = ['Web', 'iOS', 'Android', 'Windows', 'macOS', 'Linux', 'Chrome Uzantısı'];
+const OTHER_CATEGORY_SLUG = 'diger';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -40,6 +45,11 @@ export default function SubmitForm({ categories, user }) {
   const locale = useLocale();
   const [descriptionLength, setDescriptionLength] = useState(0);
   const [startedAt] = useState(() => Date.now());
+  const [categoryId, setCategoryId] = useState('');
+  const [selectedPlatforms, setSelectedPlatforms] = useState(new Set());
+
+  const selectedCategory = categories.find((category) => category.id === categoryId);
+  const isOtherCategory = selectedCategory?.slug === OTHER_CATEGORY_SLUG;
 
   return (
     <form action={submitTool} className="space-y-6 rounded-xl border bg-card p-5 shadow-sm sm:p-7">
@@ -117,7 +127,8 @@ export default function SubmitForm({ categories, user }) {
           name="category_id"
           id="category_id"
           required
-          defaultValue=""
+          value={categoryId}
+          onChange={(event) => setCategoryId(event.target.value)}
           className="block min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <option value="" disabled>
@@ -129,6 +140,68 @@ export default function SubmitForm({ categories, user }) {
             </option>
           ))}
         </select>
+        {isOtherCategory && (
+          <div className="space-y-1 pt-1">
+            <Label htmlFor="category_note">{t('categoryNoteLabel')}</Label>
+            <Input
+              id="category_note"
+              name="category_note"
+              required
+              minLength={3}
+              maxLength={200}
+              placeholder={t('categoryNotePlaceholder')}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-3 rounded-lg border border-dashed p-4">
+        <p className="text-sm font-semibold">{t('extraDetailsTitle')}</p>
+        <p className="text-xs text-muted-foreground">{t('extraDetailsSubtitle')}</p>
+
+        <div className="space-y-2">
+          <Label htmlFor="pricing_model">{t('pricingLabel')}</Label>
+          <select
+            name="pricing_model"
+            id="pricing_model"
+            defaultValue=""
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+          >
+            <option value="">{t('pricingPlaceholder')}</option>
+            {PRICING_MODELS.map((model) => (
+              <option key={model} value={model}>
+                {model}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>{t('platformsLabel')}</Label>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {PLATFORM_OPTIONS.map((platform) => (
+              <div key={platform} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`platform-${platform}`}
+                  name="platforms"
+                  value={platform}
+                  checked={selectedPlatforms.has(platform)}
+                  onCheckedChange={(checked) =>
+                    setSelectedPlatforms((current) => {
+                      const next = new Set(current);
+                      if (checked) next.add(platform);
+                      else next.delete(platform);
+                      return next;
+                    })
+                  }
+                />
+                <Label htmlFor={`platform-${platform}`} className="text-sm font-normal">
+                  {platform}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {!user && (
