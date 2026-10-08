@@ -37,6 +37,8 @@ export function JobPacksStrip({
     return terms.every((term) => text.includes(term));
   });
   const [access, setAccess] = useState(null);
+  const [accessRevision, setAccessRevision] = useState(0);
+  const [completedPacks, setCompletedPacks] = useState({});
   const safeInitial =
     initialPackId && isRunnablePack(initialPackId) ? String(initialPackId).trim() : null;
   const [runnerPackId, setRunnerPackId] = useState(
@@ -49,7 +51,7 @@ export function JobPacksStrip({
     const load = async () => {
       try {
         if (typeof fetch !== 'function') return;
-        const res = await fetch('/api/kasif/pack-access');
+        const res = await fetch('/api/kasif/pack-access', { cache: 'no-store' });
         if (!active || !res?.ok) return;
         const data = await res.json();
         if (active && data) setAccess(data);
@@ -61,7 +63,7 @@ export function JobPacksStrip({
     return () => {
       active = false;
     };
-  }, []);
+  }, [accessRevision]);
 
   // React to deep-link changes (learn path → /kasif?pack=&runner=1)
   useEffect(() => {
@@ -96,7 +98,7 @@ export function JobPacksStrip({
 
   function packLocked(packId) {
     const decision = access?.packs?.[packId];
-    if (!decision) return false;
+    if (!decision) return true;
     return decision.allowed === false;
   }
 
@@ -151,15 +153,11 @@ export function JobPacksStrip({
                   {t('packs.upgradeCta')}
                 </Link>
                 <Link
-                  href={
-                    locale === 'en'
-                      ? '/en/kasif?pack=seo-brief&runner=1'
-                      : '/kasif?pack=seo-brief&runner=1'
-                  }
+                  href={locale === 'en' ? '/en/kasif' : '/kasif'}
                   className="font-semibold text-primary hover:underline"
                   onClick={() => trackEvent('kasif_pack_quota_free_runner_click')}
                 >
-                  {t('packs.paywallTryFreeRunner')}
+                  {t('packs.chatCta')}
                 </Link>
               </div>
             </div>
@@ -332,7 +330,9 @@ export function JobPacksStrip({
         })}
       </ul>
 
-      {runnerPackId && isRunnablePack(runnerPackId) && !packLocked(runnerPackId) ? (
+      {runnerPackId &&
+      isRunnablePack(runnerPackId) &&
+      (!packLocked(runnerPackId) || completedPacks[runnerPackId]) ? (
         <div id="kasif-pack-runner" className="scroll-mt-24">
           <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border bg-muted/30 p-3">
             <p className="text-sm font-semibold">
@@ -353,7 +353,15 @@ export function JobPacksStrip({
               {t('packs.runnerClose')}
             </button>
           </div>
-          <PackRunnerPanel key={runnerPackId} locale={locale} packId={runnerPackId} />
+          <PackRunnerPanel
+            key={runnerPackId}
+            locale={locale}
+            packId={runnerPackId}
+            onComplete={() => {
+              setCompletedPacks((current) => ({ ...current, [runnerPackId]: true }));
+              setAccessRevision((current) => current + 1);
+            }}
+          />
         </div>
       ) : null}
     </section>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Check, Copy, LoaderCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-export function CopyAnswerButton({ answer }) {
+export function CopyAnswerButton({ answer, labelKey = 'copyAnswer' }) {
   const t = useTranslations('Kasif');
   const [status, setStatus] = useState('idle');
 
@@ -29,7 +29,7 @@ export function CopyAnswerButton({ answer }) {
         className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-50"
       >
         <Icon aria-hidden="true" className="h-3.5 w-3.5" />
-        {t(status === 'copied' ? 'answerCopied' : 'copyAnswer')}
+        {t(status === 'copied' ? 'answerCopied' : labelKey)}
       </button>
       <span role="status" className="text-xs text-muted-foreground">
         {status === 'copied' ? t('answerCopied') : status === 'error' ? t('copyAnswerError') : ''}

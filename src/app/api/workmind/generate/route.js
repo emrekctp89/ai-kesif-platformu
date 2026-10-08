@@ -1,3 +1,4 @@
+import { getViewerProState } from '@/lib/kasif/server';
 import logger from '@/utils/logger';
 import { NextResponse } from 'next/server';
 
@@ -72,6 +73,16 @@ async function generateWithKasifCloud(prompt) {
 
 export async function POST(req) {
   try {
+    const viewer = await getViewerProState();
+    if (!viewer.isPro) {
+      return NextResponse.json(
+        {
+          error: 'WorkMind için PRO üyelik gerekiyor.',
+          reason: viewer.isAuthenticated ? 'pro_required' : 'login_required',
+        },
+        { status: viewer.isAuthenticated ? 403 : 401 }
+      );
+    }
     const body = await req.json();
     const prompt = String(body?.prompt || '').trim();
 

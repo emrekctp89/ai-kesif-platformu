@@ -20,6 +20,7 @@ export const PUBLICLY_PAUSED_PATHS = new Set([
 
 /** Community surfaces — optional for logged-in users via profile menu toggle. */
 export const COMMUNITY_PATHS = [
+  '/arastirma',
   '/koleksiyonlar',
   '/topluluk',
   '/akis',

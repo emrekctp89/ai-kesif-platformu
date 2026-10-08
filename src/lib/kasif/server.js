@@ -28,3 +28,5 @@ export { getOpsDigestHistory } from './opsDigestHistory';
 export { runKasifOpsDigest } from './opsDigestRun';
 export { kasifConfig } from './config';
 export { refreshKasifGoalCandidates } from './goalCandidates';
+
+export { getViewerProState } from './packAccessServer';

@@ -445,19 +445,19 @@ export function detectMetaIntent(question) {
 
 function metaAnswers(kind, locale = 'tr') {
   const tr = {
-    identity: `Ben Kâşif v${KASIF_VERSION}’im — AI Keşif Platformu’nun iş bitirme ve karar orkestratörüyüm. İhtiyacı anlar, onaylı katalogdan doğru araçları seçer, işi adımlara böler, uygulanabilir çıktılar üretir ve sonucu tamamlanana kadar takip ederim.`,
+    identity: `Ben Kâşif v${KASIF_VERSION}, AI Keşif’in platform sohbet asistanıyım. Sistemi, araç kataloğunu ve site özelliklerini açıklayabilirim. Temel sohbet herkese açıktır; WorkMind ve tüm iş paketleri PRO üyeliğe dahildir.`,
     capabilities:
-      'Bir sistem CEO’su gibi çalışabilirim: hedefi netleştirir, ücretsiz/ücretli araçları araştırıp karşılaştırır, çok adımlı çalışma planı kurar, hazır iş paketleri ve sihirbazlarla ilk çıktıyı üretir, otomasyon/partner bağlantılarına devreder, sonucu ve tamamlanma kanıtını izler, yeni katalog araçlarını keşif kuyruğuna alırım. Örnek: “SaaS lansmanımı planla”, “sunumumu üret”, “toplantıdan görev çıkar”, “bu aracı kataloğa ekle: URL”.',
-    how: 'Soruyu Türkçe veya İngilizce anlar; hızlı yerel eşleşme, öğrenilmiş taksonomi ve gerektiğinde yapılandırılmış model zinciriyle niyeti çıkarırım. Önerileri yalnızca onaylı katalog verisiyle temellendiririm; Workmind planı, iş sihirbazı, çalıştırılabilir paket ve sonuç köprüsüyle öneriden tamamlanmış işe ilerlerim. Açık web keşfi güvenlik nedeniyle yalnız yönetici kontrollü onay kuyruğuna yazar; otomatik yayımlamaz.',
+      'Platformda yolunu bulmana, kategorileri keşfetmene, katalogdaki araçları karşılaştırmana ve üyelik özelliklerini anlamana yardımcı olurum. İş akışı oluşturmak için WorkMind’i, görev çıktıları için PRO iş paketlerini kullanabilirsin.',
+    how: 'Sorularını Türkçe veya İngilizce yanıtlarım. Araç önerilerini onaylı katalog bilgilerine dayandırırım. Sistem hakkında sohbet ücretsizdir; WorkMind ve iş paketleri PRO üyelik gerektirir.',
   };
   const en = {
-    identity: `I am Kâşif v${KASIF_VERSION} — AI Keşif Platformu’s job-completion and decision orchestrator. I understand the goal, select grounded tools, build an execution plan, produce usable deliverables, and track the work through completion.`,
+    identity: `I am Kâşif v${KASIF_VERSION}, AI Keşif’s platform chat assistant. I explain the system, tool catalog and site features. Basic chat is open to everyone; WorkMind and all job packs are included in PRO.`,
     capabilities:
-      'I can act like a system CEO: clarify a goal, research and compare free or paid tools, orchestrate multi-step workflows, generate first deliverables with job packs and wizards, hand work to automation or partner providers, track completion evidence, and place newly discovered tools into the catalog approval queue. Try: “plan my SaaS launch”, “produce a pitch deck”, “turn this meeting into tasks”, or “add this tool: URL”.',
-    how: 'I understand Turkish and English through local matching, learned taxonomy, and a structured provider fallback when needed. Recommendations stay grounded in the approved catalog; Workmind plans, job wizards, runnable packs, and the result bridge move from recommendation to completed work. Open-web discovery is admin-controlled and writes only to an approval queue, never directly to production.',
+      'I help you navigate the platform, explore categories, compare catalog tools and understand membership features. Use WorkMind for workflows and PRO job packs for task outputs.',
+    how: 'I answer in Turkish or English and ground tool recommendations in the approved catalog. Platform chat is free; WorkMind and job packs require PRO membership.',
   };
-  const pack = locale === 'en' ? en : tr;
-  return pack[kind] || pack.identity;
+  const answers = locale === 'en' ? en : tr;
+  return answers[kind] || answers.identity;
 }
 
 /**

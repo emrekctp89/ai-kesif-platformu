@@ -1,4 +1,7 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
+import { getLocale } from 'next-intl/server';
+import { getViewerProState } from '@/lib/kasif/server';
 import { FlaskConical } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
@@ -21,6 +24,31 @@ export async function generateMetadata({ params }) {
 
 export default async function WorkmindPage() {
   const t = await getTranslations('Workmind');
+  const locale = await getLocale();
+  const viewer = await getViewerProState();
+  const prefix = locale === 'en' ? '/en' : '';
+  if (!viewer.isPro) {
+    return (
+      <section className="mx-auto max-w-2xl px-6 py-20 text-center">
+        <span className="rounded-full border border-amber-500/40 px-3 py-1 text-sm font-semibold">
+          PRO
+        </span>
+        <h1 className="mt-5 text-3xl font-bold">{t('proTitle')}</h1>
+        <p className="mt-3 text-muted-foreground">{t('proBody')}</p>
+        <div className="mt-6 flex justify-center gap-4">
+          <Link
+            className="rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground"
+            href={`${prefix}/uyelik`}
+          >
+            {t('proCta')}
+          </Link>
+          <Link className="rounded-lg border px-5 py-3" href={`${prefix}/kasif`}>
+            {t('chatCta')}
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-4rem)] w-full flex-col overflow-hidden bg-background">

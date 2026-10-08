@@ -40,6 +40,12 @@ export default function GlobalError({ error, reset }) {
           >
             Yeniden Dene
           </button>
+          <p style={{ marginTop: '20px' }}>
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Reload the document to recover a failed root layout. */}
+            <a href="/" style={{ color: '#f8fafc', textUnderlineOffset: '4px' }}>
+              Ana Sayfaya Dön
+            </a>
+          </p>
         </main>
       </body>
     </html>

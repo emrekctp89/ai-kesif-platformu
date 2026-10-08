@@ -1,3 +1,7 @@
+jest.mock('@/lib/kasif/packAccessServer', () => ({
+  getViewerProState: jest.fn().mockResolvedValue({ isPro: true }),
+  assertPackAllowed: jest.fn().mockResolvedValue({ allowed: true }),
+}));
 const enforceRateLimit = jest.fn();
 const assertKasifEnabled = jest.fn();
 const createAdminClient = jest.fn();
@@ -92,4 +96,14 @@ describe('Kâşif job-session API', () => {
     expect(body.feedbackToken).toBeTruthy();
     expect(body.goals).toContain('presentation-creation');
   });
+});
+
+test('non-PRO cannot create a WorkMind session without a pack id', async () => {
+  const { getViewerProState } = require('@/lib/kasif/packAccessServer');
+  getViewerProState.mockResolvedValueOnce({ isPro: false, isAuthenticated: true });
+  const response = await POST(
+    requestWith({ prompt: 'Create a presentation for my project', source: 'workmind' })
+  );
+  expect(response.status).toBe(402);
+  expect((await response.json()).reason).toBe('pro_required');
 });

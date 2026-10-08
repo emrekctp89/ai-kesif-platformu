@@ -73,7 +73,7 @@ describe('kasifJobCompletionPath', () => {
 
   it('packs modülü runner deep link alanları taşır', () => {
     const packs = KASIF_LEARN_MODULES.find((m) => m.id === 'packs');
-    expect(packs.practice.pack).toBe('seo-brief');
+    expect(packs.practice.pack).toBe('research-brief');
     expect(packs.practice.runner).toBe(true);
   });
 });

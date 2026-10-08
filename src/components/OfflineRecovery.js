@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function OfflineRecovery({ homeHref = '/' }) {
+  const t = useTranslations('Offline');
   const [online, setOnline] = useState(false);
 
   useEffect(() => {
@@ -21,13 +23,11 @@ export function OfflineRecovery({ homeHref = '/' }) {
   return (
     <div className="flex flex-col items-center gap-4">
       <p role="status" className="text-sm text-muted-foreground">
-        {online
-          ? 'Bağlantı geri geldi. Yeniden deneyebilirsiniz.'
-          : 'İnternet bağlantısı bekleniyor…'}
+        {t(online ? 'connected' : 'waiting')}
       </p>
       <Button size="lg" disabled={!online} onClick={() => window.location.assign(homeHref)}>
         <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-        Yeniden Dene
+        {t('retry')}
       </Button>
     </div>
   );

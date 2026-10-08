@@ -149,7 +149,7 @@ export const JOB_PACKS = [
       { tr: 'Takip kuralları', en: 'Follow-up rules' },
     ],
     bridgeGoals: ['email-writing'],
-    proHint: false,
+    proHint: true,
   },
   {
     id: 'pitch-deck',
@@ -177,7 +177,7 @@ export const JOB_PACKS = [
       { tr: 'Prova & export', en: 'Rehearse & export' },
     ],
     bridgeGoals: ['presentation-creation', 'image-generation'],
-    proHint: false,
+    proHint: true,
   },
   {
     id: 'seo-brief',
@@ -205,7 +205,7 @@ export const JOB_PACKS = [
       { tr: 'İçerik brief', en: 'Content brief' },
     ],
     bridgeGoals: ['seo-optimization', 'content-writing'],
-    proHint: false,
+    proHint: true,
   },
   {
     id: 'support-kit',
@@ -233,7 +233,7 @@ export const JOB_PACKS = [
       { tr: 'FAQ', en: 'FAQ' },
     ],
     bridgeGoals: ['customer-support', 'email-writing'],
-    proHint: false,
+    proHint: true,
   },
   {
     id: 'code-scaffold',
@@ -317,7 +317,7 @@ export const JOB_PACKS = [
       { tr: 'Bulgu şablonu', en: 'Findings template' },
     ],
     bridgeGoals: ['data-analysis'],
-    proHint: false,
+    proHint: true,
   },
 ];
 

@@ -1,13 +1,23 @@
 import '@testing-library/jest-dom';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { JobPacksStrip } from '@/components/kasif/JobPacksStrip';
 
 jest.mock('next-intl', () => ({ useTranslations: () => (key) => key }));
 jest.mock('@/utils/analytics', () => ({ trackEvent: jest.fn() }));
 jest.mock('@/components/kasif/PackRunnerPanel', () => ({
-  PackRunnerPanel: () => <p>Runner content</p>,
+  PackRunnerPanel: ({ onComplete }) => (
+    <div>
+      <p>Runner content</p>
+      <button onClick={() => onComplete?.({ run: {} })}>Complete run</button>
+    </div>
+  ),
 }));
 jest.mock('@/lib/kasif/jobPacks', () => ({
+  JOB_PACKS: [
+    { id: 'demo', proHint: true },
+    { id: 'seo-brief', proHint: false },
+  ],
+  RUNNABLE_PACK_IDS: ['demo', 'seo-brief'],
   listJobPacks: () => [
     {
       id: 'demo',
@@ -21,7 +31,10 @@ jest.mock('@/lib/kasif/jobPacks', () => ({
 }));
 
 beforeEach(() => {
-  global.fetch = jest.fn().mockResolvedValue({ ok: false });
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ isPro: true, packs: { demo: { allowed: true } } }),
+  });
   Element.prototype.scrollIntoView = jest.fn();
 });
 
@@ -30,11 +43,11 @@ it('shows the final step of the pack', () => {
   expect(screen.getByText('4. Publish')).toBeInTheDocument();
 });
 
-it('opens and scrolls to the runner, then closes it and restores focus', () => {
+it('opens and scrolls to the runner, then closes it and restores focus', async () => {
   jest.useFakeTimers();
   try {
     render(<JobPacksStrip />);
-    const trigger = screen.getByRole('button', { name: 'packs.runnerOpen' });
+    const trigger = await screen.findByRole('button', { name: 'packs.runnerOpen' });
     fireEvent.click(trigger);
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('Runner content')).toBeInTheDocument();
@@ -60,4 +73,28 @@ it('matches words across title and steps, and clears an empty search result', ()
   fireEvent.click(screen.getByRole('button', { name: 'packs.clearSearch' }));
   expect(screen.getByText('Demo pack')).toBeInTheDocument();
   expect(search).toHaveFocus();
+});
+
+it('refreshes access after completion while keeping the last output visible', async () => {
+  let reads = 0;
+  global.fetch = jest.fn(async () => {
+    reads += 1;
+    return {
+      ok: true,
+      json: async () => ({
+        isPro: false,
+        isAuthenticated: true,
+        freeRunsLeft: reads === 1 ? 1 : 0,
+        packs: { demo: { allowed: reads === 1, reason: 'pro_required' } },
+      }),
+    };
+  });
+  render(<JobPacksStrip />);
+  await waitFor(() => expect(screen.getByText('packs.quotaHint')).toBeInTheDocument());
+  fireEvent.click(screen.getByRole('button', { name: 'packs.runnerOpen' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Complete run' }));
+  await screen.findByText('packs.quotaEmptyHint');
+  expect(global.fetch).toHaveBeenCalledTimes(2);
+  expect(screen.getByText('Runner content')).toBeInTheDocument();
+  expect(screen.queryByText('packs.quotaHint')).not.toBeInTheDocument();
 });

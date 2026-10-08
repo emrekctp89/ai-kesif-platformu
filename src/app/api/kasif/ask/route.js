@@ -1,4 +1,5 @@
 import logger from '@/utils/logger';
+import { answerPlatformQuestion } from '@/lib/kasif/platformAssistant';
 import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { enforceRateLimit } from '@/utils/antiAbuse';
@@ -222,6 +223,7 @@ export async function POST(request) {
 
     // Meta / soft-landing yanıtları katalog aramadan döner.
     const directResponse =
+      answerPlatformQuestion(question, locale) ||
       answerMetaQuestion(question, locale) ||
       answerContextlessFollowUp(question, locale, history, softLandingOverride);
     if (directResponse) {

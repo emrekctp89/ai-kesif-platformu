@@ -79,10 +79,7 @@ export async function countProPackRunsForUser(userId) {
  */
 export async function getPackAccessSnapshot() {
   const viewer = await getViewerProState();
-  let usedProPackRuns = 0;
-  if (viewer.user?.id && !viewer.isPro) {
-    usedProPackRuns = await countProPackRunsForUser(viewer.user.id);
-  }
+  const usedProPackRuns = 0;
 
   const state = {
     isPro: viewer.isPro,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { ArrowRight, BookOpen, Search, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -19,16 +19,29 @@ import {
 } from '@/components/ui/select';
 import { authorDisplayName } from '@/lib/contentAuthors';
 
+function normalizeSearchText(value) {
+  return value
+    .toLocaleLowerCase('tr-TR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ı/g, 'i')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function formatDate(value, locale) {
   if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
   return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'tr-TR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-  }).format(new Date(value));
+  }).format(date);
 }
 
 function PostCard({ post, locale, t, featured = false }) {
+  const [failedImageUrl, setFailedImageUrl] = useState(null);
   const dateLabel = formatDate(post.published_at, locale);
   const isGuide = post.type === 'Rehber';
   const authorName = authorDisplayName(post, t('defaultAuthor'));
@@ -52,7 +65,7 @@ function PostCard({ post, locale, t, featured = false }) {
             featured ? 'aspect-[16/10] md:aspect-auto md:min-h-[280px]' : 'aspect-video'
           }`}
         >
-          {post.featured_image_url ? (
+          {post.featured_image_url && post.featured_image_url !== failedImageUrl ? (
             <Image
               src={post.featured_image_url}
               alt={post.title}
@@ -60,6 +73,7 @@ function PostCard({ post, locale, t, featured = false }) {
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               sizes={featured ? '(max-width: 768px) 100vw, 50vw' : '(max-width: 768px) 100vw, 33vw'}
               priority={featured}
+              onError={() => setFailedImageUrl(post.featured_image_url)}
             />
           ) : (
             <div className="flex h-full min-h-[180px] items-center justify-center bg-gradient-to-br from-indigo-950/15 via-muted to-purple-800/15">
@@ -128,6 +142,7 @@ function PostCard({ post, locale, t, featured = false }) {
  * }} props
  */
 export function BlogListingClient({ posts, locale, categories = [], tags = [] }) {
+  const filterPanelId = useId();
   const t = useTranslations('Blog');
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all'); // all | guide | post
@@ -143,7 +158,8 @@ export function BlogListingClient({ posts, locale, categories = [], tags = [] })
   };
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLocaleLowerCase('tr-TR');
+    const q = normalizeSearchText(query);
+    const searchTerms = q.split(' ').filter(Boolean);
     return (posts || []).filter((post) => {
       const isGuide = post.type === 'Rehber';
       if (filter === 'guide' && !isGuide) return false;
@@ -157,8 +173,10 @@ export function BlogListingClient({ posts, locale, categories = [], tags = [] })
         if (!hasTag) return false;
       }
       if (!q) return true;
-      const hay = `${post.title || ''} ${post.description || ''}`.toLocaleLowerCase('tr-TR');
-      return hay.includes(q);
+      const hay = normalizeSearchText(
+        `${post.title || ''} ${post.description || ''} ${authorDisplayName(post, '')}`
+      );
+      return searchTerms.every((term) => hay.includes(term));
     });
   }, [posts, query, filter, categoryId, tagId]);
 
@@ -189,7 +207,25 @@ export function BlogListingClient({ posts, locale, categories = [], tags = [] })
                 variant={active ? 'default' : 'ghost'}
                 className="min-h-9 rounded-full px-3.5"
                 role="tab"
+                id={`${filterPanelId}-${item.id}`}
+                aria-controls={filterPanelId}
+                tabIndex={active ? 0 : -1}
                 aria-selected={active}
+                onKeyDown={(event) => {
+                  const index = filters.findIndex((entry) => entry.id === item.id);
+                  const nextIndex = {
+                    ArrowRight: (index + 1) % filters.length,
+                    ArrowLeft: (index + filters.length - 1) % filters.length,
+                    Home: 0,
+                    End: filters.length - 1,
+                  }[event.key];
+                  if (nextIndex === undefined) return;
+                  event.preventDefault();
+                  setFilter(filters[nextIndex].id);
+                  event.currentTarget.parentElement
+                    .querySelectorAll('[role="tab"]')
+                    [nextIndex]?.focus();
+                }}
                 onClick={() => setFilter(item.id)}
               >
                 {item.label}
@@ -242,6 +278,12 @@ export function BlogListingClient({ posts, locale, categories = [], tags = [] })
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape' && query) {
+                  event.preventDefault();
+                  setQuery('');
+                }
+              }}
               placeholder={t('searchPlaceholder')}
               className="min-h-10 pl-9"
               aria-label={t('searchPlaceholder')}
@@ -250,36 +292,51 @@ export function BlogListingClient({ posts, locale, categories = [], tags = [] })
         </div>
       </div>
 
-      <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
-        <p role="status" className="text-sm text-muted-foreground">
-          {t('resultsCount', { count: filtered.length })}
-        </p>
-        {hasActiveFilters && filtered.length > 0 && (
-          <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
-            {t('clearFilters')}
-          </Button>
+      <div
+        role="tabpanel"
+        id={filterPanelId}
+        aria-labelledby={`${filterPanelId}-${filter}`}
+        className="space-y-8"
+      >
+        <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
+          <p role="status" className="text-sm text-muted-foreground">
+            {t('resultsCount', { count: filtered.length })}
+          </p>
+          {hasActiveFilters && filtered.length > 0 && (
+            <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
+              {t('clearFilters')}
+            </Button>
+          )}
+        </div>
+
+        {filtered.length === 0 ? (
+          <section className="rounded-3xl border border-dashed bg-muted/20 px-6 py-14 text-center">
+            <BookOpen className="mx-auto h-10 w-10 text-muted-foreground/50" aria-hidden="true" />
+            <h2 className="mt-4 text-xl font-bold tracking-tight">
+              {t(hasActiveFilters ? 'noResultsTitle' : 'emptyTitle')}
+            </h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              {t(hasActiveFilters ? 'noResultsBody' : 'emptyBody')}
+            </p>
+            {hasActiveFilters ? (
+              <Button type="button" variant="outline" className="mt-5" onClick={clearFilters}>
+                {t('clearFilters')}
+              </Button>
+            ) : (
+              <Button asChild variant="outline" className="mt-5">
+                <Link href="/ogren">{t('ctaLearn')}</Link>
+              </Button>
+            )}
+          </section>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 sm:gap-8">
+            {featured ? <PostCard post={featured} locale={locale} t={t} featured /> : null}
+            {rest.map((post) => (
+              <PostCard key={post.slug} post={post} locale={locale} t={t} />
+            ))}
+          </div>
         )}
       </div>
-
-      {filtered.length === 0 ? (
-        <section className="rounded-3xl border border-dashed bg-muted/20 px-6 py-14 text-center">
-          <BookOpen className="mx-auto h-10 w-10 text-muted-foreground/50" aria-hidden="true" />
-          <h2 className="mt-4 text-xl font-bold tracking-tight">{t('noResultsTitle')}</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            {t('noResultsBody')}
-          </p>
-          <Button type="button" variant="outline" className="mt-5" onClick={clearFilters}>
-            {t('clearFilters')}
-          </Button>
-        </section>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 sm:gap-8">
-          {featured ? <PostCard post={featured} locale={locale} t={t} featured /> : null}
-          {rest.map((post) => (
-            <PostCard key={post.slug} post={post} locale={locale} t={t} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }

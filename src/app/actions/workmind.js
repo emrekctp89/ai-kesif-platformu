@@ -1,5 +1,6 @@
 'use server';
 
+import { getViewerProState } from '@/lib/kasif/server';
 import logger from '@/utils/logger';
 
 import { cookies } from 'next/headers';
@@ -40,6 +41,7 @@ function serializeFlowGraph(nodes = [], edges = []) {
 }
 
 export async function getWorkmindToolRecommendations(categorySlug, step = {}) {
+  if (!(await getViewerProState()).isPro) return { tools: [], error: 'pro_required' };
   const normalizedStep = {
     goal: String(step?.goal || '')
       .trim()
@@ -75,6 +77,7 @@ export async function getWorkmindToolRecommendations(categorySlug, step = {}) {
 }
 
 export async function getToolsByCategorySlug(categorySlug) {
+  if (!(await getViewerProState()).isPro) return [];
   const supabase = await createClient(await cookies());
   const primarySlug = resolvePrimarySlug(categorySlug) || String(categorySlug || '').trim();
 
@@ -105,6 +108,7 @@ export async function getToolsByCategorySlug(categorySlug) {
 }
 
 export async function saveWorkflow(prompt, nodes, edges, isPublic = false) {
+  if (!(await getViewerProState()).isPro) return { error: 'WorkMind için PRO üyelik gerekiyor.' };
   const supabase = await createClient(await cookies());
   const {
     data: { user },

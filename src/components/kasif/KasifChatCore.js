@@ -794,18 +794,23 @@ export function KasifChatCore({
             </section>
           )}
           {!compact && (
-            <JobPacksStrip
-              locale={locale}
-              initialPackId={searchParams?.get('pack') || null}
-              initialOpenRunner={
-                searchParams?.get('runner') === '1' ||
-                searchParams?.get('runner') === 'true' ||
-                searchParams?.get('openRunner') === '1'
-              }
-              onAskPack={(pack) => {
-                void askQuestion(pack.starterQuestion);
-              }}
-            />
+            <details open={Boolean(searchParams?.get('pack'))} className="rounded-2xl border p-4">
+              <summary className="cursor-pointer text-sm font-semibold">
+                {t('packs.title')} · PRO
+              </summary>
+              <JobPacksStrip
+                locale={locale}
+                initialPackId={searchParams?.get('pack') || null}
+                initialOpenRunner={
+                  searchParams?.get('runner') === '1' ||
+                  searchParams?.get('runner') === 'true' ||
+                  searchParams?.get('openRunner') === '1'
+                }
+                onAskPack={(pack) => {
+                  void askQuestion(pack.starterQuestion);
+                }}
+              />
+            </details>
           )}
           {showStarters && (
             <section

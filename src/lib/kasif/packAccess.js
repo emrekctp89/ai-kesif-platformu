@@ -1,11 +1,11 @@
 /**
- * Pack Pro gate + free quota rules (pure, testable).
+ * Pack PRO membership rules (pure, testable).
  */
 
 import { JOB_PACKS, getJobPackById, isRunnablePack, RUNNABLE_PACK_IDS } from './jobPacks';
 
 /** Free users may start this many proHint packs per rolling window. */
-export const FREE_PRO_PACK_QUOTA = 2;
+export const FREE_PRO_PACK_QUOTA = 0;
 
 /** Rolling window days for free pro-pack quota. */
 export const FREE_PRO_PACK_WINDOW_DAYS = 30;
@@ -40,7 +40,7 @@ export function buildPackPaywall(locale = 'tr', reason = 'pro_required', options
       bodyKey: 'packs.paywallLoginBody',
       ctaKey: 'packs.loginCta',
       ctaHref: `${prefix}/login?next=${next}`,
-      secondaryKey: 'packs.paywallSeeFree',
+      secondaryKey: 'packs.chatCta',
       secondaryHref: freePackHref,
       freePackIds: freeAlts,
       upgradePath: `${prefix}/login?next=${next}`,
@@ -53,7 +53,7 @@ export function buildPackPaywall(locale = 'tr', reason = 'pro_required', options
     bodyKey: 'packs.paywallQuotaBody',
     ctaKey: 'packs.upgradeCta',
     ctaHref: `${prefix}/uyelik`,
-    secondaryKey: 'packs.paywallTryFreeRunner',
+    secondaryKey: 'packs.chatCta',
     secondaryHref: freePackHref,
     freePackIds: freeAlts,
     upgradePath: `${prefix}/uyelik`,
@@ -92,23 +92,8 @@ export function evaluatePackAccess(input = {}) {
     };
   }
 
-  const isProPack = Boolean(pack.proHint);
   const isPro = Boolean(input.isPro);
   const isAuthenticated = Boolean(input.isAuthenticated);
-  const used = Math.max(0, Number(input.usedProPackRuns) || 0);
-  const freeRunsLeft = Math.max(0, FREE_PRO_PACK_QUOTA - used);
-
-  if (!isProPack) {
-    return {
-      allowed: true,
-      reason: 'free_pack',
-      packId,
-      isProPack: false,
-      freeRunsLeft: null,
-      isPro,
-      isAuthenticated,
-    };
-  }
 
   if (isPro) {
     return {
@@ -122,7 +107,7 @@ export function evaluatePackAccess(input = {}) {
     };
   }
 
-  // Guests: pro packs require login (then free quota applies).
+  // Guests must sign in and activate PRO.
   if (!isAuthenticated) {
     return {
       allowed: false,
@@ -132,18 +117,6 @@ export function evaluatePackAccess(input = {}) {
       freeRunsLeft: FREE_PRO_PACK_QUOTA,
       isPro: false,
       isAuthenticated: false,
-    };
-  }
-
-  if (freeRunsLeft > 0) {
-    return {
-      allowed: true,
-      reason: 'free_quota',
-      packId,
-      isProPack: true,
-      freeRunsLeft,
-      isPro: false,
-      isAuthenticated: true,
     };
   }
 

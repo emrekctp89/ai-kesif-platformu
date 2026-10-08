@@ -37,7 +37,7 @@ export default async function KasifLearnPage({ params }) {
       url: siteUrl,
     },
     educationalLevel: 'Beginner',
-    timeRequired: 'PT45M',
+    timeRequired: 'PT46M',
     isPartOf: {
       '@type': 'CollectionPage',
       name: locale === 'en' ? 'AI Learning Hub' : 'AI Öğrenme Merkezi',

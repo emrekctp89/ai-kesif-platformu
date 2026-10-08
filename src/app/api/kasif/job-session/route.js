@@ -4,7 +4,7 @@ import { enforceRateLimit } from '@/utils/antiAbuse';
 import { assertKasifEnabled } from '@/lib/kasif/config';
 import { understandQuestion } from '@/lib/kasif/engine';
 import { applyFunnelStage, seedFunnelFromResponse } from '@/lib/kasif/funnel';
-import { assertPackAllowed } from '@/lib/kasif/packAccessServer';
+import { assertPackAllowed, getViewerProState } from '@/lib/kasif/packAccessServer';
 import { createAdminClient } from '@/utils/supabase/admin';
 import logger from '@/utils/logger';
 
@@ -16,16 +16,16 @@ const API_MESSAGES = {
     rateLimit: 'Çok fazla istek.',
     invalid: 'Geçersiz istek.',
     failed: 'Görev oturumu kaydedilemedi.',
-    login_required: 'Pro paketler için giriş yap.',
-    pro_required: 'Ücretsiz Pro paket kotan doldu. Pro’ya yükselt.',
+    login_required: 'İş paketleri için giriş yap ve PRO üyeliğini etkinleştir.',
+    pro_required: 'WorkMind ve tüm iş paketleri PRO üyeliğe dahildir.',
   },
   en: {
     disabled: 'Kâşif is not enabled.',
     rateLimit: 'Too many requests.',
     invalid: 'Invalid request.',
     failed: 'Could not create job session.',
-    login_required: 'Sign in to use Pro packs.',
-    pro_required: 'Free Pro pack quota used. Upgrade to Pro.',
+    login_required: 'Sign in and activate PRO to use job packs.',
+    pro_required: 'WorkMind and all job packs require PRO membership.',
   },
 };
 
@@ -80,6 +80,21 @@ export async function POST(request) {
     .slice(0, 80);
 
   let packUserId = null;
+  if (!packId) {
+    const viewer = await getViewerProState();
+    if (!viewer.isPro) {
+      const reason = viewer.isAuthenticated ? 'pro_required' : 'login_required';
+      return NextResponse.json(
+        {
+          error: messages[reason],
+          reason,
+          upgradePath: locale === 'en' ? '/en/uyelik' : '/uyelik',
+        },
+        { status: viewer.isAuthenticated ? 402 : 401 }
+      );
+    }
+    packUserId = viewer.user?.id || null;
+  }
   if (packId) {
     const access = await assertPackAllowed(packId);
     if (!access.allowed) {

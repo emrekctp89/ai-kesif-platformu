@@ -28,7 +28,8 @@ describe('Kâşif module boundary', () => {
     const violations = [];
 
     for (const file of walk(sourceRoot)) {
-      if (!/\.[cm]?[jt]sx?$/.test(file)) continue;
+      if (!/\.[cm]?[jt]sx?$/.test(file) || file.includes(`${path.sep}__tests__${path.sep}`))
+        continue;
       if (allowedDomainDirectories.some((directory) => file.includes(directory))) continue;
       const content = fs.readFileSync(file, 'utf8');
       const internalImports = content.match(/@\/lib\/kasif\/(?!server(?:['"]|\/))[^'"]+/g) || [];

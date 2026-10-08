@@ -1,74 +1,29 @@
 const {
-  FREE_PRO_PACK_QUOTA,
-  evaluatePackAccess,
   evaluateAllPackAccess,
-  isProPackId,
+  evaluatePackAccess,
+  FREE_PRO_PACK_QUOTA,
 } = require('../../src/lib/kasif/packAccess');
-
-describe('packAccess', () => {
-  it('proHint paketlerini tanır', () => {
-    expect(isProPackId('content-studio')).toBe(true);
-    expect(isProPackId('sales-outreach')).toBe(false);
+describe('PRO pack access', () => {
+  test('all packs require PRO even with unused former trial quota', () => {
+    expect(FREE_PRO_PACK_QUOTA).toBe(0);
+    for (const access of Object.values(
+      evaluateAllPackAccess({ isAuthenticated: true, usedProPackRuns: 0 })
+    )) {
+      expect(access.allowed).toBe(false);
+      expect(access.reason).toBe('pro_required');
+    }
   });
-
-  it('ücretsiz paketi herkese açar', () => {
-    const decision = evaluatePackAccess({
-      packId: 'sales-outreach',
-      isAuthenticated: false,
-      isPro: false,
-    });
-    expect(decision.allowed).toBe(true);
-    expect(decision.reason).toBe('free_pack');
+  test('guests cannot run any pack', () => {
+    for (const access of Object.values(evaluateAllPackAccess({})))
+      expect(access.reason).toBe('login_required');
   });
-
-  it('pro pakette misafiri login ister', () => {
-    const decision = evaluatePackAccess({
-      packId: 'content-studio',
-      isAuthenticated: false,
-      isPro: false,
-    });
-    expect(decision.allowed).toBe(false);
-    expect(decision.reason).toBe('login_required');
+  test('PRO members can run all packs', () => {
+    for (const access of Object.values(
+      evaluateAllPackAccess({ isPro: true, isAuthenticated: true })
+    ))
+      expect(access.allowed).toBe(true);
   });
-
-  it('ücretsiz kota ve dolunca pro_required', () => {
-    const withQuota = evaluatePackAccess({
-      packId: 'content-studio',
-      isAuthenticated: true,
-      isPro: false,
-      usedProPackRuns: 0,
-    });
-    expect(withQuota.allowed).toBe(true);
-    expect(withQuota.freeRunsLeft).toBe(FREE_PRO_PACK_QUOTA);
-
-    const exhausted = evaluatePackAccess({
-      packId: 'content-studio',
-      isAuthenticated: true,
-      isPro: false,
-      usedProPackRuns: FREE_PRO_PACK_QUOTA,
-    });
-    expect(exhausted.allowed).toBe(false);
-    expect(exhausted.reason).toBe('pro_required');
-  });
-
-  it('pro üye sınırsız', () => {
-    const decision = evaluatePackAccess({
-      packId: 'social-launch',
-      isAuthenticated: true,
-      isPro: true,
-      usedProPackRuns: 99,
-    });
-    expect(decision.allowed).toBe(true);
-    expect(decision.reason).toBe('pro_member');
-  });
-
-  it('tüm paketler için map üretir', () => {
-    const map = evaluateAllPackAccess({
-      isPro: false,
-      isAuthenticated: true,
-      usedProPackRuns: 0,
-    });
-    expect(map['content-studio'].allowed).toBe(true);
-    expect(map['sales-outreach'].allowed).toBe(true);
+  test('unknown packs remain blocked for PRO members', () => {
+    expect(evaluatePackAccess({ packId: 'unknown', isPro: true }).allowed).toBe(false);
   });
 });

@@ -343,6 +343,11 @@ export default function KasifLearnPathClient() {
               ) : null}
 
               <div className="rounded-2xl border border-violet-500/25 bg-violet-500/5 p-4 sm:p-5">
+                {['workmind', 'packs'].includes(activeModule.id) && (
+                  <p className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm leading-6">
+                    {t('proNotice')}
+                  </p>
+                )}
                 <div className="flex flex-wrap items-center gap-2">
                   <Flame
                     className="h-4 w-4 text-violet-600 dark:text-violet-300"
@@ -406,10 +411,7 @@ export default function KasifLearnPathClient() {
                   type="button"
                   className="rounded-xl"
                   disabled={activeIndex >= total - 1}
-                  onClick={() => {
-                    if (!completed[activeModule.id]) toggleComplete(activeModule.id);
-                    goNext();
-                  }}
+                  onClick={goNext}
                 >
                   {t('nextModule')}
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
@@ -430,20 +432,13 @@ export default function KasifLearnPathClient() {
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">{t('funnelBody')}</p>
         <ol className="mt-4 flex flex-wrap gap-2">
-          {[
-            'job_stated',
-            'tool_recommended',
-            'tool_selected',
-            'setup_started',
-            'first_result',
-            'job_done',
-          ].map((stage, i) => (
+          {['chooseGoal', 'tryExercise', 'checkOutput', 'takeNotes'].map((stage, i) => (
             <li
-              key={stage}
+              key={t(stage)}
               className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-xs font-semibold"
             >
               <span className="text-muted-foreground">{i + 1}.</span>
-              <code className="font-mono text-[11px]">{stage}</code>
+              <span>{t(stage)}</span>
             </li>
           ))}
         </ol>

@@ -42,7 +42,6 @@ export function HeaderNav({
     { href: '/ogren', label: t('learn'), emphasize: true },
     { href: '/workmind', label: t('workmind'), emphasize: true },
     { href: '/blog', label: t('blog'), className: 'hidden lg:inline' },
-    { href: '/arastirma', label: t('research'), className: 'hidden xl:inline' },
     { href: '/karsilastir', label: t('compare'), className: 'hidden xl:inline' },
   ];
 
@@ -50,7 +49,6 @@ export function HeaderNav({
     [
       { href: '/kasif', label: t('kasif') },
       { href: '/tavsiye', label: t('aiRecommend') },
-      { href: '/arastirma', label: t('research') },
       { href: '/bulten', label: t('newsletter') },
       // Paused for now — kept listed only if flags re-enabled in navFeatures:
       { href: '/kesfet', label: t('discover') },
@@ -62,6 +60,7 @@ export function HeaderNav({
   // Community surfaces (incl. collections) only when user enables the profile community panel.
   const moreCommunity = filterNavLinks(
     [
+      { href: '/arastirma', label: t('research') },
       { href: '/koleksiyonlar', label: t('collections') },
       ...(user ? [{ href: '/akis', label: t('feed') }] : []),
       { href: '/topluluk', label: t('community') },

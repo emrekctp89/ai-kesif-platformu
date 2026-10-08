@@ -1,3 +1,7 @@
+jest.mock('@/lib/kasif/server', () => ({
+  ...jest.requireActual('@/lib/kasif/server'),
+  getViewerProState: jest.fn().mockResolvedValue({ isPro: true }),
+}));
 jest.mock('server-only', () => ({}));
 jest.mock('next/headers', () => ({
   cookies: jest.fn().mockResolvedValue({}),
@@ -89,5 +93,14 @@ describe('Workmind tool recommendation action', () => {
     await expect(
       getWorkmindToolRecommendations('sunum', { description: 'Build a customer deck' })
     ).resolves.toEqual({ tools: fallbackTools, source: 'category' });
+  });
+});
+
+test('non-PRO cannot request WorkMind recommendations', async () => {
+  const { getViewerProState } = require('@/lib/kasif/server');
+  getViewerProState.mockResolvedValueOnce({ isPro: false });
+  expect(await getWorkmindToolRecommendations('sunum')).toEqual({
+    tools: [],
+    error: 'pro_required',
   });
 });

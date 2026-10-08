@@ -28,8 +28,8 @@ const PACK_ACCESS_RESPONSE = {
   json: async () => ({
     isPro: false,
     isAuthenticated: false,
-    freeRunsLeft: 2,
-    freeProPackQuota: 2,
+    freeRunsLeft: 0,
+    freeProPackQuota: 0,
     packs: {},
   }),
 };
@@ -124,35 +124,32 @@ describe('Kâşif ekranı', () => {
   it('başlangıç sorusunu giriş alanına taşır ve odağı korur', () => {
     render(<KasifExperiment />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sunum hazırla' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Platformu tanı' }));
 
     const question = screen.getByRole('textbox', { name: "Kâşif'e sor" });
-    expect(question).toHaveValue(
-      'Ücretsiz bir sunum hazırlamak için hangi araçları kullanabilirim?'
-    );
+    expect(question).toHaveValue('Bu platform nasıl çalışır?');
     expect(question).toHaveFocus();
-    expect(screen.getByText('65/800')).toBeInTheDocument();
+    expect(screen.getByText('26/800')).toBeInTheDocument();
   });
 
-  it('boş durumda görev odaklı örnekleri gösterir', () => {
+  it('boş durumda platform sorusu örneklerini gösterir', () => {
     render(<KasifExperiment />);
 
     expect(screen.getByRole('heading', { name: 'Nereden başlamak istersin?' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Görsel üret' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Kod yaz' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'SEO analiz' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'E-posta yaz' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Sohbet asistanı' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Kategoriler' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'WorkMind' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'PRO üyelik' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Favoriler' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Kâşif' })).toBeInTheDocument();
   });
 
-  it('boş durumda iş paketleri şeridini gösterir', () => {
+  it('iş paketleri sohbetten ayrı ve kapalı bir PRO bölümüdür', async () => {
     render(<KasifExperiment />);
-
-    expect(
-      screen.getByRole('heading', { name: /Tek araç değil — işi bitiren paket/i })
-    ).toBeInTheDocument();
-    expect(screen.getByText(/İçerik stüdyosu/i)).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Paketi sor' }).length).toBeGreaterThan(0);
+    const summary = screen.getByText('İş paketleri · PRO');
+    expect(summary.closest('details')).not.toHaveAttribute('open');
+    fireEvent.click(summary);
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    expect(screen.queryByRole('button', { name: 'Paketi sor' })).not.toBeInTheDocument();
   });
 
   it('yanıtın arayüz diliyle üretilmesi için locale bilgisini gönderir', async () => {
@@ -299,7 +296,7 @@ describe('Kâşif ekranı', () => {
 
     expect(await screen.findByText(/Görevi netleştir/i)).toBeInTheDocument();
     // Soft-landing bloğunda starter chip'ler görünür (boş durum starterlarından ayrı).
-    expect(screen.getAllByRole('button', { name: 'Sunum hazırla' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'Platformu tanı' }).length).toBeGreaterThan(0);
   });
 
   it('soft-landing chip tıklanınca yeni soruyu otomatik gönderir', async () => {
@@ -343,7 +340,7 @@ describe('Kâşif ekranı', () => {
     fireEvent.click(screen.getByRole('button', { name: "Kâşif'e sor" }));
     await screen.findByText(/Görevi netleştir/i);
 
-    const sunumChips = screen.getAllByRole('button', { name: 'Sunum hazırla' });
+    const sunumChips = screen.getAllByRole('button', { name: 'Platformu tanı' });
     fireEvent.click(sunumChips[sunumChips.length - 1]);
 
     await screen.findByText('Sunum önerisi');
@@ -352,7 +349,7 @@ describe('Kâşif ekranı', () => {
     );
     expect(askCalls).toHaveLength(2);
     const secondBody = JSON.parse(askCalls[1][1].body);
-    expect(secondBody.question).toMatch(/sunum/i);
+    expect(secondBody.question).toMatch(/platform/i);
   });
 
   it('yeni konuşma başlatıldığında bekleyen isteği iptal eder', () => {

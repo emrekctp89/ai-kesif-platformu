@@ -18,7 +18,6 @@ export default function Footer() {
           { href: '/workmind', label: t('workmind') },
           { href: '/karsilastir', label: t('compare') },
           { href: '/tavsiye', label: t('aiRecommend') },
-          { href: '/arastirma', label: t('research') },
           { href: '/kesfet', label: t('discover') },
           { href: '/random-tools', label: t('randomTools') },
         ],

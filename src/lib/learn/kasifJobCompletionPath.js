@@ -1,181 +1,150 @@
-/**
- * Kâşif “iş bitirme” öğrenme yolu — içerik tanımı (TR/EN).
- * UI: /ogren/kasif
- */
-
-/** @typedef {{ tr: string, en: string }} LocaleText */
-
-/**
- * @typedef {{
- *   id: string,
- *   durationMin: number,
- *   title: LocaleText,
- *   summary: LocaleText,
- *   learn: LocaleText[],
- *   practice: {
- *     label: LocaleText,
- *     body: LocaleText,
- *     cta: LocaleText,
- *     href: string,
- *     query?: string,
- *   },
- *   tip?: LocaleText,
- * }} LearnModule
- */
-
-/** @type {LearnModule[]} */
+/** Platform learning path, localized and aligned with PRO access. */
 export const KASIF_LEARN_MODULES = [
   {
     id: 'mindset',
     durationMin: 3,
     title: {
-      tr: '1. Zihin modeli: tıklama değil, iş bitirme',
-      en: '1. Mindset: job done, not just clicks',
+      tr: '1. Platforma ilk bakış',
+      en: '1. Your first look at the platform',
     },
     summary: {
-      tr: 'Kâşif bir dizin araması değil; “şu işi bitirmek istiyorum” diyerek araç seçip ilk somut çıktıya giden bir yol.',
-      en: 'Kâşif is not just directory search — you state a job, pick a tool, and aim for a concrete first result.',
+      tr: 'AI Keşif’te araç keşfi, öğrenme kaynakları ve topluluk bir arada. Kâşif sistem hakkında sohbet eder; WorkMind ve iş paketleri PRO özellikleridir.',
+      en: 'AI Keşif combines tool discovery, learning resources and community. Kâşif chats about the system; WorkMind and job packs are PRO features.',
     },
     learn: [
       {
-        tr: 'Eski model: araç listesi → tık → abonelik labirenti.',
-        en: 'Old model: tool list → click → subscription maze.',
+        tr: 'Önce yapmak istediğin işi tek cümlede yaz.',
+        en: 'Describe your goal in one sentence.',
       },
       {
-        tr: 'Yeni model: görev → öneri → kurulum → ilk sonuç → iş bitti.',
-        en: 'New model: job → recommend → setup → first result → done.',
-      },
-      {
-        tr: 'North Star hunisi: job_stated → tool_recommended → first_result → job_done.',
-        en: 'North-star funnel: job_stated → tool_recommended → first_result → job_done.',
+        tr: 'Öğrenme dersleri ve temel sohbet herkese açıktır.',
+        en: 'Learning lessons and basic chat are open to everyone.',
       },
     ],
     practice: {
-      label: { tr: 'Pratik', en: 'Practice' },
-      body: {
-        tr: 'Kendi cümlenle bir iş yaz: “Ücretsiz sunum taslağı istiyorum” gibi. Sonraki adımda Kâşif’e soracağız.',
-        en: 'Write one job in your words: e.g. “I need a free presentation draft.” You’ll ask Kâşif next.',
+      label: {
+        tr: 'Pratik',
+        en: 'Practice',
       },
-      cta: { tr: 'Kâşif’i aç', en: 'Open Kâşif' },
-      href: '/kasif',
-    },
-    tip: {
-      tr: 'İpucu: “en iyi AI” yerine somut iş + kısıt (ücretsiz, 10 slayt, B2B) yaz.',
-      en: 'Tip: prefer a concrete job + constraints (free, 10 slides, B2B) over “best AI”.',
+      body: {
+        tr: 'Öğren merkezinde hedefinle eşleşen bir rota seç.',
+        en: 'Choose a learning route that matches your goal.',
+      },
+      cta: {
+        tr: 'Rotaları aç',
+        en: 'Open routes',
+      },
+      href: '/ogren',
     },
   },
   {
     id: 'ask',
     durationMin: 5,
     title: {
-      tr: '2. Kâşif’e görevi sor',
-      en: '2. Ask Kâşif for the job',
+      tr: '2. Kâşif ile sistemi tanı',
+      en: '2. Get to know the system with Kâşif',
     },
     summary: {
-      tr: 'Kâşif yalnızca platformdaki onaylı araçlardan sıralar; serbest sohbet modeli değil. Takip sorularında bağlamı taşır.',
-      en: 'Kâşif ranks only verified catalog tools — not a free-form chatbot. Follow-ups keep conversation context.',
+      tr: 'Kâşif platformun sohbet asistanıdır. Site özelliklerini, kategorileri ve üyelik ayrımını sorabilirsin. Araç önerileri katalog verilerine dayanır.',
+      en: 'Kâşif is the platform chat assistant. Ask about site features, categories and membership. Tool recommendations use catalog data.',
     },
     learn: [
       {
-        tr: 'Açık görev: sunum, görsel, SEO, e-posta, destek…',
-        en: 'Clear jobs: presentation, image, SEO, email, support…',
+        tr: '“Bu platform nasıl çalışır?” diye sor.',
+        en: 'Ask “How does this platform work?”',
       },
       {
-        tr: 'Fiyat daraltması: “bunlardan ücretsiz olanlar?” geçmiş hedefi korur.',
-        en: 'Price refinements: “which of these are free?” keep the prior goal.',
-      },
-      {
-        tr: 'Konu değişimi: “Hayır, görsel istiyorum” eski hedefi sıfırlar.',
-        en: 'Topic switch: “No, I want images” clears the old goal.',
-      },
-      {
-        tr: 'Geçmişsiz “bunlardan hangileri?” soft-landing ile görevi yeniden ister.',
-        en: 'Context-less “which of those?” soft-lands and asks you to restate the job.',
+        tr: 'Takip sorusunda anlamadığın özelliği netleştir.',
+        en: 'Use a follow-up to clarify an unfamiliar feature.',
       },
     ],
     practice: {
-      label: { tr: 'Deneme sorusu', en: 'Try this prompt' },
-      body: {
-        tr: 'Aşağıdaki soruyu Kâşif’e gönder; ardından “Peki ücretsiz olanlar hangileri?” diye sor.',
-        en: 'Send the prompt below, then follow with “Which of these are free?”',
+      label: {
+        tr: 'Pratik',
+        en: 'Practice',
       },
-      cta: { tr: 'Soruyla aç', en: 'Open with prompt' },
+      body: {
+        tr: 'Kâşif’e PRO üyeliğin neleri içerdiğini sor.',
+        en: 'Ask Kâşif what PRO membership includes.',
+      },
+      cta: {
+        tr: 'Kâşif ile sohbet et',
+        en: 'Chat with Kâşif',
+      },
       href: '/kasif',
-      query: 'Ücretsiz sunum hazırlamak için hangi araçları kullanabilirim?',
-    },
-    tip: {
-      tr: 'İngilizce de çalışır: “Recommend a free presentation tool”.',
-      en: 'Turkish works too: “Ücretsiz sunum aracı öner”.',
     },
   },
   {
     id: 'wizard',
     durationMin: 5,
     title: {
-      tr: '3. Sihirbaz: checklist + ilk çıktı şablonu',
-      en: '3. Wizard: checklist + first-output template',
+      tr: '3. Katalogdan araç seç',
+      en: '3. Choose a catalog tool',
     },
     summary: {
-      tr: '22 hedef için goal sihirbazı var: adımlar, kopyalanabilir prompt ve “ilk sonuç” tanımı. Listede kalma — üret.',
-      en: '22 goals have wizards: steps, copyable prompts, and a first-result definition. Don’t stop at the list — produce.',
+      tr: 'Bir kategori seçip aynı işi yapan araçların ayrıntılarını incele. Katalog bir başlangıç noktasıdır; satın almadan önce aracın kendi güncel koşullarını kontrol et.',
+      en: 'Choose a category and inspect tools that solve the same task. The catalog is a starting point; check the vendor’s current terms before buying.',
     },
     learn: [
       {
-        tr: 'Öneri sonrası JobFunnel paneli checklist gösterir.',
-        en: 'After a recommendation, JobFunnel shows a checklist.',
+        tr: 'Hedefine uygun iki aracı not et.',
+        en: 'Record two tools suited to your goal.',
       },
       {
-        tr: 'Prompt şablonunu kopyala → araca yapıştır → ilk çıktıyı al.',
-        en: 'Copy the prompt template → paste into the tool → get a first output.',
-      },
-      {
-        tr: 'Self-report: “kuruluma başladım / ilk sonuç / iş bitti”.',
-        en: 'Self-report: setup started / first result / job done.',
+        tr: 'Fiyat, platform ve kullanım koşullarını kontrol et.',
+        en: 'Check pricing, platforms and usage terms.',
       },
     ],
     practice: {
-      label: { tr: 'Pratik', en: 'Practice' },
-      body: {
-        tr: 'Bir hedef sor (ör. e-posta yazımı). Checklist’i aç, şablonu kopyala, en az bir adımı işaretle.',
-        en: 'Ask for a job (e.g. email writing). Open the checklist, copy a template, mark at least one step.',
+      label: {
+        tr: 'Pratik',
+        en: 'Practice',
       },
-      cta: { tr: 'E-posta görevi sor', en: 'Ask email job' },
-      href: '/kasif',
-      query: 'Soğuk e-posta yazmak için araç öner',
+      body: {
+        tr: 'Bir kategoriye gir ve iki araç seç.',
+        en: 'Open a category and select two tools.',
+      },
+      cta: {
+        tr: 'Kategorileri keşfet',
+        en: 'Explore categories',
+      },
+      href: '/kategori',
     },
   },
   {
     id: 'workmind',
     durationMin: 6,
     title: {
-      tr: '4. Workmind görev oturumu',
-      en: '4. Workmind job session',
+      tr: '4. WorkMind ile iş akışı planla · PRO',
+      en: '4. Plan a workflow with WorkMind · PRO',
     },
     summary: {
-      tr: 'Kâşif → Workmind handoff ile aynı görevi adım adım plana dök. Her adımda araç önerisi ve ilerleme hunisi güncellenir.',
-      en: 'Hand off from Kâşif to Workmind to plan the same job step by step. Tool picks and funnel progress update per step.',
+      tr: 'WorkMind bir hedefi adımlara ayırır ve ilgili araçları önerir. İş akışı üretmek ve kaydetmek PRO üyelik gerektirir.',
+      en: 'WorkMind splits a goal into steps and suggests relevant tools. Generating and saving workflows requires PRO membership.',
     },
     learn: [
       {
-        tr: '“Workmind’de adım adım planla” bağlantısı oturumu başlatır.',
-        en: '“Plan step by step in Workmind” starts a session.',
+        tr: 'Hedefe kapsam ve çıktı ölçütü ekle.',
+        en: 'Add scope and an output criterion to the goal.',
       },
       {
-        tr: 'Adım tamamla + araç seç → funnel stage ilerler.',
-        en: 'Complete a step + pick a tool → funnel stages advance.',
-      },
-      {
-        tr: 'Gemini kapalıysa yerel Kâşif planlayıcı yedek üretir.',
-        en: 'If Gemini is off, the local Kâşif planner still builds a workflow.',
+        tr: 'Üretilen planın adımlarını uygulamadan önce incele.',
+        en: 'Review generated steps before carrying them out.',
       },
     ],
     practice: {
-      label: { tr: 'Pratik', en: 'Practice' },
-      body: {
-        tr: 'Kâşif’te bir paket veya görev seçip Workmind’e geç. En az 1 adımı tamamla.',
-        en: 'Pick a job or pack in Kâşif, open Workmind, complete at least one step.',
+      label: {
+        tr: 'Pratik',
+        en: 'Practice',
       },
-      cta: { tr: 'Workmind’i aç', en: 'Open Workmind' },
+      body: {
+        tr: 'PRO üyeysen küçük bir hedefle akış oluştur. Değilsen üyelik kapsamını incele.',
+        en: 'If you have PRO, create a workflow for a small goal. Otherwise, review the membership features.',
+      },
+      cta: {
+        tr: 'WorkMind’i aç',
+        en: 'Open WorkMind',
+      },
       href: '/workmind',
     },
   },
@@ -183,179 +152,169 @@ export const KASIF_LEARN_MODULES = [
     id: 'packs',
     durationMin: 8,
     title: {
-      tr: '5. İş paketleri ve platform runner’lar',
-      en: '5. Job packs and on-platform runners',
+      tr: '5. İş paketlerini kullan · PRO',
+      en: '5. Use job packs · PRO',
     },
     summary: {
-      tr: '10 iş paketi: brief yaz → platformda ilk çıktı üret (runner) → first_result kaydı. Bazı paketler Pro kota ile.',
-      en: '10 job packs: write a brief → generate a first output on-platform (runner) → first_result is recorded. Some packs use Pro quota.',
+      tr: 'Tüm Kâşif iş paketleri PRO üyeliğe dahildir. Paket bir görev için yapılandırılmış çıktı üretir; doğruluğu ve uygunluğu sen kontrol edersin.',
+      en: 'All Kâşif job packs are included in PRO. A pack produces structured output for a task; you review its accuracy and suitability.',
     },
     learn: [
       {
-        tr: 'Paketler: içerik, satış, toplantı, sosyal, pitch, SEO, destek, kod, hukuk, araştırma.',
-        en: 'Packs: content, sales, meeting, social, pitch, SEO, support, code, legal, research.',
+        tr: 'Paket briefine hedef kitle, kapsam ve beklenen çıktıyı ekle.',
+        en: 'Include audience, scope and expected output in the brief.',
       },
       {
-        tr: 'SEO / destek / kod / hukuk / araştırma paketleri çok adımlı (steps) çıktı üretir.',
-        en: 'SEO, support, code, legal, and research packs produce multi-step (steps) artifacts.',
-      },
-      {
-        tr: 'LLM zinciri: Partner API → Gemini → yerel şablon.',
-        en: 'LLM chain: Partner API → Gemini → local template.',
-      },
-      {
-        tr: 'Runner sonrası: katalog aracı seç → hesap bağla (araç sitesinde) → Workmind.',
-        en: 'After a run: pick a catalog tool → sign in on the tool site → continue in Workmind.',
+        tr: 'Üyelik kontrolü sunucuda uygulanır; ücretsiz deneme hakkı yoktur.',
+        en: 'Membership is checked on the server; there is no free trial quota.',
       },
     ],
     practice: {
-      label: { tr: 'Pratik', en: 'Practice' },
-      body: {
-        tr: 'SEO brief runner’ını deep link ile aç, kısa brief yaz, çalıştır. Adımları oku ve kopyala.',
-        en: 'Open the SEO brief runner via deep link, write a short brief, run it. Read and copy the steps.',
+      label: {
+        tr: 'Pratik',
+        en: 'Practice',
       },
-      cta: { tr: 'SEO brief runner’ı aç', en: 'Open SEO brief runner' },
+      body: {
+        tr: 'PRO üyeysen araştırma paketiyle kısa bir brief dene.',
+        en: 'If you have PRO, try a short brief with the research pack.',
+      },
+      cta: {
+        tr: 'İş paketlerini aç',
+        en: 'Open job packs',
+      },
       href: '/kasif',
-      pack: 'seo-brief',
+      pack: 'research-brief',
       runner: true,
-    },
-    tip: {
-      tr: 'Pro paketlerde ücretsiz deneme kotası vardır; giriş gerekebilir.',
-      en: 'Pro packs may need sign-in and use a free trial quota.',
     },
   },
   {
     id: 'bridge',
     durationMin: 5,
     title: {
-      tr: '6. Sonuç köprüsü: ilk çıktıyı kanıtla',
-      en: '6. Result bridge: prove first output',
+      tr: '6. Çıktıyı değerlendir ve not al',
+      en: '6. Review the output and take notes',
     },
     summary: {
-      tr: 'Aracın ürettiği metni/URL’yi yapıştır → first_result stage. OAuth’sız kanıt; e-posta, içerik, sunum, görsel, otomasyon, toplantı.',
-      en: 'Paste the tool’s text/URL → first_result stage. Proof without OAuth: email, content, slides, image, automation, meeting.',
+      tr: 'Bir yanıtın üretilmesi işin tamamlandığı anlamına gelmez. Kaynakları, kısıtları ve çıktının gerçek hedefini karşılayıp karşılamadığını kontrol et.',
+      en: 'Generating an answer does not finish the task. Check sources, constraints and whether the output meets the actual goal.',
     },
     learn: [
       {
-        tr: 'Yapıştırma paneli JobFunnel içinde görünür.',
-        en: 'The paste panel lives inside JobFunnel.',
+        tr: 'Önemli iddiaları özgün kaynakla doğrula.',
+        en: 'Verify important claims against original sources.',
       },
       {
-        tr: 'Çok kısa veya anlamsız metin reddedilir; gerçek taslak yapıştır.',
-        en: 'Too-short or empty paste is rejected; paste a real draft.',
-      },
-      {
-        tr: 'İstersen aynı anda “iş bitti” işaretleyebilirsin.',
-        en: 'You can optionally mark job_done in the same action.',
+        tr: 'Öğrendiğin bir şeyi ve sonraki denemeyi not et.',
+        en: 'Record one lesson learned and your next experiment.',
       },
     ],
     practice: {
-      label: { tr: 'Pratik', en: 'Practice' },
-      body: {
-        tr: 'Bir e-posta veya blog taslağını (en az birkaç cümle) köprüye yapıştır ve kaydı doğrula.',
-        en: 'Paste an email or blog draft (a few sentences) into the bridge and confirm it saves.',
+      label: {
+        tr: 'Pratik',
+        en: 'Practice',
       },
-      cta: { tr: 'Kâşif’te dene', en: 'Try on Kâşif' },
-      href: '/kasif',
-      query: 'Blog yazısı için araç öner',
+      body: {
+        tr: 'Öğrenme rotasında kontrol dersini bitir ve notlarını indir.',
+        en: 'Finish a route’s review lesson and download your notes.',
+      },
+      cta: {
+        tr: 'Alıştırmalara dön',
+        en: 'Return to exercises',
+      },
+      href: '/ogren',
     },
   },
   {
     id: 'add-tool',
     durationMin: 4,
     title: {
-      tr: '7. Kataloğa araç öner (admin onayı)',
-      en: '7. Suggest a catalog tool (admin gate)',
+      tr: '7. Topluluğa araç öner',
+      en: '7. Suggest a tool to the community',
     },
     summary: {
-      tr: '“Bu aracı ekle https://…” ile resmî ürün URL’si scrape edilir; kayıt onaysız kuyruğa düşer. Otomatik yayın yok.',
-      en: '“Add this tool https://…” scrapes an official product URL into an unapproved queue. No auto-publish.',
+      tr: 'Yararlı bulduğun bir aracı platforma önerebilirsin. Öneriler onay sürecinden geçer; göndermek otomatik yayımlanacağı anlamına gelmez.',
+      en: 'Suggest a useful tool to the platform. Suggestions go through approval; submitting does not automatically publish them.',
     },
     learn: [
       {
-        tr: 'Yalnızca resmî ürün siteleri; dizin/aggregator engelli.',
-        en: 'Official product sites only; directories/aggregators blocked.',
+        tr: 'Resmî araç bağlantısını ve açıklamasını hazırla.',
+        en: 'Prepare the official URL and a description.',
       },
       {
-        tr: 'Dedupe: isim / link / host çakışması yeni kayıt açmaz.',
-        en: 'Dedupe: name/link/host matches skip new inserts.',
-      },
-      {
-        tr: 'Admin bekleyen araçlardan onaylayınca Kâşif önerebilir.',
-        en: 'After admin approval, Kâşif can recommend the tool.',
+        tr: 'Mevcut katalogda aynı aracın olup olmadığını kontrol et.',
+        en: 'Check whether the catalog already contains the tool.',
       },
     ],
     practice: {
-      label: { tr: 'Örnek cümle', en: 'Example phrase' },
-      body: {
-        tr: 'Kâşif’e yaz: Bu aracı ekle https://ornek-urun.com — (gerçek bir ürün sitesi kullan). URL yoksa resmî URL ister.',
-        en: 'Tell Kâşif: Add this tool https://example-product.com — (use a real product site). Without a URL it asks for one.',
+      label: {
+        tr: 'Pratik',
+        en: 'Practice',
       },
-      cta: { tr: 'Add-tool denemesi', en: 'Try add-tool' },
-      href: '/kasif',
-      query: 'Bu aracı ekle ',
-    },
-    tip: {
-      tr: 'Rate limit: saatlik birkaç istek. Spam için değil, kaliteli aday için.',
-      en: 'Rate limited: a few requests per hour. For quality candidates, not spam.',
+      body: {
+        tr: 'Araç önerme formunu incele; gerçekten kullandığın bir ürün varsa öner.',
+        en: 'Review the suggestion form and submit a product you have actually used.',
+      },
+      cta: {
+        tr: 'Araç öner',
+        en: 'Suggest a tool',
+      },
+      href: '/submit',
     },
   },
   {
     id: 'capstone',
     durationMin: 10,
     title: {
-      tr: '8. Bitirme görevi (capstone)',
-      en: '8. Capstone challenge',
+      tr: '8. Kendi mini projenle pekiştir',
+      en: '8. Practice with your own mini project',
     },
     summary: {
-      tr: 'Uçtan uca bir iş bitir: sor → seç → runner veya araç → köprü → (isteğe) Workmind.',
-      en: 'Finish one job end-to-end: ask → pick → runner or tool → bridge → (optional) Workmind.',
+      tr: 'Bir rotayı seç, küçük bir çıktı üret ve nasıl iyileştireceğini kaydet. PRO araçlar isteğe bağlıdır; öğrenme alıştırmalarını harici araçlarla da yapabilirsin.',
+      en: 'Choose a route, produce a small output and record how to improve it. PRO features are optional; external tools can be used for learning exercises.',
     },
     learn: [
       {
-        tr: 'Senaryo A: SEO brief runner → adımları kopyala → first_result.',
-        en: 'Scenario A: SEO brief runner → copy steps → first_result.',
+        tr: 'Tek bir somut çıktı hedefle: özet, brief veya görev listesi.',
+        en: 'Aim for one concrete output: a summary, brief or task list.',
       },
       {
-        tr: 'Senaryo B: Satış e-postası sor → sihirbaz şablonu → yapıştırma köprüsü.',
-        en: 'Scenario B: Ask sales email → wizard template → paste bridge.',
-      },
-      {
-        tr: 'Senaryo C: Sosyal lansman paketi → Workmind planı → 1 adım tamamla.',
-        en: 'Scenario C: Social launch pack → Workmind plan → complete 1 step.',
+        tr: 'Çıktıyı kontrol et ve bir sonraki deneme için not bırak.',
+        en: 'Review the output and record your next experiment.',
       },
     ],
     practice: {
-      label: { tr: 'Capstone', en: 'Capstone' },
-      body: {
-        tr: 'Üç senaryodan birini seç ve 15 dakikada first_result’a ulaş. Bu sayfadaki tüm adımları tamamlandı işaretle.',
-        en: 'Pick one scenario and reach first_result in ~15 minutes. Mark every module complete on this page.',
+      label: {
+        tr: 'Pratik',
+        en: 'Practice',
       },
-      cta: { tr: 'Araştırma brief runner ile bitir', en: 'Finish with research brief runner' },
-      href: '/kasif',
-      pack: 'research-brief',
-      runner: true,
-      query: 'Küçük ekip için AI araç seçimi blog yazısı ve SEO brief istiyorum',
+      body: {
+        tr: 'Öğren merkezindeki bir rotanın üç dersini tamamla.',
+        en: 'Complete all three lessons in a learning hub route.',
+      },
+      cta: {
+        tr: 'Mini projeye başla',
+        en: 'Start a mini project',
+      },
+      href: '/ogren',
     },
   },
 ];
-
 export const KASIF_LEARN_OUTCOMES = [
   {
-    tr: 'Görevi net yazıp Kâşif’ten kaynaklı öneri almak',
-    en: 'State a job and get catalog-grounded recommendations',
+    tr: 'Kâşif ile sistem hakkında sohbet etmek',
+    en: 'Chat with Kâşif about the platform',
   },
   {
-    tr: 'Sihirbaz / paket / runner ile ilk çıktı üretmek',
-    en: 'Produce a first output via wizard, pack, or runner',
+    tr: 'Katalogdan araç seçip karşılaştırmak',
+    en: 'Choose and compare catalog tools',
   },
   {
-    tr: 'first_result’ı köprü veya runner ile kaydetmek',
-    en: 'Record first_result via paste bridge or runner',
+    tr: 'WorkMind ve iş paketlerinin PRO kapsamını anlamak',
+    en: 'Understand PRO access to WorkMind and job packs',
   },
   {
-    tr: 'Katalog adayı önermeyi (admin gate) bilmek',
-    en: 'Know how to suggest catalog candidates (admin gate)',
+    tr: 'Öğrenme alıştırmalarını tamamlayıp not almak',
+    en: 'Complete learning exercises and take notes',
   },
 ];
 

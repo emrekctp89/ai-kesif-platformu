@@ -23,10 +23,8 @@ const MESSAGES = {
     rateLimit: 'Çok fazla istek.',
     invalid: 'Geçersiz istek.',
     notRunnable: 'Bu paket henüz runner desteklemiyor.',
-    login_required:
-      'Bu Pro paket runner’ı için giriş gerekli. Girişten sonra 30 günde 2 ücretsiz Pro denemen olur.',
-    pro_required:
-      'Ücretsiz Pro paket kotan doldu (2/30 gün). Pro’ya geç veya ücretsiz paket runner’larını dene (SEO, destek, pitch…).',
+    login_required: 'İş paketleri için giriş yap ve PRO üyeliğini etkinleştir.',
+    pro_required: 'WorkMind ve tüm iş paketleri PRO üyeliğe dahildir.',
     unknown_pack: 'Paket bulunamadı.',
     failed: 'Paket runner çalıştırılamadı.',
   },
@@ -35,10 +33,8 @@ const MESSAGES = {
     rateLimit: 'Too many requests.',
     invalid: 'Invalid request.',
     notRunnable: 'This pack does not support the runner yet.',
-    login_required:
-      'Sign in to use this Pro pack runner. After sign-in you get 2 free Pro pack runs per 30 days.',
-    pro_required:
-      'Your free Pro pack quota is used (2 / 30 days). Upgrade to Pro, or try free pack runners (SEO, support, pitch…).',
+    login_required: 'Sign in and activate PRO to use job packs.',
+    pro_required: 'WorkMind and all job packs require PRO membership.',
     unknown_pack: 'Pack not found.',
     failed: 'Pack runner failed.',
   },
