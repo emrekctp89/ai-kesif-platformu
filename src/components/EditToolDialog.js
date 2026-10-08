@@ -438,6 +438,21 @@ export function EditToolDialog({ tool, categories, allTags }) {
               ))}
             </select>
           </div>
+          {tool.category_note ? (
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="category_note" className="text-right pt-2">
+                Kategori notu
+              </Label>
+              <Textarea
+                id="category_note"
+                name="category_note"
+                defaultValue={tool.category_note || ''}
+                maxLength={200}
+                className="col-span-3 min-h-16"
+                placeholder="Kullanıcının “Diğer” kategorisi için verdiği açıklama"
+              />
+            </div>
+          ) : null}
           {/* YENİ: Fiyatlandırma Modeli */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="pricing_model" className="text-right">
