@@ -1,3 +1,4 @@
+import { getCategoryLabel } from '@/lib/categoryLocalization';
 import logger from '@/utils/logger';
 import { notFound, redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
@@ -97,9 +98,10 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  const config = getCategoryConfig(category.slug);
-  const title = t('metaTitle', { name: category.name });
-  const description = config.description || t('metaDescription', { name: category.name });
+  const config = getCategoryConfig(category.slug, locale);
+  const title = t('metaTitle', { name: getCategoryLabel(category, locale) });
+  const description =
+    config.description || t('metaDescription', { name: getCategoryLabel(category, locale) });
   const pageUrl = `${siteUrl}${locale === 'en' ? '/en' : ''}/kategori/${category.slug}`;
   const ogImageUrl = `${siteUrl}/opengraph-image`;
 
@@ -146,10 +148,11 @@ export default async function CategoryPage({ params }) {
   if (!pageData) notFound();
 
   const { category, initialData, toolsCount } = pageData;
-  const config = getCategoryConfig(category.slug);
+  const config = getCategoryConfig(category.slug, locale);
   const Icon = config.icon;
-  const title = t('metaTitle', { name: category.name });
-  const description = config.description || t('fallbackDescription', { name: category.name });
+  const title = t('metaTitle', { name: getCategoryLabel(category, locale) });
+  const description =
+    config.description || t('fallbackDescription', { name: getCategoryLabel(category, locale) });
   const categoryUrl = `${siteUrl}${locale === 'en' ? '/en' : ''}/kategori/${category.slug}`;
 
   const structuredData = {
@@ -192,7 +195,7 @@ export default async function CategoryPage({ params }) {
           {
             '@type': 'ListItem',
             position: 3,
-            name: category.name,
+            name: getCategoryLabel(category, locale),
             item: categoryUrl,
           },
         ],
@@ -215,7 +218,7 @@ export default async function CategoryPage({ params }) {
               id="tools-page-title"
               className="truncate text-lg font-extrabold tracking-tight text-foreground sm:text-xl md:text-2xl"
             >
-              {category.name}{' '}
+              {getCategoryLabel(category, locale)}{' '}
               <span className="font-light text-muted-foreground">{t('toolsSuffix')}</span>
             </h1>
             {config.description ? (

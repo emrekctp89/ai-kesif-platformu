@@ -1,3 +1,4 @@
+import { getCategoryLabel } from '@/lib/categoryLocalization';
 import logger from '@/utils/logger';
 import { Link } from '@/i18n/routing';
 import { cookies } from 'next/headers';
@@ -174,7 +175,7 @@ export async function FeaturedTools({ locale = 'tr' }) {
                     prefetch={false}
                     className="max-w-[45%] truncate rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
                   >
-                    {tool.category_name}
+                    {getCategoryLabel(tool, locale)}
                   </Link>
                   <div className="flex items-center gap-2">
                     <Button

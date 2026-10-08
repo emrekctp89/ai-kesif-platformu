@@ -2,6 +2,8 @@
 
 'use client';
 
+import { getCategoryLabel } from '@/lib/categoryLocalization';
+
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import FavoriteButton from '@/components/FavoriteButton'; // Bu dosya yolunun doğru olduğunu varsayıyoruz
@@ -22,7 +24,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import ToolIcon from '@/components/ToolIcon';
 import { TrackedExternalLink } from '@/components/TrackedExternalLink';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 // Bu sabitleri de bileşenin kendi dosyasına taşıyoruz
 const tierStyles = {
@@ -53,6 +55,7 @@ const favoritesCache = new Map();
 // Tek bir araç kartı (DÜZELTİLMİŞ HALİ)
 // -----------------------------
 export default function ToolCard({ tool }) {
+  const locale = useLocale();
   const tc = useTranslations('Common');
   const tt = useTranslations('Tool');
 
@@ -127,7 +130,7 @@ export default function ToolCard({ tool }) {
             onClick={(e) => e.stopPropagation()}
           >
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground w-fit hover:bg-primary hover:text-primary-foreground transition-colors">
-              {tool.category_name}
+              {getCategoryLabel(tool, locale)}
             </span>
           </Link>
         </div>

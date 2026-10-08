@@ -1,3 +1,4 @@
+import { getCategoryLabel } from '@/lib/categoryLocalization';
 import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { Link } from '@/i18n/routing';
@@ -550,7 +551,9 @@ export default async function LearningHubPage({ params }) {
                           {t(track.levelKey)}
                         </Badge>
                         {track.categoryName ? (
-                          <Badge variant="outline">{track.categoryName}</Badge>
+                          <Badge variant="outline">
+                            {getCategoryLabel({ name: track.categoryName }, locale)}
+                          </Badge>
                         ) : null}
                       </div>
                       <CardTitle className="text-lg leading-snug sm:text-xl transition-colors group-hover:text-primary">

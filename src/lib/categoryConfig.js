@@ -1,3 +1,4 @@
+import { getEnglishCategory } from './categoryLocalization';
 import {
   Image as ImageIcon,
   Code2,
@@ -536,8 +537,14 @@ export const defaultCategoryConfig = {
   description: 'Bu kategori altındaki en yenilikçi ve popüler yapay zeka araçlarını keşfedin.',
 };
 
-export function getCategoryConfig(slug) {
-  return categoryConfig[slug] || defaultCategoryConfig;
+export function getCategoryConfig(slug, locale = 'tr') {
+  const config = categoryConfig[slug] || defaultCategoryConfig;
+  if (locale !== 'en') return config;
+  const translated = getEnglishCategory(slug);
+  return {
+    ...config,
+    description: translated?.description || 'Discover innovative AI tools in this category.',
+  };
 }
 
 export function getCategoryCount() {

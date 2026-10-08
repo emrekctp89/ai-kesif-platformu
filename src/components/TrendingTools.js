@@ -1,3 +1,5 @@
+import { getLocale } from 'next-intl/server';
+import { getCategoryLabel } from '@/lib/categoryLocalization';
 import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -22,6 +24,7 @@ async function getTrendingData() {
  *            'message' — bilgilendirici empty state göster
  */
 export async function TrendingTools({ emptyMode = 'hide' } = {}) {
+  const locale = await getLocale();
   const trendingTools = await getTrendingData();
 
   if (!trendingTools || trendingTools.length === 0) {
@@ -68,7 +71,9 @@ export async function TrendingTools({ emptyMode = 'hide' } = {}) {
                   <ToolIcon name={tool.name} link={tool.link} className="h-6 w-6 shrink-0" />
                   <span className="truncate">{tool.name}</span>
                 </h3>
-                <p className="mt-1 truncate text-xs text-muted-foreground">{tool.category_name}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">
+                  {getCategoryLabel(tool, locale)}
+                </p>
                 <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span aria-hidden="true">🔥</span>
                   <span className="font-bold">{tool.favorite_count} favori</span>

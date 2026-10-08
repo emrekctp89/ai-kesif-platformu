@@ -1,3 +1,4 @@
+import { getCategoryLabel } from '@/lib/categoryLocalization';
 import logger from '@/utils/logger';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { unstable_cache } from 'next/cache';
@@ -88,6 +89,7 @@ function localizeTool(tool, locale) {
   const useEn = locale === 'en';
   return {
     ...tool,
+    displayCategory: getCategoryLabel(tool, locale),
     displayName: useEn && tool.name_en ? tool.name_en : tool.name,
     displayDescription: useEn && tool.description_en ? tool.description_en : tool.description,
   };
@@ -302,10 +304,10 @@ export default async function ComparePage(props) {
                               prefetch={false}
                               className="hover:text-primary hover:underline"
                             >
-                              {tool.category_name}
+                              {tool.displayCategory}
                             </Link>
                           ) : (
-                            tool.category_name || '—'
+                            tool.displayCategory || '—'
                           )}
                         </td>
                       ))}
@@ -402,7 +404,7 @@ export default async function ComparePage(props) {
                             {tool.displayName}
                           </Link>
                         </CardTitle>
-                        <CardDescription>{tool.category_name}</CardDescription>
+                        <CardDescription>{tool.displayCategory}</CardDescription>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 text-sm">

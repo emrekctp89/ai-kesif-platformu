@@ -1,5 +1,8 @@
 'use client';
 
+import { useLocale } from 'next-intl';
+import { getCategoryLabel } from '@/lib/categoryLocalization';
+
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { CheckCircle2, LoaderCircle, Send, ShieldCheck } from 'lucide-react';
@@ -31,6 +34,7 @@ function SubmitButton() {
 }
 
 export default function SubmitForm({ categories, user }) {
+  const locale = useLocale();
   const [descriptionLength, setDescriptionLength] = useState(0);
   const [startedAt] = useState(() => Date.now());
 
@@ -117,7 +121,7 @@ export default function SubmitForm({ categories, user }) {
           </option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
-              {category.name}
+              {getCategoryLabel(category, locale)}
             </option>
           ))}
         </select>

@@ -1,5 +1,8 @@
 'use client';
 
+import { useLocale } from 'next-intl';
+import { getCategoryLabel } from '@/lib/categoryLocalization';
+
 import * as React from 'react';
 import {
   Dialog,
@@ -18,6 +21,7 @@ import toast from 'react-hot-toast';
 import { TrackedExternalLink } from '@/components/TrackedExternalLink';
 
 export function ToolPreviewDialog({ tool, isOpen, onClose }) {
+  const locale = useLocale();
   const [details, setDetails] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -93,7 +97,7 @@ export function ToolPreviewDialog({ tool, isOpen, onClose }) {
             {toolData.category_description && (
               <div className="text-sm text-muted-foreground">
                 <p>
-                  <strong>Kategori:</strong> {toolData.category_name}
+                  <strong>Kategori:</strong> {getCategoryLabel(toolData, locale)}
                 </p>
                 <p className="mt-1">{toolData.category_description}</p>
               </div>

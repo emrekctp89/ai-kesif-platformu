@@ -1,3 +1,5 @@
+import { getLocale } from 'next-intl/server';
+import { getCategoryLabel } from '@/lib/categoryLocalization';
 import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -23,6 +25,7 @@ async function getToolOfTheDayData() {
 }
 
 export async function ToolOfTheDay() {
+  const locale = await getLocale();
   const tool = await getToolOfTheDayData();
 
   // Eğer günün aracı bulunamazsa, bu bölümü hiç gösterme
@@ -90,7 +93,7 @@ export async function ToolOfTheDay() {
               </p>
               <Link href={`/kategori/${tool.category_slug}`}>
                 <Badge className="text-sm py-1.5 px-3 bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer text-secondary-foreground">
-                  {tool.category_name}
+                  {getCategoryLabel(tool, locale)}
                 </Badge>
               </Link>
 
