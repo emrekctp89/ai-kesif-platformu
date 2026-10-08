@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
+import { useTranslations } from 'next-intl';
 import { CheckCircle2, LoaderCircle, Send, ShieldCheck } from 'lucide-react';
 
 import { submitTool } from '@/app/actions';
@@ -12,18 +13,19 @@ import { Textarea } from './ui/textarea';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const t = useTranslations('Submit');
 
   return (
     <Button type="submit" size="lg" className="min-h-12 w-full" disabled={pending}>
       {pending ? (
         <>
           <LoaderCircle aria-hidden="true" className="mr-2 h-5 w-5 animate-spin" />
-          Öneri gönderiliyor...
+          {t('submitting')}
         </>
       ) : (
         <>
           <Send aria-hidden="true" className="mr-2 h-5 w-5" />
-          Öneriyi incelemeye gönder
+          {t('submit')}
         </>
       )}
     </Button>
@@ -31,6 +33,7 @@ function SubmitButton() {
 }
 
 export default function SubmitForm({ categories, user }) {
+  const t = useTranslations('Submit');
   const [descriptionLength, setDescriptionLength] = useState(0);
   const [startedAt] = useState(() => Date.now());
 
@@ -41,7 +44,7 @@ export default function SubmitForm({ categories, user }) {
         className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden"
         aria-hidden="true"
       >
-        <Label htmlFor="company_website">Şirket web sitesi</Label>
+        <Label htmlFor="company_website">{t('companyWebsite')}</Label>
         <Input
           id="company_website"
           name="company_website"
@@ -52,18 +55,18 @@ export default function SubmitForm({ categories, user }) {
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="name">Araç adı *</Label>
+          <Label htmlFor="name">{t('nameLabel')}</Label>
           <Input
             id="name"
             name="name"
             required
             minLength={2}
             maxLength={80}
-            placeholder="Örn. ChatGPT"
+            placeholder={t('namePlaceholder')}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="link">Resmî web sitesi *</Label>
+          <Label htmlFor="link">{t('linkLabel')}</Label>
           <Input
             id="link"
             name="link"
@@ -72,19 +75,21 @@ export default function SubmitForm({ categories, user }) {
             maxLength={500}
             inputMode="url"
             autoComplete="url"
-            placeholder="https://example.com"
+            placeholder={t('linkPlaceholder')}
             aria-describedby="link-help"
           />
           <p id="link-help" className="text-xs text-muted-foreground">
-            Aracın ana sayfasını veya resmî ürün sayfasını ekleyin.
+            {t('linkHelp')}
           </p>
         </div>
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
-          <Label htmlFor="description">Kısa açıklama *</Label>
-          <span className="text-xs text-muted-foreground">{descriptionLength}/600</span>
+          <Label htmlFor="description">{t('descriptionLabel')}</Label>
+          <span className="text-xs text-muted-foreground">
+            {t('descriptionCount', { count: descriptionLength })}
+          </span>
         </div>
         <Textarea
           id="description"
@@ -93,18 +98,17 @@ export default function SubmitForm({ categories, user }) {
           minLength={20}
           maxLength={600}
           onChange={(event) => setDescriptionLength(event.target.value.length)}
-          placeholder="Araç ne işe yarıyor, kimler için uygun ve öne çıkan faydası nedir?"
+          placeholder={t('descriptionPlaceholder')}
           className="min-h-[130px] resize-y"
           aria-describedby="description-help"
         />
         <p id="description-help" className="text-xs text-muted-foreground">
-          En az 20 karakter. İnceleme ekibinin aracı doğru değerlendirmesine yardımcı olacak özgün
-          bir açıklama yazın.
+          {t('descriptionHelp')}
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="category_id">En uygun kategori *</Label>
+        <Label htmlFor="category_id">{t('categoryLabel')}</Label>
         <select
           name="category_id"
           id="category_id"
@@ -113,7 +117,7 @@ export default function SubmitForm({ categories, user }) {
           className="block min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <option value="" disabled>
-            Bir kategori seçin...
+            {t('categoryPlaceholder')}
           </option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
@@ -125,7 +129,7 @@ export default function SubmitForm({ categories, user }) {
 
       {!user && (
         <div className="space-y-2 rounded-lg border bg-secondary/50 p-4">
-          <Label htmlFor="suggester_email">E-posta adresiniz *</Label>
+          <Label htmlFor="suggester_email">{t('emailLabel')}</Label>
           <Input
             type="email"
             name="suggester_email"
@@ -133,7 +137,7 @@ export default function SubmitForm({ categories, user }) {
             required
             maxLength={254}
             autoComplete="email"
-            placeholder="ornek@mail.com"
+            placeholder={t('emailPlaceholder')}
             aria-describedby="email-help"
           />
           <p
@@ -141,8 +145,7 @@ export default function SubmitForm({ categories, user }) {
             className="flex items-start gap-2 pt-1 text-xs leading-5 text-muted-foreground"
           >
             <ShieldCheck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-            Yalnızca önerinizin sonucu hakkında bilgi vermek için kullanılır; pazarlama listesine
-            eklenmez.
+            {t('emailHelp')}
           </p>
         </div>
       )}
@@ -150,19 +153,17 @@ export default function SubmitForm({ categories, user }) {
       <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4">
         <p className="flex items-center gap-2 text-sm font-semibold">
           <CheckCircle2 aria-hidden="true" className="h-4 w-4 text-emerald-600" />
-          Göndermeden önce
+          {t('beforeSubmitTitle')}
         </p>
         <ul className="mt-2 space-y-1 text-xs leading-5 text-muted-foreground">
-          <li>• Araç çalışır durumda ve yapay zekâ özelliği sunmalı.</li>
-          <li>• Aynı araç daha önce eklenmemiş olmalı.</li>
-          <li>• Öneriler yayınlanmadan önce editör incelemesinden geçer.</li>
+          <li>• {t('checklistWorking')}</li>
+          <li>• {t('checklistUnique')}</li>
+          <li>• {t('checklistReview')}</li>
         </ul>
       </div>
 
       <SubmitButton />
-      <p className="text-center text-xs text-muted-foreground">
-        Gönderim ücretsizdir. Onay garantisi verilmez.
-      </p>
+      <p className="text-center text-xs text-muted-foreground">{t('footerNote')}</p>
     </form>
   );
 }
