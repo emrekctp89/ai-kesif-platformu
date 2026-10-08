@@ -1,5 +1,8 @@
 'use client';
 
+import { useLocale } from 'next-intl';
+import { getCategoryLabel } from '@/lib/categoryLocalization';
+
 import logger from '@/utils/logger';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -65,6 +68,7 @@ function getPopularityScore(tool) {
 // Tek bir araç kartı (DÜZELTİLMİŞ HALİ)
 // -----------------------------
 export default function ToolCard({ tool }) {
+  const locale = useLocale();
   // router'a artık burada ihtiyacımız yok.
   // const router = useRouter();
   if (!tool || !tool.name) return null;
@@ -124,7 +128,7 @@ export default function ToolCard({ tool }) {
             onClick={(e) => e.stopPropagation()}
           >
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground w-fit hover:bg-primary hover:text-primary-foreground transition-colors">
-              {tool.category_name}
+              {getCategoryLabel(tool, locale)}
             </span>
           </Link>
         </div>

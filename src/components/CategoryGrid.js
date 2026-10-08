@@ -1,4 +1,5 @@
-import { getTranslations } from 'next-intl/server';
+import { getCategoryLabel } from '@/lib/categoryLocalization';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { ArrowRight } from 'lucide-react';
 
 import { Link } from '@/i18n/routing';
@@ -13,6 +14,7 @@ export async function CategoryGrid({ categories, limit = 36, showAllLink = true 
   if (!categories || categories.length === 0) return null;
 
   const t = await getTranslations('Homepage');
+  const locale = await getLocale();
   const visible = typeof limit === 'number' && limit > 0 ? categories.slice(0, limit) : categories;
   const hasMore = typeof limit === 'number' && categories.length > limit;
 
@@ -40,7 +42,7 @@ export async function CategoryGrid({ categories, limit = 36, showAllLink = true 
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
         {visible.map((category) => {
-          const config = getCategoryConfig(category.slug);
+          const config = getCategoryConfig(category.slug, locale);
           const Icon = config.icon;
 
           return (
@@ -62,7 +64,7 @@ export async function CategoryGrid({ categories, limit = 36, showAllLink = true 
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
-                      {category.name}
+                      {getCategoryLabel(category, locale)}
                     </h3>
                     <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
                       {config.description}

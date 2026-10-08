@@ -1,5 +1,7 @@
 'use client';
 
+import { getCategoryLabel } from '@/lib/categoryLocalization';
+
 import { useState, useEffect, Suspense, useMemo } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
@@ -80,7 +82,9 @@ export function HomepageClient({
 
   const activeFilters = useMemo(() => {
     const filters = [];
-    const categoryNames = new Map(categories.map((category) => [category.slug, category.name]));
+    const categoryNames = new Map(
+      categories.map((category) => [category.slug, getCategoryLabel(category, locale)])
+    );
     const tagNames = new Map(allTags.map((tag) => [String(tag.id), tag.name]));
     const addFilter = ({ key, value, label, multiValue }) => {
       const nextParams = new URLSearchParams(searchParamsString);
@@ -170,7 +174,7 @@ export function HomepageClient({
     }
 
     return filters;
-  }, [allTags, categories, pathname, searchParams, searchParamsString, sortLabels, t]);
+  }, [allTags, categories, locale, pathname, searchParams, searchParamsString, sortLabels, t]);
 
   const hasUserFilters = activeFilters.length > 0;
 

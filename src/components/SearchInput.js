@@ -1,11 +1,13 @@
 'use client';
 
+import { getCategoryLabel } from '@/lib/categoryLocalization';
+
 import logger from '@/utils/logger';
 
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { ArrowRight, LoaderCircle, Search, X } from 'lucide-react';
 import { getSearchSuggestions } from '@/app/actions/tools';
 import ToolIcon from '@/components/ToolIcon';
@@ -13,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { trackEvent } from '@/utils/analytics';
 
 export function SearchInput() {
+  const locale = useLocale();
   const t = useTranslations('Homepage');
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -219,7 +222,7 @@ export function SearchInput() {
                   <div className="flex flex-col overflow-hidden">
                     <span className="truncate text-sm font-semibold sm:text-base">{tool.name}</span>
                     <span className="truncate text-xs text-muted-foreground">
-                      {tool.category_name}
+                      {getCategoryLabel(tool, locale)}
                     </span>
                   </div>
                   <ArrowRight className="ml-auto h-4 w-4 translate-x-[-10px] opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 sm:h-5 sm:w-5" />

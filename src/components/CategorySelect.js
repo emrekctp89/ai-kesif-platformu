@@ -1,7 +1,9 @@
 'use client';
 
+import { getCategoryLabel } from '@/lib/categoryLocalization';
+
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   Select,
   SelectContent,
@@ -13,6 +15,7 @@ import {
 } from '@/components/ui/select';
 
 export function CategorySelect({ categories, value, onValueChange }) {
+  const locale = useLocale();
   const t = useTranslations('Homepage');
   return (
     <Select value={value} onValueChange={onValueChange}>
@@ -25,7 +28,7 @@ export function CategorySelect({ categories, value, onValueChange }) {
           <SelectItem value="all">{t('allCategories')}</SelectItem>
           {categories.map((category) => (
             <SelectItem key={category.slug} value={category.slug}>
-              {category.name}
+              {getCategoryLabel(category, locale)}
             </SelectItem>
           ))}
         </SelectGroup>

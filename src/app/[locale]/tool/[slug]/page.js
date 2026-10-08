@@ -1,3 +1,4 @@
+import { getCategoryLabel } from '@/lib/categoryLocalization';
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { Link } from '@/i18n/routing';
@@ -173,6 +174,7 @@ function localizeTool(tool, locale) {
   const useEn = locale === 'en';
   return {
     ...tool,
+    displayCategory: getCategoryLabel(tool, locale),
     displayName: useEn && tool.name_en ? tool.name_en : tool.name,
     displayDescription: useEn && tool.description_en ? tool.description_en : tool.description,
   };
@@ -304,7 +306,7 @@ export default async function ToolPage(props) {
         description: tool.displayDescription,
         url: shareUrl,
         sameAs: tool.link,
-        applicationCategory: tool.category_name,
+        applicationCategory: tool.displayCategory,
         operatingSystem: platforms.join(', '),
         datePublished: tool.created_at || undefined,
         dateModified: tool.updated_at || tool.created_at || undefined,
@@ -336,7 +338,7 @@ export default async function ToolPage(props) {
                 {
                   '@type': 'ListItem',
                   position: 2,
-                  name: tool.category_name,
+                  name: tool.displayCategory,
                   item: `${siteUrl}/kategori/${tool.category_slug}`,
                 },
               ]
@@ -390,7 +392,7 @@ export default async function ToolPage(props) {
                     href={`/kategori/${tool.category_slug}`}
                     className="transition-colors hover:text-foreground"
                   >
-                    {tool.category_name}
+                    {tool.displayCategory}
                   </Link>
                 </li>
               </>
@@ -407,7 +409,7 @@ export default async function ToolPage(props) {
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             {tool.category_slug
-              ? t('backToCategory', { category: tool.category_name })
+              ? t('backToCategory', { category: tool.displayCategory })
               : t('backToAll')}
           </Link>
         </nav>
@@ -436,11 +438,11 @@ export default async function ToolPage(props) {
                       {tool.category_slug ? (
                         <Link href={`/kategori/${tool.category_slug}`}>
                           <Badge variant="secondary" className="hover:bg-secondary/80">
-                            {tool.category_name}
+                            {tool.displayCategory}
                           </Badge>
                         </Link>
                       ) : (
-                        <Badge variant="secondary">{tool.category_name}</Badge>
+                        <Badge variant="secondary">{tool.displayCategory}</Badge>
                       )}
                       {tool.pricing_model ? (
                         <Badge variant="outline">
@@ -505,7 +507,7 @@ export default async function ToolPage(props) {
                     <DecisionSignal
                       icon={Layers3}
                       label={t('bestFor')}
-                      value={tool.category_name}
+                      value={tool.displayCategory}
                     />
                     <DecisionSignal
                       icon={WalletCards}
@@ -592,7 +594,7 @@ export default async function ToolPage(props) {
                 {t('overview')}
               </h2>
               <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-                <InfoCard icon={Layers3} label={t('category')} value={tool.category_name} />
+                <InfoCard icon={Layers3} label={t('category')} value={tool.displayCategory} />
                 <InfoCard icon={WalletCards} label={t('pricing')} value={pricingLabel} />
                 <InfoCard
                   icon={MonitorSmartphone}
