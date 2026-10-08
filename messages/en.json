@@ -614,6 +614,27 @@
     "announcementTitle": "Development note:",
     "announcementBody": "Our platform is brand new and we keep shipping features. If you hit a problem or have an idea, please share it with us!"
   },
+  "Feedback": {
+    "triggerButton": "Send Feedback",
+    "dialogTitle": "Feedback",
+    "dialogDescription": "Share your thoughts about the platform or any issues you've run into.",
+    "companyWebsite": "Company website",
+    "emailLabel": "Your email address",
+    "emailPlaceholder": "you@example.com",
+    "typeLabel": "Feedback type",
+    "typeGeneral": "General feedback",
+    "typeBug": "Bug report",
+    "typeSuggestion": "Feature suggestion",
+    "typeContent": "Content correction",
+    "messageLabel": "Your message",
+    "messagePlaceholder": "Write your thoughts or the issue you encountered...",
+    "messageHelp": "Write at least 20 characters.",
+    "messageCount": "{count}/2000",
+    "cancel": "Cancel",
+    "submit": "Send",
+    "submitting": "Sending…",
+    "successToast": "Thanks for your feedback!"
+  },
   "Tool": {
     "visitSite": "Visit Site",
     "promoteTool": "Promote This Tool"
