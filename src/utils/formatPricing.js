@@ -6,9 +6,11 @@ export function formatPricing(pricingString, t) {
   // Replace known Turkish pricing words with translations
   const replacements = {
     Ücretsiz: t('free'),
+    Abonelik: t('subscription'),
     Aylık: t('monthly'),
     Yıllık: t('yearly'),
     'Tek Seferlik': t('oneTime'),
+    'Tek Seferlik Ödeme': t('oneTime'),
     Kredi: t('credits'),
     Ücretli: t('paid'),
   };

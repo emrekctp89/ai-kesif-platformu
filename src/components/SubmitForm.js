@@ -15,7 +15,12 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Checkbox } from './ui/checkbox';
 
-const PRICING_MODELS = ['Ücretsiz', 'Freemium', 'Abonelik', 'Tek Seferlik Ödeme'];
+const PRICING_MODELS = [
+  { value: 'Ücretsiz', pricingKey: 'free' },
+  { value: 'Freemium', pricingKey: 'freemium' },
+  { value: 'Abonelik', pricingKey: 'subscription' },
+  { value: 'Tek Seferlik Ödeme', pricingKey: 'oneTime' },
+];
 const PLATFORM_OPTIONS = ['Web', 'iOS', 'Android', 'Windows', 'macOS', 'Linux', 'Chrome Uzantısı'];
 const OTHER_CATEGORY_SLUG = 'diger';
 
@@ -42,6 +47,7 @@ function SubmitButton() {
 
 export default function SubmitForm({ categories, user }) {
   const t = useTranslations('Submit');
+  const tp = useTranslations('Pricing');
   const locale = useLocale();
   const [descriptionLength, setDescriptionLength] = useState(0);
   const [startedAt] = useState(() => Date.now());
@@ -169,8 +175,8 @@ export default function SubmitForm({ categories, user }) {
           >
             <option value="">{t('pricingPlaceholder')}</option>
             {PRICING_MODELS.map((model) => (
-              <option key={model} value={model}>
-                {model}
+              <option key={model.value} value={model.value}>
+                {tp(model.pricingKey)}
               </option>
             ))}
           </select>

@@ -35,9 +35,15 @@ import { cn } from '@/lib/utils';
 import { ToolVariantManager } from './ToolVariantManager';
 import { TranslateButton } from '@/components/TranslateButton';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 // Fiyatlandırma ve Platform seçeneklerini tanımlıyoruz
-const pricingModels = ['Ücretsiz', 'Freemium', 'Abonelik', 'Tek Seferlik Ödeme'];
+const pricingModels = [
+  { value: 'Ücretsiz', pricingKey: 'free' },
+  { value: 'Freemium', pricingKey: 'freemium' },
+  { value: 'Abonelik', pricingKey: 'subscription' },
+  { value: 'Tek Seferlik Ödeme', pricingKey: 'oneTime' },
+];
 const platformOptions = ['Web', 'iOS', 'Android', 'Windows', 'macOS', 'Linux', 'Chrome Uzantısı'];
 const tierOptions = ['Normal', 'Pro', 'Sponsorlu']; // YENİ: Seviye seçenekleri
 
@@ -113,6 +119,7 @@ function MultiSelectTags({ allTags, initialSelectedTags }) {
 // Ana Düzenleme Penceresi
 export function EditToolDialog({ tool, categories, allTags }) {
   const router = useRouter();
+  const tp = useTranslations('Pricing');
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState(tool.name || '');
@@ -467,8 +474,8 @@ export function EditToolDialog({ tool, categories, allTags }) {
             >
               <option value="">Seçilmedi</option>
               {pricingModels.map((model) => (
-                <option key={model} value={model}>
-                  {model}
+                <option key={model.value} value={model.value}>
+                  {tp(model.pricingKey)}
                 </option>
               ))}
             </select>
