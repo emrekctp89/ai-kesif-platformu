@@ -21,7 +21,15 @@ const PRICING_MODELS = [
   { value: 'Abonelik', pricingKey: 'subscription' },
   { value: 'Tek Seferlik Ödeme', pricingKey: 'oneTime' },
 ];
-const PLATFORM_OPTIONS = ['Web', 'iOS', 'Android', 'Windows', 'macOS', 'Linux', 'Chrome Uzantısı'];
+const PLATFORM_OPTIONS = [
+  { value: 'Web', label: 'Web' },
+  { value: 'iOS', label: 'iOS' },
+  { value: 'Android', label: 'Android' },
+  { value: 'Windows', label: 'Windows' },
+  { value: 'macOS', label: 'macOS' },
+  { value: 'Linux', label: 'Linux' },
+  { value: 'Chrome Uzantısı', labelKey: 'platformChromeExt' },
+];
 const OTHER_CATEGORY_SLUG = 'diger';
 
 function SubmitButton() {
@@ -48,6 +56,7 @@ function SubmitButton() {
 export default function SubmitForm({ categories, user }) {
   const t = useTranslations('Submit');
   const tp = useTranslations('Pricing');
+  const th = useTranslations('Homepage');
   const locale = useLocale();
   const [descriptionLength, setDescriptionLength] = useState(0);
   const [startedAt] = useState(() => Date.now());
@@ -186,23 +195,23 @@ export default function SubmitForm({ categories, user }) {
           <Label>{t('platformsLabel')}</Label>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {PLATFORM_OPTIONS.map((platform) => (
-              <div key={platform} className="flex items-center space-x-2">
+              <div key={platform.value} className="flex items-center space-x-2">
                 <Checkbox
-                  id={`platform-${platform}`}
+                  id={`platform-${platform.value}`}
                   name="platforms"
-                  value={platform}
-                  checked={selectedPlatforms.has(platform)}
+                  value={platform.value}
+                  checked={selectedPlatforms.has(platform.value)}
                   onCheckedChange={(checked) =>
                     setSelectedPlatforms((current) => {
                       const next = new Set(current);
-                      if (checked) next.add(platform);
-                      else next.delete(platform);
+                      if (checked) next.add(platform.value);
+                      else next.delete(platform.value);
                       return next;
                     })
                   }
                 />
-                <Label htmlFor={`platform-${platform}`} className="text-sm font-normal">
-                  {platform}
+                <Label htmlFor={`platform-${platform.value}`} className="text-sm font-normal">
+                  {platform.labelKey ? th(platform.labelKey) : platform.label}
                 </Label>
               </div>
             ))}
