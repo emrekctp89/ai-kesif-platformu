@@ -9,8 +9,8 @@ export function formatPricing(pricingString, t) {
     Abonelik: t('subscription'),
     Aylık: t('monthly'),
     Yıllık: t('yearly'),
-    'Tek Seferlik': t('oneTime'),
     'Tek Seferlik Ödeme': t('oneTime'),
+    'Tek Seferlik': t('oneTime'),
     Kredi: t('credits'),
     Ücretli: t('paid'),
   };

@@ -6,6 +6,12 @@ jest.mock('next/navigation', () => ({ useRouter: () => ({ refresh: jest.fn() }) 
 jest.mock('@/app/actions', () => ({ updateTool: jest.fn(), assignTagsToTool: jest.fn() }));
 jest.mock('@/components/ToolVariantManager', () => ({ ToolVariantManager: () => null }));
 jest.mock('@/components/TranslateButton', () => ({ TranslateButton: () => null }));
+jest.mock('next-intl', () => ({
+  useTranslations: () => (key) =>
+    ({ free: 'Free', freemium: 'Freemium', subscription: 'Subscription', oneTime: 'One-time' })[
+      key
+    ] || key,
+}));
 
 beforeAll(() => {
   global.ResizeObserver = class {
@@ -32,6 +38,9 @@ it('lets the admin approve a flagged link and resets the decision when the URL c
     />
   );
   fireEvent.click(screen.getByRole('button', { name: 'Düzenle' }));
+  expect(screen.getByRole('option', { name: 'Free' })).toHaveValue('Ücretsiz');
+  expect(screen.getByRole('option', { name: 'Subscription' })).toHaveValue('Abonelik');
+  expect(screen.getByRole('option', { name: 'One-time' })).toHaveValue('Tek Seferlik Ödeme');
   expect(screen.getByText('HTTP 405')).toBeInTheDocument();
   expect(screen.getByRole('link', { name: /Linki aç/ })).toHaveAttribute(
     'href',
