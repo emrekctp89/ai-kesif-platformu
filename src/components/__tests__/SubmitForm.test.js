@@ -12,6 +12,14 @@ jest.mock('next-intl', () => ({
 }));
 jest.mock('@/app/actions', () => ({ submitTool: jest.fn() }));
 
+beforeAll(() => {
+  global.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+});
+
 it('shows English pricing choices while submitting canonical pricing values', () => {
   render(<SubmitForm categories={[]} user={{ id: 'test-user' }} />);
 
