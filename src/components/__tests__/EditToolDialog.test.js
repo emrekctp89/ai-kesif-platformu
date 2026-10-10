@@ -19,6 +19,7 @@ const mockMessages = {
       tierPro: 'Pro',
       tierSponsored: 'Sponsorlu',
       platforms: 'Platformlar',
+      chromeExtension: 'Chrome Uzantısı',
       tags: 'Etiketler',
       selectTags: 'Etiket seç…',
       cancel: 'İptal',
@@ -47,6 +48,7 @@ const mockMessages = {
       tierPro: 'Pro',
       tierSponsored: 'Sponsored',
       platforms: 'Platforms',
+      chromeExtension: 'Chrome Extension',
       tags: 'Tags',
       selectTags: 'Select tags…',
       cancel: 'Cancel',
@@ -141,4 +143,5 @@ it('shows English pricing labels while keeping the stored pricing value unchange
   const pricing = screen.getByLabelText('Pricing model');
   expect(screen.getByRole('option', { name: 'Free' })).toBeInTheDocument();
   expect(pricing).toHaveValue('Ücretsiz');
+  expect(screen.getByLabelText('Chrome Extension')).toBeInTheDocument();
 });
