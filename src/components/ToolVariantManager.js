@@ -19,8 +19,10 @@ import {
 } from '@/components/ui/table';
 import { CheckCircle } from 'lucide-react';
 import { getEditableToolVariants, getOriginalToolVariant } from '@/utils/toolVariants';
+import { useTranslations } from 'next-intl';
 
-export function ToolVariantManager({ tool }) {
+export function ToolVariantManager({ tool, locale }) {
+  const t = useTranslations('ToolEditor');
   // Admin tool lists often omit tool_variants relation — default to [].
   const [variants, setVariants] = React.useState(() => getEditableToolVariants(tool));
   const [isGenerating, startGeneratingTransition] = useTransition();
@@ -37,11 +39,11 @@ export function ToolVariantManager({ tool }) {
     startGeneratingTransition(async () => {
       const result = await generateToolVariants(tool.id);
       if (result.error) {
-        toast.error(result.error);
+        toast.error(locale === 'en' ? t('variantOperationFailed') : result.error);
       } else {
         // Mevcut varyantların üzerine yazmak yerine, yenilerini ekliyoruz.
         setVariants((prev) => [...prev, ...result.data.map((v) => ({ ...v, is_active: false }))]);
-        toast.success('3 yeni varyant üretildi!');
+        toast.success(t('variantsGenerated'));
       }
     });
   };
@@ -61,9 +63,9 @@ export function ToolVariantManager({ tool }) {
       formData.append('variants', JSON.stringify(variants));
       const result = await updateToolVariants(formData);
       if (result.error) {
-        toast.error(result.error);
+        toast.error(locale === 'en' ? t('variantOperationFailed') : result.error);
       } else {
-        toast.success(result.success);
+        toast.success(t('variantsSaved'));
       }
     });
   };
@@ -71,7 +73,7 @@ export function ToolVariantManager({ tool }) {
   const handleApplyWinner = (variant) => {
     if (
       !confirm(
-        `"${variant.title}" varyantını bu aracın yeni ana başlığı yapmak istediğinize emin misiniz? Bu işlem, diğer tüm varyantları silecek ve testi sonlandıracaktır.`
+        t('winnerConfirmation', { title: variant.title })
       )
     ) {
       return;
@@ -83,9 +85,9 @@ export function ToolVariantManager({ tool }) {
       formData.append('newDescription', variant.description);
       const result = await applyWinningVariant(formData);
       if (result.error) {
-        toast.error(result.error);
+        toast.error(locale === 'en' ? t('variantOperationFailed') : result.error);
       } else {
-        toast.success(result.success);
+        toast.success(t('winnerApplied'));
         // Arayüzü güncellemek için sayfayı yenilemek en basit yol
         window.location.reload();
       }
@@ -94,25 +96,27 @@ export function ToolVariantManager({ tool }) {
 
   return (
     <div className="space-y-4 pt-4 mt-4 border-t">
-      <h4 className="font-semibold">A/B Testi Varyantları</h4>
+      <h4 className="font-semibold">{t('abTestVariants')}</h4>
 
       {/* İstatistik Tablosu */}
       <Card>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Varyant</TableHead>
-              <TableHead>Gösterim</TableHead>
-              <TableHead>Tıklanma</TableHead>
+              <TableHead>{t('variant')}</TableHead>
+              <TableHead>{t('impressions')}</TableHead>
+              <TableHead>{t('clicks')}</TableHead>
               <TableHead>CTR (%)</TableHead>
-              <TableHead>Aktif</TableHead>
-              <TableHead className="text-right">İşlem</TableHead>
+              <TableHead>{t('active')}</TableHead>
+              <TableHead className="text-right">{t('action')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {originalVariant && (
               <TableRow>
-                <TableCell className="font-medium">{originalVariant.title} (Orijinal)</TableCell>
+                <TableCell className="font-medium">
+                  {originalVariant.title} ({t('original')})
+                </TableCell>
                 <TableCell>{originalVariant.impressions || '-'}</TableCell>
                 <TableCell>{originalVariant.clicks || '-'}</TableCell>
                 <TableCell>-</TableCell>
@@ -147,7 +151,7 @@ export function ToolVariantManager({ tool }) {
                       disabled={isSaving}
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      Kazanan Yap
+                      {t('makeWinner')}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -161,10 +165,10 @@ export function ToolVariantManager({ tool }) {
       <div className="flex justify-between pt-4">
         <Button variant="outline" onClick={handleGenerateVariants} disabled={isGenerating}>
           <Sparkles className="w-4 h-4 mr-2" />
-          {isGenerating ? 'Üretiliyor...' : 'AI ile Varyant Üret'}
+          {isGenerating ? t('generating') : t('generateWithAi')}
         </Button>
         <Button onClick={handleSaveChanges} disabled={isSaving}>
-          {isSaving ? 'Kaydediliyor...' : 'Aktif/Pasif Durumunu Kaydet'}
+          {isSaving ? t('saving') : t('saveActiveStatus')}
         </Button>
       </div>
     </div>

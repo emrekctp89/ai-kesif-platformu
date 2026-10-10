@@ -68,7 +68,6 @@ jest.mock('@/components/ToolVariantManager', () => ({ ToolVariantManager: () => 
 jest.mock('@/components/TranslateButton', () => ({ TranslateButton: () => null }));
 jest.mock('next-intl', () => ({
   useLocale: () => mockLocale,
-  useLocale: () => mockLocale,
   useTranslations: (namespace) => (key, values) => {
     const value = mockMessages[mockLocale][namespace][key] || key;
     return values
