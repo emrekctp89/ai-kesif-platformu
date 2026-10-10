@@ -294,7 +294,7 @@ export function DeveloperPortalClient() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
-      <Card className="border-primary/20 bg-primary/5">
+      <Card id="quick-start" className="scroll-mt-24 border-primary/20 bg-primary/5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -534,7 +534,7 @@ export function DeveloperPortalClient() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="api-keys" className="scroll-mt-24">
         <CardHeader>
           <CardTitle>{t('createKeyTitle')}</CardTitle>
           <CardDescription>{t('createKeyDescription')}</CardDescription>
