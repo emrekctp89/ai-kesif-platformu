@@ -182,22 +182,22 @@ export function EditToolDialog({ tool, categories, allTags }) {
     try {
       const toolUpdateResult = await updateTool(formData);
       if (toolUpdateResult?.error) {
-        toast.error(toolUpdateResult.error);
+        toast.error(locale === 'en' ? t('updateFailed') : toolUpdateResult.error);
         return;
       }
       const tagAssignResult = await assignTagsToTool(formData);
       if (tagAssignResult?.error) {
-        toast.error(tagAssignResult.error);
+        toast.error(locale === 'en' ? t('tagUpdateFailed') : tagAssignResult.error);
         return;
       }
 
       const linkStatus = toolUpdateResult?.linkCheck?.status;
       if (linkStatus === 'invalid') {
-        toast.error(toolUpdateResult.success || t('savedLinkStillBroken'));
+        toast.error(t('savedLinkStillBroken'));
       } else if (linkStatus === 'review') {
-        toast(toolUpdateResult.success || t('savedLinkNeedsReview'), { icon: '⚠️' });
+        toast(t('savedLinkNeedsReview'), { icon: '⚠️' });
       } else {
-        toast.success(toolUpdateResult.success || t('savedSuccessfully'));
+        toast.success(t('savedSuccessfully'));
       }
       setIsOpen(false);
       router.refresh();
@@ -530,7 +530,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
               ))}
             </select>
             {/* YENİ: Varyant Yönetim Paneli */}
-            <ToolVariantManager tool={tool} />
+            <ToolVariantManager tool={tool} locale={locale} />
           </div>
 
           <DialogFooter>
