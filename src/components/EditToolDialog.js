@@ -130,7 +130,6 @@ function MultiSelectTags({ allTags, initialSelectedTags, t }) {
 // Ana Düzenleme Penceresi
 export function EditToolDialog({ tool, categories, allTags }) {
   const router = useRouter();
-  const locale = useLocale();
   const t = useTranslations('ToolEditor');
   const tPricing = useTranslations('Pricing');
   const [isOpen, setIsOpen] = useState(false);
@@ -193,16 +192,9 @@ export function EditToolDialog({ tool, categories, allTags }) {
 
       const linkStatus = toolUpdateResult?.linkCheck?.status;
       if (linkStatus === 'invalid') {
-        toast.error(
-          toolUpdateResult.success ||
-            t('savedLinkStillBroken')
-        );
+        toast.error(toolUpdateResult.success || t('savedLinkStillBroken'));
       } else if (linkStatus === 'review') {
-        toast(
-          toolUpdateResult.success ||
-            t('savedLinkNeedsReview'),
-          { icon: '⚠️' }
-        );
+        toast(toolUpdateResult.success || t('savedLinkNeedsReview'), { icon: '⚠️' });
       } else {
         toast.success(toolUpdateResult.success || t('savedSuccessfully'));
       }
@@ -230,10 +222,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
           className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-4"
         >
           <input type="hidden" name="toolId" value={tool.id} />
-          <section
-            className="rounded-lg border bg-muted/30 p-3"
-            aria-label={t('qualityCheck')}
-          >
+          <section className="rounded-lg border bg-muted/30 p-3" aria-label={t('qualityCheck')}>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold">
@@ -242,9 +231,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
                     total: qualityChecks.length,
                   })}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {t('qualityHint')}
-                </p>
+                <p className="text-xs text-muted-foreground">{t('qualityHint')}</p>
               </div>
               <Badge variant={passedCheckCount === qualityChecks.length ? 'default' : 'secondary'}>
                 %{Math.round(qualityProgress)}
@@ -341,22 +328,14 @@ export function EditToolDialog({ tool, categories, allTags }) {
                   onChange={(event) => setLinkDecision(event.target.value)}
                   className="w-full rounded-md border bg-background p-2 text-sm"
                 >
-                  <option value="keep">
-                    {t('keepDecision')}
-                  </option>
+                  <option value="keep">{t('keepDecision')}</option>
                   <option value="manual_valid">{t('approveLinkManually')}</option>
-                  <option value="automatic">
-                    {t('runAutomaticCheck')}
-                  </option>
+                  <option value="automatic">{t('runAutomaticCheck')}</option>
                 </select>
-                <p className="text-xs text-muted-foreground">
-                  {t('manualApprovalHint')}
-                </p>
+                <p className="text-xs text-muted-foreground">{t('manualApprovalHint')}</p>
               </div>
               {link && !parsedLink && (
-                <p className="mt-1 text-xs text-destructive">
-                  {t('invalidUrl')}
-                </p>
+                <p className="mt-1 text-xs text-destructive">{t('invalidUrl')}</p>
               )}
             </div>
           </div>
