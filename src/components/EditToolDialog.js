@@ -35,7 +35,7 @@ import { cn } from '@/lib/utils';
 import { ToolVariantManager } from './ToolVariantManager';
 import { TranslateButton } from '@/components/TranslateButton';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 // Fiyatlandırma ve Platform seçeneklerini tanımlıyoruz
 const pricingModels = [
@@ -130,6 +130,7 @@ function MultiSelectTags({ allTags, initialSelectedTags, t }) {
 // Ana Düzenleme Penceresi
 export function EditToolDialog({ tool, categories, allTags }) {
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations('ToolEditor');
   const tPricing = useTranslations('Pricing');
   const [isOpen, setIsOpen] = useState(false);
@@ -214,7 +215,9 @@ export function EditToolDialog({ tool, categories, allTags }) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{t('title', { name: tool.name })}</DialogTitle>
+          <DialogTitle>
+            {t('title', { name: locale === 'en' ? nameEn || tool.name : tool.name })}
+          </DialogTitle>
           <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
         <form

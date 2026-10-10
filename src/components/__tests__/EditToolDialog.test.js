@@ -25,7 +25,12 @@ const mockMessages = {
       saving: 'Kaydediliyor…',
       saveChanges: 'Değişiklikleri Kaydet',
     },
-    Pricing: { free: 'Ücretsiz', freemium: 'Freemium', subscription: 'Abonelik', oneTime: 'Tek seferlik' },
+    Pricing: {
+      free: 'Ücretsiz',
+      freemium: 'Freemium',
+      subscription: 'Abonelik',
+      oneTime: 'Tek seferlik',
+    },
   },
   en: {
     ToolEditor: {
@@ -48,7 +53,12 @@ const mockMessages = {
       saving: 'Saving…',
       saveChanges: 'Save changes',
     },
-    Pricing: { free: 'Free', freemium: 'Freemium', subscription: 'Subscription', oneTime: 'One-time payment' },
+    Pricing: {
+      free: 'Free',
+      freemium: 'Freemium',
+      subscription: 'Subscription',
+      oneTime: 'One-time payment',
+    },
   },
 };
 
@@ -58,10 +68,14 @@ jest.mock('@/components/ToolVariantManager', () => ({ ToolVariantManager: () => 
 jest.mock('@/components/TranslateButton', () => ({ TranslateButton: () => null }));
 jest.mock('next-intl', () => ({
   useLocale: () => mockLocale,
+  useLocale: () => mockLocale,
   useTranslations: (namespace) => (key, values) => {
     const value = mockMessages[mockLocale][namespace][key] || key;
     return values
-      ? Object.entries(values).reduce((result, [name, replacement]) => result.replace(`{${name}}`, replacement), value)
+      ? Object.entries(values).reduce(
+          (result, [name, replacement]) => result.replace(`{${name}}`, replacement),
+          value
+        )
       : value;
   },
 }));
@@ -111,7 +125,8 @@ it('shows English pricing labels while keeping the stored pricing value unchange
     <EditToolDialog
       tool={{
         id: 2,
-        name: 'Example',
+        name: 'Örnek',
+        name_en: 'Example',
         link: 'https://example.com/',
         pricing_model: 'Ücretsiz',
         tier: 'Normal',
@@ -123,6 +138,7 @@ it('shows English pricing labels while keeping the stored pricing value unchange
     />
   );
   fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+  expect(screen.getByRole('heading', { name: 'Edit Example' })).toBeInTheDocument();
   const pricing = screen.getByLabelText('Pricing model');
   expect(screen.getByRole('option', { name: 'Free' })).toBeInTheDocument();
   expect(pricing).toHaveValue('Ücretsiz');
