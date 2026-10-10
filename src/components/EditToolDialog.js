@@ -35,14 +35,31 @@ import { cn } from '@/lib/utils';
 import { ToolVariantManager } from './ToolVariantManager';
 import { TranslateButton } from '@/components/TranslateButton';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 // Fiyatlandırma ve Platform seçeneklerini tanımlıyoruz
-const pricingModels = ['Ücretsiz', 'Freemium', 'Abonelik', 'Tek Seferlik Ödeme'];
-const platformOptions = ['Web', 'iOS', 'Android', 'Windows', 'macOS', 'Linux', 'Chrome Uzantısı'];
-const tierOptions = ['Normal', 'Pro', 'Sponsorlu']; // YENİ: Seviye seçenekleri
+const pricingModels = [
+  { value: 'Ücretsiz', key: 'free' },
+  { value: 'Freemium', key: 'freemium' },
+  { value: 'Abonelik', key: 'subscription' },
+  { value: 'Tek Seferlik Ödeme', key: 'oneTime' },
+];
+const platformOptions = [
+  { value: 'Web', label: 'Web' },
+  { value: 'iOS', label: 'iOS' },
+  { value: 'Android', label: 'Android' },
+  { value: 'Windows', label: 'Windows' },
+  { value: 'macOS', label: 'macOS' },
+  { value: 'Linux', label: 'Linux' },
+  { value: 'Chrome Uzantısı', key: 'chromeExtension' },
+];
+const tierOptions = [
+  { value: 'Normal', key: 'tierNormal' },
+  { value: 'Pro', key: 'tierPro' },
+  { value: 'Sponsorlu', key: 'tierSponsored' },
+];
 
-// Çoklu Etiket Seçim Bileşeni (Değişiklik yok)
-function MultiSelectTags({ allTags, initialSelectedTags }) {
+function MultiSelectTags({ allTags, initialSelectedTags, t }) {
   const [open, setOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState(new Set(initialSelectedTags.map((t) => t.id)));
   const selectedTagObjects = allTags.filter((tag) => selectedTags.has(tag.id));
@@ -67,16 +84,16 @@ function MultiSelectTags({ allTags, initialSelectedTags }) {
                       {tag.name}
                     </Badge>
                   ))
-                : 'Etiket seç...'}
+                : t('selectTags')}
             </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
           <Command>
-            <CommandInput placeholder="Etiket ara..." />
+            <CommandInput placeholder={t('searchTags')} />
             <CommandList>
-              <CommandEmpty>Etiket bulunamadı.</CommandEmpty>
+              <CommandEmpty>{t('noTagsFound')}</CommandEmpty>
               <CommandGroup>
                 {allTags.map((tag) => (
                   <CommandItem
@@ -113,6 +130,9 @@ function MultiSelectTags({ allTags, initialSelectedTags }) {
 // Ana Düzenleme Penceresi
 export function EditToolDialog({ tool, categories, allTags }) {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('ToolEditor');
+  const tPricing = useTranslations('Pricing');
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState(tool.name || '');
@@ -133,11 +153,11 @@ export function EditToolDialog({ tool, categories, allTags }) {
     }
   }, [link]);
   const qualityChecks = [
-    { label: 'İsim hazır', passed: name.trim().length >= 2 },
-    { label: 'Bağlantı geçerli', passed: parsedLink },
-    { label: 'Açıklama yeterli', passed: description.trim().length >= 80 },
-    { label: 'Fiyat bilgisi var', passed: Boolean(pricingModel) },
-    { label: 'Platform seçildi', passed: selectedPlatforms.size > 0 },
+    { label: t('qualityName'), passed: name.trim().length >= 2 },
+    { label: t('qualityLink'), passed: parsedLink },
+    { label: t('qualityDescription'), passed: description.trim().length >= 80 },
+    { label: t('qualityPricing'), passed: Boolean(pricingModel) },
+    { label: t('qualityPlatform'), passed: selectedPlatforms.size > 0 },
   ];
   const passedCheckCount = qualityChecks.filter((check) => check.passed).length;
   const qualityProgress = (passedCheckCount / qualityChecks.length) * 100;
@@ -175,16 +195,16 @@ export function EditToolDialog({ tool, categories, allTags }) {
       if (linkStatus === 'invalid') {
         toast.error(
           toolUpdateResult.success ||
-            'Araç kaydedildi ancak link hâlâ kırık görünüyor. Alternatif URL deneyin.'
+            t('savedLinkStillBroken')
         );
       } else if (linkStatus === 'review') {
         toast(
           toolUpdateResult.success ||
-            'Araç kaydedildi. Link manuel inceleme gerektiriyor (bot koruması olabilir).',
+            t('savedLinkNeedsReview'),
           { icon: '⚠️' }
         );
       } else {
-        toast.success(toolUpdateResult.success || 'Araç ve etiketleri başarıyla güncellendi.');
+        toast.success(toolUpdateResult.success || t('savedSuccessfully'));
       }
       setIsOpen(false);
       router.refresh();
@@ -197,15 +217,13 @@ export function EditToolDialog({ tool, categories, allTags }) {
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          Düzenle
+          {t('edit')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{tool.name} Aracını Düzenle</DialogTitle>
-          <DialogDescription>
-            Aracın bilgilerini, etiketlerini ve diğer detaylarını güncelleyin.
-          </DialogDescription>
+          <DialogTitle>{t('title', { name: tool.name })}</DialogTitle>
+          <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
         <form
           action={handleFormAction}
@@ -214,15 +232,18 @@ export function EditToolDialog({ tool, categories, allTags }) {
           <input type="hidden" name="toolId" value={tool.id} />
           <section
             className="rounded-lg border bg-muted/30 p-3"
-            aria-label="Veri kalitesi kontrolü"
+            aria-label={t('qualityCheck')}
           >
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold">
-                  Veri kalitesi: {passedCheckCount}/{qualityChecks.length}
+                  {t('qualityScore', {
+                    passed: passedCheckCount,
+                    total: qualityChecks.length,
+                  })}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Zorunlu alanlar geçerli olduğunda kaydedebilirsin.
+                  {t('qualityHint')}
                 </p>
               </div>
               <Badge variant={passedCheckCount === qualityChecks.length ? 'default' : 'secondary'}>
@@ -253,7 +274,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
           </section>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor={`name-${tool.id}`} className="text-right">
-              İsim
+              {t('name')}
             </Label>
             <Input
               id={`name-${tool.id}`}
@@ -268,7 +289,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor={`link-${tool.id}`} className="text-right">
-              Link
+              {t('link')}
             </Label>
             <div className="col-span-3">
               <Input
@@ -286,16 +307,16 @@ export function EditToolDialog({ tool, categories, allTags }) {
               />
               <div className="mt-3 space-y-2 rounded-md border p-3">
                 <p className="text-sm font-medium">
-                  Link kontrolü:{' '}
+                  {t('linkCheck')}:{' '}
                   {tool.link_check_status === 'manual_valid'
-                    ? 'Admin tarafından onaylandı'
+                    ? t('linkManuallyApproved')
                     : tool.link_check_status === 'invalid'
-                      ? 'Otomatik kontrol kırık işaretledi'
+                      ? t('linkFlaggedBroken')
                       : tool.link_check_status === 'review'
-                        ? 'Manuel inceleme bekliyor'
+                        ? t('linkNeedsReview')
                         : tool.link_check_status === 'valid'
-                          ? 'Geçerli'
-                          : 'Henüz doğrulanmadı'}
+                          ? t('linkValid')
+                          : t('linkNotChecked')}
                 </p>
                 {tool.link_check_error && (
                   <p className="text-xs text-muted-foreground">{tool.link_check_error}</p>
@@ -307,11 +328,11 @@ export function EditToolDialog({ tool, categories, allTags }) {
                     rel="noopener noreferrer"
                     className="text-sm text-primary underline"
                   >
-                    Linki aç ve kontrol et ↗
+                    {t('openAndCheckLink')} ↗
                   </a>
                 )}
                 <Label htmlFor={`link-decision-${tool.id}`} className="block">
-                  Admin kararı
+                  {t('adminDecision')}
                 </Label>
                 <select
                   id={`link-decision-${tool.id}`}
@@ -321,28 +342,27 @@ export function EditToolDialog({ tool, categories, allTags }) {
                   className="w-full rounded-md border bg-background p-2 text-sm"
                 >
                   <option value="keep">
-                    Mevcut kararı koru (URL değişirse yeniden kontrol et)
+                    {t('keepDecision')}
                   </option>
-                  <option value="manual_valid">Link çalışıyor — manuel onayla</option>
+                  <option value="manual_valid">{t('approveLinkManually')}</option>
                   <option value="automatic">
-                    Manuel onayı kaldır ve otomatik kontrolü çalıştır
+                    {t('runAutomaticCheck')}
                   </option>
                 </select>
                 <p className="text-xs text-muted-foreground">
-                  Manuel onay kaydedildiğinde otomatik taramalar bu linki değiştirmez. URL değişirse
-                  onay sıfırlanır.
+                  {t('manualApprovalHint')}
                 </p>
               </div>
               {link && !parsedLink && (
                 <p className="mt-1 text-xs text-destructive">
-                  http:// veya https:// ile başlayan geçerli bir adres girin.
+                  {t('invalidUrl')}
                 </p>
               )}
             </div>
           </div>
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor={`description-${tool.id}`} className="pt-2 text-right">
-              Açıklama
+              {t('toolDescription')}
             </Label>
             <div className="col-span-3">
               <div className="mb-2 flex justify-end">
@@ -350,7 +370,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
                   size="sm"
                   getText={() => description}
                   onTranslated={setDescription}
-                  label="Açıklamayı çevir"
+                  label={t('translateDescription')}
                 />
               </div>
               <Textarea
@@ -364,8 +384,8 @@ export function EditToolDialog({ tool, categories, allTags }) {
               <div className="mt-1 flex justify-between gap-3 text-xs text-muted-foreground">
                 <span>
                   {description.trim().length < 80
-                    ? 'Kaliteli bir açıklama için en az 80 karakter önerilir.'
-                    : 'Açıklama uzunluğu uygun.'}
+                    ? t('descriptionTooShort')
+                    : t('descriptionLengthOk')}
                 </span>
                 <span>{description.length}/1200</span>
               </div>
@@ -373,7 +393,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor={`name-en-${tool.id}`} className="text-right">
-              İsim (EN)
+              {t('nameEn')}
             </Label>
             <div className="col-span-3 space-y-2">
               <div className="flex justify-end">
@@ -382,7 +402,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
                   targetLanguage="en"
                   getText={() => name}
                   onTranslated={setNameEn}
-                  label="İsmi EN'ye çevir"
+                  label={t('translateNameEn')}
                 />
               </div>
               <Input
@@ -391,13 +411,13 @@ export function EditToolDialog({ tool, categories, allTags }) {
                 value={nameEn}
                 onChange={(event) => setNameEn(event.target.value)}
                 maxLength={100}
-                placeholder="English name (optional)"
+                placeholder={t('englishNamePlaceholder')}
               />
             </div>
           </div>
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor={`description-en-${tool.id}`} className="pt-2 text-right">
-              Açıklama (EN)
+              {t('descriptionEn')}
             </Label>
             <div className="col-span-3">
               <div className="mb-2 flex justify-end">
@@ -406,7 +426,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
                   targetLanguage="en"
                   getText={() => description}
                   onTranslated={setDescriptionEn}
-                  label="Açıklamayı EN'ye çevir"
+                  label={t('translateDescriptionEn')}
                 />
               </div>
               <Textarea
@@ -416,13 +436,13 @@ export function EditToolDialog({ tool, categories, allTags }) {
                 onChange={(event) => setDescriptionEn(event.target.value)}
                 className="min-h-24"
                 maxLength={1200}
-                placeholder="English description (optional)"
+                placeholder={t('englishDescriptionPlaceholder')}
               />
             </div>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="category_id" className="text-right">
-              Kategori
+              {t('category')}
             </Label>
             <select
               name="category_id"
@@ -441,7 +461,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
           {tool.category_note ? (
             <div className="grid grid-cols-4 items-start gap-4">
               <Label htmlFor="category_note" className="text-right pt-2">
-                Kategori notu
+                {t('categoryNote')}
               </Label>
               <Textarea
                 id="category_note"
@@ -449,14 +469,13 @@ export function EditToolDialog({ tool, categories, allTags }) {
                 defaultValue={tool.category_note || ''}
                 maxLength={200}
                 className="col-span-3 min-h-16"
-                placeholder="Kullanıcının “Diğer” kategorisi için verdiği açıklama"
+                placeholder={t('categoryNotePlaceholder')}
               />
             </div>
           ) : null}
-          {/* YENİ: Fiyatlandırma Modeli */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="pricing_model" className="text-right">
-              Fiyatlandırma
+              {t('pricingModel')}
             </Label>
             <select
               name="pricing_model"
@@ -465,36 +484,36 @@ export function EditToolDialog({ tool, categories, allTags }) {
               onChange={(event) => setPricingModel(event.target.value)}
               className="col-span-3 mt-1 block w-full pl-3 pr-10 py-2.5 text-base border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <option value="">Seçilmedi</option>
+              <option value="">{t('notSelected')}</option>
               {pricingModels.map((model) => (
-                <option key={model} value={model}>
-                  {model}
+                <option key={model.value} value={model.value}>
+                  {tPricing(model.key)}
                 </option>
               ))}
             </select>
           </div>
           {/* YENİ: Desteklenen Platformlar */}
           <div className="grid grid-cols-4 items-start gap-4">
-            <Label className="text-right pt-2">Platformlar</Label>
+            <Label className="text-right pt-2">{t('platforms')}</Label>
             <div className="col-span-3 grid grid-cols-2 gap-2">
               {platformOptions.map((platform) => (
-                <div key={platform} className="flex items-center space-x-2">
+                <div key={platform.value} className="flex items-center space-x-2">
                   <Checkbox
-                    id={`platform-${platform}`}
+                    id={`platform-${platform.value}`}
                     name="platforms"
-                    value={platform}
-                    checked={selectedPlatforms.has(platform)}
+                    value={platform.value}
+                    checked={selectedPlatforms.has(platform.value)}
                     onCheckedChange={(checked) =>
                       setSelectedPlatforms((current) => {
                         const next = new Set(current);
-                        if (checked) next.add(platform);
-                        else next.delete(platform);
+                        if (checked) next.add(platform.value);
+                        else next.delete(platform.value);
                         return next;
                       })
                     }
                   />
-                  <Label htmlFor={`platform-${platform}`} className="text-sm font-normal">
-                    {platform}
+                  <Label htmlFor={`platform-${platform.value}`} className="text-sm font-normal">
+                    {platform.key ? t(platform.key) : platform.label}
                   </Label>
                 </div>
               ))}
@@ -502,17 +521,18 @@ export function EditToolDialog({ tool, categories, allTags }) {
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="tags" className="text-right">
-              Etiketler
+              {t('tags')}
             </Label>
             <MultiSelectTags
               allTags={allTags}
               initialSelectedTags={(tool.tool_tags || []).map((tt) => tt.tags).filter(Boolean)}
+              t={t}
             />
           </div>
           {/* YENİ: Araç Seviyesi */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="tier" className="text-right">
-              Seviye
+              {t('tier')}
             </Label>
             <select
               name="tier"
@@ -522,8 +542,8 @@ export function EditToolDialog({ tool, categories, allTags }) {
               className="col-span-3 mt-1 block w-full pl-3 pr-10 py-2.5 text-base border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {tierOptions.map((tier) => (
-                <option key={tier} value={tier}>
-                  {tier}
+                <option key={tier.value} value={tier.value}>
+                  {t(tier.key)}
                 </option>
               ))}
             </select>
@@ -534,17 +554,17 @@ export function EditToolDialog({ tool, categories, allTags }) {
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
-                İptal
+                {t('cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" disabled={!canSave}>
               {isSaving ? (
                 <>
                   <LoaderCircle aria-hidden="true" className="mr-2 h-4 w-4 animate-spin" />
-                  Kaydediliyor…
+                  {t('saving')}
                 </>
               ) : (
-                'Değişiklikleri Kaydet'
+                t('saveChanges')
               )}
             </Button>
           </DialogFooter>
