@@ -49,6 +49,7 @@ export function HomepageClient({
   customHeader,
 }) {
   const t = useTranslations('Homepage');
+  const tPricing = useTranslations('Pricing');
   const locale = useLocale();
   const {
     user,
@@ -145,10 +146,16 @@ export function HomepageClient({
 
     const pricing = searchParams.get('pricing');
     if (pricing) {
+      const pricingLabels = {
+        Ücretsiz: tPricing('free'),
+        Freemium: tPricing('freemium'),
+        Abonelik: tPricing('subscription'),
+        'Tek Seferlik Ödeme': tPricing('oneTime'),
+      };
       addFilter({
         key: 'pricing',
         value: pricing,
-        label: t('filterPricing', { value: pricing }),
+        label: t('filterPricing', { value: pricingLabels[pricing] || pricing }),
       });
     }
 
@@ -159,7 +166,9 @@ export function HomepageClient({
         addFilter({
           key: 'platforms',
           value: platform,
-          label: t('filterPlatform', { value: platform }),
+          label: t('filterPlatform', {
+            value: platform === 'Chrome Uzantısı' ? t('platformChromeExt') : platform,
+          }),
           multiValue: true,
         })
       );
@@ -174,7 +183,17 @@ export function HomepageClient({
     }
 
     return filters;
-  }, [allTags, categories, locale, pathname, searchParams, searchParamsString, sortLabels, t]);
+  }, [
+    allTags,
+    categories,
+    locale,
+    pathname,
+    searchParams,
+    searchParamsString,
+    sortLabels,
+    t,
+    tPricing,
+  ]);
 
   const hasUserFilters = activeFilters.length > 0;
 

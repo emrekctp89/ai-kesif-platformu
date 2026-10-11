@@ -81,7 +81,7 @@ export default function ToolCard({ tool }) {
   const getBadgeText = () => {
     if (tool.is_promoted) return tc('promoted');
     if (tool.tier === 'Sponsorlu') return tc('promoted');
-    if (tool.is_featured) return 'Öne Çıkan';
+    if (tool.is_featured) return tc('featured');
     if (tool.tier === 'Pro') return tc('pro');
     return tool.tier;
   };

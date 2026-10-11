@@ -205,7 +205,15 @@ export async function submitTool(formData) {
     );
   }
 
-  const allowedPlatforms = ['Web', 'iOS', 'Android', 'Windows', 'macOS', 'Linux', 'Chrome Uzantısı'];
+  const allowedPlatforms = [
+    'Web',
+    'iOS',
+    'Android',
+    'Windows',
+    'macOS',
+    'Linux',
+    'Chrome Uzantısı',
+  ];
   if (platforms.some((platform) => !allowedPlatforms.includes(platform))) {
     return redirect(`/submit?message=${encodeURIComponent('Geçersiz platform seçimi.')}`);
   }
@@ -1903,7 +1911,7 @@ export async function getRandomTool() {
   return redirect(`/tool/${data.slug}`);
 }
 
-export async function fetchMoreTools({ page = 0, searchParams }) {
+export async function fetchMoreTools({ page = 0, searchParams, locale = 'tr' }) {
   'use server';
 
   const supabase = await createClient(await cookies());
@@ -1943,8 +1951,30 @@ export async function fetchMoreTools({ page = 0, searchParams }) {
     return [];
   }
 
+  let localizedById = new Map();
+  if (locale === 'en' && tools.length > 0) {
+    const { data: localizedRows, error: localizedError } = await supabase
+      .from('tools')
+      .select('id, name_en, description_en')
+      .in(
+        'id',
+        tools.map((tool) => tool.id)
+      );
+    if (localizedError) {
+      logger.warn('Homepage English tool fields could not be loaded:', localizedError);
+    } else {
+      localizedById = new Map((localizedRows || []).map((row) => [String(row.id), row]));
+    }
+  }
+
   const mappedTools = tools.map((tool) => ({
     ...tool,
+    ...(locale === 'en'
+      ? {
+          name: localizedById.get(String(tool.id))?.name_en || tool.name,
+          description: localizedById.get(String(tool.id))?.description_en || tool.description,
+        }
+      : {}),
     popularity_score: Number(tool.popularity_score) || 0,
   }));
 
@@ -2284,13 +2314,13 @@ export async function upsertRating(formData) {
   return { success: 'Puanınız başarıyla kaydedildi.' };
 }
 
-export async function getSearchSuggestions(query) {
+export async function getSearchSuggestions(query, locale = 'tr') {
   'use server';
   if (!query || query.length < 2) return [];
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('tools')
-    .select('id, name, slug, link, tier, categories(name, slug)')
+    .select('id, name, name_en, slug, link, tier, categories(name, slug)')
     .eq('is_approved', true)
     .ilike('name', `%${query}%`)
     .limit(5);
@@ -2300,6 +2330,7 @@ export async function getSearchSuggestions(query) {
   }
   return (data || []).map((tool) => ({
     ...tool,
+    name: locale === 'en' && tool.name_en ? tool.name_en : tool.name,
     category_name: tool.categories?.name || null,
     category_slug: tool.categories?.slug || null,
     categories: undefined,

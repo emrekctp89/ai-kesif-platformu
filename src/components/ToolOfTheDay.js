@@ -1,4 +1,4 @@
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { getCategoryLabel } from '@/lib/categoryLocalization';
 import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
@@ -26,11 +26,27 @@ async function getToolOfTheDayData() {
 
 export async function ToolOfTheDay() {
   const locale = await getLocale();
-  const tool = await getToolOfTheDayData();
+  const t = await getTranslations({ locale, namespace: 'Homepage' });
+  const rawTool = await getToolOfTheDayData();
 
   // Eğer günün aracı bulunamazsa, bu bölümü hiç gösterme
-  if (!tool) {
+  if (!rawTool) {
     return null;
+  }
+
+  let tool = rawTool;
+  if (locale === 'en') {
+    const supabase = await createClient(await cookies());
+    const { data: localized } = await supabase
+      .from('tools')
+      .select('name_en, description_en')
+      .eq('id', rawTool.id)
+      .maybeSingle();
+    tool = {
+      ...rawTool,
+      name: localized?.name_en || rawTool.name,
+      description: localized?.description_en || rawTool.description,
+    };
   }
 
   return (
@@ -43,7 +59,7 @@ export async function ToolOfTheDay() {
           <div className="space-y-5">
             <div className="brand-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold shadow-inner">
               <Zap className="h-4 w-4 animate-bounce" aria-hidden="true" />
-              <span>GÜNÜN ARACI</span>
+              <span>{t('toolOfDayBadge')}</span>
             </div>
             <h2
               id="tool-of-the-day-heading"
@@ -77,11 +93,11 @@ export async function ToolOfTheDay() {
                   }}
                   className="font-semibold px-8"
                 >
-                  İncele & Keşfet
+                  {t('exploreTool')}
                 </TrackedExternalLink>
               </Button>
               <Button asChild variant="outline" size="lg" className="w-full sm:w-auto glass-button">
-                <Link href={`/tool/${tool.slug}`}>Detayları Gör</Link>
+                <Link href={`/tool/${tool.slug}`}>{t('viewDetails')}</Link>
               </Button>
             </div>
           </div>
@@ -89,7 +105,7 @@ export async function ToolOfTheDay() {
           <div className="hidden md:flex flex-col items-end justify-center">
             <div className="glass-panel p-6 rounded-2xl w-full max-w-sm backdrop-blur-xl">
               <p className="text-sm font-semibold mb-2 text-muted-foreground uppercase tracking-wider">
-                Kategori
+                {t('categoryLabel')}
               </p>
               <Link href={`/kategori/${tool.category_slug}`}>
                 <Badge className="text-sm py-1.5 px-3 bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer text-secondary-foreground">
@@ -100,7 +116,7 @@ export async function ToolOfTheDay() {
               {tool.tags && tool.tags.length > 0 && (
                 <>
                   <p className="text-sm font-semibold mt-6 mb-2 text-muted-foreground uppercase tracking-wider">
-                    Öne Çıkan Etiketler
+                    {t('featuredTags')}
                   </p>
                   <div className="flex flex-wrap gap-2 justify-start">
                     {tool.tags.slice(0, 5).map((tag) => (

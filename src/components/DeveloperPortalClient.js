@@ -66,7 +66,7 @@ function writeStoredSandboxKey(value) {
   }
 }
 
-export function DeveloperPortalClient() {
+export function DeveloperPortalClient({ isAuthenticated = false }) {
   const t = useTranslations('DeveloperPage');
   const locale = useLocale();
   const dateLocale = locale === 'en' ? 'en-US' : 'tr-TR';
@@ -77,6 +77,7 @@ export function DeveloperPortalClient() {
   const [newKeyName, setNewKeyName] = useState('');
   const [generating, setGenerating] = useState(false);
   const [newRawKey, setNewRawKey] = useState(null);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   // Sandbox state
   const [sandboxKey, setSandboxKey] = useState('');
@@ -118,7 +119,8 @@ export function DeveloperPortalClient() {
 
   useEffect(() => {
     setSandboxKey(readStoredSandboxKey());
-    fetchKeys();
+    if (isAuthenticated) fetchKeys();
+    else setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only bootstrap
   }, []);
 
@@ -147,6 +149,10 @@ export function DeveloperPortalClient() {
 
   const handleGenerate = async (e) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
     if (!newKeyName.trim()) {
       toast.error(t('keyNameRequired'));
       return;
@@ -170,6 +176,10 @@ export function DeveloperPortalClient() {
   };
 
   const handleRevoke = async (id) => {
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
     if (!confirm(t('revokeConfirm'))) return;
 
     try {
@@ -196,6 +206,10 @@ export function DeveloperPortalClient() {
   };
 
   const runSandbox = async () => {
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
     const key = sandboxKey.trim();
     if (!key.startsWith('aik_')) {
       toast.error(t('sandboxKeyRequired'));
@@ -294,7 +308,7 @@ export function DeveloperPortalClient() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
-      <Card className="border-primary/20 bg-primary/5">
+      <Card id="quick-start" className="scroll-mt-24 border-primary/20 bg-primary/5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -521,9 +535,7 @@ export function DeveloperPortalClient() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() =>
-                    handleCopy(JSON.stringify(sandboxResult.body, null, 2))
-                  }
+                  onClick={() => handleCopy(JSON.stringify(sandboxResult.body, null, 2))}
                 >
                   <Copy className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
                   {t('copied')}
@@ -534,7 +546,7 @@ export function DeveloperPortalClient() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="api-keys" className="scroll-mt-24">
         <CardHeader>
           <CardTitle>{t('createKeyTitle')}</CardTitle>
           <CardDescription>{t('createKeyDescription')}</CardDescription>
@@ -569,7 +581,15 @@ export function DeveloperPortalClient() {
           <CardDescription>{t('listDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {!isAuthenticated ? (
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 text-sm">
+              <p className="font-semibold">{t('keysLoginTitle')}</p>
+              <p className="mt-1 text-muted-foreground">{t('keysLoginBody')}</p>
+              <Button type="button" className="mt-4" onClick={() => setShowLoginPrompt(true)}>
+                {t('loginFreeCta')}
+              </Button>
+            </div>
+          ) : loading ? (
             <p className="text-muted-foreground">{t('loading')}</p>
           ) : keys.length === 0 ? (
             <p className="text-muted-foreground">{t('emptyKeys')}</p>
@@ -655,6 +675,29 @@ export function DeveloperPortalClient() {
             >
               <FlaskConical className="mr-2 h-4 w-4" aria-hidden="true" />
               {t('dialogUseInSandbox')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('loginPromptTitle')}</DialogTitle>
+            <DialogDescription>{t('loginPromptBody')}</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" onClick={() => setShowLoginPrompt(false)}>
+              {t('loginPromptCancel')}
+            </Button>
+            <Button asChild>
+              <a
+                href={`${locale === 'en' ? '/en' : ''}/login?next=${encodeURIComponent(
+                  locale === 'en' ? '/en/developer' : '/developer'
+                )}`}
+              >
+                {t('loginFreeCta')}
+              </a>
             </Button>
           </div>
         </DialogContent>
