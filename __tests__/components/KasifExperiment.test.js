@@ -132,6 +132,19 @@ describe('Kâşif ekranı', () => {
     expect(screen.getByText('26/800')).toBeInTheDocument();
   });
 
+  it('uzman öneri ve karşılaştırma akışlarını kendi araçlarına yönlendirir', () => {
+    render(<KasifExperiment />);
+
+    expect(screen.getByRole('link', { name: 'Bana en uygun AI aracını öner' })).toHaveAttribute(
+      'href',
+      '/tavsiye'
+    );
+    expect(screen.getByRole('link', { name: 'AI araçlarını karşılaştır' })).toHaveAttribute(
+      'href',
+      '/karsilastir'
+    );
+  });
+
   it('boş durumda platform sorusu örneklerini gösterir', () => {
     render(<KasifExperiment />);
 

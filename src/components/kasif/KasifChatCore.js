@@ -44,8 +44,8 @@ import { trackEvent } from '@/utils/analytics';
 import { cn } from '@/lib/utils';
 
 const STARTER_QUESTIONS = [
-  { key: 'recommend', icon: Sparkles, featured: true },
-  { key: 'compare', icon: GitCompareArrows, featured: true },
+  { key: 'recommend', icon: Sparkles, featured: true, href: '/tavsiye' },
+  { key: 'compare', icon: GitCompareArrows, featured: true, href: '/karsilastir' },
   { key: 'presentation', icon: Presentation },
   { key: 'image', icon: ImageIcon },
   { key: 'code', icon: Code2 },
@@ -598,47 +598,69 @@ export function KasifChatCore({
             question: item.question,
             Icon: STARTER_ICON_BY_ID[item.id] || Sparkles,
           }))
-        : STARTER_QUESTIONS.slice(0, limit).map(({ key, icon: Icon, featured }) => ({
+        : STARTER_QUESTIONS.slice(0, limit).map(({ key, icon: Icon, featured, href }) => ({
             key,
             label: t(`starters.${key}.label`),
             question: t(`starters.${key}.question`),
             Icon,
             featured,
+            href: href ? (locale === 'tr' ? href : `/${locale}${href}`) : undefined,
           }));
 
-    return chips.map(({ key, label, question, Icon, featured }) => (
-      <button
-        key={`${prefix}-${key}`}
-        type="button"
-        onClick={() =>
-          chooseStarterQuestion(question, {
-            autoAsk,
-            fromSoftLanding,
-            softLandingStarter: key,
-          })
-        }
-        className={
-          autoAsk
-            ? 'inline-flex min-h-8 items-center gap-1.5 rounded-full border border-violet-500/20 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50'
-            : featured
-              ? 'group flex min-h-20 items-center gap-3 rounded-2xl border border-primary/30 bg-gradient-to-br from-cyan-500/15 via-violet-500/10 to-fuchsia-500/15 px-4 py-3 text-left text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:col-span-1 lg:col-span-1'
-              : 'flex min-h-12 items-center gap-2 rounded-xl border bg-background px-3 py-2 text-left text-sm font-medium transition-colors hover:border-primary/50 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-        }
-        disabled={loading}
-      >
-        <Icon
-          className={
-            autoAsk
-              ? 'h-3.5 w-3.5 text-primary'
-              : featured
-                ? 'h-6 w-6 shrink-0 text-primary transition-transform group-hover:scale-110'
-                : 'h-4 w-4 shrink-0 text-primary'
+    return chips.map(({ key, label, question, Icon, featured, href }) => {
+      const className = autoAsk
+        ? 'inline-flex min-h-8 items-center gap-1.5 rounded-full border border-violet-500/20 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50'
+        : featured
+          ? 'group flex min-h-20 items-center gap-3 rounded-2xl border border-primary/30 bg-gradient-to-br from-cyan-500/15 via-violet-500/10 to-fuchsia-500/15 px-4 py-3 text-left text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:col-span-1 lg:col-span-1'
+          : 'flex min-h-12 items-center gap-2 rounded-xl border bg-background px-3 py-2 text-left text-sm font-medium transition-colors hover:border-primary/50 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+      const content = (
+        <>
+          <Icon
+            className={
+              autoAsk
+                ? 'h-3.5 w-3.5 text-primary'
+                : featured
+                  ? 'h-6 w-6 shrink-0 text-primary transition-transform group-hover:scale-110'
+                  : 'h-4 w-4 shrink-0 text-primary'
+            }
+            aria-hidden="true"
+          />
+          {label}
+        </>
+      );
+
+      if (href) {
+        return (
+          <Link
+            key={`${prefix}-${key}`}
+            href={href}
+            prefetch={false}
+            className={className}
+            onClick={() => trackEvent('kasif_specialist_flow_opened', { flow: key })}
+          >
+            {content}
+          </Link>
+        );
+      }
+
+      return (
+        <button
+          key={`${prefix}-${key}`}
+          type="button"
+          onClick={() =>
+            chooseStarterQuestion(question, {
+              autoAsk,
+              fromSoftLanding,
+              softLandingStarter: key,
+            })
           }
-          aria-hidden="true"
-        />
-        {label}
-      </button>
-    ));
+          className={className}
+          disabled={loading}
+        >
+          {content}
+        </button>
+      );
+    });
   }
 
   const Wrapper = compact ? 'div' : 'main';
