@@ -14,14 +14,14 @@ import { getSiteOrigin } from '@/utils/siteUrl';
 const siteUrl = getSiteOrigin();
 
 // Bu fonksiyon, sayfa için gerekli olan tüm verileri sunucuda tek seferde çeker.
-async function getPageData(searchParams) {
+async function getPageData(searchParams, locale) {
   const supabase = await createClient(await cookies());
 
   const { fetchMoreTools } = await import('@/app/actions');
   const [authResult, initialTools, categoriesResult, tagsResult, toolsCountResult] =
     await Promise.all([
       supabase.auth.getUser(),
-      fetchMoreTools({ page: 0, searchParams }),
+      fetchMoreTools({ page: 0, searchParams, locale }),
       supabase.from('categories').select('name, slug').order('name'),
       supabase.from('tags').select('id, name').order('name'),
       supabase.from('tools').select('id', { count: 'exact', head: true }).eq('is_approved', true),
@@ -61,7 +61,7 @@ export default async function HomePage(props) {
   const homepageUrl = isEnglish ? `${siteUrl}/en` : `${siteUrl}/`;
 
   // Tüm verileri sunucuda çekiyoruz
-  const initialData = await getPageData(resolvedSearchParams);
+  const initialData = await getPageData(resolvedSearchParams, locale);
 
   // Keşif sırası: Günün aracı → Öne çıkan → Trendler → Kategoriler (kompakt)
   // Keys: RSC → Client prop geçişinde React list uyarısını önler.

@@ -1,6 +1,5 @@
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import {
   ArrowRight,
   Bot,
@@ -37,10 +36,6 @@ export default async function DeveloperPage({ params }) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect(`/login?next=/developer&message=${encodeURIComponent(t('loginRequired'))}`);
-  }
 
   const flow = [
     { icon: KeyRound, title: t('flowKeyTitle'), body: t('flowKeyBody') },
@@ -96,6 +91,10 @@ export default async function DeveloperPage({ params }) {
                 <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                 {t('docsHint')}
               </p>
+              <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                {t('freeAccessNote')}
+              </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <a
                   href="#quick-start"
@@ -121,7 +120,10 @@ export default async function DeveloperPage({ params }) {
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
             {t('flowEyebrow')}
           </p>
-          <h2 id="developer-flow-title" className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+          <h2
+            id="developer-flow-title"
+            className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl"
+          >
             {t('flowTitle')}
           </h2>
           <p className="mt-2 text-muted-foreground">{t('flowDescription')}</p>
@@ -130,7 +132,10 @@ export default async function DeveloperPage({ params }) {
           {flow.map((step, index) => {
             const Icon = step.icon;
             return (
-              <article key={step.title} className="relative rounded-2xl border bg-card p-5 shadow-sm">
+              <article
+                key={step.title}
+                className="relative rounded-2xl border bg-card p-5 shadow-sm"
+              >
                 <div className="mb-4 flex items-center justify-between">
                   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <Icon className="h-5 w-5" aria-hidden="true" />
@@ -179,11 +184,16 @@ export default async function DeveloperPage({ params }) {
             <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
             <h2 className="text-xl font-bold">{t('productionTitle')}</h2>
           </div>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('productionDescription')}</p>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            {t('productionDescription')}
+          </p>
           <ul className="mt-5 space-y-4">
             {productionRules.map((rule) => (
               <li key={rule} className="flex gap-3 text-sm leading-6">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+                <CheckCircle2
+                  className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
+                  aria-hidden="true"
+                />
                 <span>{t(`production${rule.charAt(0).toUpperCase()}${rule.slice(1)}`)}</span>
               </li>
             ))}
@@ -196,7 +206,7 @@ export default async function DeveloperPage({ params }) {
       </section>
 
       <div className="rounded-3xl border border-border/50 bg-card/40 p-4 glass-panel sm:p-6">
-        <DeveloperPortalClient />
+        <DeveloperPortalClient isAuthenticated={Boolean(user)} />
       </div>
     </div>
   );

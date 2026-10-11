@@ -76,7 +76,7 @@ export function SearchInput() {
         }
 
         try {
-          const results = await getSearchSuggestions(normalizedValue);
+          const results = await getSearchSuggestions(normalizedValue, locale);
           if (requestIdRef.current !== requestId) return;
 
           const safeResults = Array.isArray(results) ? results : [];
@@ -89,7 +89,7 @@ export function SearchInput() {
         }
       }, 300);
     },
-    [closeSuggestions]
+    [closeSuggestions, locale]
   );
 
   const handleChange = (event) => {

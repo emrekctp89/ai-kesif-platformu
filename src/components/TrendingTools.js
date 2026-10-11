@@ -1,4 +1,4 @@
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { getCategoryLabel } from '@/lib/categoryLocalization';
 import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
@@ -25,7 +25,25 @@ async function getTrendingData() {
  */
 export async function TrendingTools({ emptyMode = 'hide' } = {}) {
   const locale = await getLocale();
-  const trendingTools = await getTrendingData();
+  const t = await getTranslations({ locale, namespace: 'Homepage' });
+  const rawTrendingTools = await getTrendingData();
+  let trendingTools = rawTrendingTools;
+
+  if (locale === 'en' && rawTrendingTools?.length) {
+    const supabase = await createClient(await cookies());
+    const { data: localizedRows } = await supabase
+      .from('tools')
+      .select('id, name_en')
+      .in(
+        'id',
+        rawTrendingTools.map((tool) => tool.id)
+      );
+    const localizedById = new Map((localizedRows || []).map((row) => [String(row.id), row]));
+    trendingTools = rawTrendingTools.map((tool) => ({
+      ...tool,
+      name: localizedById.get(String(tool.id))?.name_en || tool.name,
+    }));
+  }
 
   if (!trendingTools || trendingTools.length === 0) {
     if (emptyMode === 'message') {
@@ -50,11 +68,9 @@ export async function TrendingTools({ emptyMode = 'hide' } = {}) {
             className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground"
           >
             <Flame className="h-7 w-7 text-orange-500" aria-hidden="true" />
-            Haftanın Trendleri
+            {t('trendingTitle')}
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Son günlerde en çok favoriye eklenen araçlar
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{t('trendingSubtitle')}</p>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
@@ -76,7 +92,9 @@ export async function TrendingTools({ emptyMode = 'hide' } = {}) {
                 </p>
                 <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span aria-hidden="true">🔥</span>
-                  <span className="font-bold">{tool.favorite_count} favori</span>
+                  <span className="font-bold">
+                    {t('favoriteCount', { count: tool.favorite_count })}
+                  </span>
                 </div>
               </CardContent>
             </Card>

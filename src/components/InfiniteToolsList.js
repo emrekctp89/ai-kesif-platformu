@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { getCategoryLabel } from '@/lib/categoryLocalization';
 
 import logger from '@/utils/logger';
@@ -69,6 +69,7 @@ function getPopularityScore(tool) {
 // -----------------------------
 export default function ToolCard({ tool }) {
   const locale = useLocale();
+  const t = useTranslations('Homepage');
   // router'a artık burada ihtiyacımız yok.
   // const router = useRouter();
   if (!tool || !tool.name) return null;
@@ -197,7 +198,7 @@ export default function ToolCard({ tool }) {
               }
               className="px-2 py-1 sm:px-3"
             >
-              Detayları İncele
+              {t('viewDetails')}
               <ArrowRight aria-hidden="true" className="ml-1.5 h-4 w-4" />
             </Link>
           </Button>
@@ -217,6 +218,8 @@ export function InfiniteToolsList({
   fixedSearchParams,
   hasUserFilters,
 }) {
+  const locale = useLocale();
+  const t = useTranslations('Homepage');
   const [tools, setTools] = useState(initialTools || []);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialTools?.length > 0);
@@ -238,7 +241,7 @@ export function InfiniteToolsList({
     };
 
     try {
-      const newTools = await fetchMoreTools({ page, searchParams: paramsAsObject });
+      const newTools = await fetchMoreTools({ page, searchParams: paramsAsObject, locale });
 
       if (newTools?.length) {
         setPage((prev) => prev + 1);
@@ -260,7 +263,7 @@ export function InfiniteToolsList({
     } finally {
       setIsLoading(false);
     }
-  }, [fixedSearchParams, page, searchParams]);
+  }, [fixedSearchParams, locale, page, searchParams]);
 
   useEffect(() => {
     if (inView && hasMore && !isLoading && !loadError) {
@@ -286,14 +289,10 @@ export function InfiniteToolsList({
             <SearchX aria-hidden="true" className="h-7 w-7 text-muted-foreground" />
           </div>
           <h2 className="mt-5 text-xl font-bold tracking-tight">
-            {hasUserFilters
-              ? 'Bu ölçütlerle araç bulunamadı'
-              : 'Henüz gösterilecek araç bulunmuyor'}
+            {hasUserFilters ? t('emptyFilteredTitle') : t('emptyGeneralTitle')}
           </h2>
           <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
-            {hasUserFilters
-              ? 'Arama ifadesini kısaltmayı veya bazı filtreleri kaldırmayı deneyebilirsin.'
-              : 'Araç listesi güncelleniyor. Biraz sonra tekrar kontrol edebilirsin.'}
+            {hasUserFilters ? t('emptyFilteredBody') : t('emptyGeneralBody')}
           </p>
 
           {hasUserFilters && (
@@ -301,7 +300,7 @@ export function InfiniteToolsList({
               <Button asChild>
                 <Link href={pathname} scroll={false}>
                   <X aria-hidden="true" className="mr-2 h-4 w-4" />
-                  Arama ve filtreleri temizle
+                  {t('clearSearchAndFilters')}
                 </Link>
               </Button>
               <Button asChild className="ai-tavsiye-gradient shadow-md">
@@ -315,7 +314,7 @@ export function InfiniteToolsList({
                   }
                 >
                   <WandSparkles aria-hidden="true" className="mr-2 h-4 w-4" />
-                  AI ile araç bul
+                  {t('aiRecommend')}
                 </Link>
               </Button>
             </div>
@@ -337,7 +336,7 @@ export function InfiniteToolsList({
 
       {hasMore && !loadError && (
         <div ref={ref} className="col-span-full mt-8" role="status" aria-live="polite">
-          <span className="sr-only">Daha fazla araç yükleniyor</span>
+          <span className="sr-only">{t('loadingMore')}</span>
           <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-8">
             <ToolCardSkeleton key="skeleton-1" />
             <ToolCardSkeleton key="skeleton-2" />
@@ -351,9 +350,7 @@ export function InfiniteToolsList({
           role="alert"
           className="col-span-full mt-8 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed bg-muted/20 px-5 py-8 text-center"
         >
-          <p className="text-sm text-muted-foreground">
-            Daha fazla araç yüklenirken bir sorun oluştu.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('loadMoreError')}</p>
           <Button
             type="button"
             variant="outline"
@@ -363,7 +360,7 @@ export function InfiniteToolsList({
             }}
             disabled={isLoading}
           >
-            Tekrar dene
+            {t('retry')}
           </Button>
         </div>
       )}
