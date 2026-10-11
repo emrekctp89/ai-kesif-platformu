@@ -2080,6 +2080,14 @@
     "proactivePreferenceSaving": "Tercih kaydediliyor…",
     "startersDescription": "Bir örnek seçebilir veya ihtiyacını aşağıya kendi cümlelerinle yazabilirsin.",
     "starters": {
+      "recommend": {
+        "label": "Bana en uygun AI aracını öner",
+        "question": "İhtiyacımı anlatacağım; bana en uygun AI araçlarını nedenleriyle öner. Önce karar vermen için gereken kısa soruları sor."
+      },
+      "compare": {
+        "label": "AI araçlarını karşılaştır",
+        "question": "Kararsız kaldığım AI araçlarını ihtiyaçlarıma göre karşılaştırmama yardım et. Önce araçları ve önceliklerimi sor."
+      },
       "presentation": {
         "label": "Platformu tanı",
         "question": "Bu platform nasıl çalışır?"

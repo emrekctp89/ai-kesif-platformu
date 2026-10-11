@@ -11,6 +11,7 @@ import { NotificationCenter } from './NotificationCenter';
 import { UserNav } from './UserNav';
 import { MobileNav } from './MobileNav';
 import { CommandPalette } from './CommandPalette';
+import { FutureAiGlyph } from './FutureAiGlyph';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,13 +43,10 @@ export function HeaderNav({
     { href: '/ogren', label: t('learn'), emphasize: true },
     { href: '/workmind', label: t('workmind'), emphasize: true },
     { href: '/blog', label: t('blog'), className: 'hidden lg:inline' },
-    { href: '/karsilastir', label: t('compare'), className: 'hidden xl:inline' },
   ];
 
   const moreExplore = filterNavLinks(
     [
-      { href: '/kasif', label: t('kasif') },
-      { href: '/tavsiye', label: t('aiRecommend') },
       { href: '/bulten', label: t('newsletter') },
       // Paused for now — kept listed only if flags re-enabled in navFeatures:
       { href: '/kesfet', label: t('discover') },
@@ -153,9 +151,13 @@ export function HeaderNav({
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <CommandPalette />
         <div className="hidden items-center gap-2 sm:flex">
-          <Button asChild className="ai-tavsiye-gradient font-semibold shadow-md">
-            <Link href="/tavsiye" prefetch={false}>
-              {t('aiRecommend')}
+          <Button
+            asChild
+            className="bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-500 font-semibold text-white shadow-md transition hover:brightness-110"
+          >
+            <Link href="/kasif" prefetch={false} className="gap-2">
+              <FutureAiGlyph className="h-5 w-5" />
+              {t('kasif')}
             </Link>
           </Button>
           <Button asChild variant="secondary">

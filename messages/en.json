@@ -2080,6 +2080,14 @@
     "proactivePreferenceSaving": "Saving preference…",
     "startersDescription": "Choose an example or describe what you need in your own words below.",
     "starters": {
+      "recommend": {
+        "label": "Recommend the right AI tool",
+        "question": "I will describe my need; recommend the best-fitting AI tools with reasons. First ask the short questions you need to decide."
+      },
+      "compare": {
+        "label": "Compare AI tools",
+        "question": "Help me compare the AI tools I am considering against my needs. First ask which tools and priorities matter to me."
+      },
       "presentation": {
         "label": "About the platform",
         "question": "What is this platform?"

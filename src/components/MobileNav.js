@@ -4,11 +4,9 @@ import * as React from 'react';
 import {
   Menu,
   Bot,
-  Lightbulb,
   PlusCircle,
   Info,
   Mail,
-  GitCompareArrows,
   Newspaper,
   Crown,
   LogIn,
@@ -60,9 +58,7 @@ export function MobileNav({ user, isProUser }) {
           { href: '/kategori', label: t('categories'), icon: LayoutGrid },
           { href: '/ogren', label: t('learn'), icon: GraduationCap },
           { href: '/workmind', label: t('workmind'), icon: BrainCircuit },
-          { href: '/kasif', label: t('kasif'), icon: BrainCircuit },
-          { href: '/karsilastir', label: t('compare'), icon: GitCompareArrows },
-          { href: '/tavsiye', label: t('aiRecommend'), icon: Lightbulb },
+          { href: '/kasif', label: t('kasif'), icon: FutureAiGlyph, featuredKasif: true },
           { href: '/kesfet', label: t('discover'), icon: Bot },
           { href: '/random-tools', label: t('randomTools'), icon: Bot },
         ],
@@ -142,8 +138,7 @@ export function MobileNav({ user, isProUser }) {
                 {section.title}
               </p>
               <div className="flex flex-col gap-1">
-                {section.links.map(({ href, label, icon: Icon }) => {
-                  const isAiTavsiye = href === '/tavsiye';
+                {section.links.map(({ href, label, icon: Icon, featuredKasif }) => {
                   const isFeatured = href === '/ogren' || href === '/workmind';
                   return (
                     <Link
@@ -152,8 +147,8 @@ export function MobileNav({ user, isProUser }) {
                       prefetch={false}
                       onClick={() => setOpen(false)}
                       className={
-                        isAiTavsiye
-                          ? 'ai-tavsiye-gradient flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold shadow-md'
+                        featuredKasif
+                          ? 'flex min-h-12 items-center gap-3 rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-500 px-3 py-2.5 text-sm font-semibold text-white shadow-md'
                           : isFeatured
                             ? 'flex min-h-11 items-center gap-3 rounded-lg bg-primary/10 px-3 py-2 text-sm font-semibold text-foreground'
                             : 'flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
