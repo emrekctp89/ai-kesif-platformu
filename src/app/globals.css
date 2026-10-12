@@ -109,6 +109,44 @@
   @apply border-none bg-gradient-to-r from-blue-700 via-indigo-600 to-cyan-600 bg-[size:300%_auto] text-white animate-breathing-glow hover:opacity-95;
 }
 
+/* Kâşif: nötr düğme üzerinde yumuşakça akan gri yazı */
+.kasif-text-flow {
+  color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    #374151 0%,
+    #9ca3af 35%,
+    #e5e7eb 50%,
+    #6b7280 70%,
+    #374151 100%
+  );
+  background-size: 220% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: kasifTextFlow 3.6s ease-in-out infinite;
+}
+
+.dark .kasif-text-flow {
+  background-image: linear-gradient(90deg, #9ca3af 0%, #f3f4f6 42%, #6b7280 65%, #d1d5db 100%);
+}
+
+@keyframes kasifTextFlow {
+  0%,
+  100% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 0% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kasif-text-flow {
+    animation: none;
+    background-position: 50% 50%;
+  }
+}
+
 /* Yumuşak yüzey: kartlar / hero panelleri */
 .brand-surface {
   @apply border border-indigo-500/20 bg-gradient-to-br from-indigo-950/10 via-background to-purple-800/10;

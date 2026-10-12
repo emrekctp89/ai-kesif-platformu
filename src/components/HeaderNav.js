@@ -153,11 +153,12 @@ export function HeaderNav({
         <div className="hidden items-center gap-2 sm:flex">
           <Button
             asChild
-            className="bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-500 font-semibold text-white shadow-md transition hover:brightness-110"
+            variant="outline"
+            className="bg-background/70 font-semibold shadow-sm backdrop-blur-sm hover:bg-accent"
           >
             <Link href="/kasif" prefetch={false} className="gap-2">
               <SiteSearchIcon className="h-5 w-5" />
-              {t('kasif')}
+              <span className="kasif-text-flow">{t('kasif')}</span>
             </Link>
           </Button>
           <Button asChild variant="outline">

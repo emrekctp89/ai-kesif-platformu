@@ -149,14 +149,14 @@ export function MobileNav({ user, isProUser }) {
                       onClick={() => setOpen(false)}
                       className={
                         featuredKasif
-                          ? 'flex min-h-12 items-center gap-3 rounded-xl bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-500 px-3 py-2.5 text-sm font-semibold text-white shadow-md'
+                          ? 'flex min-h-12 items-center gap-3 rounded-xl border border-border bg-background/70 px-3 py-2.5 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-accent'
                           : isFeatured
                             ? 'flex min-h-11 items-center gap-3 rounded-lg bg-primary/10 px-3 py-2 text-sm font-semibold text-foreground'
                             : 'flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground'
                       }
                     >
                       <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                      {label}
+                      {featuredKasif ? <span className="kasif-text-flow">{label}</span> : label}
                     </Link>
                   );
                 })}
