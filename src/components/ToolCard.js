@@ -182,6 +182,7 @@ export default function ToolCard({ tool }) {
             >
               <TrackedExternalLink
                 href={tool.link}
+                toolId={tool.id}
                 target="_blank"
                 rel="noopener noreferrer"
                 eventName="official_site_click"

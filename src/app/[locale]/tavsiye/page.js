@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl';
 import toast from 'react-hot-toast';
 import { ArrowRight, CheckCircle2, LoaderCircle, Search, Sparkles } from 'lucide-react';
 
@@ -12,13 +13,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { trackEvent } from '@/utils/analytics';
 
-const examplePrompts = [
-  'Sosyal medya için hızlıca görsel ve kısa video üretmek istiyorum.',
-  'Kod yazarken hata bulmama ve açıklama üretmeme yardım edecek bir araç arıyorum.',
-  'Toplantı kayıtlarını Türkçe metne ve özetlere dönüştürmek istiyorum.',
-];
-
 export default function RecommendationPage() {
+  const locale = useLocale();
+  const t = useTranslations('Recommendation');
+  const examplePrompts = [t('examples.social'), t('examples.code'), t('examples.meetings')];
   const [prompt, setPrompt] = useState('');
   const [recommendations, setRecommendations] = useState([]);
   const [submittedPrompt, setSubmittedPrompt] = useState('');
@@ -29,7 +27,7 @@ export default function RecommendationPage() {
     const userPrompt = String(formData.get('prompt') || '').trim();
 
     if (userPrompt.length < 10) {
-      toast.error('İhtiyacınızı en az 10 karakterle anlatın.');
+      toast.error(t('validation'));
       return;
     }
 
@@ -42,7 +40,7 @@ export default function RecommendationPage() {
         const result = await getAiRecommendation(userPrompt);
 
         if (!result.success) {
-          toast.error(result.error || 'Tavsiye alınırken bir hata oluştu.');
+          toast.error(t('requestError'));
           setRecommendations([]);
           return;
         }
@@ -59,7 +57,7 @@ export default function RecommendationPage() {
           });
         });
       } catch {
-        toast.error('Sistem hatası oluştu. Lütfen tekrar deneyin.');
+        toast.error(t('systemError'));
         setRecommendations([]);
       }
     });
@@ -72,14 +70,13 @@ export default function RecommendationPage() {
         <div className="relative z-10">
           <div className="brand-chip mx-auto mb-4 flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
             <Sparkles aria-hidden="true" className="h-4 w-4" />
-            Kâşif araç eşleştirmesi
+            {t('eyebrow')}
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-            İhtiyacını anlat, doğru AI aracını bul
+            {t('title')}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-            Yapmak istediğin işi doğal bir dille yaz. Platformdaki araçları inceleyip sana en uygun
-            üç seçeneği ve nedenlerini sunalım.
+            {t('description')}
           </p>
         </div>
       </header>
@@ -91,7 +88,7 @@ export default function RecommendationPage() {
               <div className="grid w-full gap-2">
                 <div className="flex items-end justify-between gap-3">
                   <Label htmlFor="prompt-input" className="text-base font-semibold sm:text-lg">
-                    Ne yapmak istiyorsun?
+                    {t('promptLabel')}
                   </Label>
                   <span className="text-xs text-muted-foreground">{prompt.length}/800</span>
                 </div>
@@ -103,20 +100,19 @@ export default function RecommendationPage() {
                   maxLength={800}
                   minLength={10}
                   required
-                  placeholder="Örn. Haftalık ürün videoları hazırlamak istiyorum; tasarım deneyimim yok ve ücretsiz başlayabilmeliyim."
+                  placeholder={t('promptPlaceholder')}
                   className="min-h-[150px] resize-y text-base leading-7"
                   disabled={isPending}
                   aria-describedby="prompt-help"
                 />
                 <p id="prompt-help" className="text-xs text-muted-foreground">
-                  Kullanım amacı, deneyim seviyesi, bütçe veya platform gibi ayrıntılar daha
-                  isabetli sonuç verir.
+                  {t('promptHelp')}
                 </p>
               </div>
 
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Bir örnekle başla
+                  {t('examplesLabel')}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {examplePrompts.map((example, index) => (
@@ -127,7 +123,7 @@ export default function RecommendationPage() {
                       disabled={isPending}
                       className="min-h-10 rounded-full border bg-background px-3 py-2 text-left text-xs font-medium transition-colors hover:border-primary hover:bg-primary/5 disabled:opacity-50"
                     >
-                      Örnek {index + 1}
+                      {t('exampleButton', { number: index + 1 })}
                     </button>
                   ))}
                 </div>
@@ -142,32 +138,26 @@ export default function RecommendationPage() {
                 {isPending ? (
                   <>
                     <LoaderCircle aria-hidden="true" className="mr-2 h-5 w-5 animate-spin" />
-                    Araçlar inceleniyor...
+                    {t('loading')}
                   </>
                 ) : (
                   <>
                     <Search aria-hidden="true" className="mr-2 h-5 w-5" />
-                    Bana uygun araçları bul
+                    {t('submit')}
                   </>
                 )}
               </Button>
               <p className="text-center text-xs text-muted-foreground" aria-live="polite">
-                {isPending
-                  ? 'Platformdaki araçlar ihtiyacınıza göre karşılaştırılıyor.'
-                  : 'Sonuçlar genellikle birkaç saniye içinde hazırlanır.'}
+                {isPending ? t('loadingHint') : t('readyHint')}
               </p>
             </form>
           </CardContent>
         </Card>
 
         <aside className="rounded-2xl border border-border/50 bg-muted/30 p-5 glass-panel">
-          <h2 className="font-bold">Nasıl çalışır?</h2>
+          <h2 className="font-bold">{t('howTitle')}</h2>
           <ol className="mt-4 space-y-4 text-sm text-muted-foreground">
-            {[
-              'İhtiyacını ve önemli koşulları yaz.',
-              'Kâşif yalnızca platform kayıtlarından uygun araçları sıralasın.',
-              'Önerilerin detaylarını inceleyip karar ver.',
-            ].map((step, index) => (
+            {[t('steps.describe'), t('steps.match'), t('steps.review')].map((step, index) => (
               <li key={step} className="flex gap-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                   {index + 1}
@@ -177,8 +167,7 @@ export default function RecommendationPage() {
             ))}
           </ol>
           <p className="mt-5 border-t pt-4 text-xs leading-5 text-muted-foreground">
-            Tavsiyeler karar desteği sağlar. Fiyat ve özellikleri aracın resmî sitesinden
-            doğrulamanı öneririz.
+            {t('disclaimer')}
           </p>
         </aside>
       </div>
@@ -194,13 +183,13 @@ export default function RecommendationPage() {
             <div className="mb-5">
               <p className="flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
-                Eşleştirme tamamlandı
+                {t('completed')}
               </p>
               <h2 id="recommendation-results-heading" className="mt-2 text-2xl font-bold">
-                Sana uygun araçlar
+                {t('resultsTitle')}
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                “{submittedPrompt}” ihtiyacına göre sıralandı.
+                {t('resultsDescription', { prompt: submittedPrompt })}
               </p>
             </div>
 
@@ -212,7 +201,7 @@ export default function RecommendationPage() {
                 >
                   <CardHeader>
                     <p className="text-xs font-bold uppercase tracking-wide text-primary">
-                      {index + 1}. öneri
+                      {t('resultPosition', { number: index + 1 })}
                     </p>
                     <CardTitle className="text-xl">{tool.name}</CardTitle>
                   </CardHeader>
@@ -220,7 +209,7 @@ export default function RecommendationPage() {
                     <p className="text-sm leading-6 text-muted-foreground">{tool.reason}</p>
                     <Button asChild className="mt-6 w-full">
                       <Link
-                        href={`/tool/${tool.slug}`}
+                        href={`/${locale}/tool/${tool.slug}`}
                         prefetch={false}
                         onClick={() =>
                           trackEvent('recommendation_result_click', {
@@ -229,7 +218,7 @@ export default function RecommendationPage() {
                           })
                         }
                       >
-                        Detayları incele
+                        {t('viewDetails')}
                         <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
@@ -249,7 +238,7 @@ export default function RecommendationPage() {
                   document.getElementById('prompt-input')?.focus();
                 }}
               >
-                Yeni bir ihtiyaç yaz
+                {t('reset')}
               </Button>
             </div>
           </div>

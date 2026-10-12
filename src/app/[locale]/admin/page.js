@@ -86,6 +86,8 @@ async function getAdminData() {
     postsResult,
     challengesResult,
     reportedLinksResult,
+    outboundClickSummaryResult,
+    outboundClicksResult,
     adminAlertsResult,
     kasifInteractionsResult,
     kasifGoalCandidatesResult,
@@ -111,6 +113,18 @@ async function getAdminData() {
       .select('*, tools(id, name, slug, link)')
       .order('created_at', { ascending: false })
       .limit(100),
+    supabaseAdmin
+      .from('tool_outbound_click_summary')
+      .select('*')
+      .order('click_count', { ascending: false })
+      .limit(100),
+    supabaseAdmin
+      .from('tool_outbound_clicks')
+      .select(
+        'id, tool_id, destination_url, placement, referrer_path, locale, created_at, tools(name, slug)'
+      )
+      .order('created_at', { ascending: false })
+      .limit(200),
     supabaseAdmin
       .from('admin_alerts')
       .select('*')
@@ -148,6 +162,12 @@ async function getAdminData() {
   }
   if (reportedLinksResult.error) {
     logger.error('[admin] link reports:', reportedLinksResult.error.message);
+  }
+  if (outboundClickSummaryResult.error) {
+    logger.error('[admin] outbound click summary:', outboundClickSummaryResult.error.message);
+  }
+  if (outboundClicksResult.error) {
+    logger.error('[admin] outbound clicks:', outboundClicksResult.error.message);
   }
   if (adminAlertsResult.error) {
     logger.error('[admin] alerts:', adminAlertsResult.error.message);
@@ -197,6 +217,8 @@ async function getAdminData() {
     })(),
     challenges: challengesResult.data || [],
     reportedLinks: reportedLinksResult.data || [],
+    outboundClickSummary: outboundClickSummaryResult.data || [],
+    outboundClicks: outboundClicksResult.data || [],
     adminAlerts: adminAlertsResult.data || [],
     kasifInteractions: kasifInteractionsResult.data || [],
     kasifGoalCandidates: kasifGoalCandidatesResult.data || [],
@@ -247,6 +269,8 @@ export default async function AdminPage({ params }) {
       allPosts: [],
       challenges: [],
       reportedLinks: [],
+      outboundClickSummary: [],
+      outboundClicks: [],
       adminAlerts: [],
       kasifInteractions: [],
       kasifGoalCandidates: [],

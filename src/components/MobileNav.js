@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from './ui/button';
 import { FutureAiGlyph } from '@/components/FutureAiGlyph';
+import { SiteSearchIcon } from '@/components/SiteSearchIcon';
 import { filterNavLinks } from '@/lib/navFeatures';
 import { useCommunityPanelPref } from '@/hooks/useCommunityPanelPref';
 
@@ -58,7 +59,7 @@ export function MobileNav({ user, isProUser }) {
           { href: '/kategori', label: t('categories'), icon: LayoutGrid },
           { href: '/ogren', label: t('learn'), icon: GraduationCap },
           { href: '/workmind', label: t('workmind'), icon: BrainCircuit },
-          { href: '/kasif', label: t('kasif'), icon: FutureAiGlyph, featuredKasif: true },
+          { href: '/kasif', label: t('kasif'), icon: SiteSearchIcon, featuredKasif: true },
           { href: '/kesfet', label: t('discover'), icon: Bot },
           { href: '/random-tools', label: t('randomTools'), icon: Bot },
         ],

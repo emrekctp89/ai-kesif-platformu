@@ -476,6 +476,7 @@ export default async function ComparePage(props) {
                         <Button asChild size="sm" className="brand-gradient min-h-9">
                           <TrackedExternalLink
                             href={tool.link}
+                            toolId={tool.id}
                             target="_blank"
                             rel="noopener noreferrer nofollow"
                             eventParameters={{

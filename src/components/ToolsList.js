@@ -130,6 +130,7 @@ function ToolCard({ tool, user, isFavorited }) {
         <Button asChild size="sm">
           <TrackedExternalLink
             href={tool.link}
+            toolId={tool.id}
             target="_blank"
             rel="noopener noreferrer"
             eventName="official_site_click"

@@ -13,7 +13,15 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from 'next-intl';
-import { CalendarDays, Check, ExternalLink, Mail, ShieldAlert, Trash2 } from 'lucide-react';
+import {
+  CalendarDays,
+  Check,
+  ExternalLink,
+  Mail,
+  MousePointerClick,
+  ShieldAlert,
+  Trash2,
+} from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -3387,10 +3395,136 @@ function KasifQualityTab({ interactions = [], goalCandidates = [] }) {
   );
 }
 
+function OutboundClicksTab({ summary = [], clicks = [] }) {
+  const t = useTranslations('AdminClient');
+  const locale = useLocale();
+  const number = new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'tr-TR');
+  const date = new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'tr-TR', {
+    dateStyle: 'medium',
+    timeStyle: 'medium',
+  });
+  const totals = summary.reduce(
+    (result, row) => ({
+      all: result.all + Number(row.click_count || 0),
+      day: result.day + Number(row.clicks_24h || 0),
+      week: result.week + Number(row.clicks_7d || 0),
+      month: result.month + Number(row.clicks_30d || 0),
+    }),
+    { all: 0, day: 0, week: 0, month: 0 }
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          [t('clicksAllTime'), totals.all],
+          [t('clicks24h'), totals.day],
+          [t('clicks7d'), totals.week],
+          [t('clicks30d'), totals.month],
+        ].map(([label, value]) => (
+          <Card key={label} className="glass-panel border-border/50">
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-muted-foreground">{label}</p>
+              <p className="mt-1 text-2xl font-bold">{number.format(value)}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="glass-panel border-border/50">
+        <CardHeader>
+          <CardTitle>{t('clicksByToolTitle')}</CardTitle>
+          <CardDescription>{t('clicksByToolDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {summary.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs text-muted-foreground">
+                    <th className="px-2 py-3">{t('clicksTool')}</th>
+                    <th className="px-2 py-3">{t('clicksTotal')}</th>
+                    <th className="px-2 py-3">24h</th>
+                    <th className="px-2 py-3">7d</th>
+                    <th className="px-2 py-3">30d</th>
+                    <th className="px-2 py-3">{t('clicksLast')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.map((row) => (
+                    <tr key={row.tool_id} className="border-b last:border-0">
+                      <td className="px-2 py-3 font-medium">{row.tool_name}</td>
+                      <td className="px-2 py-3">{number.format(Number(row.click_count || 0))}</td>
+                      <td className="px-2 py-3">{number.format(Number(row.clicks_24h || 0))}</td>
+                      <td className="px-2 py-3">{number.format(Number(row.clicks_7d || 0))}</td>
+                      <td className="px-2 py-3">{number.format(Number(row.clicks_30d || 0))}</td>
+                      <td className="px-2 py-3 text-xs text-muted-foreground">
+                        {row.last_clicked_at ? date.format(new Date(row.last_clicked_at)) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="py-8 text-center text-sm text-muted-foreground">{t('clicksEmpty')}</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="glass-panel border-border/50">
+        <CardHeader>
+          <CardTitle>{t('clickLogTitle')}</CardTitle>
+          <CardDescription>{t('clickLogDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {clicks.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[900px] text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs text-muted-foreground">
+                    <th className="px-2 py-3">{t('clicksTime')}</th>
+                    <th className="px-2 py-3">{t('clicksTool')}</th>
+                    <th className="px-2 py-3">{t('clicksPlacement')}</th>
+                    <th className="px-2 py-3">{t('clicksSourcePage')}</th>
+                    <th className="px-2 py-3">{t('clicksLocale')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clicks.map((row) => (
+                    <tr key={row.id} className="border-b last:border-0">
+                      <td className="whitespace-nowrap px-2 py-3 text-xs">
+                        {date.format(new Date(row.created_at))}
+                      </td>
+                      <td className="px-2 py-3 font-medium">
+                        {row.tools?.name || `#${row.tool_id}`}
+                      </td>
+                      <td className="px-2 py-3">
+                        <code>{row.placement}</code>
+                      </td>
+                      <td className="max-w-64 truncate px-2 py-3 text-muted-foreground">
+                        {row.referrer_path || '—'}
+                      </td>
+                      <td className="px-2 py-3">{row.locale || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="py-8 text-center text-sm text-muted-foreground">{t('clicksEmpty')}</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 const ADMIN_TAB_VALUES = new Set([
   'approval_queue',
   'tool_management',
   'reported_links',
+  'outbound_clicks',
   'kasif_quality',
   'admin_alerts',
   'content_management',
@@ -3422,6 +3556,8 @@ export function AdminPageClient({ data }) {
     allPosts,
     challenges,
     reportedLinks = [],
+    outboundClickSummary = [],
+    outboundClicks = [],
     adminAlerts = [],
     creatorApplications = [],
     kasifInteractions = [],
@@ -3464,6 +3600,13 @@ export function AdminPageClient({ data }) {
           {t('tabReports')}
           <Badge variant={activeReportCount > 0 ? 'default' : 'secondary'} className="ml-2">
             {activeReportCount}
+          </Badge>
+        </TabsTrigger>
+        <TabsTrigger value="outbound_clicks" className="shrink-0 text-xs sm:text-sm">
+          <MousePointerClick className="mr-1.5 h-4 w-4" aria-hidden="true" />
+          {t('tabClicks')}
+          <Badge variant="secondary" className="ml-2">
+            {outboundClickSummary.reduce((sum, row) => sum + Number(row.clicks_30d || 0), 0)}
           </Badge>
         </TabsTrigger>
         <TabsTrigger value="kasif_quality" className="shrink-0 text-xs sm:text-sm">
@@ -3514,6 +3657,10 @@ export function AdminPageClient({ data }) {
 
       <TabsContent value="reported_links" className="mt-6">
         <ReportedLinksTab reports={reportedLinks} />
+      </TabsContent>
+
+      <TabsContent value="outbound_clicks" className="mt-6">
+        <OutboundClicksTab summary={outboundClickSummary} clicks={outboundClicks} />
       </TabsContent>
 
       <TabsContent value="kasif_quality" className="mt-6">

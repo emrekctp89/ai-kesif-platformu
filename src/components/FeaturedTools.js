@@ -198,6 +198,7 @@ export async function FeaturedTools({ locale = 'tr' }) {
                       >
                         <TrackedExternalLink
                           href={tool.link}
+                          toolId={tool.id}
                           target="_blank"
                           rel="noopener noreferrer"
                           eventName="official_site_click"

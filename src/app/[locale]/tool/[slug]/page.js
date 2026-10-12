@@ -553,6 +553,7 @@ export default async function ToolPage(props) {
                   >
                     <TrackedExternalLink
                       href={tool.link}
+                      toolId={tool.id}
                       target="_blank"
                       rel="noopener noreferrer nofollow"
                       eventParameters={{
@@ -731,6 +732,7 @@ export default async function ToolPage(props) {
                 <Button asChild className="brand-gradient min-h-11 w-full shadow-md">
                   <TrackedExternalLink
                     href={tool.link}
+                    toolId={tool.id}
                     target="_blank"
                     rel="noopener noreferrer nofollow"
                     eventParameters={{
@@ -807,6 +809,7 @@ export default async function ToolPage(props) {
           <Button asChild className="brand-gradient min-h-12 flex-1 shadow-md">
             <TrackedExternalLink
               href={tool.link}
+              toolId={tool.id}
               target="_blank"
               rel="noopener noreferrer nofollow"
               eventParameters={{

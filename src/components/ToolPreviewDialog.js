@@ -132,6 +132,7 @@ export function ToolPreviewDialog({ tool, isOpen, onClose }) {
               <Button asChild size="lg" className="bg-green-600 hover:bg-green-700">
                 <TrackedExternalLink
                   href={toolData.link}
+                  toolId={toolData.id}
                   target="_blank"
                   rel="noopener noreferrer"
                   eventName="official_site_click"

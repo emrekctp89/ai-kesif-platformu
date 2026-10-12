@@ -11,7 +11,7 @@ import { NotificationCenter } from './NotificationCenter';
 import { UserNav } from './UserNav';
 import { MobileNav } from './MobileNav';
 import { CommandPalette } from './CommandPalette';
-import { FutureAiGlyph } from './FutureAiGlyph';
+import { SiteSearchIcon } from './SiteSearchIcon';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -156,13 +156,8 @@ export function HeaderNav({
             className="bg-gradient-to-r from-cyan-500 via-indigo-500 to-fuchsia-500 font-semibold text-white shadow-md transition hover:brightness-110"
           >
             <Link href="/kasif" prefetch={false} className="gap-2">
-              <FutureAiGlyph className="h-5 w-5" />
+              <SiteSearchIcon className="h-5 w-5" />
               {t('kasif')}
-            </Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href="/workmind" prefetch={false}>
-              {t('workmind')}
             </Link>
           </Button>
           <Button asChild variant="outline">

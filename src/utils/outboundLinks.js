@@ -38,3 +38,29 @@ export function preserveReferrerRel(rel = '') {
 
   return [...new Set(tokens)].join(' ');
 }
+
+export function recordOutboundClick({ toolId, destinationUrl, placement }) {
+  const normalizedToolId = Number(toolId);
+  if (!Number.isSafeInteger(normalizedToolId) || normalizedToolId <= 0 || !destinationUrl) return;
+
+  const payload = {
+    toolId: normalizedToolId,
+    destinationUrl,
+    placement: String(placement || 'unknown').slice(0, 80),
+    referrerPath:
+      typeof window === 'undefined'
+        ? undefined
+        : `${window.location.pathname}${window.location.search}`,
+    locale: typeof document === 'undefined' ? undefined : document.documentElement.lang,
+  };
+
+  void fetch('/api/outbound-click', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+    keepalive: true,
+    credentials: 'same-origin',
+  }).catch(() => {
+    // Analytics must never block navigation to the provider.
+  });
+}

@@ -1,11 +1,16 @@
 'use client';
 
 import { trackEvent } from '@/utils/analytics';
-import { buildTrackedOutboundUrl, preserveReferrerRel } from '@/utils/outboundLinks';
+import {
+  buildTrackedOutboundUrl,
+  preserveReferrerRel,
+  recordOutboundClick,
+} from '@/utils/outboundLinks';
 
 export function TrackedExternalLink({
   eventName = 'official_site_click',
   eventParameters,
+  toolId,
   children,
   ...props
 }) {
@@ -36,6 +41,11 @@ export function TrackedExternalLink({
           destination_url: trackedHref || undefined,
           destination_host: destinationHost,
           ...eventParameters,
+        });
+        recordOutboundClick({
+          toolId,
+          destinationUrl: trackedHref,
+          placement: eventParameters?.placement || eventParameters?.source,
         });
       }}
     >
