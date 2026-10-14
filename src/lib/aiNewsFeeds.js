@@ -30,6 +30,21 @@ export const AI_NEWS_SOURCES = [
     feedUrl: 'https://news.microsoft.com/source/topics/ai/feed/',
     siteUrl: 'https://news.microsoft.com/source/topics/ai/',
   },
+  {
+    id: 'reddit-ai-community',
+    name: 'Reddit AI Toplulukları',
+    feedUrl: 'https://www.reddit.com/r/MachineLearning+LocalLLaMA+artificial/top/.rss?t=week',
+    siteUrl: 'https://www.reddit.com/r/MachineLearning+LocalLLaMA+artificial/',
+  },
+];
+
+export const X_OFFICIAL_ACCOUNTS = [
+  'OpenAI',
+  'AnthropicAI',
+  'GoogleDeepMind',
+  'huggingface',
+  'MistralAI',
+  'xai',
 ];
 
 const MAX_ITEMS_PER_SOURCE = 12;
@@ -123,10 +138,63 @@ async function fetchSource(source, fetchImpl) {
   return parseAiNewsFeed(await response.text(), source);
 }
 
+export function parseXSearchResponse(payload) {
+  const users = new Map((payload?.includes?.users || []).map((user) => [user.id, user]));
+
+  return (payload?.data || [])
+    .map((post) => {
+      const user = users.get(post.author_id);
+      const username = user?.username;
+      const text = cleanText(post.text);
+      const publishedAt = new Date(post.created_at);
+
+      if (!post.id || !username || !text || Number.isNaN(publishedAt.getTime())) return null;
+
+      return {
+        source_id: `x-${username.toLowerCase()}`,
+        source_name: `X · ${user.name || `@${username}`}`,
+        source_url: `https://x.com/${username}`,
+        title: truncate(text, 220),
+        summary: text.length > 220 ? truncate(text, MAX_SUMMARY_LENGTH) : null,
+        article_url: `https://x.com/${username}/status/${post.id}`,
+        image_url: null,
+        published_at: publishedAt.toISOString(),
+        is_published: true,
+      };
+    })
+    .filter(Boolean)
+    .slice(0, MAX_ITEMS_PER_SOURCE);
+}
+
+async function fetchOfficialXPosts(fetchImpl) {
+  const bearerToken = process.env.X_BEARER_TOKEN || process.env.TWITTER_BEARER_TOKEN;
+  if (!bearerToken) return { skipped: true, items: [] };
+
+  const accountQuery = X_OFFICIAL_ACCOUNTS.map((account) => `from:${account}`).join(' OR ');
+  const params = new URLSearchParams({
+    query: `(${accountQuery}) -is:retweet -is:reply`,
+    max_results: '50',
+    'tweet.fields': 'created_at,author_id',
+    expansions: 'author_id',
+    'user.fields': 'name,username,verified',
+  });
+  const response = await fetchImpl(`https://api.x.com/2/tweets/search/recent?${params}`, {
+    headers: { Authorization: `Bearer ${bearerToken}` },
+    signal: AbortSignal.timeout(12_000),
+  });
+
+  if (!response.ok) throw new Error(`X resmî hesap akışı: HTTP ${response.status}`);
+  return { skipped: false, items: parseXSearchResponse(await response.json()) };
+}
+
 export async function syncAiNews({ fetchImpl = fetch, supabase = createAdminClient() } = {}) {
-  const results = await Promise.allSettled(
-    AI_NEWS_SOURCES.map(async (source) => ({ source, items: await fetchSource(source, fetchImpl) }))
-  );
+  const results = await Promise.allSettled([
+    ...AI_NEWS_SOURCES.map(async (source) => ({
+      source,
+      items: await fetchSource(source, fetchImpl),
+    })),
+    fetchOfficialXPosts(fetchImpl),
+  ]);
 
   const items = [];
   const failures = [];
@@ -149,7 +217,12 @@ export async function syncAiNews({ fetchImpl = fetch, supabase = createAdminClie
     return { ok: false, imported: 0, failures, error: error.message };
   }
 
-  return { ok: true, imported: items.length, failures };
+  return {
+    ok: true,
+    imported: items.length,
+    failures,
+    xEnabled: Boolean(process.env.X_BEARER_TOKEN || process.env.TWITTER_BEARER_TOKEN),
+  };
 }
 
 export async function getLatestAiNews({ limit = 8, supabase = createAdminClient() } = {}) {

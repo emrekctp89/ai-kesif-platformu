@@ -2,7 +2,7 @@
 
 jest.mock('server-only', () => ({}));
 
-import { parseAiNewsFeed } from '../aiNewsFeeds';
+import { parseAiNewsFeed, parseXSearchResponse } from '../aiNewsFeeds';
 
 describe('parseAiNewsFeed', () => {
   const source = { id: 'test', name: 'Test AI', siteUrl: 'https://example.com' };
@@ -29,5 +29,37 @@ describe('parseAiNewsFeed', () => {
       source
     );
     expect(items).toEqual([]);
+  });
+});
+
+describe('parseXSearchResponse', () => {
+  it('maps posts from official accounts to attributed news items', () => {
+    const items = parseXSearchResponse({
+      data: [
+        {
+          id: '123',
+          author_id: '42',
+          text: 'We are launching a new AI model today.',
+          created_at: '2026-10-14T08:00:00.000Z',
+        },
+      ],
+      includes: { users: [{ id: '42', name: 'OpenAI', username: 'OpenAI' }] },
+    });
+
+    expect(items).toEqual([
+      expect.objectContaining({
+        source_id: 'x-openai',
+        source_name: 'X · OpenAI',
+        article_url: 'https://x.com/OpenAI/status/123',
+      }),
+    ]);
+  });
+
+  it('drops posts without a resolvable author', () => {
+    expect(
+      parseXSearchResponse({
+        data: [{ id: '123', author_id: 'missing', text: 'Post', created_at: '2026-10-14' }],
+      })
+    ).toEqual([]);
   });
 });
