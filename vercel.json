@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/ai-news",
+      "schedule": "15 5 * * *"
+    },
+    {
       "path": "/api/cron/link-audit-pending",
       "schedule": "0 3 * * *"
     },

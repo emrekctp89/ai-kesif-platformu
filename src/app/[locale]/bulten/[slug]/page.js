@@ -70,6 +70,7 @@ function NewsletterArticleBody({ content, t }) {
   if (!content || typeof content !== 'object') return null;
 
   const hasAny =
+    content.ai_news?.length > 0 ||
     content.trending_tools?.length > 0 ||
     content.top_prompt ||
     content.top_showcase ||
@@ -79,6 +80,26 @@ function NewsletterArticleBody({ content, t }) {
 
   return (
     <div className="space-y-10">
+      {content.ai_news?.length > 0 ? (
+        <Section title={`📰 ${t('aiNews')}`}>
+          {content.ai_news.map((item, index) => (
+            <ContentCard key={item.article_url || index}>
+              <a
+                href={item.article_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-foreground hover:text-primary"
+              >
+                {item.title} <ExternalLink className="ml-1 inline h-3.5 w-3.5" aria-hidden="true" />
+              </a>
+              {item.summary ? (
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.summary}</p>
+              ) : null}
+              <p className="mt-2 text-xs text-muted-foreground">{item.source_name}</p>
+            </ContentCard>
+          ))}
+        </Section>
+      ) : null}
       {content.trending_tools?.length > 0 ? (
         <Section title={`🔥 ${t('trending')}`}>
           {content.trending_tools.map((tool, index) => (
@@ -184,6 +205,7 @@ export default async function BultenDetailPage(props) {
 
   const content = newsletter.content_json || {};
   const hasStructuredContent =
+    content.ai_news?.length > 0 ||
     content.trending_tools?.length > 0 ||
     content.top_prompt ||
     content.top_showcase ||

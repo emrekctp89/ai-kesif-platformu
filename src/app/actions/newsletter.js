@@ -8,6 +8,7 @@ import { WeeklyNewsletterEmail } from '@/components/emails/WeeklyNewsletterEmail
 import { render } from '@react-email/render';
 import { slugify } from '@/utils/slugify';
 import { normalizeNewsletterRecipients } from '@/lib/newsletterRecipients';
+import { getLatestAiNews } from '@/lib/aiNewsFeeds';
 
 const NEWSLETTER_SUBJECT = 'AI Keşif Platformu | Haftalık Bülten';
 
@@ -122,6 +123,7 @@ export async function previewNewsletter() {
       };
     }
 
+    newsletterData.ai_news = await getLatestAiNews({ limit: 6, supabase: supabaseAdmin });
     const html = await render(<WeeklyNewsletterEmail newsletterData={newsletterData} />);
 
     return { success: true, data: newsletterData, html };
@@ -147,6 +149,8 @@ export async function sendNewsletter() {
   if (dataError || !newsletterData) {
     return { error: 'Bülten içeriği oluşturulamadı.' };
   }
+
+  newsletterData.ai_news = await getLatestAiNews({ limit: 6, supabase: supabaseAdmin });
 
   const htmlContent = await render(<WeeklyNewsletterEmail newsletterData={newsletterData} />);
 

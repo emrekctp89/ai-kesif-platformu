@@ -158,6 +158,7 @@
     "topPrompt": "Haftanın prompt'u",
     "topShowcase": "Haftanın eseri",
     "latestPost": "Son yazımız",
+    "aiNews": "Yapay zeka gündemi",
     "createdBy": "Oluşturan: {name}",
     "forTool": "{name} için.",
     "noContent": "Bu bülten için içerik bulunamadı."
@@ -210,7 +211,11 @@
     "archiveCount": "{count} bülten",
     "readIssue": "Bülteni oku",
     "emptyArchive": "Henüz arşivlenmiş bir bülten yok. Abone olun; ilk gönderiden sonra burada listelenecek.",
-    "fallbackDesc": "Haftalık AI bülteni özeti."
+    "fallbackDesc": "Haftalık AI bülteni özeti.",
+    "newsChip": "Güncel akış",
+    "newsHeading": "Yapay zeka gündemi",
+    "newsSubheading": "Resmi ve güvenilir kaynaklardan derlenen en yeni gelişmeler.",
+    "openSource": "Kaynakta oku"
   },
   "Blog": {
     "metaTitle": "Blog",

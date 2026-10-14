@@ -158,6 +158,7 @@
     "topPrompt": "Prompt of the week",
     "topShowcase": "Showcase of the week",
     "latestPost": "Latest post",
+    "aiNews": "AI news",
     "createdBy": "By {name}",
     "forTool": "For {name}.",
     "noContent": "No content found for this issue."
@@ -210,7 +211,11 @@
     "archiveCount": "{count} issues",
     "readIssue": "Read issue",
     "emptyArchive": "No archived issues yet. Subscribe — they’ll appear here after the first send.",
-    "fallbackDesc": "Weekly AI newsletter summary."
+    "fallbackDesc": "Weekly AI newsletter summary.",
+    "newsChip": "Latest feed",
+    "newsHeading": "AI news",
+    "newsSubheading": "The latest developments curated from official and trusted sources.",
+    "openSource": "Read at source"
   },
   "Blog": {
     "metaTitle": "Blog",

@@ -63,9 +63,26 @@ export const WeeklyNewsletterEmail = ({ newsletterData }) => (
       <div style={{ padding: '24px' }}>
         {/* Giriş Yazısı */}
         <p style={descriptionStyle}>
-          Merhaba! AI Keşif Platformu'nda bu hafta öne çıkanlar ve topluluğun en sevdikleri burada.
-          İşte kaçırmamanız gerekenler:
+          Merhaba! Yapay zeka dünyasında bu hafta öne çıkan haberler ve AI Keşif topluluğunun
+          favorileri burada.
         </p>
+
+        {newsletterData.ai_news?.length > 0 && (
+          <div style={sectionStyle}>
+            <h2 style={headingStyle}>📰 Yapay Zeka Gündemi</h2>
+            {newsletterData.ai_news.map((item) => (
+              <div key={item.article_url} style={cardStyle}>
+                <a href={item.article_url} style={titleStyle}>
+                  {item.title}
+                </a>
+                {item.summary ? <p style={descriptionStyle}>{item.summary}</p> : null}
+                <a href={item.source_url} style={{ ...linkStyle, fontSize: '12px' }}>
+                  Kaynak: {item.source_name}
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Haftanın Trendleri */}
         {newsletterData.trending_tools?.length > 0 && (

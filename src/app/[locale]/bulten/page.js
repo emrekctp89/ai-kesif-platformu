@@ -2,7 +2,7 @@ import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { Link } from '@/i18n/routing';
-import { ArrowRight, Calendar, Mail } from 'lucide-react';
+import { ArrowRight, Calendar, ExternalLink, Mail, Newspaper } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { NewsletterSignup } from '@/components/NewsletterSignup';
@@ -24,6 +24,22 @@ async function getPublishedNewsletters() {
     return [];
   }
 
+  return data || [];
+}
+
+async function getLatestNews() {
+  const supabase = await createClient(await cookies());
+  const { data, error } = await supabase
+    .from('ai_news_items')
+    .select('id, source_name, source_url, title, summary, article_url, published_at')
+    .eq('is_published', true)
+    .order('published_at', { ascending: false })
+    .limit(12);
+
+  if (error) {
+    logger.error('AI haberleri çekilirken hata:', error);
+    return [];
+  }
   return data || [];
 }
 
@@ -49,7 +65,7 @@ export async function generateMetadata({ params }) {
 export default async function BultenPage({ params }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'NewsletterPage' });
-  const newsletters = await getPublishedNewsletters();
+  const [newsletters, news] = await Promise.all([getPublishedNewsletters(), getLatestNews()]);
 
   return (
     <div className="mx-auto max-w-5xl space-y-12 pb-10 sm:space-y-14">
@@ -73,6 +89,56 @@ export default async function BultenPage({ params }) {
           </div>
         </div>
       </section>
+
+      {news.length > 0 ? (
+        <section aria-labelledby="ai-gundem-heading">
+          <div className="mb-6">
+            <div className="brand-chip mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold">
+              <Newspaper className="h-4 w-4" aria-hidden="true" />
+              {t('newsChip')}
+            </div>
+            <h2 id="ai-gundem-heading" className="text-2xl font-bold tracking-tight sm:text-3xl">
+              {t('newsHeading')}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground sm:text-base">{t('newsSubheading')}</p>
+          </div>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            {news.map((item) => (
+              <a
+                key={item.id}
+                href={item.article_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Card className="glass-panel h-full border-border/50 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+                  <CardHeader className="space-y-3">
+                    <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                      <span className="font-semibold text-primary">{item.source_name}</span>
+                      <time dateTime={item.published_at}>
+                        {formatDate(item.published_at, locale)}
+                      </time>
+                    </div>
+                    <CardTitle className="text-lg leading-snug group-hover:text-primary">
+                      {item.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-0">
+                    {item.summary ? (
+                      <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                        {item.summary}
+                      </p>
+                    ) : null}
+                    <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                      {t('openSource')} <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
+                  </CardContent>
+                </Card>
+              </a>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section aria-labelledby="bulten-arsiv-heading">
         <div className="mb-6 flex flex-col gap-2 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
