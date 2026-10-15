@@ -74,6 +74,28 @@
   }
 }
 
+@keyframes marketTicker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.market-ticker-track {
+  animation: marketTicker 42s linear infinite;
+}
+.market-ticker-track:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-ticker-track {
+    animation: none;
+  }
+}
+
 /* Eserler galerisi için Masonry grid stili */
 @media (min-width: 768px) {
   .masonry-grid {

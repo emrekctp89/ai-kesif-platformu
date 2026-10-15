@@ -48,7 +48,6 @@ export function HeaderNav({
   const moreExplore = filterNavLinks(
     [
       { href: '/haberler', label: t('news') },
-      { href: '/bulten', label: t('newsletter') },
       // Paused for now — kept listed only if flags re-enabled in navFeatures:
       { href: '/kesfet', label: t('discover') },
       { href: '/random-tools', label: t('randomTools') },

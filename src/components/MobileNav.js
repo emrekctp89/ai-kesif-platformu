@@ -88,7 +88,6 @@ export function MobileNav({ user, isProUser }) {
       links: [
         { href: '/haberler', label: t('news'), icon: Newspaper },
         { href: '/blog', label: t('blog'), icon: Newspaper },
-        { href: '/bulten', label: t('newsletter'), icon: Mail },
       ],
     },
     {
