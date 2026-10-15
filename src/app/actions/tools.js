@@ -149,9 +149,51 @@ Görev:
 export async function submitTool(formData) {
   'use server';
 
+  const locale = String(formData.get('locale') || '') === 'en' ? 'en' : 'tr';
+  const submitPath = locale === 'en' ? '/en/submit' : '/submit';
+  const messages =
+    locale === 'en'
+      ? {
+          human: 'The submission could not be verified. Refresh the page and try again.',
+          rateLimit: (minutes) =>
+            `You have sent too many suggestions. Please try again in about ${minutes} minutes.`,
+          invalidFields: 'Complete all fields according to the stated requirements.',
+          invalidPricing: 'The selected pricing model is invalid.',
+          invalidPlatform: 'The selected platform is invalid.',
+          categoryNoteLong: 'The category note can be up to 200 characters.',
+          invalidWebsite: 'Enter a valid official website address.',
+          blockedWebsite:
+            "Directory and aggregator links aren't accepted. Enter the tool's official website.",
+          invalidEmail: 'Enter a valid email address.',
+          invalidCategory: 'Select a valid category.',
+          otherCategory: 'You selected “Other”. Briefly describe what kind of tool this is.',
+          generic: 'Something went wrong. Please try again.',
+          duplicate: 'This tool has already been suggested or this name is already in use.',
+        }
+      : {
+          human: 'Gönderim doğrulanamadı. Sayfayı yenileyip tekrar deneyin.',
+          rateLimit: (minutes) =>
+            `Çok fazla öneri gönderdiniz. Yaklaşık ${minutes} dakika sonra tekrar deneyin.`,
+          invalidFields: 'Lütfen tüm alanları belirtilen kurallara uygun doldurun.',
+          invalidPricing: 'Geçersiz fiyatlandırma modeli seçildi.',
+          invalidPlatform: 'Geçersiz platform seçimi.',
+          categoryNoteLong: 'Kategori notu en fazla 200 karakter olabilir.',
+          invalidWebsite: 'Geçerli bir resmî web sitesi adresi girin.',
+          blockedWebsite:
+            'Dizin/aggregator bağlantıları kabul edilmiyor. Lütfen aracın resmî web sitesini girin.',
+          invalidEmail: 'Geçerli bir e-posta adresi girin.',
+          invalidCategory: 'Lütfen geçerli bir kategori seçin.',
+          otherCategory:
+            '“Diğer” kategorisini seçtiniz. Lütfen aracın ne tür bir araç olduğunu kısaca belirtin.',
+          generic: 'Bir hata oluştu, lütfen tekrar deneyin.',
+          duplicate: 'Bu araç zaten önerilmiş veya bu isim kullanılıyor.',
+        };
+  const redirectWithMessage = (message) =>
+    redirect(`${submitPath}?message=${encodeURIComponent(message)}`);
+
   const humanCheck = validateHumanForm(formData);
   if (!humanCheck.valid) {
-    return redirect(`/submit?message=${encodeURIComponent(humanCheck.error)}`);
+    return redirectWithMessage(locale === 'en' ? messages.human : humanCheck.error);
   }
 
   const rateLimit = await enforceRateLimit('tool-submission', {
@@ -159,13 +201,7 @@ export async function submitTool(formData) {
     windowMs: 60 * 60 * 1000,
   });
   if (!rateLimit.allowed) {
-    return redirect(
-      `/submit?message=${encodeURIComponent(
-        `Çok fazla öneri gönderdiniz. Yaklaşık ${Math.ceil(
-          rateLimit.retryAfterSeconds / 60
-        )} dakika sonra tekrar deneyin.`
-      )}`
-    );
+    return redirectWithMessage(messages.rateLimit(Math.ceil(rateLimit.retryAfterSeconds / 60)));
   }
 
   const supabase = await createClient(await cookies());
@@ -194,15 +230,12 @@ export async function submitTool(formData) {
     !category_id ||
     !final_suggester_email
   ) {
-    const errorMessage = 'Lütfen tüm alanları belirtilen kurallara uygun doldurun.';
-    return redirect(`/submit?message=${encodeURIComponent(errorMessage)}`);
+    return redirectWithMessage(messages.invalidFields);
   }
 
   const allowedPricingModels = ['Ücretsiz', 'Freemium', 'Abonelik', 'Tek Seferlik Ödeme'];
   if (pricing_model && !allowedPricingModels.includes(pricing_model)) {
-    return redirect(
-      `/submit?message=${encodeURIComponent('Geçersiz fiyatlandırma modeli seçildi.')}`
-    );
+    return redirectWithMessage(messages.invalidPricing);
   }
 
   const allowedPlatforms = [
@@ -215,13 +248,11 @@ export async function submitTool(formData) {
     'Chrome Uzantısı',
   ];
   if (platforms.some((platform) => !allowedPlatforms.includes(platform))) {
-    return redirect(`/submit?message=${encodeURIComponent('Geçersiz platform seçimi.')}`);
+    return redirectWithMessage(messages.invalidPlatform);
   }
 
   if (category_note.length > 200) {
-    return redirect(
-      `/submit?message=${encodeURIComponent('Kategori notu en fazla 200 karakter olabilir.')}`
-    );
+    return redirectWithMessage(messages.categoryNoteLong);
   }
 
   let normalizedLink;
@@ -232,22 +263,16 @@ export async function submitTool(formData) {
     }
     normalizedLink = parsedLink.toString();
   } catch {
-    return redirect(
-      `/submit?message=${encodeURIComponent('Geçerli bir resmî web sitesi adresi girin.')}`
-    );
+    return redirectWithMessage(messages.invalidWebsite);
   }
 
   if (getBlockedToolHost(normalizedLink)) {
-    return redirect(
-      `/submit?message=${encodeURIComponent(
-        'Dizin/aggregator bağlantıları kabul edilmiyor. Lütfen aracın resmî web sitesini girin.'
-      )}`
-    );
+    return redirectWithMessage(messages.blockedWebsite);
   }
 
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailPattern.test(final_suggester_email) || final_suggester_email.length > 254) {
-    return redirect(`/submit?message=${encodeURIComponent('Geçerli bir e-posta adresi girin.')}`);
+    return redirectWithMessage(messages.invalidEmail);
   }
 
   const { data: category } = await supabase
@@ -257,15 +282,11 @@ export async function submitTool(formData) {
     .maybeSingle();
 
   if (!category) {
-    return redirect(`/submit?message=${encodeURIComponent('Lütfen geçerli bir kategori seçin.')}`);
+    return redirectWithMessage(messages.invalidCategory);
   }
 
   if (category.slug === 'diger' && category_note.length < 3) {
-    return redirect(
-      `/submit?message=${encodeURIComponent(
-        '“Diğer” kategorisini seçtiniz. Lütfen aracın ne tür bir araç olduğunu kısaca belirtin.'
-      )}`
-    );
+    return redirectWithMessage(messages.otherCategory);
   }
 
   const slug = slugify(name);
@@ -295,11 +316,11 @@ export async function submitTool(formData) {
   const { error } = await supabase.from('tools').insert([toolData]);
 
   if (error) {
-    let errorMessage = 'Bir hata oluştu, lütfen tekrar deneyin.';
+    let errorMessage = messages.generic;
     if (error.code === '23505') {
-      errorMessage = 'Bu araç zaten önerilmiş veya bu isim kullanılıyor.';
+      errorMessage = messages.duplicate;
     }
-    return redirect(`/submit?message=${encodeURIComponent(errorMessage)}`);
+    return redirectWithMessage(errorMessage);
   }
 
   try {
@@ -322,7 +343,7 @@ export async function submitTool(formData) {
     logger.error('E-posta gönderme hatası:', emailError);
   }
 
-  return redirect('/submit?status=success');
+  return redirect(`${submitPath}?status=success`);
 }
 
 export async function approveTool(formData) {

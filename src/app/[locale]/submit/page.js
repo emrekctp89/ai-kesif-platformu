@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { CheckCircle2, Clock3, SearchCheck } from 'lucide-react';
 
@@ -7,6 +6,7 @@ import SubmitForm from '@/components/SubmitForm';
 import { Button } from '@/components/ui/button';
 import { AnalyticsEvent } from '@/components/AnalyticsEvent';
 import { filterPrimaryCategories, sortCategoriesByCanonicalOrder } from '@/lib/categoryConfig';
+import { Link } from '@/i18n/routing';
 
 async function getCategories() {
   const supabase = await createClient();

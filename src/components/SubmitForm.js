@@ -15,8 +15,21 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Checkbox } from './ui/checkbox';
 
-const PRICING_MODELS = ['Ücretsiz', 'Freemium', 'Abonelik', 'Tek Seferlik Ödeme'];
-const PLATFORM_OPTIONS = ['Web', 'iOS', 'Android', 'Windows', 'macOS', 'Linux', 'Chrome Uzantısı'];
+const PRICING_MODELS = [
+  { value: 'Ücretsiz', key: 'pricingFree' },
+  { value: 'Freemium', key: 'pricingFreemium' },
+  { value: 'Abonelik', key: 'pricingSubscription' },
+  { value: 'Tek Seferlik Ödeme', key: 'pricingOneTime' },
+];
+const PLATFORM_OPTIONS = [
+  { value: 'Web', label: 'Web' },
+  { value: 'iOS', label: 'iOS' },
+  { value: 'Android', label: 'Android' },
+  { value: 'Windows', label: 'Windows' },
+  { value: 'macOS', label: 'macOS' },
+  { value: 'Linux', label: 'Linux' },
+  { value: 'Chrome Uzantısı', key: 'chromeExtension' },
+];
 const OTHER_CATEGORY_SLUG = 'diger';
 
 function SubmitButton() {
@@ -54,6 +67,7 @@ export default function SubmitForm({ categories, user }) {
   return (
     <form action={submitTool} className="space-y-6 rounded-xl border bg-card p-5 shadow-sm sm:p-7">
       <input type="hidden" name="started_at" value={startedAt} />
+      <input type="hidden" name="locale" value={locale} />
       <div
         className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden"
         aria-hidden="true"
@@ -169,8 +183,8 @@ export default function SubmitForm({ categories, user }) {
           >
             <option value="">{t('pricingPlaceholder')}</option>
             {PRICING_MODELS.map((model) => (
-              <option key={model} value={model}>
-                {model}
+              <option key={model.value} value={model.value}>
+                {t(model.key)}
               </option>
             ))}
           </select>
@@ -180,23 +194,23 @@ export default function SubmitForm({ categories, user }) {
           <Label>{t('platformsLabel')}</Label>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {PLATFORM_OPTIONS.map((platform) => (
-              <div key={platform} className="flex items-center space-x-2">
+              <div key={platform.value} className="flex items-center space-x-2">
                 <Checkbox
-                  id={`platform-${platform}`}
+                  id={`platform-${platform.value}`}
                   name="platforms"
-                  value={platform}
-                  checked={selectedPlatforms.has(platform)}
+                  value={platform.value}
+                  checked={selectedPlatforms.has(platform.value)}
                   onCheckedChange={(checked) =>
                     setSelectedPlatforms((current) => {
                       const next = new Set(current);
-                      if (checked) next.add(platform);
-                      else next.delete(platform);
+                      if (checked) next.add(platform.value);
+                      else next.delete(platform.value);
                       return next;
                     })
                   }
                 />
-                <Label htmlFor={`platform-${platform}`} className="text-sm font-normal">
-                  {platform}
+                <Label htmlFor={`platform-${platform.value}`} className="text-sm font-normal">
+                  {platform.key ? t(platform.key) : platform.label}
                 </Label>
               </div>
             ))}

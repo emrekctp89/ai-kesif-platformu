@@ -36,6 +36,7 @@ import { ToolVariantManager } from './ToolVariantManager';
 import { TranslateButton } from '@/components/TranslateButton';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
+import { getCategoryLabel } from '@/lib/categoryLocalization';
 
 // Fiyatlandırma ve Platform seçeneklerini tanımlıyoruz
 const pricingModels = [
@@ -435,7 +436,7 @@ export function EditToolDialog({ tool, categories, allTags }) {
             >
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
-                  {category.name}
+                  {getCategoryLabel(category, locale)}
                 </option>
               ))}
             </select>

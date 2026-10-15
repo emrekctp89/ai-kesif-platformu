@@ -134,7 +134,7 @@ it('shows English pricing labels while keeping the stored pricing value unchange
         platforms: [],
         tool_tags: [],
       }}
-      categories={[]}
+      categories={[{ id: 10, name: 'Görsel Üretim', slug: 'gorsel-uretim' }]}
       allTags={[]}
     />
   );
@@ -144,4 +144,5 @@ it('shows English pricing labels while keeping the stored pricing value unchange
   expect(screen.getByRole('option', { name: 'Free' })).toBeInTheDocument();
   expect(pricing).toHaveValue('Ücretsiz');
   expect(screen.getByLabelText('Chrome Extension')).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: 'Image Generation' })).toBeInTheDocument();
 });
