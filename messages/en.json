@@ -41,6 +41,7 @@
     "compare": "Compare",
     "blog": "Blog",
     "newsletter": "Newsletter",
+    "news": "News",
     "showcase": "Showcase",
     "categories": "Categories",
     "community": "Community",
@@ -215,7 +216,27 @@
     "newsChip": "Latest feed",
     "newsHeading": "AI news",
     "newsSubheading": "The latest developments curated from official and trusted sources.",
-    "openSource": "Read at source"
+    "openSource": "Read at source",
+    "allNews": "All news"
+  },
+  "NewsPage": {
+    "metaTitle": "Latest Artificial Intelligence News",
+    "metaDescription": "Current artificial intelligence news from official sources and selected communities.",
+    "liveBadge": "Live AI briefing",
+    "title": "Today in artificial intelligence",
+    "subtitle": "Important developments from official technology sources and selected communities, limited to the last seven days.",
+    "freshnessNote": "View refreshes every 15 minutes · Sources scanned every 6 hours",
+    "leadLabel": "Top story",
+    "latestHeading": "Latest developments",
+    "latestSubheading": "Newest stories first, linked directly to the original source.",
+    "officialSource": "Official source",
+    "communitySource": "Community signal",
+    "readAtSource": "Read story",
+    "newsCount": "{count} current stories",
+    "minutesAgo": "{count} min ago",
+    "hoursAgo": "{count} hours ago",
+    "daysAgo": "{count} days ago",
+    "empty": "No current stories were found for the last seven days. The feed will be scanned again shortly."
   },
   "Blog": {
     "metaTitle": "Blog",

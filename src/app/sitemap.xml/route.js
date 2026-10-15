@@ -28,6 +28,7 @@ export async function GET() {
     { url: withBase('/ogren/kasif') },
     { url: withBase('/workmind') },
     { url: withBase('/blog') },
+    { url: withBase('/haberler') },
     { url: withBase('/arastirma') },
     { url: withBase('/karsilastir') },
     { url: withBase('/tavsiye') },

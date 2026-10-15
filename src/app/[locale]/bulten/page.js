@@ -2,7 +2,7 @@ import logger from '@/utils/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { Link } from '@/i18n/routing';
-import { ArrowRight, Calendar, ExternalLink, Mail, Newspaper } from 'lucide-react';
+import { ArrowRight, Calendar, Mail, Newspaper } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
 import { NewsletterSignup } from '@/components/NewsletterSignup';
@@ -66,6 +66,14 @@ export default async function BultenPage({ params }) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'NewsletterPage' });
   const [newsletters, news] = await Promise.all([getPublishedNewsletters(), getLatestNews()]);
+  const newsPreview = news
+    .filter(
+      (item) =>
+        !item.source_name?.startsWith('Reddit') ||
+        (item.title?.length >= 32 &&
+          !/^(r\.i\.p\.|big or small\?|the internet is wild)/i.test(item.title))
+    )
+    .slice(0, 3);
 
   return (
     <div className="mx-auto max-w-5xl space-y-12 pb-10 sm:space-y-14">
@@ -90,7 +98,7 @@ export default async function BultenPage({ params }) {
         </div>
       </section>
 
-      {news.length > 0 ? (
+      {newsPreview.length > 0 ? (
         <section aria-labelledby="ai-gundem-heading">
           <div className="mb-6">
             <div className="brand-chip mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-bold">
@@ -102,15 +110,9 @@ export default async function BultenPage({ params }) {
             </h2>
             <p className="mt-1 text-sm text-muted-foreground sm:text-base">{t('newsSubheading')}</p>
           </div>
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            {news.map((item) => (
-              <a
-                key={item.id}
-                href={item.article_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+            {newsPreview.map((item) => (
+              <Link key={item.id} href="/haberler" className="group rounded-xl">
                 <Card className="glass-panel h-full border-border/50 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
                   <CardHeader className="space-y-3">
                     <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
@@ -130,11 +132,11 @@ export default async function BultenPage({ params }) {
                       </p>
                     ) : null}
                     <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                      {t('openSource')} <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t('allNews')} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                     </span>
                   </CardContent>
                 </Card>
-              </a>
+              </Link>
             ))}
           </div>
         </section>

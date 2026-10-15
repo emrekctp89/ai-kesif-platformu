@@ -27,6 +27,7 @@ export default function Footer() {
     {
       title: t('groupContent'),
       links: [
+        { href: '/haberler', label: t('news') },
         { href: '/blog', label: t('blog') },
         { href: '/bulten', label: t('newsletter') },
       ],

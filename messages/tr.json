@@ -41,6 +41,7 @@
     "compare": "Karşılaştır",
     "blog": "Blog",
     "newsletter": "Bülten",
+    "news": "Haberler",
     "showcase": "Eserler",
     "categories": "Kategoriler",
     "community": "Topluluk",
@@ -215,7 +216,27 @@
     "newsChip": "Güncel akış",
     "newsHeading": "Yapay zeka gündemi",
     "newsSubheading": "Resmi ve güvenilir kaynaklardan derlenen en yeni gelişmeler.",
-    "openSource": "Kaynakta oku"
+    "openSource": "Kaynakta oku",
+    "allNews": "Tüm haberler"
+  },
+  "NewsPage": {
+    "metaTitle": "Güncel Yapay Zeka Haberleri",
+    "metaDescription": "Resmî kaynaklardan ve seçilmiş topluluklardan güncel yapay zeka haberleri.",
+    "liveBadge": "Canlı AI gündemi",
+    "title": "Yapay zeka dünyasında bugün",
+    "subtitle": "Resmî teknoloji kaynakları ve seçilmiş topluluklardan, yalnızca son 7 günün önemli gelişmeleri.",
+    "freshnessNote": "15 dakikada bir yenilenen görünüm · Kaynaklarda 6 saatte bir tarama",
+    "leadLabel": "Günün öne çıkanı",
+    "latestHeading": "Son gelişmeler",
+    "latestSubheading": "En yeni haberler önce, doğrudan orijinal kaynağıyla.",
+    "officialSource": "Resmî kaynak",
+    "communitySource": "Topluluk gündemi",
+    "readAtSource": "Haberi oku",
+    "newsCount": "{count} güncel haber",
+    "minutesAgo": "{count} dk önce",
+    "hoursAgo": "{count} saat önce",
+    "daysAgo": "{count} gün önce",
+    "empty": "Son 7 gün için güncel haber bulunamadı. Akış kısa süre içinde yeniden taranacak."
   },
   "Blog": {
     "metaTitle": "Blog",
